@@ -15,7 +15,7 @@ import { execSync } from 'child_process';
 import { generateCodebaseMap } from '../codebase-map.js';
 
 async function makeTempGitRepo(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'omx-codebase-map-test-'));
+  const dir = await mkdtemp(join(tmpdir(), 'rcs-codebase-map-test-'));
   execSync('git init', { cwd: dir, stdio: 'ignore' });
   execSync('git config user.email "test@test.com"', { cwd: dir, stdio: 'ignore' });
   execSync('git config user.name "Test"', { cwd: dir, stdio: 'ignore' });
@@ -37,7 +37,7 @@ describe('generateCodebaseMap', () => {
   });
 
   it('returns empty string for non-git directory', async () => {
-    const plainDir = await mkdtemp(join(tmpdir(), 'omx-plain-'));
+    const plainDir = await mkdtemp(join(tmpdir(), 'rcs-plain-'));
     try {
       await writeFile(join(plainDir, 'foo.ts'), 'export function foo() {}');
       const map = await generateCodebaseMap(plainDir);
@@ -111,7 +111,7 @@ describe('generateCodebaseMap', () => {
   });
 
   it('does not include untracked files (security: no filename leakage)', async () => {
-    const secDir = await mkdtemp(join(tmpdir(), 'omx-untracked-test-'));
+    const secDir = await mkdtemp(join(tmpdir(), 'rcs-untracked-test-'));
     try {
       execSync('git init', { cwd: secDir, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: secDir, stdio: 'ignore' });
@@ -134,7 +134,7 @@ describe('generateCodebaseMap', () => {
   });
 
   it('uses a durable cache for unchanged git index state', async () => {
-    const cacheDir = await mkdtemp(join(tmpdir(), 'omx-codebase-cache-'));
+    const cacheDir = await mkdtemp(join(tmpdir(), 'rcs-codebase-cache-'));
     try {
       execSync('git init', { cwd: cacheDir, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: cacheDir, stdio: 'ignore' });
@@ -146,7 +146,7 @@ describe('generateCodebaseMap', () => {
       const map = await generateCodebaseMap(cacheDir);
       assert.ok(map.includes('tracked'));
 
-      const cachePath = join(cacheDir, '.omx', 'cache', 'codebase-map.json');
+      const cachePath = join(cacheDir, '.rcs', 'cache', 'codebase-map.json');
       const cache = JSON.parse(await readFile(cachePath, 'utf-8'));
       cache.map = '  src/: cached-only';
       await writeFile(cachePath, JSON.stringify(cache, null, 2));
@@ -158,7 +158,7 @@ describe('generateCodebaseMap', () => {
   });
 
   it('invalidates stale and corrupt durable cache entries safely', async () => {
-    const cacheDir = await mkdtemp(join(tmpdir(), 'omx-codebase-cache-stale-'));
+    const cacheDir = await mkdtemp(join(tmpdir(), 'rcs-codebase-cache-stale-'));
     try {
       execSync('git init', { cwd: cacheDir, stdio: 'ignore' });
       execSync('git config user.email "test@test.com"', { cwd: cacheDir, stdio: 'ignore' });
@@ -168,7 +168,7 @@ describe('generateCodebaseMap', () => {
       execSync('git add src/first.ts', { cwd: cacheDir, stdio: 'ignore' });
 
       assert.ok((await generateCodebaseMap(cacheDir)).includes('first'));
-      const cachePath = join(cacheDir, '.omx', 'cache', 'codebase-map.json');
+      const cachePath = join(cacheDir, '.rcs', 'cache', 'codebase-map.json');
       await writeFile(cachePath, '{not-json');
       assert.ok((await generateCodebaseMap(cacheDir)).includes('first'), 'corrupt cache should regenerate');
 
@@ -183,17 +183,17 @@ describe('generateCodebaseMap', () => {
     }
   });
 
-  it('caches empty tracked-source results without exposing .omx paths', async () => {
-    const emptyDir = await mkdtemp(join(tmpdir(), 'omx-codebase-empty-cache-'));
+  it('caches empty tracked-source results without exposing .rcs paths', async () => {
+    const emptyDir = await mkdtemp(join(tmpdir(), 'rcs-codebase-empty-cache-'));
     try {
       execSync('git init', { cwd: emptyDir, stdio: 'ignore' });
       await writeFile(join(emptyDir, 'README.md'), '# empty source set\n');
       execSync('git add README.md', { cwd: emptyDir, stdio: 'ignore' });
-      await mkdir(join(emptyDir, '.omx', 'cache'), { recursive: true });
-      await writeFile(join(emptyDir, '.omx', 'cache', 'secret.ts'), 'export const secret = true;');
+      await mkdir(join(emptyDir, '.rcs', 'cache'), { recursive: true });
+      await writeFile(join(emptyDir, '.rcs', 'cache', 'secret.ts'), 'export const secret = true;');
 
       assert.equal(await generateCodebaseMap(emptyDir), '');
-      const cache = JSON.parse(await readFile(join(emptyDir, '.omx', 'cache', 'codebase-map.json'), 'utf-8'));
+      const cache = JSON.parse(await readFile(join(emptyDir, '.rcs', 'cache', 'codebase-map.json'), 'utf-8'));
       assert.equal(cache.map, '');
       assert.doesNotMatch(JSON.stringify(cache), /secret\.ts/);
     } finally {
@@ -211,7 +211,7 @@ describe('generateCodebaseMap integration with generateOverlay', () => {
   let tempDir: string;
   before(async () => {
     tempDir = await makeTempGitRepo();
-    await mkdir(join(tempDir, '.omx', 'state'), { recursive: true });
+    await mkdir(join(tempDir, '.rcs', 'state'), { recursive: true });
     // Add a source file so the map is non-empty
     await mkdir(join(tempDir, 'src', 'hooks'), { recursive: true });
     await writeFile(join(tempDir, 'src', 'hooks', 'my-module.ts'), 'export function myFn() {}');
@@ -228,14 +228,14 @@ describe('generateCodebaseMap integration with generateOverlay', () => {
   });
 
   it('overlay is still valid when project has no tracked files', async () => {
-    const emptyDir = await mkdtemp(join(tmpdir(), 'omx-empty-git-'));
+    const emptyDir = await mkdtemp(join(tmpdir(), 'rcs-empty-git-'));
     try {
       execSync('git init', { cwd: emptyDir, stdio: 'ignore' });
-      await mkdir(join(emptyDir, '.omx', 'state'), { recursive: true });
+      await mkdir(join(emptyDir, '.rcs', 'state'), { recursive: true });
       const { generateOverlay } = await import('../agents-overlay.js');
       const overlay = await generateOverlay(emptyDir, 'empty-session');
-      assert.ok(overlay.includes('<!-- OMX:RUNTIME:START -->'));
-      assert.ok(overlay.includes('<!-- OMX:RUNTIME:END -->'));
+      assert.ok(overlay.includes('<!-- RCS:RUNTIME:START -->'));
+      assert.ok(overlay.includes('<!-- RCS:RUNTIME:END -->'));
       // No codebase map section when no files
       assert.ok(!overlay.includes('Codebase Map'), 'should not inject empty map');
     } finally {

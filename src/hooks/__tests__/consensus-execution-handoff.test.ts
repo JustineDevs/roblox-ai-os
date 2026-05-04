@@ -12,7 +12,7 @@
  * and that architect/critic prompts contain required RALPLAN-DR sections.
  *
  * Note: This file loads SKILL.md and prompt content directly via fs.readFileSync()
- * instead of getBuiltinSkill() (which does not exist in OMX).
+ * instead of getBuiltinSkill() (which does not exist in RCS).
  */
 
 import { describe, it } from 'node:test';
@@ -142,7 +142,7 @@ describe('Consensus mode execution handoff (plan/SKILL.md)', () => {
     assert.match(consensusSection, /available-agent-types roster/i);
     assert.match(consensusSection, /staffing guidance|role allocation/i);
     assert.match(consensusSection, /reasoning levels? by lane|suggested reasoning/i);
-    assert.match(consensusSection, /omx team|launch hint/i);
+    assert.match(consensusSection, /rcs team|launch hint/i);
     assert.match(consensusSection, /team verification path/i);
   });
 
@@ -285,7 +285,7 @@ describe('RALPLAN-DR in ralplan/SKILL.md', () => {
     assert.match(ralplanSkill, /available-agent-types roster/i);
     assert.match(ralplanSkill, /staffing guidance|role\/staffing allocation/i);
     assert.match(ralplanSkill, /reasoning levels? by lane|reasoning-by-lane/i);
-    assert.match(ralplanSkill, /omx team|launch hints?/i);
+    assert.match(ralplanSkill, /rcs team|launch hints?/i);
     assert.match(ralplanSkill, /team verification/i);
   });
 });

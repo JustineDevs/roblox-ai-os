@@ -83,4 +83,30 @@ describe('catalog schema', () => {
     assert.equal(autoresearch?.category, 'execution');
     assert.equal(autoresearch?.status, 'active');
   });
+
+  it('includes the psychology-driven design skill family as active design skills', () => {
+    const parsed = validateCatalogManifest(readSourceManifest());
+    const psychologySkills = [
+      'brief-audience',
+      'brief-motivation',
+      'blueprint-psych',
+      'blueprint-loop',
+      'blueprint-retention',
+      'blueprint-social',
+      'forge-reward-loop',
+      'forge-daily-loop',
+      'forge-event-loop',
+      'forge-progression',
+      'forge-status',
+      'forge-fomo',
+      'forge-mastery',
+      'forge-community',
+    ];
+
+    for (const skillName of psychologySkills) {
+      const entry = parsed.skills.find((skill) => skill.name === skillName);
+      assert.equal(entry?.category, 'design');
+      assert.equal(entry?.status, 'active');
+    }
+  });
 });

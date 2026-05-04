@@ -9,15 +9,15 @@ import { HUD_TMUX_HEIGHT_LINES } from '../../hud/constants.js';
 
 const CLI_SPAWN_TIMEOUT_MS = 15_000;
 
-function runOmx(
+function runRcsCli(
   cwd: string,
   argv: string[],
   envOverrides: Record<string, string> = {},
 ): { status: number | null; stdout: string; stderr: string; error: string } {
   const testDir = dirname(fileURLToPath(import.meta.url));
   const repoRoot = join(testDir, '..', '..', '..');
-  const omxBin = join(repoRoot, 'dist', 'cli', 'omx.js');
-  const result = spawnSync(process.execPath, [omxBin, ...argv], {
+  const rcsBin = join(repoRoot, 'dist', 'cli', 'rcs.js');
+  const result = spawnSync(process.execPath, [rcsBin, ...argv], {
     cwd,
     encoding: 'utf-8',
     timeout: CLI_SPAWN_TIMEOUT_MS,
@@ -75,16 +75,16 @@ async function createLaunchFixture(
     env: {
       HOME: home,
       PATH: `${fakeBin}:/usr/bin:/bin`,
-      OMX_AUTO_UPDATE: '0',
-      OMX_NOTIFY_FALLBACK: '0',
-      OMX_HOOK_DERIVED_SIGNALS: '0',
+      RCS_AUTO_UPDATE: '0',
+      RCS_NOTIFY_FALLBACK: '0',
+      RCS_HOOK_DERIVED_SIGNALS: '0',
     },
   };
 }
 
-describe('omx launch fallback when tmux is unavailable', () => {
+describe('rcs launch fallback when tmux is unavailable', () => {
   it('launches codex directly without tmux ENOENT noise', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-fallback-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-fallback-'));
     try {
       const home = join(wd, 'home');
       const fakeBin = join(wd, 'bin');
@@ -101,15 +101,15 @@ describe('omx launch fallback when tmux is unavailable', () => {
       await writeFile(fakePsPath, '#!/bin/sh\nexit 0\n');
       await chmod(fakePsPath, 0o755);
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--xhigh', '--madmax'],
         {
           HOME: home,
           PATH: `${fakeBin}:/usr/bin:/bin`,
-          OMX_AUTO_UPDATE: '0',
-          OMX_NOTIFY_FALLBACK: '0',
-          OMX_HOOK_DERIVED_SIGNALS: '0',
+          RCS_AUTO_UPDATE: '0',
+          RCS_NOTIFY_FALLBACK: '0',
+          RCS_HOOK_DERIVED_SIGNALS: '0',
         },
       );
 
@@ -125,9 +125,9 @@ describe('omx launch fallback when tmux is unavailable', () => {
   });
 });
 
-describe('omx launcher when tmux is available', () => {
+describe('rcs launcher when tmux is available', () => {
   it('launches --madmax through explicitly requested detached tmux so HUD bootstrap can run', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-tmux-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-tmux-'));
     try {
       const home = join(wd, 'home');
       const fakeBin = join(wd, 'bin');
@@ -183,16 +183,16 @@ exit 0
       );
       await chmod(fakeTmuxPath, 0o755);
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--madmax', '--tmux'],
         {
           HOME: home,
           PATH: `${fakeBin}:/usr/bin:/bin`,
-          OMX_AUTO_UPDATE: '0',
-          OMX_NOTIFY_FALLBACK: '0',
-          OMX_HOOK_DERIVED_SIGNALS: '0',
-          OMX_LAUNCH_POLICY: 'direct',
+          RCS_AUTO_UPDATE: '0',
+          RCS_NOTIFY_FALLBACK: '0',
+          RCS_HOOK_DERIVED_SIGNALS: '0',
+          RCS_LAUNCH_POLICY: 'direct',
           TMUX: '',
           TMUX_PANE: '',
         },
@@ -210,7 +210,7 @@ exit 0
   });
 
   it('launches directly with --direct and skips detached tmux bootstrap', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-direct-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-direct-'));
     try {
       const { env, tmuxLogPath } = await createLaunchFixture(
         wd,
@@ -225,7 +225,7 @@ exit 0
 `,
       );
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--direct', '--madmax'],
         {
@@ -246,8 +246,8 @@ exit 0
     }
   });
 
-  it('launches directly from OMX_LAUNCH_POLICY=direct and skips detached tmux bootstrap', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-env-direct-'));
+  it('launches directly from RCS_LAUNCH_POLICY=direct and skips detached tmux bootstrap', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-env-direct-'));
     try {
       const { env, tmuxLogPath } = await createLaunchFixture(
         wd,
@@ -257,12 +257,12 @@ exit 0
 `,
       );
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--madmax'],
         {
           ...env,
-          OMX_LAUNCH_POLICY: 'direct',
+          RCS_LAUNCH_POLICY: 'direct',
           TMUX: '',
           TMUX_PANE: '',
         },
@@ -280,7 +280,7 @@ exit 0
   });
 
   it('launches directly inside tmux with --direct and skips HUD/mouse/extended-key tmux calls', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-inside-tmux-direct-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-inside-tmux-direct-'));
     try {
       const { env, tmuxLogPath } = await createLaunchFixture(
         wd,
@@ -290,7 +290,7 @@ exit 0
 `,
       );
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--direct', '--madmax'],
         {
@@ -312,7 +312,7 @@ exit 0
   });
 
   it('preserves HUD split behavior inside tmux when no direct override is present', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-inside-tmux-managed-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-inside-tmux-managed-'));
     try {
       const { env, tmuxLogPath } = await createLaunchFixture(
         wd,
@@ -346,7 +346,7 @@ exit 0
 `,
       );
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--madmax'],
         {
@@ -370,7 +370,7 @@ exit 0
   });
 
   it('treats a missing tmux server socket as safe for detached tmux startup', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-tmux-missing-socket-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-tmux-missing-socket-'));
     try {
       const home = join(wd, 'home');
       const fakeBin = join(wd, 'bin');
@@ -430,15 +430,15 @@ exit 0
       );
       await chmod(fakeTmuxPath, 0o755);
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--madmax', '--tmux'],
         {
           HOME: home,
           PATH: `${fakeBin}:/usr/bin:/bin`,
-          OMX_AUTO_UPDATE: '0',
-          OMX_NOTIFY_FALLBACK: '0',
-          OMX_HOOK_DERIVED_SIGNALS: '0',
+          RCS_AUTO_UPDATE: '0',
+          RCS_NOTIFY_FALLBACK: '0',
+          RCS_HOOK_DERIVED_SIGNALS: '0',
           TMUX: '',
           TMUX_PANE: '',
         },
@@ -457,7 +457,7 @@ exit 0
   });
 
   it('falls back directly when tmux is installed but the server socket is unusable', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-tmux-stale-socket-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-tmux-stale-socket-'));
     try {
       const home = join(wd, 'home');
       const fakeBin = join(wd, 'bin');
@@ -495,15 +495,15 @@ exit 1
       );
       await chmod(fakeTmuxPath, 0o755);
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--madmax', '--tmux'],
         {
           HOME: home,
           PATH: `${fakeBin}:/usr/bin:/bin`,
-          OMX_AUTO_UPDATE: '0',
-          OMX_NOTIFY_FALLBACK: '0',
-          OMX_HOOK_DERIVED_SIGNALS: '0',
+          RCS_AUTO_UPDATE: '0',
+          RCS_NOTIFY_FALLBACK: '0',
+          RCS_HOOK_DERIVED_SIGNALS: '0',
           TMUX: '',
           TMUX_PANE: '',
         },
@@ -522,7 +522,7 @@ exit 1
   });
 
   it('rolls back and falls back directly when attaching the detached tmux session fails', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-tmux-attach-fail-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-tmux-attach-fail-'));
     try {
       const home = join(wd, 'home');
       const fakeBin = join(wd, 'bin');
@@ -581,15 +581,15 @@ exit 0
       );
       await chmod(fakeTmuxPath, 0o755);
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--madmax', '--tmux'],
         {
           HOME: home,
           PATH: `${fakeBin}:/usr/bin:/bin`,
-          OMX_AUTO_UPDATE: '0',
-          OMX_NOTIFY_FALLBACK: '0',
-          OMX_HOOK_DERIVED_SIGNALS: '0',
+          RCS_AUTO_UPDATE: '0',
+          RCS_NOTIFY_FALLBACK: '0',
+          RCS_HOOK_DERIVED_SIGNALS: '0',
           TMUX: '',
           TMUX_PANE: '',
         },
@@ -608,7 +608,7 @@ exit 0
   });
 
   it('preserves the requested cwd through detached tmux launch when an unsupported SHELL value falls back away from rc-driven cwd drift', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-tmux-cwd-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-tmux-cwd-'));
     try {
       const home = join(wd, 'home');
       const fakeBin = join(wd, 'bin');
@@ -678,16 +678,16 @@ exit 0
       );
       await chmod(fakeTmuxPath, 0o755);
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--madmax', '--tmux'],
         {
           HOME: home,
           SHELL: '/definitely/missing-shell',
           PATH: `${fakeBin}:/usr/bin:/bin`,
-          OMX_AUTO_UPDATE: '0',
-          OMX_NOTIFY_FALLBACK: '0',
-          OMX_HOOK_DERIVED_SIGNALS: '0',
+          RCS_AUTO_UPDATE: '0',
+          RCS_NOTIFY_FALLBACK: '0',
+          RCS_HOOK_DERIVED_SIGNALS: '0',
           TMUX: '',
           TMUX_PANE: '',
         },
@@ -705,7 +705,7 @@ exit 0
   });
 
   it('falls back to /bin/sh for detached tmux launch when SHELL drifts to an unsupported path', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-launch-tmux-shell-fallback-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-launch-tmux-shell-fallback-'));
     try {
       const home = join(wd, 'home');
       const fakeBin = join(wd, 'bin');
@@ -773,16 +773,16 @@ exit 0
       );
       await chmod(fakeTmuxPath, 0o755);
 
-      const result = runOmx(
+      const result = runRcsCli(
         wd,
         ['--madmax', '--tmux'],
         {
           HOME: home,
           SHELL: '/bin/not-a-real-shell',
           PATH: `${fakeBin}:/usr/bin:/bin`,
-          OMX_AUTO_UPDATE: '0',
-          OMX_NOTIFY_FALLBACK: '0',
-          OMX_HOOK_DERIVED_SIGNALS: '0',
+          RCS_AUTO_UPDATE: '0',
+          RCS_NOTIFY_FALLBACK: '0',
+          RCS_HOOK_DERIVED_SIGNALS: '0',
           TMUX: '',
           TMUX_PANE: '',
         },

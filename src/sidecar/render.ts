@@ -60,7 +60,7 @@ export function renderSidecar(snapshot: SidecarSnapshot, options: RenderSidecarO
   const maxLines = Math.max(0, Math.floor(options.height ?? 0));
   return withColorSetting(options.color !== false, () => {
     const lines: string[] = [];
-    lines.push(cyan(bold(`OMX Sidecar · ${clean(snapshot.team_name)}`)));
+    lines.push(cyan(bold(`RCS Sidecar · ${clean(snapshot.team_name)}`)));
     lines.push(dim(`phase=${clean(snapshot.phase ?? 'unknown')} generated=${clean(snapshot.generated_at)}`));
     lines.push('');
 

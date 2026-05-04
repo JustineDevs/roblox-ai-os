@@ -18,6 +18,6 @@ try {
   }
 } catch (error) {
   console.warn(
-    `[omx] Postinstall bootstrap skipped after a non-fatal error: ${error instanceof Error ? error.message : String(error)}`,
+    `[rcs] Postinstall bootstrap skipped after a non-fatal error: ${error instanceof Error ? error.message : String(error)}`,
   );
 }

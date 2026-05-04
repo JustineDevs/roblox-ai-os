@@ -1,4 +1,5 @@
 import { execFileSync, spawnSync } from 'child_process';
+import { createRequire } from 'module';
 import { existsSync } from 'fs';
 import { mkdir, readFile, symlink, writeFile } from 'fs/promises';
 import { dirname, join } from 'path';
@@ -129,7 +130,7 @@ interface AutoresearchInstructionLedgerSummary {
 }
 
 const AUTORESEARCH_RESULTS_HEADER = 'iteration\tcommit\tpass\tscore\tstatus\tdescription\n';
-const AUTORESEARCH_WORKTREE_EXCLUDES = ['results.tsv', 'run.log', 'node_modules', '.omx/'];
+const AUTORESEARCH_WORKTREE_EXCLUDES = ['results.tsv', 'run.log', 'node_modules', '.rcs/'];
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -148,7 +149,7 @@ function buildRunId(missionSlug: string, runTag: string): string {
 }
 
 function activeRunStateFile(projectRoot: string): string {
-  return join(projectRoot, '.omx', 'state', 'autoresearch-state.json');
+  return join(projectRoot, '.rcs', 'state', 'autoresearch-state.json');
 }
 
 function trimContent(value: string, max = 4000): string {
@@ -172,6 +173,54 @@ function readGit(repoPath: string, args: string[]): string {
         ? err.stderr.toString('utf-8').trim()
         : '';
     throw new Error(stderr || `git ${args.join(' ')} failed`);
+  }
+}
+
+function splitShellLikeCommand(command: string): string[] {
+  const parts = command.match(/"[^"]*"|'[^']*'|\S+/g) ?? [];
+  return parts.map((part) => {
+    if ((part.startsWith('"') && part.endsWith('"')) || (part.startsWith("'") && part.endsWith("'"))) {
+      return part.slice(1, -1);
+    }
+    return part;
+  });
+}
+
+function resolveEvaluatorExecutable(command: string): string {
+  return command === 'node' ? process.execPath : command;
+}
+
+function runNodeScriptInProcess(cwd: string, scriptArg: string): {
+  status: number;
+  stdout: string;
+  stderr: string;
+  error?: Error;
+} {
+  const scriptPath = join(cwd, scriptArg);
+  const localRequire = createRequire(import.meta.url);
+  const resolvedScript = localRequire.resolve(scriptPath);
+  const previousCwd = process.cwd();
+  const previousWrite = process.stdout.write.bind(process.stdout);
+  let stdout = '';
+  try {
+    process.chdir(cwd);
+    process.stdout.write = ((chunk: string | Uint8Array) => {
+      stdout += typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf-8');
+      return true;
+    }) as typeof process.stdout.write;
+    delete localRequire.cache[resolvedScript];
+    localRequire(resolvedScript);
+    return { status: 0, stdout, stderr: '' };
+  } catch (error) {
+    return {
+      status: 1,
+      stdout,
+      stderr: error instanceof Error ? error.message : String(error),
+      error: error instanceof Error ? error : undefined,
+    };
+  } finally {
+    process.stdout.write = previousWrite;
+    process.chdir(previousCwd);
   }
 }
 
@@ -472,13 +521,23 @@ export async function runAutoresearchEvaluator(
   latestEvaluatorFile?: string,
 ): Promise<AutoresearchEvaluationRecord> {
   const ran_at = nowIso();
-  const result = spawnSync(contract.sandbox.evaluator.command, {
-    cwd: worktreePath,
-    encoding: 'utf-8',
-    shell: true,
-    maxBuffer: 1024 * 1024,
+  const [command, ...args] = splitShellLikeCommand(contract.sandbox.evaluator.command);
+  const executable = command ? resolveEvaluatorExecutable(command) : '';
+  const result = executable === process.execPath && args.length === 1
+    ? runNodeScriptInProcess(worktreePath, args[0]!)
+    : executable
+      ? spawnSync(executable, args, {
+      cwd: worktreePath,
+      encoding: 'utf-8',
+      maxBuffer: 1024 * 1024,
       windowsHide: true,
-    });
+    })
+      : {
+        status: 1,
+        stdout: '',
+        stderr: 'empty evaluator command',
+        error: undefined,
+      };
   const stdout = result.stdout?.trim() || '';
   const stderr = result.stderr?.trim() || '';
 
@@ -647,7 +706,7 @@ export function buildAutoresearchInstructions(
   },
 ): string {
   return [
-    '# OMX Autoresearch Supervisor Instructions',
+    '# RCS Autoresearch Supervisor Instructions',
     '',
     `Run ID: ${context.runId}`,
     `Mission directory: ${contract.missionDir}`,
@@ -749,7 +808,7 @@ export async function materializeAutoresearchMissionToWorktree(
 }
 
 export async function loadAutoresearchRunManifest(projectRoot: string, runId: string): Promise<AutoresearchRunManifest> {
-  const manifestFile = join(projectRoot, '.omx', 'logs', 'autoresearch', runId, 'manifest.json');
+  const manifestFile = join(projectRoot, '.rcs', 'logs', 'autoresearch', runId, 'manifest.json');
   if (!existsSync(manifestFile)) {
     throw new Error(`autoresearch_resume_manifest_missing:${runId}`);
   }
@@ -831,7 +890,7 @@ export async function prepareAutoresearchRuntime(
   const runId = buildRunId(contract.missionSlug, runTag);
   const baselineCommit = readGitShortHead(worktreePath);
   const branchName = readGit(worktreePath, ['symbolic-ref', '--quiet', '--short', 'HEAD']);
-  const runDir = join(projectRoot, '.omx', 'logs', 'autoresearch', runId);
+  const runDir = join(projectRoot, '.rcs', 'logs', 'autoresearch', runId);
   const stateFile = activeRunStateFile(projectRoot);
   const instructionsFile = join(runDir, 'bootstrap-instructions.md');
   const manifestFile = join(runDir, 'manifest.json');

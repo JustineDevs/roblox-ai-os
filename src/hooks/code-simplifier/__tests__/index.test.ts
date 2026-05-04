@@ -15,15 +15,15 @@ import {
 } from '../index.js';
 
 function makeTmpDir(): string {
-  const dir = join(tmpdir(), `omx-cs-test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  const dir = join(tmpdir(), `rcs-cs-test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
 
 function initGitRepo(dir: string): void {
   execSync('git init', { cwd: dir, stdio: 'ignore' });
-  execSync('git config user.email "omx-test@example.com"', { cwd: dir, stdio: 'ignore' });
-  execSync('git config user.name "OMX Test"', { cwd: dir, stdio: 'ignore' });
+  execSync('git config user.email "rcs-test@example.com"', { cwd: dir, stdio: 'ignore' });
+  execSync('git config user.name "RCS Test"', { cwd: dir, stdio: 'ignore' });
 
   writeFileSync(join(dir, 'tracked.ts'), 'export const tracked = 1;\n', 'utf-8');
   writeFileSync(join(dir, 'deleted.ts'), 'export const removed = true;\n', 'utf-8');
@@ -34,7 +34,7 @@ function initGitRepo(dir: string): void {
 }
 
 function writeEnabledCodeSimplifierConfig(homeDir: string): void {
-  const configDir = join(homeDir, '.omx');
+  const configDir = join(homeDir, '.rcs');
   mkdirSync(configDir, { recursive: true });
   writeFileSync(
     join(configDir, 'config.json'),

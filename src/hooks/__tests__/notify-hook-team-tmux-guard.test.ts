@@ -10,7 +10,7 @@ function isolatedChildEnv(fakeBinDir: string): NodeJS.ProcessEnv {
   const tmuxBin = join(fakeBinDir, 'tmux');
   return {
     PATH: `${fakeBinDir}:${process.env.PATH ?? ''}`,
-    OMX_TEST_TMUX_BIN: tmuxBin,
+    RCS_TEST_TMUX_BIN: tmuxBin,
     HOME: process.env.HOME,
     TMPDIR: process.env.TMPDIR,
     TEMP: process.env.TEMP,
@@ -45,7 +45,7 @@ function runSendPaneInputInChild(params: {
   });
   const script = `
     const input = ${payload};
-    process.env.OMX_TEST_TMUX_BIN = input.tmuxBin;
+    process.env.RCS_TEST_TMUX_BIN = input.tmuxBin;
     process.env.PATH = ${JSON.stringify('__CHILD_PATH__')};
     const { sendPaneInput } = await import(${JSON.stringify(params.moduleUrl)});
     const result = await sendPaneInput(input);
@@ -70,7 +70,7 @@ function runEvaluatePaneInjectionReadinessInChild(params: {
   });
   const script = `
     const input = ${payload};
-    process.env.OMX_TEST_TMUX_BIN = input.tmuxBin;
+    process.env.RCS_TEST_TMUX_BIN = input.tmuxBin;
     process.env.PATH = ${JSON.stringify('__CHILD_PATH__')};
     const { evaluatePaneInjectionReadiness } = await import(${JSON.stringify(params.moduleUrl)});
     const result = await evaluatePaneInjectionReadiness(input.paneTarget, input.options);
@@ -84,7 +84,7 @@ function runEvaluatePaneInjectionReadinessInChild(params: {
 
 describe('notify-hook team tmux guard bridge', () => {
   it('submits without typing when typePrompt=false', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-tmux-guard-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-tmux-guard-'));
     const fakeBinDir = join(cwd, 'fake-bin');
     const tmuxLogPath = join(cwd, 'tmux.log');
 
@@ -120,7 +120,7 @@ describe('notify-hook team tmux guard bridge', () => {
   });
 
   it('types then submits when typePrompt=true', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-tmux-guard-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-tmux-guard-'));
     const fakeBinDir = join(cwd, 'fake-bin');
     const tmuxLogPath = join(cwd, 'tmux.log');
 
@@ -154,7 +154,7 @@ describe('notify-hook team tmux guard bridge', () => {
   });
 
   it('reports pane_not_ready with capture context when the pane is not input-ready', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-tmux-guard-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-tmux-guard-'));
     const fakeBinDir = join(cwd, 'fake-bin');
     const tmuxLogPath = join(cwd, 'tmux.log');
 
@@ -208,7 +208,7 @@ exit 0
   });
 
   it('treats capture-pane failure as non-blocking for a live codex pane', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-tmux-guard-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-tmux-guard-'));
     const fakeBinDir = join(cwd, 'fake-bin');
     const tmuxLogPath = join(cwd, 'tmux.log');
 

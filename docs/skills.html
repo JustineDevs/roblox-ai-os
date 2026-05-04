@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Skills - oh-my-codex Docs</title>
+    <title>Skills - RCS Docs</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <header>
       <nav class="container nav" aria-label="Primary">
-        <a class="brand" href="./index.html">oh-my-codex</a>
+        <a class="brand" href="./index.html">RCS</a>
         <a href="./index.html">Home</a>
         <a href="./getting-started.html">Getting Started</a>
         <a href="./agents.html">Agents</a>
@@ -20,21 +20,56 @@
 
     <main class="container">
       <h1>Skills Reference</h1>
-      <p class="muted">All skills with category grouping and <code>$name</code> usage syntax.</p>
+      <p class="muted">Canonical creator workflow triggers, psychology-driven design skills, and installable support surfaces.</p>
 
-      <h2>Canonical Workflow</h2>
+      <h2>Creator Workflow</h2>
       <ol>
-        <li><code>$deep-interview</code> - clarify intent, boundaries, and non-goals when the task is still fuzzy.</li>
-        <li><code>$ralplan</code> - approve the plan and tradeoffs before execution.</li>
-        <li><code>$team</code> or <code>$ralph</code> - choose <code>$team</code> for coordinated parallel execution, or <code>$ralph</code> for a persistent completion loop.</li>
+        <li><code>$brief</code> - capture the request, goals, constraints, audience, genre, and outcome.</li>
+        <li><code>$blueprint</code> - generate structured design and planning artifacts.</li>
+        <li><code>$forge</code> - generate concrete creator-facing deliverables and system specs.</li>
+        <li><code>$crew</code> - orchestrate multi-role creator workflows.</li>
+        <li><code>$autoforge</code> - run an end-to-end creator workflow with minimal supervision.</li>
       </ol>
 
-      <h2>Execution Modes</h2>
+      <h2>Roblox Pre-Action Gate</h2>
       <ul>
-        <li><code>$team</code> - coordinated multi-agent execution for the approved plan</li>
-        <li><code>$ralph</code> - persistence loop until completion</li>
-        <li><code>$autopilot</code> - strict autonomous loop over <code>$ralplan -> $ralph -> $code-review</code>, returning to planning when review is not clean</li>
-        <li><code>$ultrawork</code> - max parallel execution</li>
+        <li>Before Roblox code generation, RCS must gather references, synthesize understanding, standardize terms, and design the modular file tree first.</li>
+        <li><code>PRE_ACTION_COMPLETE</code> must remain false until the pre-action artifact is complete.</li>
+        <li>Use <code>docs/reference/roblox-pre-action-protocol.md</code> and <code>templates/roblox/pre-action-plan.md</code> as the required planning surfaces.</li>
+      </ul>
+
+      <h2>Psychology Design</h2>
+      <ul>
+        <li><code>$brief:audience</code> - identify target fantasy, habits, desire language, session length, and return motive.</li>
+        <li><code>$brief:motivation</code> - rank progression, status, FOMO, mastery, and community by genre fit and risk.</li>
+        <li><code>$blueprint:psych</code> - generate the player psychology blueprint from desire backward.</li>
+        <li><code>$blueprint:loop</code> - define trigger → action → reward → repeat across session, daily, weekly, and comeback loops.</li>
+        <li><code>$blueprint:retention</code> - define D1/D7/D30 assumptions, cadence, and comeback hooks.</li>
+        <li><code>$blueprint:social</code> - define how the experience becomes a social machine.</li>
+        <li><code>$forge:reward-loop</code> - generate trigger/action/reward/escalation/reset/fail-state specs.</li>
+        <li><code>$forge:daily-loop</code> - generate daily return motivators and bounded streak/event logic.</li>
+        <li><code>$forge:event-loop</code> - generate limited-time event structures with urgency and re-entry logic.</li>
+        <li><code>$forge:progression</code> - generate XP, level, multiplier, prestige, rebirth, and unlock ladders.</li>
+        <li><code>$forge:status</code> - generate prestige and flex systems with visible milestones.</li>
+        <li><code>$forge:fomo</code> - generate urgency mechanics with fairness notes and anti-frustration guardrails.</li>
+        <li><code>$forge:mastery</code> - generate learning, optimization, discovery, and skill-expression systems.</li>
+        <li><code>$forge:community</code> - generate systems that make playing with others sticky.</li>
+      </ul>
+
+      <h2>Canonical Framework</h2>
+      <ul>
+        <li>Design from player desire backward.</li>
+        <li>Use the five drivers: progression, status, FOMO, mastery, community.</li>
+        <li>Map each driver through mechanic patterns, UI feedback, economy impact, retention impact, monetization fit, risk notes, and Roblox-fit notes.</li>
+      </ul>
+
+      <h2>Compatibility Runtime Layers</h2>
+      <p class="muted">These are advanced lower-level execution layers. They remain available for compatibility, diagnostics, and operator control, but they are not the primary creator workflow.</p>
+      <ul>
+        <li><code>$team</code> - lower-level coordinated team runtime retained for compatibility and operational control.</li>
+        <li><code>$ralph</code> - lower-level persistence loop retained for compatibility and runtime control.</li>
+        <li><code>$autopilot</code> - lower-level autonomous execution runtime retained for compatibility.</li>
+        <li><code>$ultrawork</code> - lower-level max-parallel execution mode retained for compatibility.</li>
         <li><code>$visual-verdict</code> - structured visual QA loop for screenshot/reference matching</li>
         <li><code>$ecomode</code> - token-efficient model routing</li>
         <li><code>$ultraqa</code> - test/verify/fix loop</li>
@@ -43,9 +78,10 @@
 
       <h2>Planning & Clarification</h2>
       <ul>
-        <li><code>$deep-interview</code> - requirements clarification before planning or execution</li>
-        <li><code>$ralplan</code> - planner/architect/critic consensus planning</li>
-        <li><code>$plan</code> - supporting strategic planning when you are not using the canonical path</li>
+        <li><code>$brief</code> - canonical briefing surface</li>
+        <li><code>$blueprint</code> - canonical planning surface</li>
+        <li><code>$plan</code> - supporting strategic planning when you are not using the canonical creator path</li>
+        <li><code>$deep-interview</code> and <code>$ralplan</code> remain available as compatibility/internal planning layers.</li>
       </ul>
 
       <h2>Agent Shortcuts</h2>
@@ -56,7 +92,7 @@
         <li><code>$build-fix</code></li>
         <li><code>$code-review</code></li>
         <li><code>$security-review</code></li>
-        <li><code>$visual-ralph</code></li>
+        <li><code>$visual-ralph</code> (advanced compatibility visual runtime)</li>
         <li><code>$frontend-ui-ux</code></li>
         <li><code>$git-master</code></li>
         <li><code>$review</code></li>
@@ -66,16 +102,18 @@
       <ul>
         <li><code>$cancel</code>, <code>$doctor</code>, <code>$help</code>, <code>$note</code>, <code>$trace</code></li>
         <li><code>$skill</code></li>
-        <li><code>$hud</code>, <code>$omx-setup</code>, <code>$configure-notifications</code></li>
-        <li><code>$ralph-init</code></li>
+        <li><code>$hud</code>, <code>$rcs-setup</code>, <code>$configure-notifications</code></li>
+        <li><code>$ralph-init</code> (legacy compatibility helper)</li>
         <li><code>$worker</code> (internal) - team worker protocol / lifecycle</li>
       </ul>
 
       <h2>Usage Examples</h2>
-      <pre><code>$deep-interview "clarify the auth change"
-$ralplan "approve the auth plan and review tradeoffs"
-$ralph "carry the approved plan to completion"
-$team 3:executor "execute the approved plan in parallel"
+      <pre><code>$brief "farming simulator for mobile-first Roblox sessions"
+$brief:motivation "rank the retention drivers"
+$blueprint:psych "design from player desire backward"
+$blueprint:loop "define session, daily, weekly, and comeback loops"
+$forge:progression "write the progression ladder"
+$forge:community "write the social retention systems"
 $code-review "review current branch"
 $doctor</code></pre>
 

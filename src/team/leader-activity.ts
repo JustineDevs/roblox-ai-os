@@ -5,7 +5,7 @@ const execFileAsync = promisify(execFile);
 import { existsSync, statSync } from 'node:fs';
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join, posix, resolve, sep, win32 } from 'node:path';
-import { omxStateDir } from '../utils/paths.js';
+import { rcsStateDir } from '../utils/paths.js';
 import { findGitLayout, readGitLayoutFile } from '../utils/git-layout.js';
 
 const MIN_GIT_ACTIVITY_CACHE_TTL_MS = 1000;
@@ -58,7 +58,7 @@ function resolveGitOutputPath(cwd: string, gitPath: string | null): string | nul
  * On Windows, read git info from .git/ files directly to avoid spawning
  * console windows (conhost.exe flicker on every poll cycle).
  *
- * See: https://github.com/Yeachan-Heo/oh-my-codex/issues/1100
+ * See: https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/1100
  */
 async function tryReadGitValue(cwd: string, args: string[]): Promise<string | null> {
   if (process.platform === 'win32') {
@@ -128,7 +128,7 @@ async function statMsIfExists(path: string | null): Promise<number> {
 function stateDirToProjectRoot(stateDir: string): string {
   let current = resolve(stateDir);
   while (current !== dirname(current)) {
-    if (basename(current) === '.omx') return dirname(current);
+    if (basename(current) === '.rcs') return dirname(current);
     current = dirname(current);
   }
   return dirname(dirname(stateDir));
@@ -190,7 +190,7 @@ async function readLeaderBranchGitActivityMsCached(
 }
 
 export function leaderRuntimeActivityPath(cwd: string): string {
-  return join(omxStateDir(cwd), 'leader-runtime-activity.json');
+  return join(rcsStateDir(cwd), 'leader-runtime-activity.json');
 }
 
 export async function recordLeaderRuntimeActivity(
@@ -199,7 +199,7 @@ export async function recordLeaderRuntimeActivity(
   teamName?: string,
   nowIso = new Date().toISOString(),
 ): Promise<void> {
-  const stateDir = omxStateDir(cwd);
+  const stateDir = rcsStateDir(cwd);
   await mkdir(stateDir, { recursive: true });
   const path = leaderRuntimeActivityPath(cwd);
   const existingRaw = await readJsonIfExists(path);

@@ -2,7 +2,7 @@
 
 ## Canonical Ralph state schema
 
-Ralph runtime state is stored at `.omx/state/{scope}/ralph-state.json` and MUST use this schema:
+Ralph runtime state is stored at `.rcs/state/{scope}/ralph-state.json` and MUST use this schema:
 
 - `active: boolean` **(required)**
 - `iteration: number` **(required while active)**
@@ -12,7 +12,7 @@ Ralph runtime state is stored at `.omx/state/{scope}/ralph-state.json` and MUST 
 - `completed_at?: ISO8601 string`
 - Optional linkage fields: `linked_ultrawork`, `linked_ecomode`, `linked_mode`
 - Optional ownership fields:
-  - `owner_omx_session_id`
+  - `owner_rcs_session_id`
   - `owner_codex_session_id`
   - `owner_codex_thread_id` (legacy compatibility only)
 - Optional tmux anchor fields:
@@ -22,7 +22,7 @@ Ralph runtime state is stored at `.omx/state/{scope}/ralph-state.json` and MUST 
   - `stop_reason`
 
 Ralph still owns its own mode state and there is no built-in
-`omx team ralph ...` linked launch path anymore. Under the multi-state
+`rcs team ralph ...` linked launch path anymore. Under the multi-state
 transition compatibility contract, `team + ralph` is an approved peer overlap,
 so Ralph may coexist with team when the canonical allowlist permits it. Other
 overlaps remain deny-by-default until they are explicitly approved. See
@@ -53,8 +53,8 @@ starting
 
 ## Frozen scope policy
 
-1. If `session_id` is present (explicit argument or current `.omx/state/session.json`), session scope (`.omx/state/sessions/{session_id}/...`) is authoritative.
-2. Root scope (`.omx/state/*.json`) is compatibility fallback only.
+1. If `session_id` is present (explicit argument or current `.rcs/state/session.json`), session scope (`.rcs/state/sessions/{session_id}/...`) is authoritative.
+2. Root scope (`.rcs/state/*.json`) is compatibility fallback only.
 3. Writes MUST target one scope (authoritative scope), never broadcast to unrelated sessions.
 4. If the current authoritative session already owns an active Ralph state, notify-hook MAY backfill missing owner metadata and refresh its tmux anchor fields in place.
 5. Same-Codex-session continuation MAY migrate a single active Ralph from one session scope into the current authoritative session scope when:
@@ -84,12 +84,12 @@ starting
 
 ## Canonical PRD/progress sources
 
-- Canonical PRD: `.omx/plans/prd-{slug}.md`
-- Startup validation source during the legacy-compatibility window: `.omx/prd.json`
-- Canonical progress ledger: `.omx/state/{scope}/ralph-progress.json`
+- Canonical PRD: `.rcs/plans/prd-{slug}.md`
+- Startup validation source during the legacy-compatibility window: `.rcs/prd.json`
+- Canonical progress ledger: `.rcs/state/{scope}/ralph-progress.json`
 - Legacy compatibility migration:
-  - `.omx/prd.json` migrates one-way to canonical PRD markdown when no canonical PRD exists.
-  - `.omx/progress.txt` migrates one-way to canonical `ralph-progress.json` when no canonical ledger exists.
+  - `.rcs/prd.json` migrates one-way to canonical PRD markdown when no canonical PRD exists.
+  - `.rcs/progress.txt` migrates one-way to canonical `ralph-progress.json` when no canonical ledger exists.
   - Legacy files remain read-only compatibility artifacts for one release cycle.
-- Canonical PRD markdown is storage/documentation-canonical today; Ralph `--prd` startup still validates machine-readable story approval state from `.omx/prd.json` until a structured replacement exists.
-- Prompt-side `$ralph` workflow activation is not equivalent to `omx ralph --prd ...`; it may seed Ralph mode state and routing context, but the PRD startup gate remains an explicit CLI-path contract.
+- Canonical PRD markdown is storage/documentation-canonical today; Ralph `--prd` startup still validates machine-readable story approval state from `.rcs/prd.json` until a structured replacement exists.
+- Prompt-side `$ralph` workflow activation is not equivalent to `rcs ralph --prd ...`; it may seed Ralph mode state and routing context, but the PRD startup gate remains an explicit CLI-path contract.

@@ -4,7 +4,7 @@
 
 import { existsSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
-import { codexHome, omxProjectMemoryPath } from '../utils/paths.js';
+import { codexHome, rcsProjectMemoryPath } from '../utils/paths.js';
 import {
   appendLogUnsafe,
   getWikiDir,
@@ -19,7 +19,7 @@ import {
 import { DEFAULT_WIKI_CONFIG, type WikiConfig, WIKI_SCHEMA_VERSION } from './types.js';
 
 function loadWikiConfig(root: string): WikiConfig {
-  const candidates = [join(root, '.omx-config.json'), join(codexHome(), '.omx-config.json')];
+  const candidates = [join(root, '.rcs-config.json'), join(codexHome(), '.rcs-config.json')];
 
   for (const path of candidates) {
     try {
@@ -62,7 +62,7 @@ export function onSessionStart(data: { cwd?: string }): { additionalContext?: st
     if (!index) return {};
 
     const summary = [
-      `[OMX Wiki: ${pages.length} pages at .omx/wiki/]`,
+      `[RCS Wiki: ${pages.length} pages at .rcs/wiki/]`,
       '',
       'Use wiki_query to search, wiki_list to browse, wiki_read to inspect pages.',
       '',
@@ -157,7 +157,7 @@ export function onPreCompact(data: { cwd?: string }): { additionalContext?: stri
 
 function feedProjectMemory(root: string): void {
   try {
-    const projectMemoryPath = omxProjectMemoryPath(root);
+    const projectMemoryPath = rcsProjectMemoryPath(root);
     if (!existsSync(projectMemoryPath)) return;
 
     const parsed = JSON.parse(readFileSync(projectMemoryPath, 'utf8')) as Record<string, unknown>;

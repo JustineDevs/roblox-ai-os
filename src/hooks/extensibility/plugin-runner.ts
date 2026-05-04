@@ -18,7 +18,7 @@ interface RunnerResult {
   error?: string;
 }
 
-const RESULT_PREFIX = '__OMX_PLUGIN_RESULT__ ';
+const RESULT_PREFIX = '__RCS_PLUGIN_RESULT__ ';
 
 async function readStdin(): Promise<string> {
   const chunks: Buffer[] = [];

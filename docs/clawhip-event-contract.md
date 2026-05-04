@@ -1,12 +1,12 @@
 # Clawhip Event Contract
 
-OMX emits hook events for clawhip through the existing hooks extensibility pipeline.
+RCS emits hook events for clawhip through the existing hooks extensibility pipeline.
 
 ## Canonical routing rule
 
 Route on `context.normalized_event`, not just raw `event`.
 
-This keeps clawhip stable even when OMX uses legacy-compatible raw event names such as `session-start`, `session-end`, and `session-idle`.
+This keeps clawhip stable even when RCS uses legacy-compatible raw event names such as `session-start`, `session-end`, and `session-idle`.
 
 ## Envelope
 
@@ -21,7 +21,7 @@ All events use the existing hook envelope:
 
 ## Common context fields
 
-When available, OMX includes these fields in `context`:
+When available, RCS includes these fields in `context`:
 
 - `normalized_event`
 - `session_name`
@@ -63,7 +63,7 @@ When available, OMX includes these fields in `context`:
 - native session lifecycle events are the canonical source for `started`, `blocked`, `run.heartbeat`, `run.blocked_on_user`, `run.blocked_on_system`, `finished`, and `failed`
 - team/runtime operational events add canonical worker-state signals for `worker.assigned`, `worker.stalled`, and `worker.recovered`
 - derived operational events add follow-up detail for `retry-needed`, `pr-created`, `test-*`, and `handoff-needed`
-- operational contexts resolve `session_name` from the OMX session id + worktree so session metadata stays stable across native and derived events
+- operational contexts resolve `session_name` from the RCS session id + worktree so session metadata stays stable across native and derived events
 
 ## Noise and duplicate controls
 

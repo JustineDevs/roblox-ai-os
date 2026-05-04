@@ -19,14 +19,14 @@ import {
 } from "./packaged-explore-harness-lock.js";
 import { checkExploreHarness } from "../doctor.js";
 
-function runOmx(
+function runRcsCli(
 	cwd: string,
 	argv: string[],
 	envOverrides: Record<string, string> = {},
 ): { status: number | null; stdout: string; stderr: string; error?: string } {
 	const testDir = dirname(fileURLToPath(import.meta.url));
 	const repoRoot = join(testDir, "..", "..", "..");
-	const omxBin = join(repoRoot, "dist", "cli", "omx.js");
+	const rcsBin = join(repoRoot, "dist", "cli", "rcs.js");
 	const mergedEnv = { ...process.env, ...envOverrides };
 	if (
 		typeof envOverrides.HOME === "string" &&
@@ -34,7 +34,7 @@ function runOmx(
 	) {
 		mergedEnv.USERPROFILE = envOverrides.HOME;
 	}
-	const r = spawnSync(process.execPath, [omxBin, ...argv], {
+	const r = spawnSync(process.execPath, [rcsBin, ...argv], {
 		cwd,
 		encoding: "utf-8",
 		env: mergedEnv,
@@ -51,18 +51,18 @@ function shouldSkipForSpawnPermissions(err?: string): boolean {
 	return typeof err === "string" && /(EPERM|EACCES)/i.test(err);
 }
 
-describe("omx doctor onboarding warning copy", () => {
+describe("rcs doctor onboarding warning copy", () => {
 	it("warns that the built-in explore harness is not ready on Windows", () => {
 		const check = checkExploreHarness("win32", {} as NodeJS.ProcessEnv);
 
 		assert.equal(check.name, "Explore Harness");
 		assert.equal(check.status, "warn");
 		assert.match(check.message, /not ready on Windows/i);
-		assert.match(check.message, /OMX_EXPLORE_BIN/);
+		assert.match(check.message, /RCS_EXPLORE_BIN/);
 	});
 
 	it("explains first-setup expectation for config and MCP onboarding warnings", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-copy-"));
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-copy-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
@@ -70,12 +70,12 @@ describe("omx doctor onboarding warning copy", () => {
 			await writeFile(
 				join(codexDir, "config.toml"),
 				`
-[mcp_servers.non_omx]
+[mcp_servers.non_rcs]
 command = "node"
 `.trimStart(),
 			);
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: join(home, ".codex"),
 			});
@@ -83,11 +83,11 @@ command = "node"
 			assert.equal(res.status, 0, res.stderr || res.stdout);
 			assert.match(
 				res.stdout,
-				/Config: config\.toml exists but no OMX entries yet \(expected before first setup; run "omx setup --force" once\)/,
+				/Config: config\.toml exists but no RCS entries yet \(expected before first setup; run "rcs setup --force" once\)/,
 			);
 			assert.match(
 				res.stdout,
-				/MCP Servers: 1 servers but no OMX servers yet \(expected before first setup; run "omx setup --force" once\)/,
+				/MCP Servers: 1 servers but no RCS servers yet \(expected before first setup; run "rcs setup --force" once\)/,
 			);
 		} finally {
 			await rm(wd, { recursive: true, force: true });
@@ -95,13 +95,13 @@ command = "node"
 	});
 
 	it("treats plugin-mode setup omissions as expected and verifies marketplace registration", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-plugin-mode-"));
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-plugin-mode-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
 			await mkdir(codexDir, { recursive: true });
 
-			const setupRes = runOmx(
+			const setupRes = runRcsCli(
 				wd,
 				["setup", "--scope", "user", "--plugin", "--force"],
 				{
@@ -112,7 +112,7 @@ command = "node"
 			if (shouldSkipForSpawnPermissions(setupRes.error)) return;
 			assert.equal(setupRes.status, 0, setupRes.stderr || setupRes.stdout);
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: codexDir,
 			});
@@ -125,11 +125,11 @@ command = "node"
 			);
 			assert.match(
 				res.stdout,
-				/Skills: plugin marketplace oh-my-codex-local registered; OMX skills are supplied by/,
+				/Skills: plugin marketplace roblox-ai-os-creator-skills-local registered; RCS skills are supplied by/,
 			);
 			assert.match(
 				res.stdout,
-				/MCP Servers: plugin mode uses plugin-scoped MCP metadata; setup-owned OMX MCP tables are intentionally omitted/,
+				/MCP Servers: plugin mode uses plugin-scoped MCP metadata; setup-owned RCS MCP tables are intentionally omitted/,
 			);
 			assert.doesNotMatch(res.stdout, /Prompts: prompts directory not found/);
 			assert.doesNotMatch(res.stdout, /Skills: skills directory not found/);
@@ -141,13 +141,13 @@ command = "node"
 	});
 
 	it("uses project-scoped plugin marketplace registration without legacy omission warnings", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-project-plugin-mode-"));
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-project-plugin-mode-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
 			await mkdir(codexDir, { recursive: true });
 
-			const setupRes = runOmx(
+			const setupRes = runRcsCli(
 				wd,
 				["setup", "--scope", "project", "--plugin", "--force"],
 				{
@@ -158,7 +158,7 @@ command = "node"
 			if (shouldSkipForSpawnPermissions(setupRes.error)) return;
 			assert.equal(setupRes.status, 0, setupRes.stderr || setupRes.stdout);
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: codexDir,
 			});
@@ -166,15 +166,15 @@ command = "node"
 			assert.equal(res.status, 0, res.stderr || res.stdout);
 			assert.match(
 				res.stdout,
-				/Resolved setup scope: project \(from \.omx\/setup-scope\.json\)/,
+				/Resolved setup scope: project \(from \.rcs\/setup-scope\.json\)/,
 			);
 			assert.match(
 				res.stdout,
-				/Resolved setup install mode: plugin \(from \.omx\/setup-scope\.json\)/,
+				/Resolved setup install mode: plugin \(from \.rcs\/setup-scope\.json\)/,
 			);
 			assert.match(
 				res.stdout,
-				/Skills: plugin marketplace oh-my-codex-local registered; OMX skills are supplied by/,
+				/Skills: plugin marketplace roblox-ai-os-creator-skills-local registered; RCS skills are supplied by/,
 			);
 			assert.match(
 				res.stdout,
@@ -182,7 +182,7 @@ command = "node"
 			);
 			assert.match(
 				res.stdout,
-				/MCP Servers: plugin mode uses plugin-scoped MCP metadata; setup-owned OMX MCP tables are intentionally omitted/,
+				/MCP Servers: plugin mode uses plugin-scoped MCP metadata; setup-owned RCS MCP tables are intentionally omitted/,
 			);
 			assert.doesNotMatch(res.stdout, /Prompts: prompts directory not found/);
 			assert.doesNotMatch(res.stdout, /Skills: skills directory not found/);
@@ -193,20 +193,20 @@ command = "node"
 	});
 
 	it("warns specifically when plugin-mode marketplace registration is missing", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-plugin-mode-missing-"));
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-plugin-mode-missing-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
-			await mkdir(join(wd, ".omx"), { recursive: true });
+			await mkdir(join(wd, ".rcs"), { recursive: true });
 			await mkdir(codexDir, { recursive: true });
 			await writeFile(
-				join(wd, ".omx", "setup-scope.json"),
+				join(wd, ".rcs", "setup-scope.json"),
 				JSON.stringify({ scope: "user", installMode: "plugin" }, null, 2) +
 					"\n",
 			);
 			await writeFile(join(codexDir, "config.toml"), "codex_hooks = true\n");
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: codexDir,
 			});
@@ -215,7 +215,7 @@ command = "node"
 			assert.match(res.stdout, /Resolved setup install mode: plugin/);
 			assert.match(
 				res.stdout,
-				/Skills: plugin mode selected, but Codex marketplace oh-my-codex-local is not registered; run "omx setup --plugin --force"/,
+				/Skills: plugin mode selected, but Codex marketplace roblox-ai-os-creator-skills-local is not registered; run "rcs setup --plugin --force"/,
 			);
 			assert.doesNotMatch(res.stdout, /Skills: skills directory not found/);
 			assert.doesNotMatch(res.stdout, /MCP Servers: no MCP servers configured/);
@@ -224,8 +224,8 @@ command = "node"
 		}
 	});
 
-	it("warns about retired omx_team_run config left behind after upgrade", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-copy-"));
+	it("warns about retired rcs_team_run config left behind after upgrade", async () => {
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-copy-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
@@ -233,14 +233,14 @@ command = "node"
 			await writeFile(
 				join(codexDir, "config.toml"),
 				`
-[mcp_servers.omx_team_run]
+[mcp_servers.rcs_team_run]
 command = "node"
 args = ["/tmp/team-server.js"]
 enabled = true
 `.trimStart(),
 			);
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: join(home, ".codex"),
 			});
@@ -248,16 +248,16 @@ enabled = true
 			assert.equal(res.status, 0, res.stderr || res.stdout);
 			assert.match(
 				res.stdout,
-				/Config: retired \[mcp_servers\.omx_team_run\] table still present; run "omx setup --force" to repair the config/,
+				/Config: retired \[mcp_servers\.rcs_team_run\] table still present; run "rcs setup --force" to repair the config/,
 			);
 			assert.match(
 				res.stdout,
-				/MCP Servers: 1 servers configured, but retired \[mcp_servers\.omx_team_run\] is not supported; run "omx setup --force" to repair the config/,
+				/MCP Servers: 1 servers configured, but retired \[mcp_servers\.rcs_team_run\] is not supported; run "rcs setup --force" to repair the config/,
 			);
-			assert.doesNotMatch(res.stdout, /Config: config\.toml has OMX entries/);
+			assert.doesNotMatch(res.stdout, /Config: config\.toml has RCS entries/);
 			assert.doesNotMatch(
 				res.stdout,
-				/MCP Servers: 1 servers but no OMX servers yet \(expected before first setup; run "omx setup --force" once\)/,
+				/MCP Servers: 1 servers but no RCS servers yet \(expected before first setup; run "rcs setup --force" once\)/,
 			);
 		} finally {
 			await rm(wd, { recursive: true, force: true });
@@ -265,7 +265,7 @@ enabled = true
 	});
 
 	it("warns when explore harness sources are packaged but cargo is unavailable", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-explore-copy-"));
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-explore-copy-"));
 		try {
 			await withPackagedExploreHarnessHidden(async () => {
 				const home = join(wd, "home");
@@ -281,7 +281,7 @@ enabled = true
 					encoding: "utf-8",
 				});
 
-				const res = runOmx(wd, ["doctor"], {
+				const res = runRcsCli(wd, ["doctor"], {
 					HOME: home,
 					CODEX_HOME: join(home, ".codex"),
 					PATH: fakeBin,
@@ -290,7 +290,7 @@ enabled = true
 				assert.equal(res.status, 0, res.stderr || res.stdout);
 				assert.match(
 					res.stdout,
-					/Explore Harness: (Rust harness sources are packaged, but no compatible packaged prebuilt or cargo was found \(install Rust or set OMX_EXPLORE_BIN for omx explore\)|not ready \(no packaged binary, OMX_EXPLORE_BIN, or cargo toolchain\))/,
+					/Explore Harness: (Rust harness sources are packaged, but no compatible packaged prebuilt or cargo was found \(install Rust or set RCS_EXPLORE_BIN for rcs explore\)|not ready \(no packaged binary, RCS_EXPLORE_BIN, or cargo toolchain\))/,
 				);
 			});
 		} finally {
@@ -300,7 +300,7 @@ enabled = true
 
 	it("passes explore harness check when a packaged native binary is present even without cargo", async () => {
 		await withPackagedExploreHarnessLock(async () => {
-			const wd = await mkdtemp(join(tmpdir(), "omx-doctor-explore-binary-"));
+			const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-explore-binary-"));
 			try {
 				const home = join(wd, "home");
 				const codexDir = join(home, ".codex");
@@ -309,12 +309,12 @@ enabled = true
 				const packagedBinary = join(
 					packageBinDir,
 					process.platform === "win32"
-						? "omx-explore-harness.exe"
-						: "omx-explore-harness",
+						? "rcs-explore-harness.exe"
+						: "rcs-explore-harness",
 				);
 				const packagedMeta = join(
 					packageBinDir,
-					"omx-explore-harness.meta.json",
+					"rcs-explore-harness.meta.json",
 				);
 				const hadExistingBinary = existsSync(packagedBinary);
 				const hadExistingMeta = existsSync(packagedMeta);
@@ -342,8 +342,8 @@ enabled = true
 					JSON.stringify({
 						binaryName:
 							process.platform === "win32"
-								? "omx-explore-harness.exe"
-								: "omx-explore-harness",
+								? "rcs-explore-harness.exe"
+								: "rcs-explore-harness",
 						platform: process.platform,
 						arch: process.arch,
 					}),
@@ -351,7 +351,7 @@ enabled = true
 				spawnSync("chmod", ["+x", packagedBinary], { encoding: "utf-8" });
 
 				try {
-					const res = runOmx(wd, ["doctor"], {
+					const res = runRcsCli(wd, ["doctor"], {
 						HOME: home,
 						CODEX_HOME: join(home, ".codex"),
 						PATH: fakeBin,
@@ -382,7 +382,7 @@ enabled = true
 	});
 
 	it("warns when explore routing is explicitly disabled in config.toml", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-explore-routing-"));
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-explore-routing-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
@@ -391,11 +391,11 @@ enabled = true
 				join(codexDir, "config.toml"),
 				`
 [shell_environment_policy.set]
-USE_OMX_EXPLORE_CMD = "off"
+USE_RCS_EXPLORE_CMD = "off"
 `.trimStart(),
 			);
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: join(home, ".codex"),
 			});
@@ -403,7 +403,7 @@ USE_OMX_EXPLORE_CMD = "off"
 			assert.equal(res.status, 0, res.stderr || res.stdout);
 			assert.match(
 				res.stdout,
-				/Explore routing: disabled in config\.toml; set USE_OMX_EXPLORE_CMD = "1" under \[shell_environment_policy\.set\] to restore default explore-first routing/,
+				/Explore routing: disabled in config\.toml; set USE_RCS_EXPLORE_CMD = "1" under \[shell_environment_policy\.set\] to restore default explore-first routing/,
 			);
 		} finally {
 			await rm(wd, { recursive: true, force: true });
@@ -411,7 +411,7 @@ USE_OMX_EXPLORE_CMD = "off"
 	});
 
 	it("warns when canonical and legacy skill roots overlap", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-skill-overlap-"));
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-skill-overlap-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
@@ -425,7 +425,7 @@ USE_OMX_EXPLORE_CMD = "off"
 			await writeFile(join(canonicalPlan, "SKILL.md"), "# canonical plan\n");
 			await writeFile(join(legacyHelp, "SKILL.md"), "# legacy help\n");
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: codexDir,
 			});
@@ -440,8 +440,8 @@ USE_OMX_EXPLORE_CMD = "off"
 		}
 	});
 
-	it("warns when hooks.json is missing OMX-managed native hook coverage", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-hooks-coverage-"));
+	it("warns when hooks.json is missing RCS-managed native hook coverage", async () => {
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-hooks-coverage-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
@@ -468,7 +468,7 @@ USE_OMX_EXPLORE_CMD = "off"
 				) + "\n",
 			);
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: codexDir,
 			});
@@ -476,15 +476,15 @@ USE_OMX_EXPLORE_CMD = "off"
 			assert.equal(res.status, 0, res.stderr || res.stdout);
 			assert.match(
 				res.stdout,
-				/Native hooks: hooks\.json is missing OMX-managed coverage for PreToolUse, PostToolUse, UserPromptSubmit, Stop; run "omx setup --force" to restore native hooks/,
+				/Native hooks: hooks\.json is missing RCS-managed coverage for PreToolUse, PostToolUse, UserPromptSubmit, Stop; run "rcs setup --force" to restore native hooks/,
 			);
 		} finally {
 			await rm(wd, { recursive: true, force: true });
 		}
 	});
 
-	it("warns when hooks.json is missing after OMX config was already installed", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-hooks-missing-"));
+	it("warns when hooks.json is missing after RCS config was already installed", async () => {
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-hooks-missing-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
@@ -492,13 +492,13 @@ USE_OMX_EXPLORE_CMD = "off"
 			await writeFile(
 				join(codexDir, "config.toml"),
 				`
-omx_enabled = true
-[mcp_servers.omx_state]
+rcs_enabled = true
+[mcp_servers.rcs_state]
 command = "node"
 `.trimStart(),
 			);
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: codexDir,
 			});
@@ -506,7 +506,7 @@ command = "node"
 			assert.equal(res.status, 0, res.stderr || res.stdout);
 			assert.match(
 				res.stdout,
-				/Native hooks: hooks\.json not found even though config\.toml has OMX entries; run "omx setup --force" to restore native hook coverage/,
+				/Native hooks: hooks\.json not found even though config\.toml has RCS entries; run "rcs setup --force" to restore native hook coverage/,
 			);
 		} finally {
 			await rm(wd, { recursive: true, force: true });
@@ -514,14 +514,14 @@ command = "node"
 	});
 
 	it("fails when hooks.json is invalid and native hook coverage cannot be read", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-hooks-invalid-"));
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-hooks-invalid-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
 			await mkdir(codexDir, { recursive: true });
 			await writeFile(join(codexDir, "hooks.json"), "{invalid json\n");
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: codexDir,
 			});
@@ -529,7 +529,7 @@ command = "node"
 			assert.equal(res.status, 0, res.stderr || res.stdout);
 			assert.match(
 				res.stdout,
-				/\[XX\] Native hooks: invalid hooks\.json; Codex may skip OMX hook coverage until "omx setup --force" repairs it/,
+				/\[XX\] Native hooks: invalid hooks\.json; Codex may skip RCS hook coverage until "rcs setup --force" repairs it/,
 			);
 		} finally {
 			await rm(wd, { recursive: true, force: true });
@@ -537,7 +537,7 @@ command = "node"
 	});
 
 	it("passes when legacy skill root is a link to the canonical skills directory", async () => {
-		const wd = await mkdtemp(join(tmpdir(), "omx-doctor-skill-link-"));
+		const wd = await mkdtemp(join(tmpdir(), "rcs-doctor-skill-link-"));
 		try {
 			const home = join(wd, "home");
 			const codexDir = join(home, ".codex");
@@ -553,7 +553,7 @@ command = "node"
 				process.platform === "win32" ? "junction" : "dir",
 			);
 
-			const res = runOmx(wd, ["doctor"], {
+			const res = runRcsCli(wd, ["doctor"], {
 				HOME: home,
 				CODEX_HOME: codexDir,
 			});

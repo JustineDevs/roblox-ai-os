@@ -1,5 +1,5 @@
 /**
- * AGENTS.md Runtime Overlay for oh-my-codex
+ * AGENTS.md Runtime Overlay for roblox-ai-os-creator-skills
  *
  * Dynamically injects session-specific context into AGENTS.md before Codex
  * launches, then strips it after session ends. Uses marker-bounded sections
@@ -20,8 +20,8 @@ import { existsSync } from "fs";
 import {
   codexHome,
   listInstalledSkillDirectories,
-  omxNotepadPath,
-  omxProjectMemoryPath,
+  rcsNotepadPath,
+  rcsProjectMemoryPath,
   packageRoot,
 } from "../utils/paths.js";
 import {
@@ -41,22 +41,22 @@ import {
   readVisibleSkillActiveState,
 } from "../state/skill-active.js";
 import {
-  OMX_GENERATED_AGENTS_MARKER,
-  OMX_MANAGED_AGENTS_END_MARKER,
-  OMX_MANAGED_AGENTS_START_MARKER,
+  RCS_GENERATED_AGENTS_MARKER,
+  RCS_MANAGED_AGENTS_END_MARKER,
+  RCS_MANAGED_AGENTS_START_MARKER,
 } from "../utils/agents-md.js";
 
-const START_MARKER = "<!-- OMX:RUNTIME:START -->";
-const END_MARKER = "<!-- OMX:RUNTIME:END -->";
-const WORKER_START_MARKER = "<!-- OMX:TEAM:WORKER:START -->";
-const WORKER_END_MARKER = "<!-- OMX:TEAM:WORKER:END -->";
+const START_MARKER = "<!-- RCS:RUNTIME:START -->";
+const END_MARKER = "<!-- RCS:RUNTIME:END -->";
+const WORKER_START_MARKER = "<!-- RCS:TEAM:WORKER:START -->";
+const WORKER_END_MARKER = "<!-- RCS:TEAM:WORKER:END -->";
 const MAX_OVERLAY_SIZE = 3500;
 const SKILL_REFERENCE_PATTERN = /\/skills\/([^/\s`]+)\/SKILL\.md\b/g;
 
 // ── Lock helpers ─────────────────────────────────────────────────────────────
 
 function lockPath(cwd: string): string {
-  return join(cwd, ".omx", "state", "agents-md.lock");
+  return join(cwd, ".rcs", "state", "agents-md.lock");
 }
 
 async function acquireLock(
@@ -269,7 +269,7 @@ async function readActiveModes(
 }
 
 async function readNotepadPriority(cwd: string): Promise<string> {
-  const notePath = omxNotepadPath(cwd);
+  const notePath = rcsNotepadPath(cwd);
   if (!existsSync(notePath)) return "";
 
   try {
@@ -289,7 +289,7 @@ async function readNotepadPriority(cwd: string): Promise<string> {
 }
 
 async function readProjectMemorySummary(cwd: string): Promise<string> {
-  const memPath = omxProjectMemoryPath(cwd);
+  const memPath = rcsProjectMemoryPath(cwd);
   if (!existsSync(memPath)) return "";
 
   try {
@@ -468,7 +468,7 @@ export async function generateOverlay(
 
     sections.push({
       key: "ralph_planning_gate",
-      text: `**Ralph Ralplan-First Gate:** ${gateStatus}\n- Requirement: complete planning artifacts before implementation/tool execution.\n- ${details}\n- Path: \`.omx/plans/\``,
+      text: `**Ralph Ralplan-First Gate:** ${gateStatus}\n- Requirement: complete planning artifacts before implementation/tool execution.\n- ${details}\n- Path: \`.rcs/plans/\``,
       optional: false,
     });
   }
@@ -632,27 +632,27 @@ function dropShadowedSkillReferenceLines(
   return keptLines.join("\n");
 }
 
-function stripOmxManagedAgentsBlocks(content: string): string {
+function stripRcsManagedAgentsBlocks(content: string): string {
   let next = content;
 
   while (true) {
-    const startIndex = next.indexOf(OMX_MANAGED_AGENTS_START_MARKER);
+    const startIndex = next.indexOf(RCS_MANAGED_AGENTS_START_MARKER);
     if (startIndex < 0) return next;
 
     const endIndex = next.indexOf(
-      OMX_MANAGED_AGENTS_END_MARKER,
-      startIndex + OMX_MANAGED_AGENTS_START_MARKER.length,
+      RCS_MANAGED_AGENTS_END_MARKER,
+      startIndex + RCS_MANAGED_AGENTS_START_MARKER.length,
     );
     if (endIndex < 0) return next;
 
-    const replaceEnd = endIndex + OMX_MANAGED_AGENTS_END_MARKER.length;
+    const replaceEnd = endIndex + RCS_MANAGED_AGENTS_END_MARKER.length;
     next = `${next.slice(0, startIndex)}${next.slice(replaceEnd)}`;
   }
 }
 
-function stripGeneratedOmxAgentsForSession(content: string): string {
-  const withoutManagedBlocks = stripOmxManagedAgentsBlocks(content).trim();
-  if (withoutManagedBlocks.includes(OMX_GENERATED_AGENTS_MARKER)) return "";
+function stripGeneratedRcsAgentsForSession(content: string): string {
+  const withoutManagedBlocks = stripRcsManagedAgentsBlocks(content).trim();
+  if (withoutManagedBlocks.includes(RCS_GENERATED_AGENTS_MARKER)) return "";
   return withoutManagedBlocks;
 }
 
@@ -685,7 +685,7 @@ export async function writeSessionModelInstructionsFile(
 
     let content = await readFile(sourcePath, "utf-8");
     content = stripOverlayContent(content).trim();
-    content = stripGeneratedOmxAgentsForSession(content);
+    content = stripGeneratedRcsAgentsForSession(content);
     if (sourcePath === join(codexHome(), "AGENTS.md")) {
       content = dropShadowedSkillReferenceLines(
         content,

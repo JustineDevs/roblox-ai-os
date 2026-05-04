@@ -29,15 +29,15 @@ describe('prompt-guidance fragments stay synced with generated surfaces', () => 
     for (const file of listTrackedAgentSurfaces()) {
       const content = read(file);
       assert.equal(
-        extract(content, '<!-- OMX:GUIDANCE:OPERATING:START -->', '<!-- OMX:GUIDANCE:OPERATING:END -->'),
+        extract(content, '<!-- RCS:GUIDANCE:OPERATING:START -->', '<!-- RCS:GUIDANCE:OPERATING:END -->'),
         operating,
       );
       assert.equal(
-        extract(content, '<!-- OMX:GUIDANCE:SPECIALIST-ROUTING:START -->', '<!-- OMX:GUIDANCE:SPECIALIST-ROUTING:END -->'),
+        extract(content, '<!-- RCS:GUIDANCE:SPECIALIST-ROUTING:START -->', '<!-- RCS:GUIDANCE:SPECIALIST-ROUTING:END -->'),
         specialistRouting,
       );
       assert.equal(
-        extract(content, '<!-- OMX:GUIDANCE:VERIFYSEQ:START -->', '<!-- OMX:GUIDANCE:VERIFYSEQ:END -->'),
+        extract(content, '<!-- RCS:GUIDANCE:VERIFYSEQ:START -->', '<!-- RCS:GUIDANCE:VERIFYSEQ:END -->'),
         verifySeq,
       );
     }
@@ -46,11 +46,11 @@ describe('prompt-guidance fragments stay synced with generated surfaces', () => 
   it('syncs executor guidance fragments', () => {
     const content = read('prompts/executor.md');
     assert.equal(
-      extract(content, '<!-- OMX:GUIDANCE:EXECUTOR:CONSTRAINTS:START -->', '<!-- OMX:GUIDANCE:EXECUTOR:CONSTRAINTS:END -->'),
+      extract(content, '<!-- RCS:GUIDANCE:EXECUTOR:CONSTRAINTS:START -->', '<!-- RCS:GUIDANCE:EXECUTOR:CONSTRAINTS:END -->'),
       read('docs/prompt-guidance-fragments/executor-constraints.md').trim(),
     );
     assert.equal(
-      extract(content, '<!-- OMX:GUIDANCE:EXECUTOR:OUTPUT:START -->', '<!-- OMX:GUIDANCE:EXECUTOR:OUTPUT:END -->'),
+      extract(content, '<!-- RCS:GUIDANCE:EXECUTOR:OUTPUT:START -->', '<!-- RCS:GUIDANCE:EXECUTOR:OUTPUT:END -->'),
       read('docs/prompt-guidance-fragments/executor-output.md').trim(),
     );
   });
@@ -58,15 +58,15 @@ describe('prompt-guidance fragments stay synced with generated surfaces', () => 
   it('syncs planner guidance fragments', () => {
     const content = read('prompts/planner.md');
     assert.equal(
-      extract(content, '<!-- OMX:GUIDANCE:PLANNER:CONSTRAINTS:START -->', '<!-- OMX:GUIDANCE:PLANNER:CONSTRAINTS:END -->'),
+      extract(content, '<!-- RCS:GUIDANCE:PLANNER:CONSTRAINTS:START -->', '<!-- RCS:GUIDANCE:PLANNER:CONSTRAINTS:END -->'),
       read('docs/prompt-guidance-fragments/planner-constraints.md').trim(),
     );
     assert.equal(
-      extract(content, '<!-- OMX:GUIDANCE:PLANNER:INVESTIGATION:START -->', '<!-- OMX:GUIDANCE:PLANNER:INVESTIGATION:END -->'),
+      extract(content, '<!-- RCS:GUIDANCE:PLANNER:INVESTIGATION:START -->', '<!-- RCS:GUIDANCE:PLANNER:INVESTIGATION:END -->'),
       read('docs/prompt-guidance-fragments/planner-investigation.md').trim(),
     );
     assert.equal(
-      extract(content, '<!-- OMX:GUIDANCE:PLANNER:OUTPUT:START -->', '<!-- OMX:GUIDANCE:PLANNER:OUTPUT:END -->'),
+      extract(content, '<!-- RCS:GUIDANCE:PLANNER:OUTPUT:START -->', '<!-- RCS:GUIDANCE:PLANNER:OUTPUT:END -->'),
       read('docs/prompt-guidance-fragments/planner-output.md').trim(),
     );
   });
@@ -74,11 +74,11 @@ describe('prompt-guidance fragments stay synced with generated surfaces', () => 
   it('syncs verifier guidance fragments', () => {
     const content = read('prompts/verifier.md');
     assert.equal(
-      extract(content, '<!-- OMX:GUIDANCE:VERIFIER:CONSTRAINTS:START -->', '<!-- OMX:GUIDANCE:VERIFIER:CONSTRAINTS:END -->'),
+      extract(content, '<!-- RCS:GUIDANCE:VERIFIER:CONSTRAINTS:START -->', '<!-- RCS:GUIDANCE:VERIFIER:CONSTRAINTS:END -->'),
       read('docs/prompt-guidance-fragments/verifier-constraints.md').trim(),
     );
     assert.equal(
-      extract(content, '<!-- OMX:GUIDANCE:VERIFIER:INVESTIGATION:START -->', '<!-- OMX:GUIDANCE:VERIFIER:INVESTIGATION:END -->'),
+      extract(content, '<!-- RCS:GUIDANCE:VERIFIER:INVESTIGATION:START -->', '<!-- RCS:GUIDANCE:VERIFIER:INVESTIGATION:END -->'),
       read('docs/prompt-guidance-fragments/verifier-investigation.md').trim(),
     );
   });

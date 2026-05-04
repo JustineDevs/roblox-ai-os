@@ -27,9 +27,9 @@ async function snapshotFiles(root: string): Promise<Map<string, string>> {
 }
 
 async function withFixture(test: (cwd: string, teamRoot: string) => Promise<void>): Promise<void> {
-  const cwd = await mkdtemp(join(tmpdir(), 'omx-sidecar-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'rcs-sidecar-'));
   try {
-    const teamRoot = join(cwd, '.omx', 'state', 'team', 'demo');
+    const teamRoot = join(cwd, '.rcs', 'state', 'team', 'demo');
     await mkdir(teamRoot, { recursive: true });
     await test(cwd, teamRoot);
   } finally {
@@ -44,7 +44,7 @@ describe('collectSidecarSnapshot', () => {
         name: 'demo',
         task: 'ship sidecar',
         worker_count: 2,
-        tmux_session: 'omx-demo',
+        tmux_session: 'rcs-demo',
         leader_pane_id: '%1',
         hud_pane_id: '%2',
         workers: [
@@ -93,7 +93,7 @@ describe('collectSidecarSnapshot', () => {
       assert.deepEqual(after, before, 'sidecar collector must be read-only over team state');
       assert.ok(!after.has('manifest.v2.json'), 'legacy config must not be migrated into a v2 manifest');
       assert.ok(snapshot);
-      assert.equal(snapshot.schema_version, 'omx.sidecar/v1');
+      assert.equal(snapshot.schema_version, 'rcs.sidecar/v1');
       assert.ok(!JSON.stringify(snapshot).includes('secret-claim-token'), 'claim tokens must never be exposed in sidecar snapshots');
       assert.deepEqual(snapshot.tasks.find((task) => task.id === '1')?.claim, { owner: 'worker-1', leased_until: '2026-04-27T02:10:00.000Z' });
       assert.equal(snapshot.phase, 'team-exec');
@@ -119,7 +119,7 @@ describe('collectSidecarSnapshot', () => {
       await writeJson(join(teamRoot, 'config.json'), {
         name: 'demo',
         task: 'ship sidecar',
-        tmux_session: 'omx-demo',
+        tmux_session: 'rcs-demo',
         workers: [
           { name: 'worker-1', index: 1, role: 'executor' },
           { name: '../escape', index: 2, role: 'executor' },
@@ -142,7 +142,7 @@ describe('collectSidecarSnapshot', () => {
       await writeJson(join(teamRoot, 'config.json'), {
         name: 'demo',
         task: 'ship sidecar',
-        tmux_session: 'omx-demo',
+        tmux_session: 'rcs-demo',
         workers: [{ name: 'worker-1', index: 1, role: 'executor' }],
       });
       await mkdir(join(teamRoot, 'events'), { recursive: true });

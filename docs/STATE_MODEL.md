@@ -1,6 +1,17 @@
-# OMX State Model
+# RCS State Model
 
-This document explains how OMX tracks workflow/skill state, how transition rules are evaluated, and which transitions are commonly allowed or blocked.
+This document explains how RCS tracks workflow/skill state, how transition rules are evaluated, and which transitions are commonly allowed or blocked.
+
+This is an **operator/runtime reference**, not the primary creator onboarding surface.
+Public creator workflow language should lead with:
+
+- `$brief`
+- `$blueprint`
+- `$forge`
+- `$crew`
+- `$autoforge`
+
+The mode identifiers described below (`deep-interview`, `ralplan`, `ralph`, `team`, `autopilot`, and related runtime names) are lower-level runtime identifiers retained for execution, compatibility, and diagnostics.
 
 ## Goals
 
@@ -13,16 +24,16 @@ This document explains how OMX tracks workflow/skill state, how transition rules
 
 ### 1. Per-mode state files — authoritative
 
-Authoritative workflow state lives in per-mode files under `.omx/state/`:
+Authoritative workflow state lives in per-mode files under `.rcs/state/`:
 
-- root scope: `.omx/state/<mode>-state.json`
-- session scope: `.omx/state/sessions/<session_id>/<mode>-state.json`
+- root scope: `.rcs/state/<mode>-state.json`
+- session scope: `.rcs/state/sessions/<session_id>/<mode>-state.json`
 
 Examples:
 
-- `.omx/state/ralplan-state.json`
-- `.omx/state/sessions/<session_id>/ralph-state.json`
-- `.omx/state/team-state.json`
+- `.rcs/state/ralplan-state.json`
+- `.rcs/state/sessions/<session_id>/ralph-state.json`
+- `.rcs/state/team-state.json`
 
 These files determine whether a workflow mode is active, completed, cancelled, or failed. Those mode phases are not always identical to the user-facing terminal lifecycle vocabulary; see the explicit terminal lifecycle section below for that compatibility boundary.
 
@@ -32,8 +43,8 @@ These files determine whether a workflow mode is active, completed, cancelled, o
 
 Locations:
 
-- `.omx/state/skill-active-state.json`
-- `.omx/state/sessions/<session_id>/skill-active-state.json`
+- `.rcs/state/skill-active-state.json`
+- `.rcs/state/sessions/<session_id>/skill-active-state.json`
 
 ### 3. Session precedence
 
@@ -70,7 +81,7 @@ Recommended read precedence for terminal lifecycle interpretation:
 2. legacy `run_outcome`
 3. compatibility inference from `current_phase`, question metadata, and persisted error/completion fields
 
-`blocked_on_user` is also compatibility-only. When surrounding question metadata proves OMX asked a blocking question, classify it as `askuserQuestion`; otherwise treat it as a user-wait compatibility signal instead of exposing it as the canonical vocabulary directly.
+`blocked_on_user` is also compatibility-only. When surrounding question metadata proves RCS asked a blocking question, classify it as `askuserQuestion`; otherwise treat it as a user-wait compatibility signal instead of exposing it as the canonical vocabulary directly.
 
 ## Core files
 
@@ -140,7 +151,7 @@ Examples:
 
 The source mode is terminalized and the destination becomes active.
 
-Current allowlisted forward handoffs:
+Current allowlisted forward handoffs between lower-level runtime identifiers:
 
 - `deep-interview -> ralplan`
 - `ralplan -> team`
@@ -152,7 +163,7 @@ Current allowlisted forward handoffs:
 
 The requested transition is not allowed and no state is changed.
 
-## Common transition rules
+## Common transition rules for runtime identifiers
 
 | From | To | Result |
 |---|---|---|
@@ -170,13 +181,13 @@ The requested transition is not allowed and no state is changed.
 
 ## Planning-like vs execution-like
 
-### Planning-like
+### Planning-like runtime identifiers
 
 - `deep-interview`
 - `ralplan`
 - `autoresearch`
 
-### Execution-like
+### Execution-like runtime identifiers
 
 - `team`
 - `ralph`
@@ -190,7 +201,7 @@ Execution-like -> planning-like rollback auto-complete is forbidden. The denial 
 
 ## Multi-skill prompt-submit behavior
 
-A single prompt can explicitly invoke multiple contiguous `$skill` tokens.
+A single prompt can explicitly invoke multiple contiguous lower-level runtime `$skill` tokens.
 
 Example:
 
@@ -205,6 +216,8 @@ Expected result:
 3. final active skill remains `ralplan`
 4. deferred execution skills are surfaced in native-hook output for traceability
 5. native hook output should describe all explicit skills, not only the primary one
+
+Public creator-facing UX should still prefer the canonical creator workflow family. This multi-runtime example exists for transition/debugging clarity, not as the recommended onboarding path.
 
 Recommended message shape:
 

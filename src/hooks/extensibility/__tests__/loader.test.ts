@@ -17,8 +17,8 @@ import {
 } from '../loader.js';
 
 describe('hooksDir', () => {
-  it('returns .omx/hooks under cwd', () => {
-    assert.equal(hooksDir('/project'), join('/project', '.omx', 'hooks'));
+  it('returns .rcs/hooks under cwd', () => {
+    assert.equal(hooksDir('/project'), join('/project', '.rcs', 'hooks'));
   });
 });
 
@@ -99,11 +99,11 @@ describe('resolveHookPluginTimeoutMs', () => {
 });
 
 describe('ensureHooksDir', () => {
-  it('creates .omx/hooks directory and returns path', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ensure-'));
+  it('creates .rcs/hooks directory and returns path', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ensure-'));
     try {
       const dir = await ensureHooksDir(cwd);
-      assert.equal(dir, join(cwd, '.omx', 'hooks'));
+      assert.equal(dir, join(cwd, '.rcs', 'hooks'));
       assert.ok(existsSync(dir));
     } finally {
       await rm(cwd, { recursive: true, force: true });
@@ -113,7 +113,7 @@ describe('ensureHooksDir', () => {
 
 describe('discoverHookPlugins', () => {
   it('returns empty array when hooks directory does not exist', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-discover-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-discover-'));
     try {
       const plugins = await discoverHookPlugins(cwd);
       assert.deepEqual(plugins, []);
@@ -123,9 +123,9 @@ describe('discoverHookPlugins', () => {
   });
 
   it('discovers .mjs files in hooks directory', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-discover-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-discover-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(join(dir, 'alpha.mjs'), 'export function onHookEvent() {}');
       await writeFile(join(dir, 'beta.mjs'), 'export function onHookEvent() {}');
@@ -143,9 +143,9 @@ describe('discoverHookPlugins', () => {
   });
 
   it('sorts plugins alphabetically by file name', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-discover-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-discover-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(join(dir, 'z-last.mjs'), 'export function onHookEvent() {}');
       await writeFile(join(dir, 'a-first.mjs'), 'export function onHookEvent() {}');
@@ -159,9 +159,9 @@ describe('discoverHookPlugins', () => {
   });
 
   it('sanitizes plugin id from file name', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-discover-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-discover-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(join(dir, 'My Plugin!!(v2).mjs'), 'export function onHookEvent() {}');
 
@@ -174,9 +174,9 @@ describe('discoverHookPlugins', () => {
   });
 
   it('adds deterministic hash suffix when sanitized IDs collide', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-discover-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-discover-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(join(dir, 'my.plugin.mjs'), 'export function onHookEvent() {}');
       await writeFile(join(dir, 'my plugin.mjs'), 'export function onHookEvent() {}');
@@ -198,9 +198,9 @@ describe('discoverHookPlugins', () => {
   });
 
   it('skips subdirectories', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-discover-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-discover-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(join(dir, 'subdir.mjs'), { recursive: true });
       await writeFile(join(dir, 'real.mjs'), 'export function onHookEvent() {}');
 
@@ -215,7 +215,7 @@ describe('discoverHookPlugins', () => {
 
 describe('validateHookPluginExport', () => {
   it('returns valid for plugin with onHookEvent export', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-validate-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-validate-'));
     try {
       const pluginPath = join(cwd, 'valid.mjs');
       await writeFile(pluginPath, 'export function onHookEvent() {}');
@@ -228,7 +228,7 @@ describe('validateHookPluginExport', () => {
   });
 
   it('returns invalid for plugin without onHookEvent export', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-validate-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-validate-'));
     try {
       const pluginPath = join(cwd, 'invalid.mjs');
       await writeFile(pluginPath, 'export function hello() {}');
@@ -248,7 +248,7 @@ describe('validateHookPluginExport', () => {
   });
 
   it('returns invalid for plugin with syntax error', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-validate-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-validate-'));
     try {
       const pluginPath = join(cwd, 'broken.mjs');
       await writeFile(pluginPath, 'export function {{{');
@@ -263,7 +263,7 @@ describe('validateHookPluginExport', () => {
 
 describe('loadHookPluginDescriptors', () => {
   it('returns empty array when no hooks directory', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-load-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-load-'));
     try {
       const descriptors = await loadHookPluginDescriptors(cwd);
       assert.deepEqual(descriptors, []);
@@ -273,9 +273,9 @@ describe('loadHookPluginDescriptors', () => {
   });
 
   it('returns descriptors with validation status', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-load-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-load-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(join(dir, 'good.mjs'), 'export function onHookEvent() {}');
       await writeFile(join(dir, 'bad.mjs'), 'export const x = 1;');

@@ -46,63 +46,87 @@ describe('keyword detector swarm/team compatibility', () => {
   });
 
   it('recognizes plugin-prefixed explicit skill tokens', () => {
-    const matches = detectKeywords('$oh-my-codex:ralplan implement issue #1307');
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:ralplan implement issue #1307');
     assert.deepEqual(matches.map((m) => m.skill), ['ralplan']);
-    assert.equal(matches[0]?.keyword, '$oh-my-codex:ralplan');
+    assert.equal(matches[0]?.keyword, '$roblox-ai-os-creator-skills:ralplan');
   });
 
   it('supports mixed-form explicit multi-skill invocation ordering and dedupe', () => {
-    const matches = detectKeywords('$oh-my-codex:ralplan $ralph $oh-my-codex:ralplan ship this');
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:ralplan $ralph $roblox-ai-os-creator-skills:ralplan ship this');
     assert.deepEqual(matches.map((m) => m.skill), ['ralplan', 'ralph']);
-    assert.deepEqual(matches.map((m) => m.keyword), ['$oh-my-codex:ralplan', '$ralph']);
+    assert.deepEqual(matches.map((m) => m.keyword), ['$roblox-ai-os-creator-skills:ralplan', '$ralph']);
   });
 
   it('keeps recognized tokens on both sides of an unknown plugin-prefixed token in the same contiguous block', () => {
-    const matches = detectKeywords('$oh-my-codex:ralplan $oh-my-codex:unknown $ralph');
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:ralplan $roblox-ai-os-creator-skills:unknown $ralph');
     assert.deepEqual(matches.map((m) => m.skill), ['ralplan', 'ralph']);
-    assert.deepEqual(matches.map((m) => m.keyword), ['$oh-my-codex:ralplan', '$ralph']);
+    assert.deepEqual(matches.map((m) => m.keyword), ['$roblox-ai-os-creator-skills:ralplan', '$ralph']);
   });
 
   it('limits mixed-form explicit invocation to the first contiguous block', () => {
-    const matches = detectKeywords('$oh-my-codex:ralplan text $ralph');
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:ralplan text $ralph');
     assert.deepEqual(matches.map((m) => m.skill), ['ralplan']);
   });
 
   it('normalizes plugin-prefixed alias tokens', () => {
-    const swarm = detectPrimaryKeyword('$oh-my-codex:swarm handle this');
+    const swarm = detectPrimaryKeyword('$roblox-ai-os-creator-skills:swarm handle this');
     assert.ok(swarm);
     assert.equal(swarm.skill, 'team');
-    assert.equal(swarm.keyword, '$oh-my-codex:swarm');
+    assert.equal(swarm.keyword, '$roblox-ai-os-creator-skills:swarm');
 
-    const ulw = detectPrimaryKeyword('$oh-my-codex:ulw continue');
+    const ulw = detectPrimaryKeyword('$roblox-ai-os-creator-skills:ulw continue');
     assert.ok(ulw);
     assert.equal(ulw.skill, 'ultrawork');
-    assert.equal(ulw.keyword, '$oh-my-codex:ulw');
+    assert.equal(ulw.keyword, '$roblox-ai-os-creator-skills:ulw');
   });
 
   it('supports plugin-prefixed hyphenated workflow tokens', () => {
-    const deepInterview = detectPrimaryKeyword('$oh-my-codex:deep-interview gather requirements');
+    const deepInterview = detectPrimaryKeyword('$roblox-ai-os-creator-skills:deep-interview gather requirements');
     assert.ok(deepInterview);
     assert.equal(deepInterview.skill, 'deep-interview');
-    assert.equal(deepInterview.keyword, '$oh-my-codex:deep-interview');
+    assert.equal(deepInterview.keyword, '$roblox-ai-os-creator-skills:deep-interview');
 
-    const codeReview = detectPrimaryKeyword('$oh-my-codex:code-review before merge');
+    const codeReview = detectPrimaryKeyword('$roblox-ai-os-creator-skills:code-review before merge');
     assert.ok(codeReview);
     assert.equal(codeReview.skill, 'code-review');
-    assert.equal(codeReview.keyword, '$oh-my-codex:code-review');
+    assert.equal(codeReview.keyword, '$roblox-ai-os-creator-skills:code-review');
+  });
+
+  it('supports explicit colon-form creator psychology commands', () => {
+    const audience = detectPrimaryKeyword('$brief:audience farming simulator audience fit');
+    assert.ok(audience);
+    assert.equal(audience.skill, 'brief-audience');
+    assert.equal(audience.keyword, '$brief:audience');
+
+    const progression = detectPrimaryKeyword('$forge:progression write the ladder');
+    assert.ok(progression);
+    assert.equal(progression.skill, 'forge-progression');
+    assert.equal(progression.keyword, '$forge:progression');
+  });
+
+  it('supports plugin-prefixed creator psychology commands', () => {
+    const match = detectPrimaryKeyword('$roblox-ai-os-creator-skills:brief:audience map the audience');
+    assert.ok(match);
+    assert.equal(match.skill, 'brief-audience');
+    assert.equal(match.keyword, '$roblox-ai-os-creator-skills:brief:audience');
+  });
+
+  it('rejects arbitrary explicit prefixes that are not allowlisted namespaces', () => {
+    assert.equal(detectPrimaryKeyword('$anything:team ship it'), null);
+    assert.equal(detectPrimaryKeyword('$foo:brief:audience map the audience'), null);
   });
 
   it('does not fall back to implicit keyword detection when an unknown plugin-prefixed $token is present', () => {
-    const matches = detectKeywords('$oh-my-codex:maer-thinking 다시 설명해봐 keep going');
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:maer-thinking 다시 설명해봐 keep going');
     assert.deepEqual(matches, []);
-    const primary = detectPrimaryKeyword('$oh-my-codex:maer-thinking 다시 설명해봐 keep going');
+    const primary = detectPrimaryKeyword('$roblox-ai-os-creator-skills:maer-thinking 다시 설명해봐 keep going');
     assert.equal(primary, null);
   });
 
   it('suppresses implicit detection when an unknown plugin-prefixed token is present with other keyword text', () => {
-    const matches = detectKeywords('$oh-my-codex:unknown analyze this issue');
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:unknown analyze this issue');
     assert.deepEqual(matches, []);
-    assert.equal(detectPrimaryKeyword('$oh-my-codex:unknown analyze this issue'), null);
+    assert.equal(detectPrimaryKeyword('$roblox-ai-os-creator-skills:unknown analyze this issue'), null);
   });
 
   it('does not auto-detect keywords for explicit /prompts invocation without $skills', () => {
@@ -177,7 +201,7 @@ describe('keyword detector swarm/team compatibility', () => {
   });
 
   it('does not trigger team keyword from filesystem/team-state path text', () => {
-    const match = detectPrimaryKeyword('You have 1 new message(s). Read .omx/state/team/execute-plan/mailbox/worker-3.json, act now, reply with concrete progress, then continue assigned work or next feasible task.');
+    const match = detectPrimaryKeyword('You have 1 new message(s). Read .rcs/state/team/execute-plan/mailbox/worker-3.json, act now, reply with concrete progress, then continue assigned work or next feasible task.');
     assert.equal(match, null);
   });
 
@@ -240,7 +264,7 @@ describe('keyword detector swarm/team compatibility', () => {
   it('does not trigger deep-interview from cleanup or state-management mentions', () => {
     assert.equal(detectPrimaryKeyword('clear deep interview state before continuing'), null);
     assert.equal(detectPrimaryKeyword('cleanup stale deep-interview state after session clear'), null);
-    assert.equal(detectPrimaryKeyword('remove the stale deep interview lock from .omx/state'), null);
+    assert.equal(detectPrimaryKeyword('remove the stale deep interview lock from .rcs/state'), null);
   });
 
   it('maps "gather requirements" to deep-interview skill', () => {
@@ -380,13 +404,27 @@ describe('keyword registry coverage', () => {
     assert.ok(registryKeywords.has('wiki add'));
     assert.ok(registryKeywords.has('wiki lint'));
     assert.ok(registryKeywords.has('$autoresearch'));
+    assert.ok(registryKeywords.has('$brief:audience'));
+    assert.ok(registryKeywords.has('$brief:motivation'));
+    assert.ok(registryKeywords.has('$blueprint:psych'));
+    assert.ok(registryKeywords.has('$blueprint:loop'));
+    assert.ok(registryKeywords.has('$blueprint:retention'));
+    assert.ok(registryKeywords.has('$blueprint:social'));
+    assert.ok(registryKeywords.has('$forge:reward-loop'));
+    assert.ok(registryKeywords.has('$forge:daily-loop'));
+    assert.ok(registryKeywords.has('$forge:event-loop'));
+    assert.ok(registryKeywords.has('$forge:progression'));
+    assert.ok(registryKeywords.has('$forge:status'));
+    assert.ok(registryKeywords.has('$forge:fomo'));
+    assert.ok(registryKeywords.has('$forge:mastery'));
+    assert.ok(registryKeywords.has('$forge:community'));
   });
 });
 
 describe('keyword detector skill-active-state lifecycle', () => {
   it('writes skill-active-state.json with ralplan phase when autopilot keyword activates', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
@@ -413,7 +451,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
         turn_id: 'turn-1',
       }]);
       assert.equal(result.initialized_mode, 'autopilot');
-      assert.equal(result.initialized_state_path, '.omx/state/sessions/sess-1/autopilot-state.json');
+      assert.equal(result.initialized_state_path, '.rcs/state/sessions/sess-1/autopilot-state.json');
 
       const persisted = JSON.parse(await readFile(join(stateDir, SKILL_ACTIVE_STATE_FILE), 'utf-8')) as {
         skill: string;
@@ -472,8 +510,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('adds approved workflow overlaps without deleting the existing canonical state', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-overlap-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-overlap-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
@@ -514,8 +552,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('keeps a session-scoped Ralph activation out of the root canonical state for other sessions', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-ralph-isolation-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralph-isolation-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
@@ -556,8 +594,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('hard-fails denied workflow overlaps without mutating current state', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-deny-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-deny-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
@@ -581,8 +619,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       assert.ok(denied?.transition_error);
       assert.match(String(denied?.transition_error), /Unsupported workflow overlap: team \+ autopilot\./);
-      assert.match(String(denied?.transition_error), /`omx state clear --mode <mode>`/);
-      assert.match(String(denied?.transition_error), /`omx_state\.\*` MCP tools/);
+      assert.match(String(denied?.transition_error), /`rcs state clear --mode <mode>`/);
+      assert.match(String(denied?.transition_error), /`rcs_state\.\*` MCP tools/);
 
       const persisted = JSON.parse(
         await readFile(join(stateDir, 'sessions', 'sess-deny', SKILL_ACTIVE_STATE_FILE), 'utf-8'),
@@ -598,8 +636,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('denies prompt-submit overlaps against the current session-visible canonical state', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-session-visible-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-session-visible-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(join(stateDir, 'sessions', 'sess-visible'), { recursive: true });
       await writeFile(
@@ -647,8 +685,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('activates ultrawork mode from the Korean keyboard typo for ulw', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-ulw-ko-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ulw-ko-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
@@ -664,7 +702,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
       assert.equal(result.skill, 'ultrawork');
       assert.equal(result.keyword, 'ulw');
       assert.equal(result.initialized_mode, 'ultrawork');
-      assert.equal(result.initialized_state_path, '.omx/state/sessions/sess-ulw-ko/ultrawork-state.json');
+      assert.equal(result.initialized_state_path, '.rcs/state/sessions/sess-ulw-ko/ultrawork-state.json');
 
       const modeState = JSON.parse(
         await readFile(join(stateDir, 'sessions', 'sess-ulw-ko', 'ultrawork-state.json'), 'utf-8'),
@@ -678,8 +716,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('seeds executing state for autoresearch prompt-submit activation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-autoresearch-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-autoresearch-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
@@ -693,7 +731,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
       assert.equal(result.skill, 'autoresearch');
       assert.equal(result.phase, 'executing');
       assert.equal(result.initialized_mode, 'autoresearch');
-      assert.equal(result.initialized_state_path, '.omx/state/sessions/sess-autoresearch/autoresearch-state.json');
+      assert.equal(result.initialized_state_path, '.rcs/state/sessions/sess-autoresearch/autoresearch-state.json');
 
       const modeState = JSON.parse(
         await readFile(join(stateDir, 'sessions', 'sess-autoresearch', 'autoresearch-state.json'), 'utf-8'),
@@ -707,8 +745,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('preserves the planning skill when ralplan and autoresearch are invoked together', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-autoresearch-planning-precedence-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-autoresearch-planning-precedence-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
@@ -731,8 +769,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('captures tmux_pane_id in seeded ralplan prompt-submit state when TMUX_PANE is present', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-ralplan-pane-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralplan-pane-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     const previousPane = process.env.TMUX_PANE;
     try {
       await mkdir(stateDir, { recursive: true });
@@ -757,8 +795,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('captures tmux_pane_id in deep-interview prompt-submit state when TMUX_PANE is present', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-deep-interview-pane-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-deep-interview-pane-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     const previousPane = process.env.TMUX_PANE;
     try {
       await mkdir(stateDir, { recursive: true });
@@ -783,8 +821,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('preserves an existing deep-interview tmux_pane_id when prompt-submit re-seeds state without TMUX_PANE', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-deep-interview-preserve-pane-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-deep-interview-preserve-pane-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     const sessionId = 'sess-deep-interview-preserve-pane';
     const previousPane = process.env.TMUX_PANE;
     try {
@@ -825,8 +863,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('seeds first-class state for ralplan prompt-submit activation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-ralplan-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralplan-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
@@ -839,7 +877,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
       assert.ok(result);
       assert.equal(result.skill, 'ralplan');
       assert.equal(result.initialized_mode, 'ralplan');
-      assert.equal(result.initialized_state_path, '.omx/state/sessions/sess-ralplan/ralplan-state.json');
+      assert.equal(result.initialized_state_path, '.rcs/state/sessions/sess-ralplan/ralplan-state.json');
 
       const modeState = JSON.parse(
         await readFile(join(stateDir, 'sessions', 'sess-ralplan', 'ralplan-state.json'), 'utf-8'),
@@ -853,8 +891,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('auto-completes deep-interview during allowlisted forward handoff', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-handoff-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-handoff-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(join(stateDir, 'sessions', 'sess-handoff'), { recursive: true });
       await writeFile(
@@ -876,7 +914,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           current_phase: 'intent-first',
           question_enforcement: {
             obligation_id: 'obligation-handoff',
-            source: 'omx-question',
+            source: 'rcs-question',
             status: 'pending',
             requested_at: '2026-04-09T23:59:00.000Z',
           },
@@ -911,8 +949,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('preserves the planning skill when planning and execution workflows are invoked together', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-planning-precedence-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-planning-precedence-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
@@ -937,8 +975,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('lets planning win even when execution appears first in the contiguous skill block', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-planning-beats-execution-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-planning-beats-execution-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
@@ -961,8 +999,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('seeds first-class root team state for team prompt-submit activation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-team-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-team-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
@@ -975,7 +1013,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
       assert.ok(result);
       assert.equal(result.skill, 'team');
       assert.equal(result.initialized_mode, 'team');
-      assert.equal(result.initialized_state_path, '.omx/state/team-state.json');
+      assert.equal(result.initialized_state_path, '.rcs/state/team-state.json');
 
       const modeState = JSON.parse(
         await readFile(join(stateDir, 'team-state.json'), 'utf-8'),
@@ -989,8 +1027,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('preserves active team root state when $team is re-entered from prompt routing', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-team-preserve-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-team-preserve-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       await writeFile(
@@ -1014,7 +1052,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       assert.ok(result);
       assert.equal(result.initialized_mode, 'team');
-      assert.equal(result.initialized_state_path, '.omx/state/team-state.json');
+      assert.equal(result.initialized_state_path, '.rcs/state/team-state.json');
 
       const modeState = JSON.parse(
         await readFile(join(stateDir, 'team-state.json'), 'utf-8'),
@@ -1029,8 +1067,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('preserves active team root state when planning follow-up defers a simultaneous $team re-entry', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-team-planning-followup-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-team-planning-followup-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       await writeFile(
@@ -1074,8 +1112,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('preserves root team state when $ralph is activated for the current session', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-team-ralph-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-team-ralph-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       await recordSkillActivation({
@@ -1127,8 +1165,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('acquires a deep-interview input lock immediately on activation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-deep-interview-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-deep-interview-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
@@ -1160,8 +1198,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('creates the session-scoped deep-interview state directory before persisting mode state', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-deep-interview-session-dir-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-deep-interview-session-dir-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
@@ -1201,8 +1239,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('clears stale pending deep-interview question enforcement when deep-interview is reactivated', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-deep-interview-reactivation-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-deep-interview-reactivation-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(join(stateDir, 'sessions', 'sess-reactivate'), { recursive: true });
       await writeFile(
@@ -1216,7 +1254,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           completed_at: '2026-04-10T00:10:00.000Z',
           question_enforcement: {
             obligation_id: 'obligation-reactivate',
-            source: 'omx-question',
+            source: 'rcs-question',
             status: 'pending',
             requested_at: '2026-04-10T00:05:00.000Z',
           },
@@ -1264,8 +1302,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('releases the deep-interview input lock on abort via cancel keyword', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-deep-interview-abort-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-deep-interview-abort-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       await recordSkillActivation({
@@ -1304,8 +1342,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('does not write state when no keyword is present', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-none-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-none-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
@@ -1319,8 +1357,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('does not seed non-stateful skill mode state on keyword activation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-non-stateful-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-non-stateful-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
@@ -1356,8 +1394,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('preserves activated_at for same-skill continuation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-continuation-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-continuation-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     const statePath = join(stateDir, SKILL_ACTIVE_STATE_FILE);
     try {
       await mkdir(stateDir, { recursive: true });
@@ -1392,8 +1430,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('preserves seeded mode progress for same-skill continuation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-seed-continuation-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-seed-continuation-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     const statePath = join(stateDir, SKILL_ACTIVE_STATE_FILE);
     try {
       await mkdir(stateDir, { recursive: true });
@@ -1421,7 +1459,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           started_at: '2026-02-25T00:00:00.000Z',
           updated_at: '2026-02-25T00:10:00.000Z',
           session_id: 'sess-autopilot',
-          state: { context_snapshot_path: '.omx/context/existing.md' },
+          state: { context_snapshot_path: '.rcs/context/existing.md' },
         }),
       );
 
@@ -1441,15 +1479,15 @@ describe('keyword detector skill-active-state lifecycle', () => {
       ) as { current_phase: string; started_at: string; state?: { context_snapshot_path?: string } };
       assert.equal(modeState.current_phase, 'code-review');
       assert.equal(modeState.started_at, '2026-02-25T00:00:00.000Z');
-      assert.equal(modeState.state?.context_snapshot_path, '.omx/context/existing.md');
+      assert.equal(modeState.state?.context_snapshot_path, '.rcs/context/existing.md');
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
   it('does not persist Ralph workflow state for a plain conversational mention', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-ralph-plain-text-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralph-plain-text-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
@@ -1472,8 +1510,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('preserves Ralph iteration counters for same-skill continuation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-ralph-continuation-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralph-continuation-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     const statePath = join(stateDir, SKILL_ACTIVE_STATE_FILE);
     try {
       await mkdir(stateDir, { recursive: true });
@@ -1526,8 +1564,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('keeps Korean ulw typo first in mixed explicit workflow persistence', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-ulw-ko-mixed-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ulw-ko-mixed-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
@@ -1556,8 +1594,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('lets an explicit Korean ulw typo override an active workflow continuation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-ulw-ko-explicit-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ulw-ko-explicit-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(join(stateDir, 'sessions', 'sess-ulw-ko-explicit'), { recursive: true });
       await writeFile(
@@ -1606,8 +1644,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('routes bare keep-going continuation to the active autopilot skill instead of generic ralph continuation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-autopilot-bare-continuation-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-autopilot-bare-continuation-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(join(stateDir, 'sessions', 'sess-autopilot-bare'), { recursive: true });
       await writeFile(
@@ -1643,7 +1681,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           started_at: '2026-04-19T00:00:00.000Z',
           updated_at: '2026-04-19T00:10:00.000Z',
           session_id: 'sess-autopilot-bare',
-          state: { context_snapshot_path: '.omx/context/autopilot.md' },
+          state: { context_snapshot_path: '.rcs/context/autopilot.md' },
         }, null, 2),
       );
 
@@ -1662,7 +1700,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
         await readFile(join(stateDir, 'sessions', 'sess-autopilot-bare', 'autopilot-state.json'), 'utf-8'),
       ) as { current_phase: string; state?: { context_snapshot_path?: string } };
       assert.equal(modeState.current_phase, 'code-review');
-      assert.equal(modeState.state?.context_snapshot_path, '.omx/context/autopilot.md');
+      assert.equal(modeState.state?.context_snapshot_path, '.rcs/context/autopilot.md');
       assert.equal(existsSync(join(stateDir, 'sessions', 'sess-autopilot-bare', 'ralph-state.json')), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
@@ -1670,8 +1708,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('routes bare keep-going continuation to the active ralph skill instead of resetting through generic keep-going detection', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-ralph-bare-continuation-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralph-bare-continuation-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(join(stateDir, 'sessions', 'sess-ralph-bare'), { recursive: true });
       await writeFile(
@@ -1735,8 +1773,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('does not reuse active workflow continuation when prompt contains an unknown plugin-prefixed explicit token', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-unknown-prefixed-explicit-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-unknown-prefixed-explicit-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(join(stateDir, 'sessions', 'sess-unknown-prefixed'), { recursive: true });
       await writeFile(
@@ -1766,7 +1804,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       const result = await recordSkillActivation({
         stateDir,
-        text: '$oh-my-codex:unknown continue',
+        text: '$roblox-ai-os-creator-skills:unknown continue',
         sessionId: 'sess-unknown-prefixed',
         nowIso: '2026-04-19T00:15:00.000Z',
       });
@@ -1779,8 +1817,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('denies switching away from a standalone workflow without explicit clear', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-skill-switch-deny-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-skill-switch-deny-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     const statePath = join(stateDir, SKILL_ACTIVE_STATE_FILE);
     try {
       await mkdir(stateDir, { recursive: true });
@@ -1814,8 +1852,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
   });
 
   it('resets activated_at when keyword changes within the same skill', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-state-keyword-switch-'));
-    const stateDir = join(cwd, '.omx', 'state');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-keyword-switch-'));
+    const stateDir = join(cwd, '.rcs', 'state');
     const statePath = join(stateDir, SKILL_ACTIVE_STATE_FILE);
     try {
       await mkdir(stateDir, { recursive: true });
@@ -1937,13 +1975,13 @@ describe('isUnderspecifiedForExecution', () => {
 
 describe('applyRalplanGate', () => {
   it('does not re-enter ralplan for a short approved team follow-up', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-gate-followup-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-gate-followup-'));
     try {
-      const plansDir = join(cwd, '.omx', 'plans');
+      const plansDir = join(cwd, '.rcs', 'plans');
       await mkdir(plansDir, { recursive: true });
       await writeFile(
         join(plansDir, 'prd-issue-831.md'),
-        '# Approved plan\n\nLaunch hint: omx team 3:executor "Execute approved issue 831 plan"\n',
+        '# Approved plan\n\nLaunch hint: rcs team 3:executor "Execute approved issue 831 plan"\n',
       );
       await writeFile(join(plansDir, 'test-spec-issue-831.md'), '# Test spec\n');
 
@@ -1956,13 +1994,13 @@ describe('applyRalplanGate', () => {
   });
 
   it('does not re-enter ralplan for a short approved Korean team follow-up', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-gate-followup-ko-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-gate-followup-ko-'));
     try {
-      const plansDir = join(cwd, '.omx', 'plans');
+      const plansDir = join(cwd, '.rcs', 'plans');
       await mkdir(plansDir, { recursive: true });
       await writeFile(
         join(plansDir, 'prd-issue-831.md'),
-        '# Approved plan\n\nLaunch hint: omx team 3:executor "Execute approved issue 831 plan"\n',
+        '# Approved plan\n\nLaunch hint: rcs team 3:executor "Execute approved issue 831 plan"\n',
       );
       await writeFile(join(plansDir, 'test-spec-issue-831.md'), '# Test spec\n');
 
@@ -1975,13 +2013,13 @@ describe('applyRalplanGate', () => {
   });
 
   it('does not re-enter ralplan for a short approved ralph follow-up', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-keyword-gate-followup-ralph-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-gate-followup-ralph-'));
     try {
-      const plansDir = join(cwd, '.omx', 'plans');
+      const plansDir = join(cwd, '.rcs', 'plans');
       await mkdir(plansDir, { recursive: true });
       await writeFile(
         join(plansDir, 'prd-issue-832.md'),
-        '# Approved plan\n\nLaunch hint: omx ralph "Execute approved issue 832 plan"\n',
+        '# Approved plan\n\nLaunch hint: rcs ralph "Execute approved issue 832 plan"\n',
       );
       await writeFile(join(plansDir, 'test-spec-issue-832.md'), '# Test spec\n');
 

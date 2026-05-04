@@ -15,10 +15,10 @@ function jsonResponse(body: unknown, init: ResponseInit = {}): Response {
 
 test('resolveReplyListenerLiveEnv stays disabled until explicitly opted in', () => {
   const result = resolveReplyListenerLiveEnv({
-    OMX_DISCORD_NOTIFIER_BOT_TOKEN: 'discord-token',
-    OMX_DISCORD_NOTIFIER_CHANNEL: 'channel-1',
-    OMX_TELEGRAM_BOT_TOKEN: 'telegram-token',
-    OMX_TELEGRAM_CHAT_ID: 'chat-1',
+    RCS_DISCORD_NOTIFIER_BOT_TOKEN: 'discord-token',
+    RCS_DISCORD_NOTIFIER_CHANNEL: 'channel-1',
+    RCS_TELEGRAM_BOT_TOKEN: 'telegram-token',
+    RCS_TELEGRAM_CHAT_ID: 'chat-1',
   });
 
   assert.deepEqual(result, {
@@ -30,15 +30,15 @@ test('resolveReplyListenerLiveEnv stays disabled until explicitly opted in', () 
 
 test('resolveReplyListenerLiveEnv reports missing credentials when opted in', () => {
   const result = resolveReplyListenerLiveEnv({
-    OMX_REPLY_LISTENER_LIVE: '1',
-    OMX_DISCORD_NOTIFIER_BOT_TOKEN: 'discord-token',
-    OMX_TELEGRAM_CHAT_ID: 'chat-1',
+    RCS_REPLY_LISTENER_LIVE: '1',
+    RCS_DISCORD_NOTIFIER_BOT_TOKEN: 'discord-token',
+    RCS_TELEGRAM_CHAT_ID: 'chat-1',
   });
 
   assert.equal(result.enabled, true);
   assert.deepEqual(result.missing, [
-    'OMX_DISCORD_NOTIFIER_CHANNEL',
-    'OMX_TELEGRAM_BOT_TOKEN',
+    'RCS_DISCORD_NOTIFIER_CHANNEL',
+    'RCS_TELEGRAM_BOT_TOKEN',
   ]);
   assert.equal(result.config, null);
 });

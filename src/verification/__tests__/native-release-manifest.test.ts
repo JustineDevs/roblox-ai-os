@@ -7,13 +7,13 @@ import { join } from 'node:path';
 
 describe('native release manifest generator', () => {
   it('annotates Linux libc variants and sorts musl assets before glibc fallbacks', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'omx-native-release-manifest-'));
+    const root = await mkdtemp(join(tmpdir(), 'rcs-native-release-manifest-'));
     try {
       const artifactsDir = join(root, 'artifacts');
       await mkdir(artifactsDir, { recursive: true });
 
-      const muslArchive = 'omx-sparkshell-x86_64-unknown-linux-musl.tar.gz';
-      const glibcArchive = 'omx-sparkshell-x86_64-unknown-linux-gnu.tar.gz';
+      const muslArchive = 'rcs-sparkshell-x86_64-unknown-linux-musl.tar.gz';
+      const glibcArchive = 'rcs-sparkshell-x86_64-unknown-linux-gnu.tar.gz';
       await writeFile(join(artifactsDir, muslArchive), 'musl');
       await writeFile(join(artifactsDir, `${muslArchive}.sha256`), 'musl-checksum\n');
       await writeFile(join(artifactsDir, glibcArchive), 'glibc');
@@ -23,7 +23,7 @@ describe('native release manifest generator', () => {
       await writeFile(planPath, JSON.stringify({
         announcement_tag: 'v0.10.2',
         releases: [
-          { app_name: 'omx-sparkshell', app_version: '0.10.2' },
+          { app_name: 'rcs-sparkshell', app_version: '0.10.2' },
         ],
         artifacts: {
           linuxGlibc: {
@@ -34,8 +34,8 @@ describe('native release manifest generator', () => {
             assets: [
               {
                 kind: 'executable',
-                name: 'omx-sparkshell',
-                path: 'omx-sparkshell',
+                name: 'rcs-sparkshell',
+                path: 'rcs-sparkshell',
               },
             ],
           },
@@ -47,8 +47,8 @@ describe('native release manifest generator', () => {
             assets: [
               {
                 kind: 'executable',
-                name: 'omx-sparkshell',
-                path: 'omx-sparkshell',
+                name: 'rcs-sparkshell',
+                path: 'rcs-sparkshell',
               },
             ],
           },

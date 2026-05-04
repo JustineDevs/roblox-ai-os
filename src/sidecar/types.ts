@@ -99,7 +99,7 @@ export interface SidecarTopology {
 }
 
 export interface SidecarSnapshot {
-  schema_version: 'omx.sidecar/v1';
+  schema_version: 'rcs.sidecar/v1';
   generated_at: string;
   team_name: string;
   team_task: string;

@@ -1,5 +1,5 @@
 /**
- * Team Orchestration for oh-my-codex
+ * Team Orchestration for roblox-ai-os-creator-skills
  *
  * Leverages Codex CLI's native multi_agent feature for multi-agent coordination.
  * Provides the staged pipeline: plan -> prd -> exec -> verify -> fix (loop)

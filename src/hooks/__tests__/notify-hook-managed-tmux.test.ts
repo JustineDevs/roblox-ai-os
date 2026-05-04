@@ -58,7 +58,7 @@ describe('notify-hook managed tmux windows fallback', () => {
   const originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
   const originalTmux = process.env.TMUX;
   const originalTmuxPane = process.env.TMUX_PANE;
-  const originalTeamWorker = process.env.OMX_TEAM_WORKER;
+  const originalTeamWorker = process.env.RCS_TEAM_WORKER;
 
   afterEach(() => {
     if (originalPlatform) Object.defineProperty(process, 'platform', originalPlatform);
@@ -66,15 +66,15 @@ describe('notify-hook managed tmux windows fallback', () => {
     else delete process.env.TMUX;
     if (originalTmuxPane !== undefined) process.env.TMUX_PANE = originalTmuxPane;
     else delete process.env.TMUX_PANE;
-    if (originalTeamWorker !== undefined) process.env.OMX_TEAM_WORKER = originalTeamWorker;
-    else delete process.env.OMX_TEAM_WORKER;
+    if (originalTeamWorker !== undefined) process.env.RCS_TEAM_WORKER = originalTeamWorker;
+    else delete process.env.RCS_TEAM_WORKER;
   });
 
   it('does not rely on ps ancestry checks on native Windows', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-tmux-win32-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-tmux-win32-'));
     try {
-      const stateDir = join(cwd, '.omx', 'state');
-      const sessionId = 'omx-test-session';
+      const stateDir = join(cwd, '.rcs', 'state');
+      const sessionId = 'rcs-test-session';
       await mkdir(stateDir, { recursive: true });
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({
         session_id: sessionId,
@@ -87,7 +87,7 @@ describe('notify-hook managed tmux windows fallback', () => {
       Object.defineProperty(process, 'platform', { value: 'win32', configurable: true });
       delete process.env.TMUX;
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const result = await resolveManagedSessionContext(cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(result.managed, false);
@@ -98,11 +98,11 @@ describe('notify-hook managed tmux windows fallback', () => {
   });
 
   it('accepts native payload session ids when session state stores a separate native_session_id', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-tmux-native-session-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-tmux-native-session-'));
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       await mkdir(stateDir, { recursive: true });
-      await writeSessionStart(cwd, 'omx-canonical-session');
+      await writeSessionStart(cwd, 'rcs-canonical-session');
       const current = JSON.parse(await readFile(join(stateDir, 'session.json'), 'utf-8'));
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({
         ...current,
@@ -111,24 +111,24 @@ describe('notify-hook managed tmux windows fallback', () => {
 
       delete process.env.TMUX;
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const result = await resolveManagedSessionContext(cwd, { session_id: 'codex-native-session' }, { allowTeamWorker: false });
       assert.equal(result.managed, true);
       assert.equal(result.invocationSessionId, 'codex-native-session');
-      assert.equal(result.canonicalSessionId, 'omx-canonical-session');
+      assert.equal(result.canonicalSessionId, 'rcs-canonical-session');
       assert.equal(result.nativeSessionId, 'codex-native-session');
-      assert.match(result.expectedTmuxSessionName, /omx-canonical-session|canonical-session/);
+      assert.match(result.expectedTmuxSessionName, /rcs-canonical-session|canonical-session/);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
   it('uses authoritative tmux session metadata before recomputing branch-based names', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-tmux-authoritative-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-tmux-authoritative-'));
     try {
-      const sessionId = 'omx-authoritative-session';
-      const tmuxSessionName = 'omx-authoritative-without-git';
+      const sessionId = 'rcs-authoritative-session';
+      const tmuxSessionName = 'rcs-authoritative-without-git';
       await writeSessionStart(cwd, sessionId, { tmuxSessionName });
 
       await withFakeTmux(cwd, `#!/usr/bin/env bash
@@ -140,7 +140,7 @@ exit 1
 `, async () => {
         process.env.TMUX = '1';
         delete process.env.TMUX_PANE;
-        process.env.OMX_TEAM_WORKER = '';
+        process.env.RCS_TEAM_WORKER = '';
 
         const result = await resolveManagedSessionContext(cwd, { session_id: sessionId }, { allowTeamWorker: false });
         assert.equal(result.managed, true);
@@ -154,27 +154,27 @@ exit 1
   });
 
   it('fails closed when authoritative tmux metadata disagrees with the active tmux session', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-tmux-authoritative-mismatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-tmux-authoritative-mismatch-'));
     try {
-      const sessionId = 'omx-authoritative-session';
-      await writeSessionStart(cwd, sessionId, { tmuxSessionName: 'omx-expected-session' });
+      const sessionId = 'rcs-authoritative-session';
+      await writeSessionStart(cwd, sessionId, { tmuxSessionName: 'rcs-expected-session' });
 
       await withFakeTmux(cwd, `#!/usr/bin/env bash
 if [[ "$1" == "display-message" ]]; then
-  echo "omx-other-session"
+  echo "rcs-other-session"
   exit 0
 fi
 exit 1
 `, async () => {
         process.env.TMUX = '1';
         delete process.env.TMUX_PANE;
-        process.env.OMX_TEAM_WORKER = '';
+        process.env.RCS_TEAM_WORKER = '';
 
         const result = await resolveManagedSessionContext(cwd, { session_id: sessionId }, { allowTeamWorker: false });
         assert.equal(result.managed, false);
         assert.equal(result.reason, 'tmux_session_mismatch');
-        assert.equal(result.expectedTmuxSessionName, 'omx-expected-session');
-        assert.equal(result.currentTmuxSessionName, 'omx-other-session');
+        assert.equal(result.expectedTmuxSessionName, 'rcs-expected-session');
+        assert.equal(result.currentTmuxSessionName, 'rcs-other-session');
       });
     } finally {
       await rm(cwd, { recursive: true, force: true });
@@ -182,21 +182,21 @@ exit 1
   });
 
   it('accepts symlinked cwd aliases for the same managed session', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-tmux-cwd-alias-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-tmux-cwd-alias-'));
     const aliasCwd = `${cwd}-alias`;
     try {
       await symlink(cwd, aliasCwd, process.platform === 'win32' ? 'junction' : 'dir');
-      await writeSessionStart(cwd, 'omx-alias-session');
+      await writeSessionStart(cwd, 'rcs-alias-session');
 
       delete process.env.TMUX;
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
-      const result = await resolveManagedSessionContext(aliasCwd, { session_id: 'omx-alias-session' }, { allowTeamWorker: false });
+      const result = await resolveManagedSessionContext(aliasCwd, { session_id: 'rcs-alias-session' }, { allowTeamWorker: false });
       assert.equal(result.managed, true);
       assert.match(result.reason, /ancestry_match$/);
-      assert.equal(result.canonicalSessionId, 'omx-alias-session');
-      assert.equal(result.expectedTmuxSessionName, buildTmuxSessionName(cwd, 'omx-alias-session'));
+      assert.equal(result.canonicalSessionId, 'rcs-alias-session');
+      assert.equal(result.expectedTmuxSessionName, buildTmuxSessionName(cwd, 'rcs-alias-session'));
     } finally {
       await rm(aliasCwd, { recursive: true, force: true });
       await rm(cwd, { recursive: true, force: true });
@@ -204,16 +204,16 @@ exit 1
   });
 
   it('verifies managed pane targets when invoked from a cwd alias for the same session', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-tmux-pane-alias-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-tmux-pane-alias-'));
     const aliasCwd = `${cwd}-alias`;
-    const sessionId = 'omx-alias-session';
+    const sessionId = 'rcs-alias-session';
     try {
       await symlink(cwd, aliasCwd, process.platform === 'win32' ? 'junction' : 'dir');
       await writeSessionStart(cwd, sessionId);
 
       delete process.env.TMUX;
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
       await withFakeTmux(cwd, `#!/usr/bin/env bash
@@ -251,10 +251,10 @@ exit 1
   });
 
   it('uses pane-scoped instance tags before falling back to session tags', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-tmux-pane-instance-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-tmux-pane-instance-'));
     try {
-      const sessionId = 'omx-pane-instance-owner';
-      const sharedTmuxSession = 'shared-omx-session';
+      const sessionId = 'rcs-pane-instance-owner';
+      const sharedTmuxSession = 'shared-rcs-session';
       await writeSessionStart(cwd, sessionId, { tmuxSessionName: sharedTmuxSession });
 
       await withFakeTmux(cwd, `#!/usr/bin/env bash
@@ -292,12 +292,12 @@ if [[ "$cmd" == "show-option" ]]; then
       *) option="$1"; shift ;;
     esac
   done
-  if [[ "$pane_scope" == "1" && "$target" == "%42" && "$option" == "@omx_pane_instance_id" ]]; then
+  if [[ "$pane_scope" == "1" && "$target" == "%42" && "$option" == "@rcs_pane_instance_id" ]]; then
     echo "${sessionId}"
     exit 0
   fi
-  if [[ "$pane_scope" == "0" && "$target" == "${sharedTmuxSession}" && "$option" == "@omx_instance_id" ]]; then
-    echo "omx-other-pane-owner"
+  if [[ "$pane_scope" == "0" && "$target" == "${sharedTmuxSession}" && "$option" == "@rcs_instance_id" ]]; then
+    echo "rcs-other-pane-owner"
     exit 0
   fi
 fi
@@ -306,7 +306,7 @@ exit 1
 `, async () => {
         process.env.TMUX = '1';
         process.env.TMUX_PANE = '%42';
-        process.env.OMX_TEAM_WORKER = '';
+        process.env.RCS_TEAM_WORKER = '';
 
         const verdict = await verifyManagedPaneTarget('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
         assert.equal(verdict.ok, true);
@@ -321,13 +321,13 @@ exit 1
   });
 
   it('keeps the verified anchor pane instead of rebinding to the active codex pane in the session', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-anchor-pane-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-anchor-pane-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-anchor-pane';
+      const sessionId = 'rcs-anchor-pane';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
 
       await mkdir(stateDir, { recursive: true });
@@ -401,7 +401,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedPaneFromAnchor('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(paneId, '%42');
@@ -412,13 +412,13 @@ exit 1
   });
 
   it('rebinds a node shell anchor to the live codex pane in the managed session', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-node-shell-anchor-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-node-shell-anchor-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-node-shell-anchor';
+      const sessionId = 'rcs-node-shell-anchor';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
 
       await mkdir(stateDir, { recursive: true });
@@ -492,7 +492,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedPaneFromAnchor('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(paneId, '%55');
@@ -503,13 +503,13 @@ exit 1
   });
 
   it('fails closed for anchorless managed-session recovery when only a wrapper-launched node pane exists', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-wrapper-node-session-pane-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-wrapper-node-session-pane-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-wrapper-node-session-pane';
+      const sessionId = 'rcs-wrapper-node-session-pane';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
 
       await mkdir(stateDir, { recursive: true });
@@ -571,7 +571,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedSessionPane(cwd, { session_id: sessionId });
       assert.equal(paneId, '');
@@ -582,13 +582,13 @@ exit 1
   });
 
   it('keeps a wrapper-launched node anchor when detached anchor fallback has no stricter codex candidate', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-wrapper-node-anchor-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-wrapper-node-anchor-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-wrapper-node-anchor';
+      const sessionId = 'rcs-wrapper-node-anchor';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
 
       await mkdir(stateDir, { recursive: true });
@@ -662,7 +662,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedPaneFromAnchor('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(paneId, '%42');
@@ -673,13 +673,13 @@ exit 1
   });
 
   it('fails closed for a shell-degraded codex anchor when only a detached wrapper fallback exists', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-degraded-codex-wrapper-only-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-degraded-codex-wrapper-only-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-degraded-codex-wrapper-only';
+      const sessionId = 'rcs-degraded-codex-wrapper-only';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
 
       await mkdir(stateDir, { recursive: true });
@@ -753,7 +753,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedPaneFromAnchor('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(paneId, '');
@@ -764,13 +764,13 @@ exit 1
   });
 
   it('rebinds a shell-degraded codex anchor to the live codex pane in the managed session', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-degraded-codex-anchor-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-degraded-codex-anchor-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-degraded-codex-anchor';
+      const sessionId = 'rcs-degraded-codex-anchor';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
 
       await mkdir(stateDir, { recursive: true });
@@ -844,7 +844,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedPaneFromAnchor('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(paneId, '%55');
@@ -855,13 +855,13 @@ exit 1
   });
 
   it('ignores an active shell-degraded codex pane when selecting the live managed replacement', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-active-degraded-codex-anchor-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-active-degraded-codex-anchor-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-active-degraded-codex-anchor';
+      const sessionId = 'rcs-active-degraded-codex-anchor';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
 
       await mkdir(stateDir, { recursive: true });
@@ -935,7 +935,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedPaneFromAnchor('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(paneId, '%55');
@@ -946,13 +946,13 @@ exit 1
   });
 
   it('rebinds a degraded anchor using the verified session name when a follow-up #S lookup would fail', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-degraded-anchor-session-reuse-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-degraded-anchor-session-reuse-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-degraded-anchor-session-reuse';
+      const sessionId = 'rcs-degraded-anchor-session-reuse';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
       const sessionLookupCountPath = join(cwd, 'session-lookup-count');
 
@@ -1037,7 +1037,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedPaneFromAnchor('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(paneId, '%55');
@@ -1048,13 +1048,13 @@ exit 1
   });
 
   it('fails closed when a degraded anchor has no live codex sibling in the managed session', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-degraded-anchor-no-live-sibling-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-degraded-anchor-no-live-sibling-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-degraded-anchor-no-live-sibling';
+      const sessionId = 'rcs-degraded-anchor-no-live-sibling';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
 
       await mkdir(stateDir, { recursive: true });
@@ -1128,7 +1128,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedPaneFromAnchor('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(paneId, '');
@@ -1139,13 +1139,13 @@ exit 1
   });
 
   it('keeps a verified live anchor when command-state lookup fails and another codex pane is active', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-managed-anchor-lookup-failure-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-managed-anchor-lookup-failure-'));
     const originalPath = process.env.PATH;
     try {
-      const stateDir = join(cwd, '.omx', 'state');
+      const stateDir = join(cwd, '.rcs', 'state');
       const fakeBinDir = join(cwd, 'fake-bin');
       const fakeTmuxPath = join(fakeBinDir, 'tmux');
-      const sessionId = 'omx-anchor-lookup-failure';
+      const sessionId = 'rcs-anchor-lookup-failure';
       const managedSessionName = buildTmuxSessionName(cwd, sessionId);
 
       await mkdir(stateDir, { recursive: true });
@@ -1215,7 +1215,7 @@ exit 1
       process.env.PATH = `${fakeBinDir}:${originalPath || ''}`;
       process.env.TMUX = '1';
       delete process.env.TMUX_PANE;
-      process.env.OMX_TEAM_WORKER = '';
+      process.env.RCS_TEAM_WORKER = '';
 
       const paneId = await resolveManagedPaneFromAnchor('%42', cwd, { session_id: sessionId }, { allowTeamWorker: false });
       assert.equal(paneId, '%42');

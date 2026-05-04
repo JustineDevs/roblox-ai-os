@@ -26,7 +26,7 @@ function isSafeStateFileName(fileName: string): boolean {
 }
 
 function readSessionIdFromEnvironment(env: NodeJS.ProcessEnv = process.env): string | undefined {
-  const candidates = [env.OMX_SESSION_ID, env.CODEX_SESSION_ID, env.SESSION_ID];
+  const candidates = [env.RCS_SESSION_ID, env.CODEX_SESSION_ID, env.SESSION_ID];
   for (const candidate of candidates) {
     const sessionId = safeString(candidate).trim();
     if (!SESSION_ID_PATTERN.test(sessionId)) continue;

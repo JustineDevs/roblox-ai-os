@@ -28,7 +28,7 @@ export function isSetupInstallMode(value: string): value is SetupInstallMode {
 }
 
 export function getSetupScopeFilePath(projectRoot: string): string {
-	return join(projectRoot, ".omx", "setup-scope.json");
+	return join(projectRoot, ".rcs", "setup-scope.json");
 }
 
 function parsePersistedSetupPreferences(
@@ -75,7 +75,7 @@ export async function readPersistedSetupPreferences(
 			options.warnOnLegacyScope
 				? (from, to) => {
 						console.warn(
-							`[omx] Migrating persisted setup scope "${from}" → "${to}" ` +
+							`[rcs] Migrating persisted setup scope "${from}" → "${to}" ` +
 								`(see issue #243: simplified to user/project).`,
 						);
 					}

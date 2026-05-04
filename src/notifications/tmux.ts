@@ -12,12 +12,12 @@ const TMUX_PANE_TARGET_RE = /^%\d+$/;
 const DEFAULT_CAPTURE_LINES = 12;
 const MAX_CAPTURE_LINES = 2000;
 const ANSI_RE = /\x1b(?:[@-Z\\-_]|\[[0-9;]*[A-Za-z])/g;
-const OMX_METADATA_SEGMENT_RE = /^\[OMX(?:[#\]].*)?$/;
+const RCS_METADATA_SEGMENT_RE = /^\[RCS(?:[#\]].*)?$/;
 const HUD_STATUS_SEGMENT_RE = /^(?:ralph:\d+\/(?:\d+|\?)|autopilot:[\w-]+|ralplan:(?:\d+\/(?:\d+|\?)|[\w-]+)|interview:[\w:-]+|research:[\w-]+|qa:[\w-]+|team:(?:\d+\s+workers|[\w.-]+)|ultrawork|turns:\d+|tokens:[\dkm.]+|quota:[\w%,.]+|session:[\dhms]+|last:\d+[smh](?:\s+ago)?|total-turns:\d+|tmux:[\w:.-]+)$/i;
 const BRANCH_METADATA_SEGMENT_RE = /^(?:(?:fix|feat|feature|chore|refactor|hotfix|release|docs|doc|test|tests|ci|build|perf|revert|bugfix|spike|wip)\/[A-Za-z0-9._/-]+|HEAD(?: -> [A-Za-z0-9._/-]+)?|detached)$/;
 
 function isMetadataOnlyTmuxSegment(segment: string): boolean {
-  return OMX_METADATA_SEGMENT_RE.test(segment)
+  return RCS_METADATA_SEGMENT_RE.test(segment)
     || HUD_STATUS_SEGMENT_RE.test(segment)
     || BRANCH_METADATA_SEGMENT_RE.test(segment);
 }
@@ -31,7 +31,7 @@ function isMetadataOnlyTmuxLine(line: string): boolean {
     return false;
   }
 
-  const hasExplicitStatusSegment = segments.some((segment) => OMX_METADATA_SEGMENT_RE.test(segment) || HUD_STATUS_SEGMENT_RE.test(segment));
+  const hasExplicitStatusSegment = segments.some((segment) => RCS_METADATA_SEGMENT_RE.test(segment) || HUD_STATUS_SEGMENT_RE.test(segment));
   return hasExplicitStatusSegment || (segments.length === 1 && BRANCH_METADATA_SEGMENT_RE.test(segments[0]));
 }
 
@@ -54,7 +54,7 @@ export interface TmuxPaneCaptureResult {
 }
 
 function shouldUsePidFallback(): boolean {
-  return process.env.OMX_TMUX_PID_FALLBACK === "1";
+  return process.env.RCS_TMUX_PID_FALLBACK === "1";
 }
 
 function execTmux(args: string[]): string {
@@ -153,13 +153,13 @@ function detectTmuxSessionByPid(): string | null {
 }
 
 /**
- * List active omx-team tmux sessions for a given team.
+ * List active rcs-team tmux sessions for a given team.
  */
 export function getTeamTmuxSessions(teamName: string): string[] {
   const sanitized = teamName.replace(/[^a-zA-Z0-9-]/g, "");
   if (!sanitized) return [];
 
-  const prefix = `omx-team-${sanitized}`;
+  const prefix = `rcs-team-${sanitized}`;
   try {
     const output = execTmux(["list-sessions", "-F", "#{session_name}"]);
     return output

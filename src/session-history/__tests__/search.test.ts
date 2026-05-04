@@ -29,7 +29,7 @@ describe('parseSinceSpec', () => {
 
 describe('searchSessionHistory', () => {
   it('returns structured matches with snippets from rollout transcripts', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-session-search-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-session-search-'));
     const codexHomeDir = join(cwd, '.codex-home');
     try {
       await writeRollout(codexHomeDir, '2026-03-10T12:00:00.000Z', 'rollout-2026-03-10T12-00-00-session-a.jsonl', [
@@ -68,7 +68,7 @@ describe('searchSessionHistory', () => {
   });
 
   it('supports session, project, and limit filters', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-session-search-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-session-search-'));
     const codexHomeDir = join(cwd, '.codex-home');
     try {
       await writeRollout(codexHomeDir, '2026-03-10T12:00:00.000Z', 'rollout-2026-03-10T12-00-00-session-a.jsonl', [
@@ -132,7 +132,7 @@ describe('searchSessionHistory', () => {
   });
 
   it('returns no results cleanly when nothing matches', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-session-search-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-session-search-'));
     const codexHomeDir = join(cwd, '.codex-home');
     try {
       await writeRollout(codexHomeDir, '2026-03-10T12:00:00.000Z', 'rollout-2026-03-10T12-00-00-session-a.jsonl', [

@@ -45,7 +45,7 @@ function teardownTmp(): void {
 }
 
 function configPath(): string {
-  return join(tmp, '.omx-config.json');
+  return join(tmp, '.rcs-config.json');
 }
 
 function writeConfig(content: string): void {
@@ -60,7 +60,7 @@ describe('readTriageConfig — missing config file', () => {
   beforeEach(setupTmp);
   after(teardownTmp);
 
-  it('returns defaulted result when .omx-config.json does not exist', () => {
+  it('returns defaulted result when .rcs-config.json does not exist', () => {
     const result = readTriageConfig();
     assert.deepEqual(result, {
       enabled: true,

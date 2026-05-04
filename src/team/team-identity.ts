@@ -59,7 +59,7 @@ function shortHash(value: string): string {
 }
 
 export function resolveTeamIdentityScope(env: NodeJS.ProcessEnv = process.env): TeamIdentityScope {
-  const sessionId = (env.OMX_SESSION_ID || env.CODEX_SESSION_ID || env.SESSION_ID || '').trim();
+  const sessionId = (env.RCS_SESSION_ID || env.CODEX_SESSION_ID || env.SESSION_ID || '').trim();
   if (sessionId) {
     return { sessionId, paneId: (env.TMUX_PANE || '').trim(), tmuxTarget: (env.TMUX || '').trim(), runId: '', source: 'env-session' };
   }
@@ -131,9 +131,9 @@ function teamLookupRoots(cwd: string, env: NodeJS.ProcessEnv = process.env): str
     if (!roots.includes(root)) roots.push(root);
   };
 
-  const explicit = typeof env.OMX_TEAM_STATE_ROOT === 'string' ? env.OMX_TEAM_STATE_ROOT : '';
+  const explicit = typeof env.RCS_TEAM_STATE_ROOT === 'string' ? env.RCS_TEAM_STATE_ROOT : '';
   addStateRoot(explicit);
-  addStateRoot(join(resolve(cwd), '.omx', 'state'));
+  addStateRoot(join(resolve(cwd), '.rcs', 'state'));
   return roots;
 }
 

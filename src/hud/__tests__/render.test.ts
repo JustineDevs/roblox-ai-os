@@ -45,16 +45,16 @@ describe('renderHud – empty context', () => {
     assert.ok(result.includes('No active modes.'));
   });
 
-  it('includes the [OMX] label', () => {
+  it('includes the [RCS] label', () => {
     const result = renderHud(emptyCtx(), 'focused');
-    assert.ok(result.includes('[OMX]'));
+    assert.ok(result.includes('[RCS]'));
   });
 
   it('renders plain text with no ANSI escapes when colors are disabled', () => {
     setColorEnabled(false);
     const result = renderHud(emptyCtx(), 'focused');
     assert.equal(/\x1b\[[0-9;]*m/.test(result), false);
-    assert.equal(result.includes('[OMX]'), true);
+    assert.equal(result.includes('[RCS]'), true);
   });
 });
 
@@ -64,19 +64,19 @@ describe('renderHud – version', () => {
   it('strips the "v" prefix from a semver version', () => {
     const ctx = { ...emptyCtx(), version: 'v1.2.3' };
     const result = renderHud(ctx, 'focused');
-    assert.ok(result.includes('[OMX#1.2.3]'));
+    assert.ok(result.includes('[RCS#1.2.3]'));
   });
 
   it('keeps a plain version number as-is', () => {
     const ctx = { ...emptyCtx(), version: '2.0.0' };
     const result = renderHud(ctx, 'focused');
-    assert.ok(result.includes('[OMX#2.0.0]'));
+    assert.ok(result.includes('[RCS#2.0.0]'));
   });
 
   it('omits hash suffix when version is null', () => {
     const result = renderHud(emptyCtx(), 'focused');
-    assert.ok(result.includes('[OMX]'));
-    assert.ok(!result.includes('[OMX#'));
+    assert.ok(result.includes('[RCS]'));
+    assert.ok(!result.includes('[RCS#'));
   });
 });
 

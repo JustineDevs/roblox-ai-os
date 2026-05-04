@@ -8,19 +8,19 @@ import { readModeState, startMode } from '../base.js';
 
 describe('modes/base multi-state compatibility', () => {
   it('allows the approved team + ralph overlap across root and session scopes', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-team-ralph-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-team-ralph-'));
     try {
       await startMode('team', 'coordinate execution', 5, wd);
       await writeFile(
-        join(wd, '.omx', 'state', 'session.json'),
+        join(wd, '.rcs', 'state', 'session.json'),
         JSON.stringify({ session_id: 'sess-team-ralph' }),
       );
 
       await startMode('ralph', 'complete the approved plan', 5, wd);
 
-      assert.equal(existsSync(join(wd, '.omx', 'state', 'team-state.json')), true);
+      assert.equal(existsSync(join(wd, '.rcs', 'state', 'team-state.json')), true);
       assert.equal(
-        existsSync(join(wd, '.omx', 'state', 'sessions', 'sess-team-ralph', 'ralph-state.json')),
+        existsSync(join(wd, '.rcs', 'state', 'sessions', 'sess-team-ralph', 'ralph-state.json')),
         true,
       );
       assert.equal((await readModeState('team', wd))?.active, true);
@@ -31,20 +31,20 @@ describe('modes/base multi-state compatibility', () => {
   });
 
   it('rejects standalone autopilot + team overlaps with actionable clearing guidance', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-autopilot-team-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-autopilot-team-'));
     try {
       await startMode('autopilot', 'run solo automation', 5, wd);
 
       await assert.rejects(
         () => startMode('team', 'attempt invalid overlap', 5, wd),
-        /omx state.*omx_state\.\*/i,
+        /rcs state.*rcs_state\.\*/i,
       );
 
       const autopilotState = JSON.parse(
-        await readFile(join(wd, '.omx', 'state', 'autopilot-state.json'), 'utf-8'),
+        await readFile(join(wd, '.rcs', 'state', 'autopilot-state.json'), 'utf-8'),
       ) as { active?: boolean };
       assert.equal(autopilotState.active, true);
-      assert.equal(existsSync(join(wd, '.omx', 'state', 'team-state.json')), false);
+      assert.equal(existsSync(join(wd, '.rcs', 'state', 'team-state.json')), false);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }

@@ -65,7 +65,7 @@ export interface QuestionRendererState {
 }
 
 export interface QuestionRecord {
-  kind: 'omx.question/v1';
+  kind: 'rcs.question/v1';
   question_id: string;
   session_id?: string;
   created_at: string;

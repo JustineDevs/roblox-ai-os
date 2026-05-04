@@ -11,14 +11,14 @@ import {
   getInstallableNativeAgentNames,
 } from '../../agents/policy.js';
 
-describe('omx setup prompt/native-agent overwrite behavior', () => {
+describe('rcs setup prompt/native-agent overwrite behavior', () => {
   const obsoleteNativeAgentField = ['skill', 'ref'].join('_');
 
   it('installs setup-owned prompts separately from active/internal native agents', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-prompts-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-prompts-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -89,10 +89,10 @@ describe('omx setup prompt/native-agent overwrite behavior', () => {
   });
 
   it('preserves setup-owned prompt assets and removes unknown prompts on --force', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-prompts-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-prompts-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -120,10 +120,10 @@ describe('omx setup prompt/native-agent overwrite behavior', () => {
   });
 
   it('removes stale merged native agents on --force', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-prompts-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-prompts-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -148,10 +148,10 @@ describe('omx setup prompt/native-agent overwrite behavior', () => {
   });
 
   it('removes generated non-installable native agents during normal setup', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-prompts-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-prompts-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -160,7 +160,7 @@ describe('omx setup prompt/native-agent overwrite behavior', () => {
       await writeFile(
         stalePath,
         [
-          '# oh-my-codex agent: style-reviewer',
+          '# roblox-ai-os-creator-skills agent: style-reviewer',
           'name = "style-reviewer"',
           'description = "old generated merged role"',
           'developer_instructions = """old"""',
@@ -180,10 +180,10 @@ describe('omx setup prompt/native-agent overwrite behavior', () => {
   });
 
   it('preserves user-authored non-installable native agents during normal setup', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-prompts-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-prompts-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -211,10 +211,10 @@ describe('omx setup prompt/native-agent overwrite behavior', () => {
   });
 
   it('removes stale native agents with the obsolete bridge field during normal setup', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-prompts-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-prompts-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });

@@ -9,7 +9,7 @@ import { handleTeamWorkerPostToolUseSuccess, teamWorkerPostToolUseInternals } fr
 import { readTeamEvents } from '../../../team/state/events.js';
 
 async function initWorkerFixture(): Promise<{ cwd: string; stateRoot: string; env: NodeJS.ProcessEnv }> {
-  const cwd = await mkdtemp(join(tmpdir(), 'omx-posttooluse-worker-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'rcs-posttooluse-worker-'));
   execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
@@ -17,7 +17,7 @@ async function initWorkerFixture(): Promise<{ cwd: string; stateRoot: string; en
   execFileSync('git', ['add', 'README.md'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['commit', '-m', 'init'], { cwd, stdio: 'ignore' });
 
-  const stateRoot = join(cwd, '.omx', 'state');
+  const stateRoot = join(cwd, '.rcs', 'state');
   const workerDir = join(stateRoot, 'team', 'demo-team', 'workers', 'worker-1');
   await mkdir(workerDir, { recursive: true });
   await writeFile(join(workerDir, 'identity.json'), JSON.stringify({
@@ -32,8 +32,8 @@ async function initWorkerFixture(): Promise<{ cwd: string; stateRoot: string; en
     stateRoot,
     env: {
       ...process.env,
-      OMX_TEAM_WORKER: 'demo-team/worker-1',
-      OMX_TEAM_STATE_ROOT: stateRoot,
+      RCS_TEAM_WORKER: 'demo-team/worker-1',
+      RCS_TEAM_STATE_ROOT: stateRoot,
     },
   };
 }
@@ -58,7 +58,7 @@ describe('handleTeamWorkerPostToolUseSuccess', () => {
     assert.deepEqual(result.operationKinds, ['auto_checkpoint', 'worker_clean_rebase', 'leader_integration_attempt']);
 
     const log = execFileSync('git', ['log', '-1', '--pretty=%s'], { cwd: fixture.cwd, encoding: 'utf-8' }).trim();
-    assert.equal(log, 'omx(team): auto-checkpoint worker-1');
+    assert.equal(log, 'rcs(team): auto-checkpoint worker-1');
 
     const events = await readTeamEvents('demo-team', fixture.cwd, { type: 'worker_integration_attempt_requested' });
     assert.equal(events.length, 1);
@@ -75,7 +75,7 @@ describe('handleTeamWorkerPostToolUseSuccess', () => {
     const dedupe = JSON.parse(await readFile(join(fixture.stateRoot, 'team', 'demo-team', 'workers', 'worker-1', 'posttooluse-dedupe.json'), 'utf-8')) as { keys: string[] };
     assert.equal(dedupe.keys.includes(result.dedupeKey!), true);
 
-    const ledger = JSON.parse(await readFile(join(fixture.cwd, '.omx', 'reports', 'team-commit-hygiene', 'demo-team.ledger.json'), 'utf-8')) as { entries: Array<{ operation: string; status: string }> };
+    const ledger = JSON.parse(await readFile(join(fixture.cwd, '.rcs', 'reports', 'team-commit-hygiene', 'demo-team.ledger.json'), 'utf-8')) as { entries: Array<{ operation: string; status: string }> };
     assert.equal(ledger.entries.some((entry) => entry.operation === 'auto_checkpoint' && entry.status === 'applied'), true);
     assert.equal(ledger.entries.some((entry) => entry.operation === 'worker_clean_rebase' && entry.status === 'noop'), true);
     assert.equal(ledger.entries.some((entry) => entry.operation === 'leader_integration_attempt' && entry.status === 'applied'), true);
@@ -161,20 +161,20 @@ describe('handleTeamWorkerPostToolUseSuccess', () => {
       operationKind: 'leader_integration_attempt',
     });
     assert.equal(key, 'team|worker-1|after|leader_integration_attempt');
-    assert.equal(teamWorkerPostToolUseInternals.isProtectedCheckpointPath('.omx/state/team/x'), true);
+    assert.equal(teamWorkerPostToolUseInternals.isProtectedCheckpointPath('.rcs/state/team/x'), true);
     assert.equal(teamWorkerPostToolUseInternals.isProtectedCheckpointPath('src/index.ts'), false);
   });
 
   it('fails closed for missing worker identity without guessed state writes', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-posttooluse-missing-identity-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-posttooluse-missing-identity-'));
     const result = await handleTeamWorkerPostToolUseSuccess(successPayload, cwd, {
       ...process.env,
-      OMX_TEAM_WORKER: 'demo-team/worker-1',
-      OMX_TEAM_STATE_ROOT: join(cwd, '.omx', 'state'),
+      RCS_TEAM_WORKER: 'demo-team/worker-1',
+      RCS_TEAM_STATE_ROOT: join(cwd, '.rcs', 'state'),
     });
 
     assert.equal(result.handled, false);
     assert.equal(result.status, 'skipped');
-    assert.equal(existsSync(join(cwd, '.omx', 'state', 'team')), false);
+    assert.equal(existsSync(join(cwd, '.rcs', 'state', 'team')), false);
   });
 });

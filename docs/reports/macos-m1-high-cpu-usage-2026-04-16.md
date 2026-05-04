@@ -1,15 +1,17 @@
+> Archive context: retained release and migration collateral from the pre-v0.1.0 fork-to-RCS transition. Links are normalized to the canonical JustineDevs repository, but historical chronology and contributor references may still describe pre-fork development.
+
 ## macOS M1 High CPU Usage Investigation
 
 Date: 2026-04-16
 
 ### Symptom
 
-Launching `omx --madmax --xhigh` on an Apple Silicon Mac caused `syspolicyd`
+Launching `rcs --madmax --xhigh` on an Apple Silicon Mac caused `syspolicyd`
 to spike, often alongside visible CPU churn in `sysmond`.
 
 ### Root Cause
 
-The dominant trigger was not `syspolicyd` itself. OMX startup entered the
+The dominant trigger was not `syspolicyd` itself. RCS startup entered the
 fallback watcher path in a repository with stale runtime state, which caused
 `leader_nudge` polling to run roughly every 250 to 350 ms.
 
@@ -52,7 +54,7 @@ Implementation:
 
 Controlled reproduction before the patch:
 
-- `omx --madmax --xhigh` in `GhostVMPriv`
+- `rcs --madmax --xhigh` in `GhostVMPriv`
 - `notify-fallback-watcher` active with `poll_ms = 250`
 - `leader_nudge` firing repeatedly
 - `syspolicyd` observed around `66% CPU`
@@ -67,7 +69,7 @@ Controlled reproduction after the patch:
 
 ### Remaining Risks
 
-- Stale `.omx/state` can still keep `leader_nudge` polling active; this patch
+- Stale `.rcs/state` can still keep `leader_nudge` polling active; this patch
   removes the dominant git-exec hotspot but does not stop the poll loop.
 - Other synchronous git metadata reads still exist in separate paths such as
   operational event enrichment and HUD rendering, but they were no longer the

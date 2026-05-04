@@ -47,13 +47,13 @@ const PROMPT_SURFACE_DIRS = [
 ];
 
 const MARKERS = [
-  '<!-- OMX:RUNTIME:START -->',
-  '<!-- OMX:RUNTIME:END -->',
-  '<!-- OMX:TEAM:WORKER:START -->',
-  '<!-- OMX:TEAM:WORKER:END -->',
-  '<!-- OMX:MODELS:START -->',
-  '<!-- OMX:MODELS:END -->',
-  '<!-- omx:generated:agents-md -->',
+  '<!-- RCS:RUNTIME:START -->',
+  '<!-- RCS:RUNTIME:END -->',
+  '<!-- RCS:TEAM:WORKER:START -->',
+  '<!-- RCS:TEAM:WORKER:END -->',
+  '<!-- RCS:MODELS:START -->',
+  '<!-- RCS:MODELS:END -->',
+  '<!-- rcs:generated:agents-md -->',
 ];
 
 const ABSOLUTE_DIRECTIVE_PATTERN = /\b(MUST(?:\s+NOT)?|DO NOT|DON'T|NEVER|ALWAYS|REQUIRED|REQUIRE|ONLY|STOP|ASK only|AUTO-CONTINUE|KEEP GOING)\b/i;

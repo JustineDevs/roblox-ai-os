@@ -22,19 +22,19 @@ import {
   sessionModelInstructionsPath,
 } from "../agents-overlay.js";
 import {
-  OMX_GENERATED_AGENTS_MARKER,
-  OMX_MANAGED_AGENTS_END_MARKER,
-  OMX_MANAGED_AGENTS_START_MARKER,
+  RCS_GENERATED_AGENTS_MARKER,
+  RCS_MANAGED_AGENTS_END_MARKER,
+  RCS_MANAGED_AGENTS_START_MARKER,
 } from "../../utils/agents-md.js";
 
-const RUNTIME_START = "<!-- OMX:RUNTIME:START -->";
-const RUNTIME_END = "<!-- OMX:RUNTIME:END -->";
-const WORKER_START = "<!-- OMX:TEAM:WORKER:START -->";
-const WORKER_END = "<!-- OMX:TEAM:WORKER:END -->";
+const RUNTIME_START = "<!-- RCS:RUNTIME:START -->";
+const RUNTIME_END = "<!-- RCS:RUNTIME:END -->";
+const WORKER_START = "<!-- RCS:TEAM:WORKER:START -->";
+const WORKER_END = "<!-- RCS:TEAM:WORKER:END -->";
 
 async function makeTempDir(): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), "omx-overlay-test-"));
-  await mkdir(join(dir, ".omx", "state"), { recursive: true });
+  const dir = await mkdtemp(join(tmpdir(), "rcs-overlay-test-"));
+  await mkdir(join(dir, ".rcs", "state"), { recursive: true });
   return dir;
 }
 
@@ -58,8 +58,8 @@ describe("generateOverlay", () => {
 
   it("generates overlay with no state files (empty but valid)", async () => {
     const overlay = await generateOverlay(tempDir, "test-session-1");
-    assert.ok(overlay.includes("<!-- OMX:RUNTIME:START -->"));
-    assert.ok(overlay.includes("<!-- OMX:RUNTIME:END -->"));
+    assert.ok(overlay.includes("<!-- RCS:RUNTIME:START -->"));
+    assert.ok(overlay.includes("<!-- RCS:RUNTIME:END -->"));
     assert.ok(overlay.includes("test-session-1"));
     assert.ok(overlay.includes("Compaction Protocol"));
   });
@@ -78,9 +78,9 @@ describe("generateOverlay", () => {
   });
 
   it("adds advisory explore routing guidance by default and hides it only on explicit opt-out", async () => {
-    const previous = process.env.USE_OMX_EXPLORE_CMD;
+    const previous = process.env.USE_RCS_EXPLORE_CMD;
     try {
-      delete process.env.USE_OMX_EXPLORE_CMD;
+      delete process.env.USE_RCS_EXPLORE_CMD;
       const defaultOverlay = await generateOverlay(
         tempDir,
         "explore-routing-default",
@@ -90,9 +90,9 @@ describe("generateOverlay", () => {
         /\*\*Explore Command Preference:\*\*/,
       );
       assert.match(defaultOverlay, /default-on; opt out/i);
-      assert.match(defaultOverlay, /omx explore` FIRST before attempting full code analysis/i);
+      assert.match(defaultOverlay, /rcs explore` FIRST before attempting full code analysis/i);
 
-      process.env.USE_OMX_EXPLORE_CMD = "off";
+      process.env.USE_RCS_EXPLORE_CMD = "off";
       const disabledOverlay = await generateOverlay(
         tempDir,
         "explore-routing-off",
@@ -100,14 +100,14 @@ describe("generateOverlay", () => {
       assert.doesNotMatch(disabledOverlay, /\*\*Explore Command Preference:\*\*/);
     } finally {
       if (typeof previous === "string")
-        process.env.USE_OMX_EXPLORE_CMD = previous;
-      else delete process.env.USE_OMX_EXPLORE_CMD;
+        process.env.USE_RCS_EXPLORE_CMD = previous;
+      else delete process.env.USE_RCS_EXPLORE_CMD;
     }
   });
 
   it("generates overlay with active modes", async () => {
     const sessionId = "test-session-2";
-    const sessionDir = join(tempDir, ".omx", "state", "sessions", sessionId);
+    const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
       join(sessionDir, "ralph-state.json"),
@@ -124,11 +124,11 @@ describe("generateOverlay", () => {
   });
 
   it("generates overlay with session-scoped active modes for current session", async () => {
-    await mkdir(join(tempDir, ".omx", "state", "sessions", "sess1"), {
+    await mkdir(join(tempDir, ".rcs", "state", "sessions", "sess1"), {
       recursive: true,
     });
     await writeFile(
-      join(tempDir, ".omx", "state", "sessions", "sess1", "team-state.json"),
+      join(tempDir, ".rcs", "state", "sessions", "sess1", "team-state.json"),
       JSON.stringify({
         active: true,
         iteration: 1,
@@ -143,7 +143,7 @@ describe("generateOverlay", () => {
 
   it("does not inherit stale root active modes into a fresh session overlay", async () => {
     await writeFile(
-      join(tempDir, ".omx", "state", "ralph-state.json"),
+      join(tempDir, ".rcs", "state", "ralph-state.json"),
       JSON.stringify({
         active: true,
         iteration: 9,
@@ -158,10 +158,10 @@ describe("generateOverlay", () => {
 
   it("lists both approved combined workflow members from canonical skill state", async () => {
     const sessionId = "combined-session";
-    const sessionDir = join(tempDir, ".omx", "state", "sessions", sessionId);
+    const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
-      join(tempDir, ".omx", "state", "session.json"),
+      join(tempDir, ".rcs", "state", "session.json"),
       JSON.stringify({ session_id: sessionId }),
     );
     await writeFile(
@@ -193,7 +193,7 @@ describe("generateOverlay", () => {
 
   it("generates overlay with notepad priority content", async () => {
     await writeFile(
-      join(tempDir, ".omx", "notepad.md"),
+      join(tempDir, ".rcs", "notepad.md"),
       "## PRIORITY\nFocus on auth module refactor.\n\n## WORKING\nSome working notes.",
     );
     const overlay = await generateOverlay(tempDir, "test-session-3");
@@ -203,7 +203,7 @@ describe("generateOverlay", () => {
 
   it("generates overlay with project memory summary", async () => {
     await writeFile(
-      join(tempDir, ".omx", "project-memory.json"),
+      join(tempDir, ".rcs", "project-memory.json"),
       JSON.stringify({
         techStack: "TypeScript + Node.js",
         conventions: "ESM modules, strict mode",
@@ -223,11 +223,11 @@ describe("generateOverlay", () => {
   it("enforces size cap (overlay <= 3500 chars)", async () => {
     const longText = "A".repeat(5000);
     await writeFile(
-      join(tempDir, ".omx", "notepad.md"),
+      join(tempDir, ".rcs", "notepad.md"),
       `## PRIORITY\n${longText}`,
     );
     await writeFile(
-      join(tempDir, ".omx", "project-memory.json"),
+      join(tempDir, ".rcs", "project-memory.json"),
       JSON.stringify({
         techStack: "B".repeat(2000),
         conventions: "C".repeat(2000),
@@ -239,13 +239,13 @@ describe("generateOverlay", () => {
       overlay.length <= 3500,
       `Overlay too large: ${overlay.length} chars`,
     );
-    assert.ok(overlay.includes("<!-- OMX:RUNTIME:START -->"));
-    assert.ok(overlay.includes("<!-- OMX:RUNTIME:END -->"));
+    assert.ok(overlay.includes("<!-- RCS:RUNTIME:START -->"));
+    assert.ok(overlay.includes("<!-- RCS:RUNTIME:END -->"));
   });
 
   it("uses deterministic overflow policy under size cap", async () => {
     const sessionId = "overflow-session";
-    const sessionDir = join(tempDir, ".omx", "state", "sessions", sessionId);
+    const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     // Inflate optional sections so overflow behavior is exercised.
     // Per-section truncation limits mean the total max body (~2640 chars) fits
@@ -263,11 +263,11 @@ describe("generateOverlay", () => {
       );
     }
     await writeFile(
-      join(tempDir, ".omx", "notepad.md"),
+      join(tempDir, ".rcs", "notepad.md"),
       `## PRIORITY\n${"N".repeat(8000)}`,
     );
     await writeFile(
-      join(tempDir, ".omx", "project-memory.json"),
+      join(tempDir, ".rcs", "project-memory.json"),
       JSON.stringify({
         techStack: "T".repeat(9000),
         conventions: "C".repeat(9000),
@@ -291,7 +291,7 @@ describe("generateOverlay", () => {
 
   it("skips inactive modes", async () => {
     await writeFile(
-      join(tempDir, ".omx", "state", "autopilot-state.json"),
+      join(tempDir, ".rcs", "state", "autopilot-state.json"),
       JSON.stringify({ active: false, current_phase: "cancelled" }),
     );
     const overlay = await generateOverlay(tempDir, "test-session-6");
@@ -300,7 +300,7 @@ describe("generateOverlay", () => {
 
   it("adds blocked ralph planning gate when PRD/test spec are missing", async () => {
     const sessionId = "ralph-gate-blocked";
-    const sessionDir = join(tempDir, ".omx", "state", "sessions", sessionId);
+    const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
       join(sessionDir, "ralph-state.json"),
@@ -311,7 +311,7 @@ describe("generateOverlay", () => {
         current_phase: "starting",
       }),
     );
-    await mkdir(join(tempDir, ".omx", "plans"), { recursive: true });
+    await mkdir(join(tempDir, ".rcs", "plans"), { recursive: true });
 
     const overlay = await generateOverlay(tempDir, sessionId);
     assert.match(overlay, /\*\*Ralph Ralplan-First Gate:\*\* BLOCKED/);
@@ -321,7 +321,7 @@ describe("generateOverlay", () => {
 
   it("unlocks ralph planning gate when PRD and test spec exist", async () => {
     const sessionId = "ralph-gate-unlocked";
-    const sessionDir = join(tempDir, ".omx", "state", "sessions", sessionId);
+    const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
       join(sessionDir, "ralph-state.json"),
@@ -332,7 +332,7 @@ describe("generateOverlay", () => {
         current_phase: "starting",
       }),
     );
-    const plansDir = join(tempDir, ".omx", "plans");
+    const plansDir = join(tempDir, ".rcs", "plans");
     await mkdir(plansDir, { recursive: true });
     await writeFile(join(plansDir, "prd-issue-259.md"), "# PRD\n");
     await writeFile(join(plansDir, "test-spec-issue-259.md"), "# Test Spec\n");
@@ -364,7 +364,7 @@ describe("resolveSessionOrchestrationMode", () => {
 
   it("does not inherit root skill-active orchestration mode into a fresh session", async () => {
     await writeFile(
-      join(tempDir, ".omx", "state", "skill-active-state.json"),
+      join(tempDir, ".rcs", "state", "skill-active-state.json"),
       JSON.stringify({
         active: true,
         skill: "team",
@@ -380,7 +380,7 @@ describe("resolveSessionOrchestrationMode", () => {
 
   it("reads persisted team skill state from the current session scope", async () => {
     const sessionId = "sess-team";
-    const sessionDir = join(tempDir, ".omx", "state", "sessions", sessionId);
+    const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
       join(sessionDir, "skill-active-state.json"),
@@ -393,7 +393,7 @@ describe("resolveSessionOrchestrationMode", () => {
 
   it("falls back to default mode for non-team skill state", async () => {
     const sessionId = "sess-autopilot";
-    const sessionDir = join(tempDir, ".omx", "state", "sessions", sessionId);
+    const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
       join(sessionDir, "skill-active-state.json"),
@@ -408,11 +408,11 @@ describe("resolveSessionOrchestrationMode", () => {
     const sessionId = "sess-team-complete";
     const rootStatePath = join(
       tempDir,
-      ".omx",
+      ".rcs",
       "state",
       "skill-active-state.json",
     );
-    const sessionDir = join(tempDir, ".omx", "state", "sessions", sessionId);
+    const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
       rootStatePath,
@@ -430,7 +430,7 @@ describe("resolveSessionOrchestrationMode", () => {
   it("does not inherit root team skill state into a fresh session without session-scoped state", async () => {
     const sessionId = "sess-root-fallback";
     await writeFile(
-      join(tempDir, ".omx", "state", "skill-active-state.json"),
+      join(tempDir, ".rcs", "state", "skill-active-state.json"),
       JSON.stringify({ active: true, skill: "team" }),
     );
 
@@ -440,7 +440,7 @@ describe("resolveSessionOrchestrationMode", () => {
 
   it("active mode summary follows canonical session skill state instead of stale root mode files", async () => {
     const sessionId = "sess-active-summary";
-    const rootStateDir = join(tempDir, ".omx", "state");
+    const rootStateDir = join(tempDir, ".rcs", "state");
     const sessionDir = join(rootStateDir, "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
@@ -469,7 +469,7 @@ describe("resolveSessionOrchestrationMode", () => {
 
   it("active mode summary suppresses stale autoresearch mode files when canonical session skill state excludes it", async () => {
     const sessionId = "sess-autoresearch-summary";
-    const rootStateDir = join(tempDir, ".omx", "state");
+    const rootStateDir = join(tempDir, ".rcs", "state");
     const sessionDir = join(rootStateDir, "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
@@ -539,7 +539,7 @@ DO NOT STOP TO ASK "SHOULD I PROCEED?" — PROCEED. DO NOT WAIT FOR CONFIRMATION
 IF BLOCKED, TRY AN ALTERNATIVE APPROACH. ONLY ASK WHEN TRULY AMBIGUOUS OR DESTRUCTIVE.
 <!-- END AUTONOMY DIRECTIVE -->
 
-# oh-my-codex - Intelligent Multi-Agent Orchestration
+# roblox-ai-os-creator-skills - Intelligent Multi-Agent Orchestration
 `;
     await writeFile(agentsMd, autonomyContent);
 
@@ -563,7 +563,7 @@ IF BLOCKED, TRY AN ALTERNATIVE APPROACH. ONLY ASK WHEN TRULY AMBIGUOUS OR DESTRU
     const secondApply = await readFile(agentsMd, "utf-8");
 
     assert.equal(secondApply, firstApply);
-    const startCount = (secondApply.match(/<!-- OMX:RUNTIME:START -->/g) || [])
+    const startCount = (secondApply.match(/<!-- RCS:RUNTIME:START -->/g) || [])
       .length;
     assert.equal(startCount, 1);
   });
@@ -572,7 +572,7 @@ IF BLOCKED, TRY AN ALTERNATIVE APPROACH. ONLY ASK WHEN TRULY AMBIGUOUS OR DESTRU
     const agentsMd = join(tempDir, "AGENTS-stale.md");
     const staleContent =
       originalContent +
-      "\n<!-- OMX:RUNTIME:START -->\n<session_context>\nOld stale content\n</session_context>\n<!-- OMX:RUNTIME:END -->\n";
+      "\n<!-- RCS:RUNTIME:START -->\n<session_context>\nOld stale content\n</session_context>\n<!-- RCS:RUNTIME:END -->\n";
     await writeFile(agentsMd, staleContent);
 
     const overlay = await generateOverlay(tempDir, "fresh-session");
@@ -581,7 +581,7 @@ IF BLOCKED, TRY AN ALTERNATIVE APPROACH. ONLY ASK WHEN TRULY AMBIGUOUS OR DESTRU
     const result = await readFile(agentsMd, "utf-8");
     assert.ok(result.includes("fresh-session"));
     assert.ok(!result.includes("Old stale content"));
-    const startCount = (result.match(/<!-- OMX:RUNTIME:START -->/g) || [])
+    const startCount = (result.match(/<!-- RCS:RUNTIME:START -->/g) || [])
       .length;
     assert.equal(startCount, 1);
   });
@@ -736,7 +736,7 @@ describe("session-scoped model instructions file", () => {
       sessionContent.indexOf("# User instructions") <
         sessionContent.indexOf("# Project instructions"),
     );
-    assert.match(sessionContent, /<!-- OMX:RUNTIME:START -->/);
+    assert.match(sessionContent, /<!-- RCS:RUNTIME:START -->/);
     assert.equal(projectAfter, projectContent);
   });
 
@@ -794,12 +794,12 @@ describe("session-scoped model instructions file", () => {
     );
     const sessionContent = await readFile(writtenPath, "utf-8");
 
-    assert.ok(sessionContent.includes("<!-- OMX:RUNTIME:START -->"));
-    assert.ok(sessionContent.includes("<!-- OMX:RUNTIME:END -->"));
-    assert.doesNotMatch(sessionContent, /omx:generated:agents-md/);
+    assert.ok(sessionContent.includes("<!-- RCS:RUNTIME:START -->"));
+    assert.ok(sessionContent.includes("<!-- RCS:RUNTIME:END -->"));
+    assert.doesNotMatch(sessionContent, /rcs:generated:agents-md/);
   });
 
-  it("omits pure generated OMX project AGENTS from the session model instructions file", async () => {
+  it("omits pure generated RCS project AGENTS from the session model instructions file", async () => {
     await mkdir(join(tempDir, "home", ".codex"), { recursive: true });
     await rm(join(tempDir, "home", ".codex", "AGENTS.md"), { force: true });
     await writeFile(
@@ -808,9 +808,9 @@ describe("session-scoped model instructions file", () => {
         "<!-- AUTONOMY DIRECTIVE — DO NOT REMOVE -->",
         "YOU ARE AN AUTONOMOUS CODING AGENT.",
         "<!-- END AUTONOMY DIRECTIVE -->",
-        OMX_GENERATED_AGENTS_MARKER,
+        RCS_GENERATED_AGENTS_MARKER,
         "",
-        "# oh-my-codex - Intelligent Multi-Agent Orchestration",
+        "# roblox-ai-os-creator-skills - Intelligent Multi-Agent Orchestration",
         "",
         "Generated orchestration brain.",
       ].join("\n"),
@@ -825,8 +825,8 @@ describe("session-scoped model instructions file", () => {
     const sessionContent = await readFile(writtenPath, "utf-8");
 
     assert.doesNotMatch(sessionContent, /Generated orchestration brain/);
-    assert.doesNotMatch(sessionContent, /omx:generated:agents-md/);
-    assert.match(sessionContent, /<!-- OMX:RUNTIME:START -->/);
+    assert.doesNotMatch(sessionContent, /rcs:generated:agents-md/);
+    assert.match(sessionContent, /<!-- RCS:RUNTIME:START -->/);
   });
 
   it("preserves real unmarked project AGENTS guidance distinct from generated session AGENTS", async () => {
@@ -847,10 +847,10 @@ describe("session-scoped model instructions file", () => {
 
     assert.match(sessionContent, /# Real project AGENTS/);
     assert.match(sessionContent, /Preserve this project guidance\./);
-    assert.match(sessionContent, /<!-- OMX:RUNTIME:START -->/);
+    assert.match(sessionContent, /<!-- RCS:RUNTIME:START -->/);
   });
 
-  it("strips only generated OMX managed blocks from merged AGENTS files", async () => {
+  it("strips only generated RCS managed blocks from merged AGENTS files", async () => {
     await mkdir(join(tempDir, "home", ".codex"), { recursive: true });
     await rm(join(tempDir, "home", ".codex", "AGENTS.md"), { force: true });
     await writeFile(
@@ -860,11 +860,11 @@ describe("session-scoped model instructions file", () => {
         "",
         "Preserve header guidance.",
         "",
-        OMX_MANAGED_AGENTS_START_MARKER,
-        OMX_GENERATED_AGENTS_MARKER,
-        "# oh-my-codex - Intelligent Multi-Agent Orchestration",
+        RCS_MANAGED_AGENTS_START_MARKER,
+        RCS_GENERATED_AGENTS_MARKER,
+        "# roblox-ai-os-creator-skills - Intelligent Multi-Agent Orchestration",
         "Generated managed block.",
-        OMX_MANAGED_AGENTS_END_MARKER,
+        RCS_MANAGED_AGENTS_END_MARKER,
         "",
         "Preserve footer guidance.",
       ].join("\n"),
@@ -882,8 +882,8 @@ describe("session-scoped model instructions file", () => {
     assert.match(sessionContent, /Preserve header guidance\./);
     assert.match(sessionContent, /Preserve footer guidance\./);
     assert.doesNotMatch(sessionContent, /Generated managed block/);
-    assert.doesNotMatch(sessionContent, /omx:generated:agents-md/);
-    assert.match(sessionContent, /<!-- OMX:RUNTIME:START -->/);
+    assert.doesNotMatch(sessionContent, /rcs:generated:agents-md/);
+    assert.match(sessionContent, /<!-- RCS:RUNTIME:START -->/);
   });
 
   it("removes session-scoped file without touching project AGENTS.md", async () => {
@@ -907,7 +907,7 @@ describe("session-scoped model instructions file", () => {
 describe("hasOverlay", () => {
   it("returns true when both markers present", () => {
     const content =
-      "start\n<!-- OMX:RUNTIME:START -->\nmiddle\n<!-- OMX:RUNTIME:END -->\nend";
+      "start\n<!-- RCS:RUNTIME:START -->\nmiddle\n<!-- RCS:RUNTIME:END -->\nend";
     assert.ok(hasOverlay(content));
   });
 
@@ -916,6 +916,6 @@ describe("hasOverlay", () => {
   });
 
   it("returns false when only start marker", () => {
-    assert.ok(!hasOverlay("<!-- OMX:RUNTIME:START -->\nbroken"));
+    assert.ok(!hasOverlay("<!-- RCS:RUNTIME:START -->\nbroken"));
   });
 });

@@ -11,7 +11,7 @@ describe('ralph deslop workflow contract', () => {
   it('requires a mandatory deslop pass after architect verification', () => {
     assert.match(ralphSkill, /Step 7\.5/i);
     assert.match(ralphSkill, /Mandatory Deslop Pass/i);
-    assert.match(ralphSkill, /oh-my-codex:ai-slop-cleaner/i);
+    assert.match(ralphSkill, /roblox-ai-os-creator-skills:ai-slop-cleaner/i);
     assert.match(ralphSkill, /changed files only/i);
     assert.match(ralphSkill, /standard mode/i);
     assert.match(ralphSkill, /not `--review`/i);

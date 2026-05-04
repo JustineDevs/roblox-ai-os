@@ -1,7 +1,7 @@
 /**
- * OMX HUD - State file readers
+ * RCS HUD - State file readers
  *
- * Reads .omx/state/ files to build HUD render context.
+ * Reads .rcs/state/ files to build HUD render context.
  */
 
 import { readFile } from 'fs/promises';
@@ -9,7 +9,7 @@ import { readFileSync } from 'fs';
 import { execFileSync } from 'child_process';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
-import { omxStateDir } from '../utils/paths.js';
+import { rcsStateDir } from '../utils/paths.js';
 import { findGitLayout, readGitLayoutFile } from '../utils/git-layout.js';
 import { getDefaultBridge, isBridgeEnabled } from '../runtime/bridge.js';
 import type { RuntimeSnapshot } from '../runtime/bridge.js';
@@ -166,7 +166,7 @@ export async function readTeamState(cwd: string): Promise<TeamStateForHud | null
 }
 
 export async function readMetrics(cwd: string): Promise<HudMetrics | null> {
-  return readJsonFile<HudMetrics>(join(cwd, '.omx', 'metrics.json'));
+  return readJsonFile<HudMetrics>(join(cwd, '.rcs', 'metrics.json'));
 }
 
 export async function readHudNotifyState(cwd: string): Promise<HudNotifyState | null> {
@@ -182,7 +182,7 @@ export async function readSessionState(cwd: string): Promise<SessionStateForHud 
 }
 
 export async function readHudConfig(cwd: string): Promise<ResolvedHudConfig> {
-  const config = await readJsonFile<HudConfig>(join(cwd, '.omx', 'hud-config.json'));
+  const config = await readJsonFile<HudConfig>(join(cwd, '.rcs', 'hud-config.json'));
   return normalizeHudConfig(config);
 }
 
@@ -204,7 +204,7 @@ export type GitRunner = (cwd: string, args: string[]) => string | null;
  * spawning console windows (conhost.exe flicker).  Falls back to execSync
  * for non-Windows platforms or unrecognised arguments.
  *
- * See: https://github.com/Yeachan-Heo/oh-my-codex/issues/1100
+ * See: https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/1100
  */
 function runGit(cwd: string, args: string[]): string | null {
   if (process.platform === 'win32') {
@@ -462,7 +462,7 @@ export async function readAllState(cwd: string, config: ResolvedHudConfig = DEFA
   // for authority/backlog/readiness display over JS-inferred state.
   let runtimeSnapshot: RuntimeSnapshot | null = null;
   if (isBridgeEnabled()) {
-    const stateDir = omxStateDir(cwd);
+    const stateDir = rcsStateDir(cwd);
     const bridge = getDefaultBridge(stateDir);
     runtimeSnapshot = bridge.readCompatFile<RuntimeSnapshot>('snapshot.json');
   }

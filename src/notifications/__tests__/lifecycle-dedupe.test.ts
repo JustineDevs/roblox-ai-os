@@ -26,7 +26,7 @@ function buildPayload(overrides: Partial<FullNotificationPayload> = {}): FullNot
 
 describe('lifecycle notification dedupe', () => {
   it('suppresses duplicate session lifecycle notifications for the same session transition', async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), 'omx-lifecycle-dedupe-'));
+    const stateDir = await mkdtemp(join(tmpdir(), 'rcs-lifecycle-dedupe-'));
     try {
       const payload = buildPayload();
       assert.equal(shouldSendLifecycleNotification(stateDir, payload), true);
@@ -38,7 +38,7 @@ describe('lifecycle notification dedupe', () => {
   });
 
   it('re-emits when the lifecycle fingerprint changes', async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), 'omx-lifecycle-dedupe-change-'));
+    const stateDir = await mkdtemp(join(tmpdir(), 'rcs-lifecycle-dedupe-change-'));
     try {
       const payload = buildPayload();
       recordLifecycleNotificationSent(stateDir, payload);
@@ -49,7 +49,7 @@ describe('lifecycle notification dedupe', () => {
   });
 
   it('stores dedupe state per session id', async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), 'omx-lifecycle-dedupe-session-'));
+    const stateDir = await mkdtemp(join(tmpdir(), 'rcs-lifecycle-dedupe-session-'));
     try {
       const payload = buildPayload({ sessionId: 'session-a', event: 'session-start' });
       recordLifecycleNotificationSent(stateDir, payload);
@@ -67,7 +67,7 @@ describe('lifecycle notification dedupe', () => {
   });
 
   it('re-emits the same lifecycle fingerprint after the dedupe window elapses', async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), 'omx-lifecycle-dedupe-window-'));
+    const stateDir = await mkdtemp(join(tmpdir(), 'rcs-lifecycle-dedupe-window-'));
     try {
       const payload = buildPayload({ event: 'session-start' });
       const startMs = Date.parse('2026-04-12T00:00:00.000Z');
@@ -82,7 +82,7 @@ describe('lifecycle notification dedupe', () => {
   });
 
   it('tracks hook dedupe separately from notification dedupe state', async () => {
-    const stateDir = await mkdtemp(join(tmpdir(), 'omx-lifecycle-dedupe-hook-'));
+    const stateDir = await mkdtemp(join(tmpdir(), 'rcs-lifecycle-dedupe-hook-'));
     try {
       const payload = buildPayload({ event: 'session-start', sessionId: 'hook-session' });
       const hookFingerprint = 'fp:keyword-detector:turn-1';

@@ -33,7 +33,7 @@
 ## Швидка команда оновлення (jq)
 
 ```bash
-CONFIG_FILE="$HOME/.codex/.omx-config.json"
+CONFIG_FILE="$HOME/.codex/.rcs-config.json"
 
 jq '.notifications.verbosity = "verbose" |
     .notifications.openclaw.hooks["session-start"].instruction = "[session-start|exec]\nproject={{projectName}} session={{sessionId}} tmux={{tmuxSession}}\nпідсумок: контекст старту 1 реченням\nпріоритет: що робити зараз 1–2 пункти\nувага: ризики/залежності (якщо немає — немає)" |

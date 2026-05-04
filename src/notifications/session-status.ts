@@ -7,14 +7,14 @@ import {
   readSubagentSessionSummary,
   type SubagentSessionSummary,
 } from '../subagents/tracker.js';
-import { omxLogsDir } from '../utils/paths.js';
+import { rcsLogsDir } from '../utils/paths.js';
 import type { SessionMapping } from './session-registry.js';
 
 export const DISCORD_STATUS_COMMAND = 'status';
 export const DISCORD_STATUS_STALE_AFTER_MS = 5 * 60_000;
 export const DISCORD_STATUS_MAX_SUBAGENTS = 3;
-export const NO_TRACKED_SESSION_MESSAGE = 'No tracked OMX session is associated with this message.';
-export const STATUS_DATA_UNAVAILABLE_MESSAGE = 'Tracked OMX session found, but status data is unavailable.';
+export const NO_TRACKED_SESSION_MESSAGE = 'No tracked RCS session is associated with this message.';
+export const STATUS_DATA_UNAVAILABLE_MESSAGE = 'Tracked RCS session found, but status data is unavailable.';
 
 interface SessionHistoryEntry {
   session_id?: string;
@@ -58,7 +58,7 @@ function readLatestHistoryEntry(
 ): SessionHistoryEntry | null {
   const existsSyncImpl = deps.existsSyncImpl ?? existsSync;
   const readFileSyncImpl = deps.readFileSyncImpl ?? readFileSync;
-  const historyPath = join(omxLogsDir(projectPath), 'session-history.jsonl');
+  const historyPath = join(rcsLogsDir(projectPath), 'session-history.jsonl');
   if (!existsSyncImpl(historyPath)) return null;
 
   try {
@@ -264,7 +264,7 @@ export async function buildDiscordSessionStatusReply(
   const freshness = formatFreshnessLabel(latestTimestamp, deps.now);
 
   const lines = [
-    'Tracked OMX session status',
+    'Tracked RCS session status',
     `Session: ${mapping.sessionId}`,
     `Native: ${nativeSessionId}`,
     `State: ${stateLabel}`,

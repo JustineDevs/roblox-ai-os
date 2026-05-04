@@ -269,9 +269,9 @@ export async function executeStateOperation(
           if (
             mode === 'ralph' &&
             effectiveSessionId &&
-            typeof mergedRaw.owner_omx_session_id !== 'string'
+            typeof mergedRaw.owner_rcs_session_id !== 'string'
           ) {
-            mergedRaw.owner_omx_session_id = effectiveSessionId;
+            mergedRaw.owner_rcs_session_id = effectiveSessionId;
           }
 
           if (mode === 'ralph') {

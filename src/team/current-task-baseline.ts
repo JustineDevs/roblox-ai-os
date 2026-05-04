@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
-import { omxStateDir } from '../utils/paths.js';
+import { rcsStateDir } from '../utils/paths.js';
 
 export type CurrentTaskStatus = 'active' | 'merged' | 'closed' | 'superseded';
 
@@ -33,7 +33,7 @@ export interface UpsertCurrentTaskBaselineInput {
 }
 
 function baselinePath(repoRoot: string): string {
-  return join(omxStateDir(repoRoot), 'current-task-baseline.json');
+  return join(rcsStateDir(repoRoot), 'current-task-baseline.json');
 }
 
 function emptyBaseline(): CurrentTaskBaselineFile {
@@ -62,7 +62,7 @@ export function readCurrentTaskBaseline(repoRoot: string): CurrentTaskBaselineFi
 }
 
 function writeCurrentTaskBaseline(repoRoot: string, data: CurrentTaskBaselineFile): void {
-  const stateDir = omxStateDir(repoRoot);
+  const stateDir = rcsStateDir(repoRoot);
   mkdirSync(stateDir, { recursive: true });
   writeFileSync(baselinePath(repoRoot), JSON.stringify(data, null, 2) + '\n', 'utf-8');
 }

@@ -1,0 +1,14 @@
+[package]
+name = "rcs-sparkshell"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "rcs-sparkshell"
+path = "src/main.rs"
+
+[dependencies]
+rcs-mux = { path = "../rcs-mux" }

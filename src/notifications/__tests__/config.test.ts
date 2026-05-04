@@ -9,21 +9,21 @@ import {
 } from '../config.js';
 
 const ENV_KEYS = [
-  'OMX_DISCORD_NOTIFIER_BOT_TOKEN',
-  'OMX_DISCORD_NOTIFIER_CHANNEL',
-  'OMX_DISCORD_WEBHOOK_URL',
-  'OMX_DISCORD_MENTION',
-  'OMX_TELEGRAM_BOT_TOKEN',
-  'OMX_TELEGRAM_NOTIFIER_BOT_TOKEN',
-  'OMX_TELEGRAM_CHAT_ID',
-  'OMX_TELEGRAM_NOTIFIER_CHAT_ID',
-  'OMX_TELEGRAM_NOTIFIER_UID',
-  'OMX_SLACK_WEBHOOK_URL',
-  'OMX_SLACK_MENTION',
-  'OMX_REPLY_ENABLED',
-  'OMX_REPLY_DISCORD_USER_IDS',
-  'OMX_REPLY_POLL_INTERVAL_MS',
-  'OMX_REPLY_RATE_LIMIT',
+  'RCS_DISCORD_NOTIFIER_BOT_TOKEN',
+  'RCS_DISCORD_NOTIFIER_CHANNEL',
+  'RCS_DISCORD_WEBHOOK_URL',
+  'RCS_DISCORD_MENTION',
+  'RCS_TELEGRAM_BOT_TOKEN',
+  'RCS_TELEGRAM_NOTIFIER_BOT_TOKEN',
+  'RCS_TELEGRAM_CHAT_ID',
+  'RCS_TELEGRAM_NOTIFIER_CHAT_ID',
+  'RCS_TELEGRAM_NOTIFIER_UID',
+  'RCS_SLACK_WEBHOOK_URL',
+  'RCS_SLACK_MENTION',
+  'RCS_REPLY_ENABLED',
+  'RCS_REPLY_DISCORD_USER_IDS',
+  'RCS_REPLY_POLL_INTERVAL_MS',
+  'RCS_REPLY_RATE_LIMIT',
 ];
 
 function clearEnvVars(): void {
@@ -140,8 +140,8 @@ describe('buildConfigFromEnv', () => {
   });
 
   it('builds discord-bot config from env vars', () => {
-    process.env.OMX_DISCORD_NOTIFIER_BOT_TOKEN = 'test-token';
-    process.env.OMX_DISCORD_NOTIFIER_CHANNEL = '123456';
+    process.env.RCS_DISCORD_NOTIFIER_BOT_TOKEN = 'test-token';
+    process.env.RCS_DISCORD_NOTIFIER_CHANNEL = '123456';
     const config = buildConfigFromEnv();
     assert.ok(config);
     assert.equal(config.enabled, true);
@@ -154,25 +154,25 @@ describe('buildConfigFromEnv', () => {
   });
 
   it('includes validated mention in discord-bot config', () => {
-    process.env.OMX_DISCORD_NOTIFIER_BOT_TOKEN = 'test-token';
-    process.env.OMX_DISCORD_NOTIFIER_CHANNEL = '123456';
-    process.env.OMX_DISCORD_MENTION = '<@12345678901234567>';
+    process.env.RCS_DISCORD_NOTIFIER_BOT_TOKEN = 'test-token';
+    process.env.RCS_DISCORD_NOTIFIER_CHANNEL = '123456';
+    process.env.RCS_DISCORD_MENTION = '<@12345678901234567>';
     const config = buildConfigFromEnv();
     assert.ok(config);
     assert.equal(config['discord-bot']!.mention, '<@12345678901234567>');
   });
 
   it('rejects invalid mention in env var', () => {
-    process.env.OMX_DISCORD_NOTIFIER_BOT_TOKEN = 'test-token';
-    process.env.OMX_DISCORD_NOTIFIER_CHANNEL = '123456';
-    process.env.OMX_DISCORD_MENTION = '@everyone';
+    process.env.RCS_DISCORD_NOTIFIER_BOT_TOKEN = 'test-token';
+    process.env.RCS_DISCORD_NOTIFIER_CHANNEL = '123456';
+    process.env.RCS_DISCORD_MENTION = '@everyone';
     const config = buildConfigFromEnv();
     assert.ok(config);
     assert.equal(config['discord-bot']!.mention, undefined);
   });
 
   it('builds discord webhook config from env var', () => {
-    process.env.OMX_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/test';
+    process.env.RCS_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/test';
     const config = buildConfigFromEnv();
     assert.ok(config);
     assert.deepEqual(config.discord, {
@@ -183,8 +183,8 @@ describe('buildConfigFromEnv', () => {
   });
 
   it('builds telegram config from env vars', () => {
-    process.env.OMX_TELEGRAM_BOT_TOKEN = '123:abc';
-    process.env.OMX_TELEGRAM_CHAT_ID = '999';
+    process.env.RCS_TELEGRAM_BOT_TOKEN = '123:abc';
+    process.env.RCS_TELEGRAM_CHAT_ID = '999';
     const config = buildConfigFromEnv();
     assert.ok(config);
     assert.deepEqual(config.telegram, {
@@ -195,7 +195,7 @@ describe('buildConfigFromEnv', () => {
   });
 
   it('builds slack config from env var', () => {
-    process.env.OMX_SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/test';
+    process.env.RCS_SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/test';
     const config = buildConfigFromEnv();
     assert.ok(config);
     assert.deepEqual(config.slack, {
@@ -205,8 +205,8 @@ describe('buildConfigFromEnv', () => {
   });
 
   it('includes a validated slack mention in slack config', () => {
-    process.env.OMX_SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/test';
-    process.env.OMX_SLACK_MENTION = '<!here>';
+    process.env.RCS_SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/test';
+    process.env.RCS_SLACK_MENTION = '<!here>';
 
     const config = buildConfigFromEnv();
     assert.ok(config);
@@ -218,8 +218,8 @@ describe('buildConfigFromEnv', () => {
   });
 
   it('drops invalid slack mention env values', () => {
-    process.env.OMX_SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/test';
-    process.env.OMX_SLACK_MENTION = '@here';
+    process.env.RCS_SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/test';
+    process.env.RCS_SLACK_MENTION = '@here';
 
     const config = buildConfigFromEnv();
     assert.ok(config);
@@ -229,28 +229,28 @@ describe('buildConfigFromEnv', () => {
     });
   });
 
-  it('uses OMX_TELEGRAM_NOTIFIER_BOT_TOKEN as fallback', () => {
-    process.env.OMX_TELEGRAM_NOTIFIER_BOT_TOKEN = '123:fallback';
-    process.env.OMX_TELEGRAM_CHAT_ID = '999';
+  it('uses RCS_TELEGRAM_NOTIFIER_BOT_TOKEN as fallback', () => {
+    process.env.RCS_TELEGRAM_NOTIFIER_BOT_TOKEN = '123:fallback';
+    process.env.RCS_TELEGRAM_CHAT_ID = '999';
     const config = buildConfigFromEnv();
     assert.ok(config);
     assert.equal(config.telegram!.botToken, '123:fallback');
   });
 
-  it('uses OMX_TELEGRAM_NOTIFIER_UID as fallback for chat ID', () => {
-    process.env.OMX_TELEGRAM_BOT_TOKEN = '123:abc';
-    process.env.OMX_TELEGRAM_NOTIFIER_UID = 'uid-999';
+  it('uses RCS_TELEGRAM_NOTIFIER_UID as fallback for chat ID', () => {
+    process.env.RCS_TELEGRAM_BOT_TOKEN = '123:abc';
+    process.env.RCS_TELEGRAM_NOTIFIER_UID = 'uid-999';
     const config = buildConfigFromEnv();
     assert.ok(config);
     assert.equal(config.telegram!.chatId, 'uid-999');
   });
 
   it('builds config with multiple platforms from env', () => {
-    process.env.OMX_DISCORD_NOTIFIER_BOT_TOKEN = 'bot-token';
-    process.env.OMX_DISCORD_NOTIFIER_CHANNEL = 'channel-123';
-    process.env.OMX_TELEGRAM_BOT_TOKEN = '456:tg';
-    process.env.OMX_TELEGRAM_CHAT_ID = 'chat-789';
-    process.env.OMX_SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/test';
+    process.env.RCS_DISCORD_NOTIFIER_BOT_TOKEN = 'bot-token';
+    process.env.RCS_DISCORD_NOTIFIER_CHANNEL = 'channel-123';
+    process.env.RCS_TELEGRAM_BOT_TOKEN = '456:tg';
+    process.env.RCS_TELEGRAM_CHAT_ID = 'chat-789';
+    process.env.RCS_SLACK_WEBHOOK_URL = 'https://hooks.slack.com/services/test';
 
     const config = buildConfigFromEnv();
     assert.ok(config);
@@ -261,10 +261,10 @@ describe('buildConfigFromEnv', () => {
   });
 
   it('mention from env is shared across discord-bot and discord webhook', () => {
-    process.env.OMX_DISCORD_NOTIFIER_BOT_TOKEN = 'bot-token';
-    process.env.OMX_DISCORD_NOTIFIER_CHANNEL = 'channel-123';
-    process.env.OMX_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/test';
-    process.env.OMX_DISCORD_MENTION = '<@12345678901234567>';
+    process.env.RCS_DISCORD_NOTIFIER_BOT_TOKEN = 'bot-token';
+    process.env.RCS_DISCORD_NOTIFIER_CHANNEL = 'channel-123';
+    process.env.RCS_DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/test';
+    process.env.RCS_DISCORD_MENTION = '<@12345678901234567>';
 
     const config = buildConfigFromEnv();
     assert.ok(config);

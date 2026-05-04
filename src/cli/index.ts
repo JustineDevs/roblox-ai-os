@@ -1,10 +1,11 @@
 /**
- * oh-my-codex CLI
+ * roblox-ai-os-creator-skills CLI
  * Multi-agent orchestration for OpenAI Codex CLI
  */
 
 import { execFileSync, spawn } from "child_process";
 import { basename, dirname, join } from "path";
+import { writeSync } from "fs";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "fs";
 import { copyFile, cp, lstat, mkdir, readdir, rm, symlink } from "fs/promises";
 import { constants as osConstants } from "os";
@@ -22,7 +23,7 @@ import { questionCommand } from "./question.js";
 import { stateCommand } from "./state.js";
 import {
   cleanupCommand,
-  cleanupOmxMcpProcesses,
+  cleanupRcsMcpProcesses,
   findLaunchSafeCleanupCandidates,
   type CleanupDependencies,
   type CleanupResult,
@@ -99,7 +100,7 @@ import {
   mitigateCopyModeUnderlineArtifacts,
 } from "../team/tmux-session.js";
 import { getPackageRoot } from "../utils/package.js";
-import { codexConfigPath, rememberOmxLaunchContext, resolveOmxEntryPath } from "../utils/paths.js";
+import { codexConfigPath, rememberRcsLaunchContext, resolveRcsEntryPath } from "../utils/paths.js";
 import { cleanCodexModelAvailabilityNuxIfNeeded, repairConfigIfNeeded } from "../config/generator.js";
 import { HUD_TMUX_HEIGHT_LINES } from "../hud/constants.js";
 import {
@@ -111,7 +112,7 @@ import {
 
 export { parseTmuxPaneSnapshot, isHudWatchPane, findHudWatchPaneIds } from "../hud/tmux.js";
 
-rememberOmxLaunchContext();
+rememberRcsLaunchContext();
 import {
   classifySpawnError,
   resolveTmuxBinaryForPlatform,
@@ -131,7 +132,7 @@ import {
 } from "../team/worktree.js";
 import { ensureReusableNodeModules } from "../utils/repo-deps.js";
 import {
-  OMX_NOTIFY_TEMP_CONTRACT_ENV,
+  RCS_NOTIFY_TEMP_CONTRACT_ENV,
   parseNotifyTempContractFromArgs,
   serializeNotifyTempContract,
   type NotifyTempContract,
@@ -141,6 +142,12 @@ import { execInjectCommand } from "../exec/followup.js";
 
 export function resolveNotifyFallbackWatcherScript(pkgRoot = getPackageRoot()): string {
   return resolveDistScript(pkgRoot, "notify-fallback-watcher.js");
+}
+
+function writeStdoutLine(line: string): void {
+  const rendered = `${line}\n`;
+  if (process.stdout.isTTY) process.stdout.write(rendered);
+  else writeSync(1, rendered);
 }
 
 export function resolveHookDerivedWatcherScript(pkgRoot = getPackageRoot()): string {
@@ -156,60 +163,83 @@ function resolveDistScript(pkgRoot: string, scriptName: string): string {
 }
 
 export const HELP = `
-oh-my-codex (omx) - Multi-agent orchestration for Codex CLI
+Roblox Creator Skills (rcs) - Creator workflow runtime for Codex CLI
 
 Usage:
-  omx           Launch Codex CLI (detached tmux by default on supported interactive terminals)
-  omx exec      Run codex exec non-interactively with OMX AGENTS/overlay injection
-  omx exec inject <session-id> --prompt <text>
+  rcs           Launch Codex CLI (detached tmux by default on supported interactive terminals)
+  rcs exec      Run codex exec non-interactively with RCS AGENTS/overlay injection
+  rcs exec inject <session-id> --prompt <text>
                 Queue audited follow-up instructions for a running non-interactive exec job
-  omx setup     Install skills, prompts, MCP servers, and scope-specific AGENTS.md
+  rcs setup     Install skills, prompts, MCP servers, and scope-specific AGENTS.md
                 (user scope prompts for legacy vs plugin skill delivery when needed)
-  omx update    Check npm now, update the global install immediately, then refresh setup
-  omx uninstall Remove OMX configuration and clean up installed artifacts
-  omx doctor    Check installation health
-  omx list      List packaged OMX skills and native agent prompts (--json)
-  omx cleanup   Kill orphaned OMX MCP server processes and remove stale OMX /tmp directories
-  omx doctor --team  Check team/swarm runtime health diagnostics
-  omx ask       Ask local provider CLI (claude|gemini) and write artifact output
-  omx question  OMX-owned blocking question UI entrypoint for agent-invoked user questions
-  omx adapt     Scaffold OMX-owned adapter foundations for persistent external targets
-  omx resume    Resume a previous interactive Codex session
-  omx explore   Default read-only exploration entrypoint (may adaptively use sparkshell backend)
-  omx session   Search prior local session transcripts and history artifacts
-  omx agents-init [path]
+  rcs update    Check npm now, update the global install immediately, then refresh setup
+  rcs uninstall Remove RCS configuration and clean up installed artifacts
+  rcs doctor    Check installation health
+  rcs list      List packaged RCS skills and native agent prompts (--json)
+  rcs cleanup   Kill orphaned RCS MCP server processes and remove stale RCS /tmp directories
+  rcs doctor --team  Check team/swarm runtime health diagnostics
+  rcs ask       Ask local provider CLI (claude|gemini) and write artifact output
+  rcs question  RCS-owned blocking question UI entrypoint for agent-invoked user questions
+  rcs adapt     Scaffold RCS-owned adapter foundations for persistent external targets
+  rcs resume    Resume a previous interactive Codex session
+  rcs explore   Default read-only exploration entrypoint (may adaptively use sparkshell backend)
+  rcs session   Search prior local session transcripts and history artifacts
+  rcs agents-init [path]
                 Bootstrap lightweight AGENTS.md files for a repo/subtree
-  omx agents    Manage Codex native agent TOML files
-  omx deepinit [path]
+  rcs agents    Manage Codex native agent TOML files
+  rcs deepinit [path]
                 Alias for agents-init (lightweight AGENTS bootstrap only)
-  omx team      Spawn parallel worker panes in tmux and bootstrap inbox/task state
-  omx ralph     Launch Codex with ralph persistence mode active
-  omx autoresearch [DEPRECATED] Use $autoresearch; direct CLI launch removed
-  omx version   Show version information
-  omx tmux-hook Manage tmux prompt injection workaround (init|status|validate|test)
-  omx hooks     Manage hook plugins (init|status|validate|test)
-  omx hud       Show HUD statusline (--watch, --json, --preset=NAME)
-  omx sidecar   Show read-only team/multi-agent visualization (--watch, --json, --tmux)
-  omx state     Read/write/list OMX mode state via CLI parity surface
-  omx notepad   CLI parity for OMX notepad MCP tools
-  omx project-memory
-                CLI parity for OMX project-memory MCP tools
-  omx trace     CLI parity for OMX trace MCP tools
-  omx code-intel
-                CLI parity for OMX code-intel MCP tools
-  omx wiki      CLI parity for OMX wiki MCP tools
-  omx mcp-serve Launch an OMX stdio MCP server target (plugin/runtime use)
-  omx sparkshell <command> [args...]
-  omx sparkshell --tmux-pane <pane-id> [--tail-lines <100-1000>]
+  rcs team      Spawn parallel worker panes in tmux and bootstrap inbox/task state
+  rcs ralph     Launch Codex with ralph persistence mode active
+  rcs autoresearch [DEPRECATED] Use $autoresearch; direct CLI launch removed
+  rcs version   Show version information
+  rcs tmux-hook Manage tmux prompt injection workaround (init|status|validate|test)
+  rcs hooks     Manage hook plugins (init|status|validate|test)
+  rcs hud       Show HUD statusline (--watch, --json, --preset=NAME)
+  rcs sidecar   Show read-only team/multi-agent visualization (--watch, --json, --tmux)
+  rcs state     Read/write/list RCS mode state via CLI parity surface
+  rcs notepad   CLI parity for RCS notepad MCP tools
+  rcs project-memory
+                CLI parity for RCS project-memory MCP tools
+  rcs trace     CLI parity for RCS trace MCP tools
+  rcs code-intel
+                CLI parity for RCS code-intel MCP tools
+  rcs wiki      CLI parity for RCS wiki MCP tools
+  rcs mcp-serve Launch an RCS stdio MCP server target (plugin/runtime use)
+  rcs sparkshell <command> [args...]
+  rcs sparkshell --tmux-pane <pane-id> [--tail-lines <100-1000>]
                 Run native sparkshell sidecar for direct command execution or explicit tmux-pane summarization
                 (also used as an adaptive backend for qualifying read-only explore tasks)
-  omx help      Show this help message
-  omx status    Show active modes and state
-  omx cancel    Cancel active execution modes
-  omx reasoning Show or set model reasoning effort (low|medium|high|xhigh)
+  rcs help      Show this help message
+  rcs status    Show active modes and state
+  rcs cancel    Cancel active execution modes
+  rcs reasoning Show or set model reasoning effort (low|medium|high|xhigh)
+
+Creator workflow triggers (use inside Codex sessions):
+  $brief         Capture goals, constraints, genre, audience, and outcome
+  $blueprint     Generate structured design and planning artifacts
+  $forge         Generate concrete creator-facing deliverables and specs
+  $crew          Orchestrate multi-role creator workflows
+  $autoforge     Run the end-to-end creator workflow with minimal supervision
+
+Psychology-aware creator triggers:
+  $brief:audience      Target fantasy, habit patterns, pain language, return motive
+  $brief:motivation    Driver ranking + anti-pattern risk scan
+  $blueprint:psych     Player psychology blueprint
+  $blueprint:loop      Session, daily, weekly, and comeback loop map
+  $blueprint:retention D1/D7/D30 retention assumptions and cadence
+  $blueprint:social    Social machine design
+  $forge:reward-loop   Reward loop specification
+  $forge:daily-loop    Daily return motivator spec
+  $forge:event-loop    Event and urgency loop spec
+  $forge:progression   XP, level, prestige, rebirth, and unlock ladders
+  $forge:status        Prestige and visible status systems
+  $forge:fomo          Fair urgency mechanics with guardrails
+  $forge:mastery       Skill-expression and optimization systems
+  $forge:community     Social stickiness systems
 
 Options:
-  --yolo        Launch Codex in yolo mode (shorthand for: omx launch --yolo)
+  --yolo        Launch Codex in yolo mode (shorthand for: rcs launch --yolo)
   --high        Launch Codex with high reasoning effort
                 (shorthand for: -c model_reasoning_effort="high")
   --xhigh       Launch Codex with xhigh reasoning effort
@@ -221,7 +251,7 @@ Options:
   --madmax-spark  spark model for workers + bypass approvals for leader and workers
                 (shorthand for: --spark --madmax)
   --notify-temp  Enable temporary notification routing for this run/session only
-  --direct       Launch the interactive leader directly without OMX tmux/HUD management
+  --direct       Launch the interactive leader directly without RCS tmux/HUD management
   --tmux         Launch the interactive leader session in detached tmux
   --discord      Select Discord provider for temporary notification mode
   --slack        Select Slack provider for temporary notification mode
@@ -232,48 +262,48 @@ Options:
                 Launch Codex in a git worktree (detached when no name is given)
   --force       Force reinstall (overwrite existing files)
   --merge-agents
-                Merge OMX-managed AGENTS.md sections into an existing AGENTS.md
+                Merge RCS-managed AGENTS.md sections into an existing AGENTS.md
                 instead of overwriting user-authored content
   --dry-run     Show what would be done without doing it
-  --plugin      Use Codex plugin delivery for omx setup and remove legacy OMX-managed user/project components
-  --legacy      Use legacy setup delivery for omx setup, overriding persisted plugin mode
+  --plugin      Use Codex plugin delivery for rcs setup and remove legacy RCS-managed user/project components
+  --legacy      Use legacy setup delivery for rcs setup, overriding persisted plugin mode
   --install-mode <legacy|plugin>
                 Explicit setup install mode (canonical form; --legacy/--plugin are aliases)
   --keep-config Skip config.toml cleanup during uninstall
-  --purge       Remove .omx/ cache directory during uninstall
+  --purge       Remove .rcs/ cache directory during uninstall
   --verbose     Show detailed output
-  --scope       Setup scope for "omx setup" only:
+  --scope       Setup scope for "rcs setup" only:
                 user | project
 
 Launch policy:
-  OMX_LAUNCH_POLICY=direct|tmux|detached-tmux|auto
+  RCS_LAUNCH_POLICY=direct|tmux|detached-tmux|auto
                 Choose the default leader launch policy when no CLI policy flag is present
-  unset OMX_LAUNCH_POLICY
+  unset RCS_LAUNCH_POLICY
                 Return to the auto/default policy (detached tmux on supported interactive terminals)
-  omx --direct --yolo
-                Run this launch without OMX tmux/HUD management
-  OMX_LAUNCH_POLICY=direct omx --yolo
+  rcs --direct --yolo
+                Run this launch without RCS tmux/HUD management
+  RCS_LAUNCH_POLICY=direct rcs --yolo
                 Use direct launch from the environment
-  OMX_LAUNCH_POLICY=direct omx --tmux --yolo
+  RCS_LAUNCH_POLICY=direct rcs --tmux --yolo
                 CLI policy flags override the environment for one launch
   Config files are intentionally not used for launch policy in this release.
 `;
 
 const REASONING_KEY = "model_reasoning_effort";
 const MODEL_INSTRUCTIONS_FILE_KEY = "model_instructions_file";
-const TEAM_WORKER_LAUNCH_ARGS_ENV = "OMX_TEAM_WORKER_LAUNCH_ARGS";
-const TEAM_INHERIT_LEADER_FLAGS_ENV = "OMX_TEAM_INHERIT_LEADER_FLAGS";
-const OMX_BYPASS_DEFAULT_SYSTEM_PROMPT_ENV = "OMX_BYPASS_DEFAULT_SYSTEM_PROMPT";
-const OMX_MODEL_INSTRUCTIONS_FILE_ENV = "OMX_MODEL_INSTRUCTIONS_FILE";
-const OMX_INSTANCE_OPTION = "@omx_instance_id";
-const OMX_RALPH_APPEND_INSTRUCTIONS_FILE_ENV =
-  "OMX_RALPH_APPEND_INSTRUCTIONS_FILE";
-const OMX_AUTORESEARCH_APPEND_INSTRUCTIONS_FILE_ENV =
-  "OMX_AUTORESEARCH_APPEND_INSTRUCTIONS_FILE";
+const TEAM_WORKER_LAUNCH_ARGS_ENV = "RCS_TEAM_WORKER_LAUNCH_ARGS";
+const TEAM_INHERIT_LEADER_FLAGS_ENV = "RCS_TEAM_INHERIT_LEADER_FLAGS";
+const RCS_BYPASS_DEFAULT_SYSTEM_PROMPT_ENV = "RCS_BYPASS_DEFAULT_SYSTEM_PROMPT";
+const RCS_MODEL_INSTRUCTIONS_FILE_ENV = "RCS_MODEL_INSTRUCTIONS_FILE";
+const RCS_INSTANCE_OPTION = "@rcs_instance_id";
+const RCS_RALPH_APPEND_INSTRUCTIONS_FILE_ENV =
+  "RCS_RALPH_APPEND_INSTRUCTIONS_FILE";
+const RCS_AUTORESEARCH_APPEND_INSTRUCTIONS_FILE_ENV =
+  "RCS_AUTORESEARCH_APPEND_INSTRUCTIONS_FILE";
 const REASONING_MODES = ["low", "medium", "high", "xhigh"] as const;
 type ReasoningMode = (typeof REASONING_MODES)[number];
 const REASONING_MODE_SET = new Set<string>(REASONING_MODES);
-const REASONING_USAGE = "Usage: omx reasoning <low|medium|high|xhigh>";
+const REASONING_USAGE = "Usage: rcs reasoning <low|medium|high|xhigh>";
 const ALLOWED_SHELLS = new Set([
   "/bin/sh",
   "/bin/bash",
@@ -479,7 +509,7 @@ export function commandOwnsLocalHelp(command: CliCommand): boolean {
 
 export type CodexLaunchPolicy = "inside-tmux" | "detached-tmux" | "direct";
 
-const OMX_LAUNCH_POLICY_ENV = "OMX_LAUNCH_POLICY";
+const RCS_LAUNCH_POLICY_ENV = "RCS_LAUNCH_POLICY";
 let warnedInvalidEnvLaunchPolicy = false;
 
 function splitLeaderLaunchPolicyArgs(args: string[]): {
@@ -527,7 +557,7 @@ export function resolveLeaderLaunchPolicyOverride(
 export function resolveEnvLaunchPolicyOverride(
   env: NodeJS.ProcessEnv = process.env,
 ): CodexLaunchPolicy | undefined {
-  const rawValue = env[OMX_LAUNCH_POLICY_ENV]?.trim();
+  const rawValue = env[RCS_LAUNCH_POLICY_ENV]?.trim();
   if (!rawValue) return undefined;
 
   const value = rawValue.toLowerCase();
@@ -538,7 +568,7 @@ export function resolveEnvLaunchPolicyOverride(
   if (!warnedInvalidEnvLaunchPolicy) {
     warnedInvalidEnvLaunchPolicy = true;
     console.warn(
-      `[omx] warning: invalid ${OMX_LAUNCH_POLICY_ENV}="${rawValue}". ` +
+      `[rcs] warning: invalid ${RCS_LAUNCH_POLICY_ENV}="${rawValue}". ` +
         "Expected direct, tmux, detached-tmux, or auto. Falling back to auto/default launch policy.",
     );
   }
@@ -589,7 +619,7 @@ export interface PreparedCodexHomeForLaunch {
 }
 
 export function runtimeCodexHomePath(cwd: string, sessionId: string): string {
-  return join(cwd, ".omx", "runtime", "codex-home", sessionId);
+  return join(cwd, ".rcs", "runtime", "codex-home", sessionId);
 }
 
 async function linkOrCopyCodexHomeEntry(source: string, destination: string): Promise<void> {
@@ -750,7 +780,7 @@ export function checkDetachedTmuxLaunchHealth(): TmuxLaunchHealth {
 function warnDetachedTmuxFallback(reason?: string): void {
   const suffix = reason ? ` (${reason})` : "";
   console.warn(
-    `[omx] warning: tmux is installed but its server/socket is unusable${suffix}. Falling back to direct Codex launch.`,
+    `[rcs] warning: tmux is installed but its server/socket is unusable${suffix}. Falling back to direct Codex launch.`,
   );
 }
 
@@ -858,14 +888,14 @@ function runCodexBlocking(
     const kind = classifySpawnError(errno);
     if (kind === "missing") {
       console.error(
-        "[omx] failed to launch codex: executable not found in PATH",
+        "[rcs] failed to launch codex: executable not found in PATH",
       );
     } else if (kind === "blocked") {
       console.error(
-        `[omx] failed to launch codex: executable is present but blocked in the current environment (${errno.code || "blocked"})`,
+        `[rcs] failed to launch codex: executable is present but blocked in the current environment (${errno.code || "blocked"})`,
       );
     } else {
-      console.error(`[omx] failed to launch codex: ${errno.message}`);
+      console.error(`[rcs] failed to launch codex: ${errno.message}`);
     }
     throw result.error;
   }
@@ -876,7 +906,7 @@ function runCodexBlocking(
         ? result.status
         : resolveSignalExitCode(result.signal);
     if (result.signal) {
-      console.error(`[omx] codex exited due to signal ${result.signal}`);
+      console.error(`[rcs] codex exited due to signal ${result.signal}`);
     }
   }
 }
@@ -1115,7 +1145,7 @@ async function showStatus(): Promise<void> {
     const refs = await listModeStateFilesWithScopePreference(cwd);
     const states = refs.map((ref) => ref.path);
     if (states.length === 0) {
-      console.log("No active modes.");
+      writeStdoutLine("No active modes.");
       return;
     }
     for (const path of states) {
@@ -1129,13 +1159,13 @@ async function showStatus(): Promise<void> {
       }
       const file = basename(path);
       const mode = file.replace("-state.json", "");
-      console.log(
+      writeStdoutLine(
         `${mode}: ${state.active === true ? "ACTIVE" : "inactive"} (phase: ${String(state.current_phase || "n/a")})`,
       );
     }
   } catch (err) {
     logCliOperationFailure(err);
-    console.log("No active modes.");
+    writeStdoutLine("No active modes.");
   }
 }
 
@@ -1193,20 +1223,20 @@ export async function launchWithHud(args: string[]): Promise<void> {
       const kind = classifySpawnError(errno);
       if (kind === "missing") {
         console.warn(
-          "[omx] warning: tmux was not found on native Windows. Continuing without tmux/HUD.\n" +
-            "[omx] To enable tmux-backed features, install psmux:\n" +
-            "[omx]   winget install psmux\n" +
-            "[omx] See: https://github.com/marlocarlo/psmux",
+          "[rcs] warning: tmux was not found on native Windows. Continuing without tmux/HUD.\n" +
+            "[rcs] To enable tmux-backed features, install psmux:\n" +
+            "[rcs]   winget install psmux\n" +
+            "[rcs] See: https://github.com/marlocarlo/psmux",
         );
       } else {
         console.warn(
-          `[omx] warning: tmux probe failed on native Windows (${errno.code || errno.message}). Continuing without tmux/HUD.`,
+          `[rcs] warning: tmux probe failed on native Windows (${errno.code || errno.message}). Continuing without tmux/HUD.`,
         );
       }
     } else if (result.status !== 0 && !isTmuxAvailable()) {
       const stderr = (result.stderr || "").trim();
       console.warn(
-        `[omx] warning: tmux reported an error on native Windows${stderr ? ` (${stderr})` : ""}. Continuing without tmux/HUD.`,
+        `[rcs] warning: tmux reported an error on native Windows${stderr ? ` (${stderr})` : ""}. Continuing without tmux/HUD.`,
       );
     }
   }
@@ -1246,19 +1276,19 @@ export async function launchWithHud(args: string[]): Promise<void> {
       if (ensured.dirty) {
         worktreeDirty = true;
         process.stderr.write(
-          `[omx] Caution: worktree at ${cwd} has uncommitted changes.\n` +
-          `  The session will launch as-is. Resolve the dirty state with OMX after launch, then proceed with your task.\n`,
+          `[rcs] Caution: worktree at ${cwd} has uncommitted changes.\n` +
+          `  The session will launch as-is. Resolve the dirty state with RCS after launch, then proceed with your task.\n`,
         );
       }
       const depBootstrap = ensureReusableNodeModules(cwd);
       if (depBootstrap.strategy === "symlink") {
-        console.log(`[omx] Reusing node_modules from ${depBootstrap.sourceNodeModulesPath}`);
+        console.log(`[rcs] Reusing node_modules from ${depBootstrap.sourceNodeModulesPath}`);
       } else if (depBootstrap.strategy === "missing" && depBootstrap.warning) {
-        console.warn(`[omx] ${depBootstrap.warning}`);
+        console.warn(`[rcs] ${depBootstrap.warning}`);
       }
     }
   }
-  const sessionId = `omx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const sessionId = `rcs-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   try {
     await maybeCheckAndPromptUpdate(cwd);
   } catch (err) {
@@ -1274,7 +1304,7 @@ export async function launchWithHud(args: string[]): Promise<void> {
   }
 
   // ── Phase 0.5: config repair ────────────────────────────────────────────
-  // After an omx version upgrade the OLD setup code (still in memory) may
+  // After an rcs version upgrade the OLD setup code (still in memory) may
   // have written a config.toml with duplicate [tui] sections.  Codex CLI's
   // TOML parser rejects duplicates, so we repair before spawning the CLI.
   try {
@@ -1283,7 +1313,7 @@ export async function launchWithHud(args: string[]): Promise<void> {
       getPackageRoot(),
     );
     if (repaired) {
-      console.log("[omx] Repaired managed config.toml compatibility issue.");
+      console.log("[rcs] Repaired managed config.toml compatibility issue.");
     }
   } catch {
     // Non-fatal: repair failure must not block launch
@@ -1299,7 +1329,7 @@ export async function launchWithHud(args: string[]): Promise<void> {
   } catch (err) {
     // preLaunch errors must NOT prevent Codex from starting
     console.error(
-      `[omx] preLaunch warning: ${err instanceof Error ? err.message : err}`,
+      `[rcs] preLaunch warning: ${err instanceof Error ? err.message : err}`,
     );
   }
 
@@ -1355,20 +1385,20 @@ export async function execWithOverlay(args: string[]): Promise<void> {
       if (ensured.dirty) {
         worktreeDirty = true;
         process.stderr.write(
-          `[omx] Caution: worktree at ${cwd} has uncommitted changes.\n` +
-          `  The session will launch as-is. Resolve the dirty state with OMX after launch, then proceed with your task.\n`,
+          `[rcs] Caution: worktree at ${cwd} has uncommitted changes.\n` +
+          `  The session will launch as-is. Resolve the dirty state with RCS after launch, then proceed with your task.\n`,
         );
       }
       const depBootstrap = ensureReusableNodeModules(cwd);
       if (depBootstrap.strategy === "symlink") {
-        console.log(`[omx] Reusing node_modules from ${depBootstrap.sourceNodeModulesPath}`);
+        console.log(`[rcs] Reusing node_modules from ${depBootstrap.sourceNodeModulesPath}`);
       } else if (depBootstrap.strategy === "missing" && depBootstrap.warning) {
-        console.warn(`[omx] ${depBootstrap.warning}`);
+        console.warn(`[rcs] ${depBootstrap.warning}`);
       }
     }
   }
 
-  const sessionId = `omx-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const sessionId = `rcs-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   try {
     await maybeCheckAndPromptUpdate(cwd);
@@ -1388,7 +1418,7 @@ export async function execWithOverlay(args: string[]): Promise<void> {
       getPackageRoot(),
     );
     if (repaired) {
-      console.log("[omx] Repaired managed config.toml compatibility issue.");
+      console.log("[rcs] Repaired managed config.toml compatibility issue.");
     }
   } catch {
     // Non-fatal
@@ -1402,7 +1432,7 @@ export async function execWithOverlay(args: string[]): Promise<void> {
     await preLaunch(cwd, sessionId, notifyTempResult.contract, codexHomeOverride, true, worktreeDirty);
   } catch (err) {
     console.error(
-      `[omx] preLaunch warning: ${err instanceof Error ? err.message : err}`,
+      `[rcs] preLaunch warning: ${err instanceof Error ? err.message : err}`,
     );
   }
 
@@ -1422,7 +1452,7 @@ export async function execWithOverlay(args: string[]): Promise<void> {
     const codexEnv = notifyTempContractRaw
       ? {
           ...codexEnvBase,
-          [OMX_NOTIFY_TEMP_CONTRACT_ENV]: notifyTempContractRaw,
+          [RCS_NOTIFY_TEMP_CONTRACT_ENV]: notifyTempContractRaw,
         }
       : codexEnvBase;
     runCodexBlocking(cwd, codexArgs, codexEnv);
@@ -1534,7 +1564,7 @@ function hasModelInstructionsOverride(args: string[]): boolean {
 }
 
 function shouldBypassDefaultSystemPrompt(env: NodeJS.ProcessEnv): boolean {
-  return env[OMX_BYPASS_DEFAULT_SYSTEM_PROMPT_ENV] !== "0";
+  return env[RCS_BYPASS_DEFAULT_SYSTEM_PROMPT_ENV] !== "0";
 }
 
 function buildModelInstructionsOverride(
@@ -1543,7 +1573,7 @@ function buildModelInstructionsOverride(
   defaultFilePath?: string,
 ): string {
   const filePath =
-    env[OMX_MODEL_INSTRUCTIONS_FILE_ENV] ||
+    env[RCS_MODEL_INSTRUCTIONS_FILE_ENV] ||
     defaultFilePath ||
     join(cwd, "AGENTS.md");
   return `${MODEL_INSTRUCTIONS_FILE_KEY}="${escapeTomlString(filePath)}"`;
@@ -1601,7 +1631,7 @@ function tagTmuxSessionWithInstance(sessionName: string, sessionId: string): voi
   const target = sessionName.trim();
   const instanceId = sessionId.trim();
   if (!target || !instanceId) return;
-  execFileSync("tmux", ["set-option", "-t", target, OMX_INSTANCE_OPTION, instanceId], {
+  execFileSync("tmux", ["set-option", "-t", target, RCS_INSTANCE_OPTION, instanceId], {
     stdio: ["ignore", "ignore", "ignore"],
     timeout: 2000,
   });
@@ -1795,9 +1825,9 @@ export function buildTmuxSessionName(cwd: string, sessionId: string): string {
   const dirName = basename(cwd);
   const grandparentPath = dirname(parentPath);
   const grandparentDir = basename(grandparentPath);
-  const repoDir = parentDir.endsWith(".omx-worktrees")
-    ? parentDir.slice(0, -".omx-worktrees".length)
-    : parentDir === "worktrees" && grandparentDir === ".omx"
+  const repoDir = parentDir.endsWith(".rcs-worktrees")
+    ? parentDir.slice(0, -".rcs-worktrees".length)
+    : parentDir === "worktrees" && grandparentDir === ".rcs"
       ? basename(dirname(grandparentPath))
       : null;
   const dirToken = repoDir
@@ -1806,8 +1836,8 @@ export function buildTmuxSessionName(cwd: string, sessionId: string): string {
   let branchToken = "detached";
   const branch = tryReadGitValue(cwd, ["rev-parse", "--abbrev-ref", "HEAD"]);
   if (branch) branchToken = sanitizeTmuxToken(branch);
-  const sessionToken = sanitizeTmuxToken(sessionId.replace(/^omx-/, ""));
-  const prefix = `omx-${dirToken}-${branchToken}`;
+  const sessionToken = sanitizeTmuxToken(sessionId.replace(/^rcs-/, ""));
+  const prefix = `rcs-${dirToken}-${branchToken}`;
   const name = `${prefix}-${sessionToken}`;
   if (name.length <= 120) return name;
   const prefixBudget = Math.max(4, 120 - sessionToken.length - 1);
@@ -1874,7 +1904,7 @@ function blockMs(ms: number): void {
 }
 
 function tmuxExtendedKeysLeaseRoot(cwd: string): string {
-  return join(cwd, ".omx", "state", TMUX_EXTENDED_KEYS_LEASE_DIR);
+  return join(cwd, ".rcs", "state", TMUX_EXTENDED_KEYS_LEASE_DIR);
 }
 
 function resolveTmuxSocketPath(
@@ -2100,13 +2130,13 @@ function buildDetachedSessionLeaderCommand(
   const wrapped = [
     buildTmuxExtendedKeysAcquireShellSnippet(cwd),
     'exec 3<&0;',
-    'omx_codex_pid="";',
-    "omx_detached_session_cleanup() {",
+    'rcs_codex_pid="";',
+    "rcs_detached_session_cleanup() {",
     "status=$?;",
     "trap - 0 INT TERM HUP;",
-    'if [ -n "$omx_codex_pid" ] && kill -0 "$omx_codex_pid" 2>/dev/null; then',
-    'kill -TERM "$omx_codex_pid" 2>/dev/null || true;',
-    'wait "$omx_codex_pid" 2>/dev/null || true;',
+    'if [ -n "$rcs_codex_pid" ] && kill -0 "$rcs_codex_pid" 2>/dev/null; then',
+    'kill -TERM "$rcs_codex_pid" 2>/dev/null || true;',
+    'wait "$rcs_codex_pid" 2>/dev/null || true;',
     "fi;",
     'exec 3<&- 2>/dev/null || true;',
     buildTmuxExtendedKeysReleaseShellSnippet(cwd),
@@ -2116,10 +2146,10 @@ function buildDetachedSessionLeaderCommand(
     "fi;",
     "exit $status;",
     "};",
-    "trap omx_detached_session_cleanup 0 INT TERM HUP;",
+    "trap rcs_detached_session_cleanup 0 INT TERM HUP;",
     `${codexCmd} <&3 &`,
-    "omx_codex_pid=$!;",
-    'wait "$omx_codex_pid";',
+    "rcs_codex_pid=$!;",
+    'wait "$rcs_codex_pid";',
   ].join(" ");
   return `/bin/sh -c ${quoteShellArg(wrapped)}`;
 }
@@ -2288,11 +2318,11 @@ function buildTmuxExtendedKeysHelperCommand(
 }
 
 function buildTmuxExtendedKeysAcquireShellSnippet(cwd: string): string {
-  return `OMX_TMUX_EXTENDED_KEYS_LEASE=$(${buildTmuxExtendedKeysHelperCommand(cwd, "acquire")} "$$" 2>/dev/null || true);`;
+  return `RCS_TMUX_EXTENDED_KEYS_LEASE=$(${buildTmuxExtendedKeysHelperCommand(cwd, "acquire")} "$$" 2>/dev/null || true);`;
 }
 
 function buildTmuxExtendedKeysReleaseShellSnippet(cwd: string): string {
-  return `if [ -n "\${OMX_TMUX_EXTENDED_KEYS_LEASE:-}" ]; then ${buildTmuxExtendedKeysHelperCommand(cwd, "release")} "\${OMX_TMUX_EXTENDED_KEYS_LEASE}" >/dev/null 2>&1 || true; fi;`;
+  return `if [ -n "\${RCS_TMUX_EXTENDED_KEYS_LEASE:-}" ]; then ${buildTmuxExtendedKeysHelperCommand(cwd, "release")} "\${RCS_TMUX_EXTENDED_KEYS_LEASE}" >/dev/null 2>&1 || true; fi;`;
 }
 
 export function withTmuxExtendedKeys<T>(
@@ -2349,10 +2379,10 @@ export function buildDetachedSessionBootstrapSteps(
     ...(workerLaunchArgs
       ? ["-e", `${TEAM_WORKER_LAUNCH_ARGS_ENV}=${workerLaunchArgs}`]
       : []),
-    ...(sessionId ? ["-e", `OMX_SESSION_ID=${sessionId}`] : []),
+    ...(sessionId ? ["-e", `RCS_SESSION_ID=${sessionId}`] : []),
     ...(codexHomeOverride ? ["-e", `CODEX_HOME=${codexHomeOverride}`] : []),
     ...(notifyTempContractRaw
-      ? ["-e", `${OMX_NOTIFY_TEMP_CONTRACT_ENV}=${notifyTempContractRaw}`]
+      ? ["-e", `${RCS_NOTIFY_TEMP_CONTRACT_ENV}=${notifyTempContractRaw}`]
       : []),
     detachedLeaderCmd,
   ];
@@ -2377,7 +2407,7 @@ export function buildDetachedSessionBootstrapSteps(
       ? [
           {
             name: "tag-session",
-            args: ["set-option", "-t", sessionName, OMX_INSTANCE_OPTION, sessionId],
+            args: ["set-option", "-t", sessionName, RCS_INSTANCE_OPTION, sessionId],
           },
         ]
       : []),
@@ -2387,8 +2417,8 @@ export function buildDetachedSessionBootstrapSteps(
 
 async function readLaunchAppendInstructions(): Promise<string> {
   const appendixCandidates = [
-    process.env[OMX_RALPH_APPEND_INSTRUCTIONS_FILE_ENV]?.trim(),
-    process.env[OMX_AUTORESEARCH_APPEND_INSTRUCTIONS_FILE_ENV]?.trim(),
+    process.env[RCS_RALPH_APPEND_INSTRUCTIONS_FILE_ENV]?.trim(),
+    process.env[RCS_AUTORESEARCH_APPEND_INSTRUCTIONS_FILE_ENV]?.trim(),
   ].filter(
     (value): value is string => typeof value === "string" && value.length > 0,
   );
@@ -2535,8 +2565,8 @@ export function buildNotifyFallbackWatcherEnv(
   return {
     ...nextEnv,
     ...(options.codexHomeOverride ? { CODEX_HOME: options.codexHomeOverride } : {}),
-    ...(options.sessionId ? { OMX_SESSION_ID: options.sessionId } : {}),
-    OMX_HUD_AUTHORITY: options.enableAuthority ? "1" : "0",
+    ...(options.sessionId ? { RCS_SESSION_ID: options.sessionId } : {}),
+    RCS_HUD_AUTHORITY: options.enableAuthority ? "1" : "0",
   };
 }
 
@@ -2544,7 +2574,7 @@ export function shouldEnableNotifyFallbackWatcher(
   env: NodeJS.ProcessEnv = process.env,
   platform: NodeJS.Platform = process.platform,
 ): boolean {
-  const toggle = String(env.OMX_NOTIFY_FALLBACK ?? "").trim();
+  const toggle = String(env.RCS_NOTIFY_FALLBACK ?? "").trim();
   if (platform === "win32") {
     return toggle === "1";
   }
@@ -2554,7 +2584,7 @@ export function shouldEnableNotifyFallbackWatcher(
 export async function cleanupLaunchOrphanedMcpProcesses(
   dependencies: CleanupDependencies = {},
 ): Promise<CleanupResult> {
-  return cleanupOmxMcpProcesses([], {
+  return cleanupRcsMcpProcesses([], {
     ...dependencies,
     selectCandidates: dependencies.selectCandidates ?? findLaunchSafeCleanupCandidates,
     writeLine: dependencies.writeLine ?? (() => {}),
@@ -2729,12 +2759,12 @@ export async function cleanupPostLaunchModeStateFiles(
             }
           } catch (err) {
             writeWarn(
-              `[omx] postLaunch: failed to recover mode state ${path}: ${err instanceof Error ? err.message : err}`,
+              `[rcs] postLaunch: failed to recover mode state ${path}: ${err instanceof Error ? err.message : err}`,
             );
           }
         } else if (result.kind === "malformed") {
           writeWarn(
-            `[omx] postLaunch: skipped malformed mode state ${path}: ${result.message}`,
+            `[rcs] postLaunch: skipped malformed mode state ${path}: ${result.message}`,
           );
         }
         continue;
@@ -2771,7 +2801,7 @@ export async function cleanupPostLaunchModeStateFiles(
         }
       } catch (err) {
         writeWarn(
-          `[omx] postLaunch: failed to update mode state ${path}: ${err instanceof Error ? err.message : err}`,
+          `[rcs] postLaunch: failed to update mode state ${path}: ${err instanceof Error ? err.message : err}`,
         );
       }
     }
@@ -2791,12 +2821,12 @@ export async function reapPostLaunchOrphanedMcpProcesses(
     const result = await cleanup();
     if (result.terminatedCount > 0) {
       writeInfo(
-        `[omx] postLaunch: reaped ${result.terminatedCount} orphaned OMX MCP process(es).`,
+        `[rcs] postLaunch: reaped ${result.terminatedCount} orphaned RCS MCP process(es).`,
       );
     }
     if (result.failedPids.length > 0) {
       writeWarn(
-        `[omx] postLaunch: failed to reap ${result.failedPids.length} orphaned OMX MCP process(es); continuing cleanup.`,
+        `[rcs] postLaunch: failed to reap ${result.failedPids.length} orphaned RCS MCP process(es); continuing cleanup.`,
       );
     }
   } catch (err) {
@@ -2806,12 +2836,12 @@ export async function reapPostLaunchOrphanedMcpProcesses(
 
 /**
  * preLaunch: Prepare environment before Codex starts.
- * 1. Best-effort launch-safe orphan cleanup for detached OMX MCP processes
+ * 1. Best-effort launch-safe orphan cleanup for detached RCS MCP processes
  * 2. Generate runtime overlay + write session-scoped model instructions file
  * 3. Write session.json
  *
  * Automatic broad stale-session cleanup remains disabled here. Only detached
- * OMX MCP processes without a live Codex ancestor are reaped so new launches
+ * RCS MCP processes without a live Codex ancestor are reaped so new launches
  * do not accumulate stale processes from prior crashed/closed sessions.
  */
 async function preLaunch(
@@ -2827,12 +2857,12 @@ async function preLaunch(
     const cleanup = await cleanupLaunchOrphanedMcpProcesses();
     if (cleanup.terminatedCount > 0) {
       console.log(
-        `[omx] Reaped ${cleanup.terminatedCount} orphaned OMX MCP process(es) before launch.`,
+        `[rcs] Reaped ${cleanup.terminatedCount} orphaned RCS MCP process(es) before launch.`,
       );
     }
     if (cleanup.failedPids.length > 0) {
       console.warn(
-        `[omx] Failed to reap ${cleanup.failedPids.length} orphaned OMX MCP process(es); continuing launch.`,
+        `[rcs] Failed to reap ${cleanup.failedPids.length} orphaned RCS MCP process(es); continuing launch.`,
       );
     }
   } catch (err) {
@@ -2882,7 +2912,7 @@ ${launchAppendix}${dirtyWorktreeGuidance}`
   // 6. Emit temp notification startup summary + warnings, then send session-start lifecycle notification (best effort)
   try {
     if (notifyTempContract?.active) {
-      process.env[OMX_NOTIFY_TEMP_CONTRACT_ENV] =
+      process.env[RCS_NOTIFY_TEMP_CONTRACT_ENV] =
         serializeNotifyTempContract(notifyTempContract);
       const { getNotificationConfig } =
         await import("../notifications/config.js");
@@ -2892,13 +2922,13 @@ ${launchAppendix}${dirtyWorktreeGuidance}`
         Boolean(resolved?.enabled),
       );
       for (const info of startup.infoLines) {
-        console.log(`[omx] ${info}`);
+        console.log(`[rcs] ${info}`);
       }
       for (const warning of startup.warningLines) {
-        console.warn(`[omx] ${warning}`);
+        console.warn(`[rcs] ${warning}`);
       }
     } else {
-      delete process.env[OMX_NOTIFY_TEMP_CONTRACT_ENV];
+      delete process.env[RCS_NOTIFY_TEMP_CONTRACT_ENV];
     }
     const { notifyLifecycle } = await import("../notifications/index.js");
     await notifyLifecycle("session-start", {
@@ -2949,13 +2979,13 @@ function runCodex(
     sessionModelInstructionsPath(cwd, sessionId),
   );
   const nativeWindows = isNativeWindows();
-  const omxBin = resolveOmxEntryPath();
-  if (!omxBin) {
-    throw new Error("Unable to resolve OMX launcher path for tmux HUD bootstrap");
+  const rcsBin = resolveRcsEntryPath();
+  if (!rcsBin) {
+    throw new Error("Unable to resolve RCS launcher path for tmux HUD bootstrap");
   }
   const hudCmd = nativeWindows
-    ? buildWindowsPromptCommand("node", [omxBin, "hud", "--watch"])
-    : buildTmuxPaneCommand("env", [`OMX_SESSION_ID=${sessionId}`, "node", omxBin, "hud", "--watch"]);
+    ? buildWindowsPromptCommand("node", [rcsBin, "hud", "--watch"])
+    : buildTmuxPaneCommand("env", [`RCS_SESSION_ID=${sessionId}`, "node", rcsBin, "hud", "--watch"]);
   const inheritLeaderFlags = process.env[TEAM_INHERIT_LEADER_FLAGS_ENV] !== "0";
   const workerLaunchArgs = resolveTeamWorkerLaunchArgsEnv(
     process.env[TEAM_WORKER_LAUNCH_ARGS_ENV],
@@ -2966,12 +2996,12 @@ function runCodex(
   const codexBaseEnv = codexHomeOverride
     ? { ...process.env, CODEX_HOME: codexHomeOverride }
     : process.env;
-  const codexEnvWithSession = { ...codexBaseEnv, OMX_SESSION_ID: sessionId };
+  const codexEnvWithSession = { ...codexBaseEnv, RCS_SESSION_ID: sessionId };
   const codexEnv = workerLaunchArgs
     ? { ...codexEnvWithSession, [TEAM_WORKER_LAUNCH_ARGS_ENV]: workerLaunchArgs }
     : codexEnvWithSession;
   const codexEnvWithNotify = notifyTempContractRaw
-    ? { ...codexEnv, [OMX_NOTIFY_TEMP_CONTRACT_ENV]: notifyTempContractRaw }
+    ? { ...codexEnv, [RCS_NOTIFY_TEMP_CONTRACT_ENV]: notifyTempContractRaw }
     : codexEnv;
 
   const { launchPolicy } = resolveTmuxAwareLaunchPolicy(
@@ -3002,8 +3032,8 @@ function runCodex(
 
     // Enable mouse scrolling at session start so scroll works before team
     // expansion. Previously this was only called from createTeamSession().
-    // Opt-out: set OMX_MOUSE=0. (closes #128)
-    if (process.env.OMX_MOUSE !== "0") {
+    // Opt-out: set RCS_MOUSE=0. (closes #128)
+    if (process.env.RCS_MOUSE !== "0") {
       try {
         const tmuxPaneTarget = process.env.TMUX_PANE;
         const displayArgs = tmuxPaneTarget
@@ -3117,7 +3147,7 @@ function runCodex(
             sessionName,
             hudPaneId,
             hookWindowIndex,
-            process.env.OMX_MOUSE !== "0",
+            process.env.RCS_MOUSE !== "0",
             nativeWindows,
           );
           if (nativeWindows && detachedWindowsCodexCmd) {
@@ -3377,7 +3407,7 @@ async function postLaunch(
     }
   } catch (err) {
     console.error(
-      `[omx] postLaunch: project config transient NUX cleanup failed: ${err instanceof Error ? err.message : err}`,
+      `[rcs] postLaunch: project config transient NUX cleanup failed: ${err instanceof Error ? err.message : err}`,
     );
   }
 
@@ -3386,7 +3416,7 @@ async function postLaunch(
     await removeSessionModelInstructionsFile(cwd, sessionId);
   } catch (err) {
     console.error(
-      `[omx] postLaunch: model instructions cleanup failed: ${err instanceof Error ? err.message : err}`,
+      `[rcs] postLaunch: model instructions cleanup failed: ${err instanceof Error ? err.message : err}`,
     );
   }
 
@@ -3395,7 +3425,7 @@ async function postLaunch(
     await writeSessionEnd(cwd, sessionId);
   } catch (err) {
     console.error(
-      `[omx] postLaunch: session archive failed: ${err instanceof Error ? err.message : err}`,
+      `[rcs] postLaunch: session archive failed: ${err instanceof Error ? err.message : err}`,
     );
   }
 
@@ -3413,7 +3443,7 @@ async function postLaunch(
     await cleanupPostLaunchModeStateFiles(cwd, sessionId);
   } catch (err) {
     console.error(
-      `[omx] postLaunch: mode cleanup failed: ${err instanceof Error ? err.message : err}`,
+      `[rcs] postLaunch: mode cleanup failed: ${err instanceof Error ? err.message : err}`,
     );
   }
 
@@ -3518,11 +3548,11 @@ async function emitNativeHookEvent(
 }
 
 function notifyFallbackPidPath(cwd: string): string {
-  return join(cwd, ".omx", "state", "notify-fallback.pid");
+  return join(cwd, ".rcs", "state", "notify-fallback.pid");
 }
 
 function hookDerivedWatcherPidPath(cwd: string): string {
-  return join(cwd, ".omx", "state", "hook-derived-watcher.pid");
+  return join(cwd, ".rcs", "state", "hook-derived-watcher.pid");
 }
 
 export function shouldDetachBackgroundHelper(
@@ -3557,11 +3587,13 @@ export function buildWindowsMsysBackgroundHelperBootstrapScript(
   const helperArgsLiteral = JSON.stringify(helperArgs);
   const cwdLiteral = JSON.stringify(cwd);
   return [
+    "const fs = require('fs');",
     "const { spawn } = require('child_process');",
     `const child = spawn(process.execPath, ${helperArgsLiteral}, { cwd: ${cwdLiteral}, detached: true, stdio: 'ignore', windowsHide: true, env: process.env });`,
     "if (!child.pid) process.exit(1);",
-    "process.stdout.write(String(child.pid));",
     "child.unref();",
+    "fs.writeSync(1, String(child.pid));",
+    "process.exit(0);",
   ].join("");
 }
 
@@ -3594,7 +3626,7 @@ async function launchBackgroundHelper(
       },
     );
 
-    if (bootstrap.error) {
+    if (bootstrap.error && (bootstrap.status ?? 1) !== 0) {
       throw bootstrap.error;
     }
 
@@ -3670,7 +3702,7 @@ function parseWatcherPidRecord(content: string): WatcherPidRecord | null {
   return pid ? { pid, startedAt: null } : null;
 }
 
-function isLikelyOmxWatcherProcess(
+function isLikelyRcsWatcherProcess(
   pid: number,
   execFileSyncFn: typeof execFileSync = execFileSync,
   platform: NodeJS.Platform = process.platform,
@@ -3711,7 +3743,7 @@ export async function reapStaleNotifyFallbackWatcher(
   const tryKillPidImpl = deps.tryKillPid ?? tryKillPid;
   const hasErrnoCodeImpl = deps.hasErrnoCode ?? hasErrnoCode;
   const warn = deps.warn ?? console.warn;
-  const isWatcherProcessImpl = deps.isWatcherProcess ?? isLikelyOmxWatcherProcess;
+  const isWatcherProcessImpl = deps.isWatcherProcess ?? isLikelyRcsWatcherProcess;
 
   try {
     const record = parseWatcherPidRecord(await readFileImpl(pidPath, "utf-8"));
@@ -3721,7 +3753,7 @@ export async function reapStaleNotifyFallbackWatcher(
   } catch (error: unknown) {
     if (!hasErrnoCodeImpl(error, "ESRCH")) {
       warn(
-        "[omx] warning: failed to stop stale notify fallback watcher",
+        "[rcs] warning: failed to stop stale notify fallback watcher",
         {
           path: pidPath,
           error: error instanceof Error ? error.message : String(error),
@@ -3757,10 +3789,10 @@ async function startNotifyFallbackWatcher(
   const notifyScript = resolveNotifyHookScript(pkgRoot);
   if (!existsSync(watcherScript) || !existsSync(notifyScript)) return;
 
-  await mkdir(join(cwd, ".omx", "state"), { recursive: true }).catch(
+  await mkdir(join(cwd, ".rcs", "state"), { recursive: true }).catch(
     (error: unknown) => {
       console.warn(
-        "[omx] warning: failed to create notify fallback watcher state directory",
+        "[rcs] warning: failed to create notify fallback watcher state directory",
         {
           cwd,
           error: error instanceof Error ? error.message : String(error),
@@ -3786,10 +3818,10 @@ async function startNotifyFallbackWatcher(
         pidPath,
         "--parent-pid",
         String(process.pid),
-        ...(process.env.OMX_NOTIFY_FALLBACK_MAX_LIFETIME_MS
+        ...(process.env.RCS_NOTIFY_FALLBACK_MAX_LIFETIME_MS
           ? [
             "--max-lifetime-ms",
-            process.env.OMX_NOTIFY_FALLBACK_MAX_LIFETIME_MS,
+            process.env.RCS_NOTIFY_FALLBACK_MAX_LIFETIME_MS,
           ]
           : []),
       ],
@@ -3799,7 +3831,7 @@ async function startNotifyFallbackWatcher(
       },
     );
   } catch (error: unknown) {
-    console.warn("[omx] warning: failed to launch notify fallback watcher", {
+    console.warn("[rcs] warning: failed to launch notify fallback watcher", {
       cwd,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -3817,7 +3849,7 @@ async function startNotifyFallbackWatcher(
     ),
   ).catch((error: unknown) => {
     console.warn(
-      "[omx] warning: failed to write notify fallback watcher pid file",
+      "[rcs] warning: failed to write notify fallback watcher pid file",
       {
         path: pidPath,
         error: error instanceof Error ? error.message : String(error),
@@ -3827,7 +3859,7 @@ async function startNotifyFallbackWatcher(
 }
 
 async function startHookDerivedWatcher(cwd: string): Promise<void> {
-  if (process.env.OMX_HOOK_DERIVED_SIGNALS !== "1") return;
+  if (process.env.RCS_HOOK_DERIVED_SIGNALS !== "1") return;
 
   const { mkdir, writeFile, readFile } = await import("fs/promises");
   const pidPath = hookDerivedWatcherPidPath(cwd);
@@ -3844,17 +3876,17 @@ async function startHookDerivedWatcher(cwd: string): Promise<void> {
         process.kill(prev.pid, "SIGTERM");
       }
     } catch (error: unknown) {
-      console.warn("[omx] warning: failed to stop stale hook-derived watcher", {
+      console.warn("[rcs] warning: failed to stop stale hook-derived watcher", {
         path: pidPath,
         error: error instanceof Error ? error.message : String(error),
       });
     }
   }
 
-  await mkdir(join(cwd, ".omx", "state"), { recursive: true }).catch(
+  await mkdir(join(cwd, ".rcs", "state"), { recursive: true }).catch(
     (error: unknown) => {
       console.warn(
-        "[omx] warning: failed to create hook-derived watcher state directory",
+        "[rcs] warning: failed to create hook-derived watcher state directory",
         {
           cwd,
           error: error instanceof Error ? error.message : String(error),
@@ -3869,7 +3901,7 @@ async function startHookDerivedWatcher(cwd: string): Promise<void> {
       env: process.env,
     });
   } catch (error: unknown) {
-    console.warn("[omx] warning: failed to launch hook-derived watcher", {
+    console.warn("[rcs] warning: failed to launch hook-derived watcher", {
       cwd,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -3887,7 +3919,7 @@ async function startHookDerivedWatcher(cwd: string): Promise<void> {
     ),
   ).catch((error: unknown) => {
     console.warn(
-      "[omx] warning: failed to write hook-derived watcher pid file",
+      "[rcs] warning: failed to write hook-derived watcher pid file",
       {
         path: pidPath,
         error: error instanceof Error ? error.message : String(error),
@@ -3909,7 +3941,7 @@ async function stopNotifyFallbackWatcher(cwd: string): Promise<void> {
   } catch (error: unknown) {
     if (!hasErrnoCode(error, "ESRCH")) {
       console.warn(
-        "[omx] warning: failed to stop notify fallback watcher process",
+        "[rcs] warning: failed to stop notify fallback watcher process",
         {
           path: pidPath,
           error: error instanceof Error ? error.message : String(error),
@@ -3920,7 +3952,7 @@ async function stopNotifyFallbackWatcher(cwd: string): Promise<void> {
 
   await unlink(pidPath).catch((error: unknown) => {
     console.warn(
-      "[omx] warning: failed to remove notify fallback watcher pid file",
+      "[rcs] warning: failed to remove notify fallback watcher pid file",
       {
         path: pidPath,
         error: error instanceof Error ? error.message : String(error),
@@ -3942,7 +3974,7 @@ async function stopHookDerivedWatcher(cwd: string): Promise<void> {
       process.kill(parsed.pid, "SIGTERM");
     }
   } catch (error: unknown) {
-    console.warn("[omx] warning: failed to stop hook-derived watcher process", {
+    console.warn("[rcs] warning: failed to stop hook-derived watcher process", {
       path: pidPath,
       error: error instanceof Error ? error.message : String(error),
     });
@@ -3950,7 +3982,7 @@ async function stopHookDerivedWatcher(cwd: string): Promise<void> {
 
   await unlink(pidPath).catch((error: unknown) => {
     console.warn(
-      "[omx] warning: failed to remove hook-derived watcher pid file",
+      "[rcs] warning: failed to remove hook-derived watcher pid file",
       {
         path: pidPath,
         error: error instanceof Error ? error.message : String(error),
@@ -3987,7 +4019,7 @@ async function flushNotifyFallbackOnce(
 }
 
 async function flushHookDerivedWatcherOnce(cwd: string): Promise<void> {
-  if (process.env.OMX_HOOK_DERIVED_SIGNALS !== "1") return;
+  if (process.env.RCS_HOOK_DERIVED_SIGNALS !== "1") return;
   const { spawnSync } = await import("child_process");
   const pkgRoot = getPackageRoot();
   const watcherScript = resolveHookDerivedWatcherScript(pkgRoot);
@@ -3999,7 +4031,7 @@ async function flushHookDerivedWatcherOnce(cwd: string): Promise<void> {
     windowsHide: true,
     env: {
       ...process.env,
-      OMX_HOOK_DERIVED_SIGNALS: "1",
+      RCS_HOOK_DERIVED_SIGNALS: "1",
     },
   });
 }
@@ -4083,14 +4115,14 @@ async function cancelModes(): Promise<void> {
     }
 
     for (const mode of reported) {
-      console.log(`Cancelled: ${mode}`);
+      writeStdoutLine(`Cancelled: ${mode}`);
     }
 
     if (reported.size === 0) {
-      console.log("No active modes to cancel.");
+      writeStdoutLine("No active modes to cancel.");
     }
   } catch (err) {
     logCliOperationFailure(err);
-    console.log("No active modes to cancel.");
+    writeStdoutLine("No active modes to cancel.");
   }
 }

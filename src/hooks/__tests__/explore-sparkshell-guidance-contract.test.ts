@@ -12,12 +12,12 @@ function expectPatterns(path: string, patterns: RegExp[]): void {
 describe('explore + sparkshell guidance contract', () => {
   it('keeps AGENTS root and template aligned on conditional explore routing and opt-in sparkshell guidance', () => {
     const patterns = [
-      /USE_OMX_EXPLORE_CMD/i,
-      /SHOULD treat `omx explore`|strongly prefer `omx explore`/i,
+      /USE_RCS_EXPLORE_CMD/i,
+      /SHOULD treat `rcs explore`|strongly prefer `rcs explore`/i,
       /--prompt/i,
       /shell-only, allowlisted, read-only path|shell-only allowlisted read-only path/i,
       /gracefully fall back to the normal path/i,
-      /omx sparkshell --tmux-pane/i,
+      /rcs sparkshell --tmux-pane/i,
       /explicit opt-?in/i,
       /When to use what/i,
     ];
@@ -29,14 +29,14 @@ describe('explore + sparkshell guidance contract', () => {
 
   it('keeps explore surfaces explicit about richer-path fallback', () => {
     expectPatterns('prompts/explore.md', [
-      /USE_OMX_EXPLORE_CMD/i,
+      /USE_RCS_EXPLORE_CMD/i,
       /preferred low-cost path/i,
       /continue on this richer normal path/i,
     ]);
 
     expectPatterns('prompts/explore-harness.md', [
       /simple read-only repository lookup tasks/i,
-      /Prefer `omx explore --prompt/i,
+      /Prefer `rcs explore --prompt/i,
       /fall back to the richer normal path/i,
     ]);
   });
@@ -53,8 +53,8 @@ describe('explore + sparkshell guidance contract', () => {
       'skills/team/SKILL.md',
     ]) {
       expectPatterns(surface, [
-        /USE_OMX_EXPLORE_CMD/i,
-        /prefer `omx explore`|use `omx explore` FIRST/i,
+        /USE_RCS_EXPLORE_CMD/i,
+        /prefer `rcs explore`|use `rcs explore` FIRST/i,
         /fall back normally|fallback normally|graceful fallback|richer normal explore path/i,
       ]);
     }
@@ -68,7 +68,7 @@ describe('explore + sparkshell guidance contract', () => {
     ]);
 
     expectPatterns('skills/team/SKILL.md', [
-      /omx sparkshell --tmux-pane/i,
+      /rcs sparkshell --tmux-pane/i,
       /explicit opt-?in/i,
       /raw `tmux capture-pane` evidence/i,
     ]);

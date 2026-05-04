@@ -6,15 +6,15 @@ import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-function runOmx(
+function runRcsCli(
   cwd: string,
   argv: string[],
   envOverrides: Record<string, string> = {},
 ): { status: number | null; stdout: string; stderr: string; error?: string } {
   const testDir = dirname(fileURLToPath(import.meta.url));
   const repoRoot = join(testDir, '..', '..', '..');
-  const omxBin = join(repoRoot, 'dist', 'cli', 'omx.js');
-  const r = spawnSync(process.execPath, [omxBin, ...argv], {
+  const rcsBin = join(repoRoot, 'dist', 'cli', 'rcs.js');
+  const r = spawnSync(process.execPath, [rcsBin, ...argv], {
     cwd,
     encoding: 'utf-8',
     env: { ...process.env, ...envOverrides },
@@ -30,7 +30,7 @@ async function withConfig(
   config: string,
   fn: (args: { wd: string; home: string; codexDir: string; configPath: string }) => Promise<void>,
 ): Promise<void> {
-  const wd = await mkdtemp(join(tmpdir(), 'omx-doctor-context-window-'));
+  const wd = await mkdtemp(join(tmpdir(), 'rcs-doctor-context-window-'));
   try {
     const home = join(wd, 'home');
     const codexDir = join(home, '.codex');
@@ -49,8 +49,8 @@ function assertNoUnsupportedLimitClaim(stdout: string): void {
   assert.doesNotMatch(stdout, /Codex context limit/i);
 }
 
-describe('omx doctor model context recommendation warning', () => {
-  it('warns when gpt-5.5 model_context_window exceeds the OMX setup recommendation', async () => {
+describe('rcs doctor model context recommendation warning', () => {
+  it('warns when gpt-5.5 model_context_window exceeds the RCS setup recommendation', async () => {
     await withConfig(
       `
 model = "gpt-5.5"
@@ -59,13 +59,13 @@ model_auto_compact_token_limit = 200000
 `,
       async ({ wd, home, codexDir, configPath }) => {
         const before = await readFile(configPath, 'utf-8');
-        const res = runOmx(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
+        const res = runRcsCli(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
         if (shouldSkipForSpawnPermissions(res.error)) return;
 
         assert.equal(res.status, 0, res.stderr || res.stdout);
         assert.match(res.stdout, /\[!!\] Model context recommendation:/);
         assert.match(res.stdout, /model_context_window=1000000/);
-        assert.match(res.stdout, /OMX setup recommendation/);
+        assert.match(res.stdout, /RCS setup recommendation/);
         assert.match(res.stdout, /250000 \/ 200000/);
         assertNoUnsupportedLimitClaim(res.stdout);
         assert.equal(await readFile(configPath, 'utf-8'), before);
@@ -73,7 +73,7 @@ model_auto_compact_token_limit = 200000
     );
   });
 
-  it('warns when gpt-5.5 model_auto_compact_token_limit exceeds the OMX setup recommendation', async () => {
+  it('warns when gpt-5.5 model_auto_compact_token_limit exceeds the RCS setup recommendation', async () => {
     await withConfig(
       `
 model = "gpt-5.5"
@@ -82,13 +82,13 @@ model_auto_compact_token_limit = 900000
 `,
       async ({ wd, home, codexDir, configPath }) => {
         const before = await readFile(configPath, 'utf-8');
-        const res = runOmx(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
+        const res = runRcsCli(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
         if (shouldSkipForSpawnPermissions(res.error)) return;
 
         assert.equal(res.status, 0, res.stderr || res.stdout);
         assert.match(res.stdout, /\[!!\] Model context recommendation:/);
         assert.match(res.stdout, /model_auto_compact_token_limit=900000/);
-        assert.match(res.stdout, /OMX setup recommendation/);
+        assert.match(res.stdout, /RCS setup recommendation/);
         assert.match(res.stdout, /250000 \/ 200000/);
         assertNoUnsupportedLimitClaim(res.stdout);
         assert.equal(await readFile(configPath, 'utf-8'), before);
@@ -104,7 +104,7 @@ model_context_window = 1000000
 model_auto_compact_token_limit = 900000
 `,
       async ({ wd, home, codexDir }) => {
-        const res = runOmx(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
+        const res = runRcsCli(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
         if (shouldSkipForSpawnPermissions(res.error)) return;
 
         assert.equal(res.status, 0, res.stderr || res.stdout);
@@ -115,7 +115,7 @@ model_auto_compact_token_limit = 900000
     );
   });
 
-  it('does not warn when gpt-5.5 context settings match the OMX setup recommendation', async () => {
+  it('does not warn when gpt-5.5 context settings match the RCS setup recommendation', async () => {
     await withConfig(
       `
 model = "gpt-5.5"
@@ -123,7 +123,7 @@ model_context_window = 250000
 model_auto_compact_token_limit = 200000
 `,
       async ({ wd, home, codexDir }) => {
-        const res = runOmx(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
+        const res = runRcsCli(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
         if (shouldSkipForSpawnPermissions(res.error)) return;
 
         assert.equal(res.status, 0, res.stderr || res.stdout);
@@ -140,7 +140,7 @@ model_context_window = 1000000
 model_auto_compact_token_limit = 900000
 `,
       async ({ wd, home, codexDir }) => {
-        const res = runOmx(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
+        const res = runRcsCli(wd, ['doctor'], { HOME: home, CODEX_HOME: codexDir });
         if (shouldSkipForSpawnPermissions(res.error)) return;
 
         assert.equal(res.status, 0, res.stderr || res.stdout);

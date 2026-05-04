@@ -8,13 +8,13 @@ import { buildMergedConfig } from '../../config/generator.js';
 import type { CatalogManifest } from '../../catalog/schema.js';
 import { getSetupInstallableSkillNames } from '../../catalog/installable.js';
 import {
-  buildOmxPluginMcpManifest,
-  OMX_FIRST_PARTY_MCP_ENTRYPOINTS,
-  OMX_FIRST_PARTY_MCP_PLUGIN_TARGETS,
-  OMX_FIRST_PARTY_MCP_SERVER_NAMES,
-  OMX_PLUGIN_MCP_COMMAND,
-  OMX_PLUGIN_MCP_SERVE_SUBCOMMAND,
-} from '../../config/omx-first-party-mcp.js';
+  buildRcsPluginMcpManifest,
+  RCS_FIRST_PARTY_MCP_ENTRYPOINTS,
+  RCS_FIRST_PARTY_MCP_PLUGIN_TARGETS,
+  RCS_FIRST_PARTY_MCP_SERVER_NAMES,
+  RCS_PLUGIN_MCP_COMMAND,
+  RCS_PLUGIN_MCP_SERVE_SUBCOMMAND,
+} from '../../config/rcs-first-party-mcp.js';
 
 type PackageJson = {
   version: string;
@@ -51,13 +51,13 @@ type Marketplace = {
 };
 
 const root = process.cwd();
-const pluginName = 'oh-my-codex';
+const pluginName = 'roblox-ai-os-creator-skills';
 const pluginRoot = join(root, 'plugins', pluginName);
 const pluginManifestPath = join(pluginRoot, '.codex-plugin', 'plugin.json');
 const pluginMcpPath = join(pluginRoot, '.mcp.json');
 const pluginAppsPath = join(pluginRoot, '.app.json');
 const marketplacePath = join(root, '.agents', 'plugins', 'marketplace.json');
-const omxBin = join(root, 'dist', 'cli', 'omx.js');
+const rcsBin = join(root, 'dist', 'cli', 'rcs.js');
 
 type PluginMcpManifest = {
   mcpServers?: Record<string, {
@@ -90,45 +90,45 @@ async function listFiles(dir: string, base = dir): Promise<string[]> {
   return files.flat().sort();
 }
 
-async function writeOmxShim(binDir: string): Promise<void> {
+async function writeRcsCliShim(binDir: string): Promise<void> {
   await mkdir(binDir, { recursive: true });
 
   if (process.platform === 'win32') {
     await writeFile(
-      join(binDir, 'omx.cmd'),
-      `@echo off\r\n"${process.execPath}" "${omxBin}" %*\r\n`,
+      join(binDir, 'rcs.cmd'),
+      `@echo off\r\n"${process.execPath}" "${rcsBin}" %*\r\n`,
       'utf-8',
     );
     return;
   }
 
-  const shimPath = join(binDir, 'omx');
+  const shimPath = join(binDir, 'rcs');
   await writeFile(
     shimPath,
-    `#!/bin/sh\nexec "${process.execPath}" "${omxBin}" "$@"\n`,
+    `#!/bin/sh\nexec "${process.execPath}" "${rcsBin}" "$@"\n`,
     'utf-8',
   );
   await chmod(shimPath, 0o755);
 }
 
 async function assertPluginCacheLaunchable(entrypoint: string): Promise<void> {
-  const cacheRoot = await mkdtemp(join(tmpdir(), 'omx-plugin-cache-'));
+  const cacheRoot = await mkdtemp(join(tmpdir(), 'rcs-plugin-cache-'));
   const cachePluginRoot = join(cacheRoot, pluginName, 'local');
   const shimDir = join(cacheRoot, 'bin');
   await cp(pluginRoot, cachePluginRoot, { recursive: true });
-  await writeOmxShim(shimDir);
+  await writeRcsCliShim(shimDir);
 
   try {
-    const result = spawnSync(OMX_PLUGIN_MCP_COMMAND, [OMX_PLUGIN_MCP_SERVE_SUBCOMMAND, entrypoint], {
+    const result = spawnSync(RCS_PLUGIN_MCP_COMMAND, [RCS_PLUGIN_MCP_SERVE_SUBCOMMAND, entrypoint], {
       cwd: cachePluginRoot,
       encoding: 'utf-8',
       input: '',
       env: {
         ...process.env,
         PATH: `${shimDir}${delimiter}${process.env.PATH || ''}`,
-        OMX_AUTO_UPDATE: '0',
-        OMX_NOTIFY_FALLBACK: '0',
-        OMX_HOOK_DERIVED_SIGNALS: '0',
+        RCS_AUTO_UPDATE: '0',
+        RCS_NOTIFY_FALLBACK: '0',
+        RCS_HOOK_DERIVED_SIGNALS: '0',
       },
     });
 
@@ -152,7 +152,7 @@ describe('official Codex plugin layout', () => {
     assert.equal(manifest.skills, './skills/');
     assert.equal(manifest.mcpServers, './.mcp.json');
     assert.equal(manifest.apps, './.app.json');
-    assert.equal(manifest.interface?.displayName, 'oh-my-codex');
+    assert.equal(manifest.interface?.displayName, 'RCS');
     assert.equal(manifest.interface?.category, 'Developer Tools');
     assert.ok(manifest.interface?.shortDescription, 'expected short interface description');
     assert.ok(manifest.interface?.longDescription, 'expected long interface description');
@@ -164,7 +164,7 @@ describe('official Codex plugin layout', () => {
       readJson<PluginMcpManifest>(pluginMcpPath),
       readJson<PluginAppsManifest>(pluginAppsPath),
     ]);
-    const expectedPluginMcpManifest = buildOmxPluginMcpManifest();
+    const expectedPluginMcpManifest = buildRcsPluginMcpManifest();
 
     const pluginManifest = await readJson<PluginManifest>(pluginManifestPath);
     assert.equal(pluginManifest.agents, undefined);
@@ -174,14 +174,14 @@ describe('official Codex plugin layout', () => {
     assert.deepEqual(mcpManifest, expectedPluginMcpManifest);
 
     for (const [serverName, server] of Object.entries(mcpManifest.mcpServers ?? {})) {
-      assert.equal(server.command, OMX_PLUGIN_MCP_COMMAND, `${serverName} should run via omx`);
+      assert.equal(server.command, RCS_PLUGIN_MCP_COMMAND, `${serverName} should run via rcs`);
       assert.equal(server.enabled, true, `${serverName} should be enabled`);
       assert.equal(server.args?.length, 2, `${serverName} should have serve subcommand + public target args`);
-      assert.equal(server.args?.[0], OMX_PLUGIN_MCP_SERVE_SUBCOMMAND, `${serverName} should launch through omx mcp-serve`);
+      assert.equal(server.args?.[0], RCS_PLUGIN_MCP_SERVE_SUBCOMMAND, `${serverName} should launch through rcs mcp-serve`);
       const target = server.args?.[1];
       assert.ok(target, `${serverName} should declare a public target`);
       assert.equal(target?.includes('..'), false, `${serverName} should not depend on path traversal outside the plugin root`);
-      assert.equal(OMX_FIRST_PARTY_MCP_PLUGIN_TARGETS.includes(target ?? ''), true, `${serverName} should use a stable public OMX MCP target`);
+      assert.equal(RCS_FIRST_PARTY_MCP_PLUGIN_TARGETS.includes(target ?? ''), true, `${serverName} should use a stable public RCS MCP target`);
       assert.equal(target?.endsWith('-server.js'), false, `${serverName} should not expose internal dist filenames in plugin metadata`);
     }
   });
@@ -189,19 +189,19 @@ describe('official Codex plugin layout', () => {
   it('keeps plugin MCP metadata aligned with the setup-managed MCP roster', async () => {
     const mcpManifest = await readJson<PluginMcpManifest>(pluginMcpPath);
     const mergedConfig = buildMergedConfig('', root, { includeTui: false });
-    const setupManagedServers = [...mergedConfig.matchAll(/^\[mcp_servers\.(omx_[^\]]+)\]$/gm)]
+    const setupManagedServers = [...mergedConfig.matchAll(/^\[mcp_servers\.(rcs_[^\]]+)\]$/gm)]
       .map((match) => match[1])
       .sort();
 
     assert.deepEqual(
       setupManagedServers,
-      [...OMX_FIRST_PARTY_MCP_SERVER_NAMES].sort(),
-      'setup should expose the canonical first-party OMX MCP roster',
+      [...RCS_FIRST_PARTY_MCP_SERVER_NAMES].sort(),
+      'setup should expose the canonical first-party RCS MCP roster',
     );
     assert.deepEqual(setupManagedServers, Object.keys(mcpManifest.mcpServers ?? {}).sort());
 
     const targetToEntrypoint = new Map(
-      OMX_FIRST_PARTY_MCP_PLUGIN_TARGETS.map((target, index) => [target, OMX_FIRST_PARTY_MCP_ENTRYPOINTS[index]]),
+      RCS_FIRST_PARTY_MCP_PLUGIN_TARGETS.map((target, index) => [target, RCS_FIRST_PARTY_MCP_ENTRYPOINTS[index]]),
     );
 
     for (const [serverName, server] of Object.entries(mcpManifest.mcpServers ?? {})) {
@@ -216,8 +216,8 @@ describe('official Codex plugin layout', () => {
     }
   });
 
-  it('launches plugin MCP public targets from a cache-style plugin root via the installed omx CLI', async () => {
-    for (const target of OMX_FIRST_PARTY_MCP_PLUGIN_TARGETS) {
+  it('launches plugin MCP public targets from a cache-style plugin root via the installed rcs CLI', async () => {
+    for (const target of RCS_FIRST_PARTY_MCP_PLUGIN_TARGETS) {
       await assertPluginCacheLaunchable(target);
     }
   });
@@ -226,7 +226,7 @@ describe('official Codex plugin layout', () => {
     const pluginEntries = await readdir(pluginRoot);
 
     assert.equal(pluginEntries.includes('.codex'), false, 'official plugin should not ship setup-owned .codex hook assets');
-    assert.equal(pluginEntries.includes('.omx'), false, 'official plugin should not ship runtime hook directories');
+    assert.equal(pluginEntries.includes('.rcs'), false, 'official plugin should not ship runtime hook directories');
     assert.equal(pluginEntries.includes('hooks.json'), false, 'official plugin should not ship a plugin-scoped hooks manifest');
   });
 
@@ -234,11 +234,11 @@ describe('official Codex plugin layout', () => {
     const marketplace = await readJson<Marketplace>(marketplacePath);
     const entry = marketplace.plugins?.find((candidate) => candidate.name === pluginName);
 
-    assert.equal(marketplace.name, 'oh-my-codex-local');
-    assert.equal(marketplace.interface?.displayName, 'oh-my-codex Local Plugins');
-    assert.ok(entry, 'expected marketplace entry for oh-my-codex');
+    assert.equal(marketplace.name, 'rcs-local');
+    assert.equal(marketplace.interface?.displayName, 'RCS Local Plugins');
+    assert.ok(entry, 'expected marketplace entry for roblox-ai-os-creator-skills');
     assert.equal(entry.source?.source, 'local');
-    assert.equal(entry.source?.path, './plugins/oh-my-codex');
+    assert.equal(entry.source?.path, './plugins/roblox-ai-os-creator-skills');
     assert.equal(entry.policy?.installation, 'AVAILABLE');
     assert.equal(entry.policy?.authentication, 'ON_INSTALL');
     assert.equal(entry.category, 'Developer Tools');
@@ -284,15 +284,15 @@ describe('official Codex plugin layout', () => {
   });
 
   it('documents marketplace-aware cache semantics without replacing full setup', async () => {
-    const staleCachePath = '~/.codex/plugins/cache/omc/oh-my-codex';
+    const staleCachePath = '~/.codex/plugins/cache/omc/roblox-ai-os-creator-skills';
     const docsToCheck = [
       'README.md',
       'docs/troubleshooting.md',
       'docs/hooks-extension.md',
       'skills/doctor/SKILL.md',
       'skills/help/SKILL.md',
-      'plugins/oh-my-codex/skills/doctor/SKILL.md',
-      'plugins/oh-my-codex/skills/help/SKILL.md',
+      'plugins/roblox-ai-os-creator-skills/skills/doctor/SKILL.md',
+      'plugins/roblox-ai-os-creator-skills/skills/help/SKILL.md',
     ];
 
     for (const docPath of docsToCheck) {
@@ -302,8 +302,8 @@ describe('official Codex plugin layout', () => {
 
     const combinedDocs = await Promise.all(docsToCheck.map((docPath) => readFile(join(root, docPath), 'utf-8')));
     const combined = combinedDocs.join('\n');
-    assert.match(combined, /plugins\/cache\/\$MARKETPLACE_NAME\/oh-my-codex\/\$VERSION\//);
-    assert.match(combined, /not a replacement for `npm install -g oh-my-codex` plus `omx setup`/);
+    assert.match(combined, /plugins\/cache\/\$MARKETPLACE_NAME\/roblox-ai-os-creator-skills\/\$VERSION\//);
+    assert.match(combined, /not a replacement for `npm install -g roblox-ai-os-creator-skills` plus `rcs setup`/);
     assert.match(combined, /legacy setup mode installs native agents\/prompts|plugin setup mode archives stale legacy prompt\/native-agent files/);
     assert.match(combined, /plugin-scoped companion metadata for MCP servers and apps/i);
     assert.match(combined, /hooks stay setup-owned|hooks remain setup-owned|native \.codex\/hooks\.json coverage/i);

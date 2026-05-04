@@ -99,10 +99,12 @@ function resolveWindowsCommandPath(
   existsImpl: ExistsSyncLike,
 ): string | null {
   const pathext = normalizeWindowsPathext(env);
-  const pathEntries = String(env.Path ?? env.PATH ?? '')
-    .split(delimiter)
-    .map((value) => value.trim())
-    .filter(Boolean);
+  const rawPath = String(env.Path ?? env.PATH ?? '');
+  const pathEntries = rawPath.includes(';')
+    ? rawPath.split(';').map((value) => value.trim()).filter(Boolean)
+    : (/^[A-Za-z]:[\\/]/.test(rawPath)
+        ? [rawPath.trim()].filter(Boolean)
+        : rawPath.split(delimiter).map((value) => value.trim()).filter(Boolean));
 
   for (const commandVariant of resolveWindowsCommandVariants(command)) {
     const candidates: string[] = [];
@@ -178,6 +180,47 @@ function resolvePowerShellExecutable(env: NodeJS.ProcessEnv, existsImpl: ExistsS
   return resolveWindowsCommandPath('powershell', env, existsImpl) || 'powershell.exe';
 }
 
+function resolveGitBashExecutable(env: NodeJS.ProcessEnv, existsImpl: ExistsSyncLike): string | null {
+  const override = String(env.RCS_TEST_GIT_BASH ?? '').trim();
+  if (override && existsImpl(override)) return override;
+  const pf = String(env.ProgramFiles ?? '').trim();
+  const pfx86 = String(env['ProgramFiles(x86)'] ?? '').trim();
+  for (const base of [pf, pfx86]) {
+    if (!base) continue;
+    const candidate = join(base, 'Git', 'bin', 'bash.exe');
+    if (existsImpl(candidate)) return candidate;
+  }
+  return null;
+}
+
+/**
+ * Git Bash (MSYS) strips `{...}` inside argv tokens when forwarding from Win32
+ * CreateProcess (brace expansion / MSYS normalization). Prefix `{` and `}` with
+ * `\` so the stub receives literal tmux format strings like `#{pane_id}`.
+ */
+function escapeArgsForMsysGitBashSpawn(args: readonly string[]): string[] {
+  return args.map((arg) => arg.replace(/\{/g, '\\{').replace(/\}/g, '\\}'));
+}
+
+/**
+ * When `tmux` resolves to a `.ps1` shim next to `tmux-stub.sh` (tests / Git-for-Windows style),
+ * spawn Git Bash with the stub script so tmux format tokens like `#{pane_id}` survive
+ * PowerShell/cmd parsing and MSYS argv brace normalization (via backslash-escaped `{` / `}`).
+ */
+export function resolveWindowsTmuxStubSpawn(
+  resolvedPs1OrTestBin: string,
+  tmuxArgs: string[],
+  env: NodeJS.ProcessEnv = process.env,
+  existsImpl: ExistsSyncLike = existsFileSync,
+): PlatformCommandSpec | null {
+  if (extname(resolvedPs1OrTestBin).toLowerCase() !== '.ps1') return null;
+  const stubSh = join(dirname(resolvedPs1OrTestBin), 'tmux-stub.sh');
+  if (!existsImpl(stubSh)) return null;
+  const bash = resolveGitBashExecutable(env, existsImpl);
+  if (!bash) return null;
+  return { command: bash, args: [stubSh, ...escapeArgsForMsysGitBashSpawn(tmuxArgs)], resolvedPath: bash };
+}
+
 function shouldUseWindowsVerbatimArguments(platform: NodeJS.Platform, spec: PlatformCommandSpec): boolean {
   return (
     platform === 'win32' &&
@@ -230,6 +273,10 @@ export function buildPlatformCommandSpec(
   }
 
   const kind = classifyWindowsCommandPath(resolvedPath);
+  if (command === 'tmux' && kind === 'powershell') {
+    const stubSpec = resolveWindowsTmuxStubSpawn(resolvedPath, args, env, existsImpl);
+    if (stubSpec) return stubSpec;
+  }
   const nodeHostedPath = resolveWindowsNodeHostedCommandPath(command, resolvedPath, existsImpl);
   if (nodeHostedPath) {
     return {

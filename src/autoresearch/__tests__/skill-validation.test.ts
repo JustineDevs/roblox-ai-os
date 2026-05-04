@@ -16,7 +16,7 @@ describe('autoresearch skill validation', () => {
   });
 
   it('treats missing validation mode as incomplete', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-autoresearch-skill-validation-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-autoresearch-skill-validation-'));
     try {
       const result = await assessAutoresearchCompletionState({ active: true }, cwd);
       assert.equal(result.complete, false);
@@ -27,10 +27,10 @@ describe('autoresearch skill validation', () => {
   });
 
   it('requires a validator pass artifact for mission-validator-script mode', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-autoresearch-validator-script-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-autoresearch-validator-script-'));
     try {
-      const artifactPath = join(cwd, '.omx', 'specs', 'autoresearch-demo', 'completion.json');
-      await mkdir(join(cwd, '.omx', 'specs', 'autoresearch-demo'), { recursive: true });
+      const artifactPath = join(cwd, '.rcs', 'specs', 'autoresearch-demo', 'completion.json');
+      await mkdir(join(cwd, '.rcs', 'specs', 'autoresearch-demo'), { recursive: true });
       await writeFile(artifactPath, JSON.stringify({ status: 'running' }, null, 2));
 
       const incomplete = await assessAutoresearchCompletionState({
@@ -57,9 +57,9 @@ describe('autoresearch skill validation', () => {
   });
 
   it('requires prompt, architect approval, and output artifact for prompt-architect-artifact mode', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-autoresearch-architect-validation-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-autoresearch-architect-validation-'));
     try {
-      const artifactDir = join(cwd, '.omx', 'specs', 'autoresearch-demo');
+      const artifactDir = join(cwd, '.rcs', 'specs', 'autoresearch-demo');
       const completionPath = join(artifactDir, 'completion.json');
       const outputPath = join(artifactDir, 'report.md');
       await mkdir(artifactDir, { recursive: true });

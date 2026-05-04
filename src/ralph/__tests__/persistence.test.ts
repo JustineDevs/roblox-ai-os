@@ -9,16 +9,16 @@ import { VISUAL_NEXT_ACTIONS_LIMIT } from '../../visual/constants.js';
 
 describe('ensureCanonicalRalphArtifacts', () => {
   it('keeps canonical files authoritative when they already exist', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-canonical-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-canonical-'));
     try {
-      const canonicalPrd = join(cwd, '.omx', 'plans', 'prd-existing.md');
-      const canonicalProgress = join(cwd, '.omx', 'state', 'ralph-progress.json');
-      await mkdir(join(cwd, '.omx', 'plans'), { recursive: true });
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
+      const canonicalPrd = join(cwd, '.rcs', 'plans', 'prd-existing.md');
+      const canonicalProgress = join(cwd, '.rcs', 'state', 'ralph-progress.json');
+      await mkdir(join(cwd, '.rcs', 'plans'), { recursive: true });
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeFile(canonicalPrd, '# Existing canonical PRD\n');
       await writeFile(canonicalProgress, JSON.stringify({ canonical: true }, null, 2));
-      await writeFile(join(cwd, '.omx', 'prd.json'), JSON.stringify({ project: 'legacy-project' }));
-      await writeFile(join(cwd, '.omx', 'progress.txt'), 'legacy line\n');
+      await writeFile(join(cwd, '.rcs', 'prd.json'), JSON.stringify({ project: 'legacy-project' }));
+      await writeFile(join(cwd, '.rcs', 'progress.txt'), 'legacy line\n');
 
       const result = await ensureCanonicalRalphArtifacts(cwd);
       assert.equal(result.migratedPrd, false);
@@ -36,11 +36,11 @@ describe('ensureCanonicalRalphArtifacts', () => {
   });
 
   it('migrates legacy PRD/progress files one-way when canonical artifacts are absent', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-migrate-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-migrate-'));
     try {
-      const legacyPrdPath = join(cwd, '.omx', 'prd.json');
-      const legacyProgressPath = join(cwd, '.omx', 'progress.txt');
-      await mkdir(join(cwd, '.omx'), { recursive: true });
+      const legacyPrdPath = join(cwd, '.rcs', 'prd.json');
+      const legacyProgressPath = join(cwd, '.rcs', 'progress.txt');
+      await mkdir(join(cwd, '.rcs'), { recursive: true });
       await writeFile(legacyPrdPath, JSON.stringify({
         project: 'Legacy Ralph Project',
         description: 'Legacy PRD payload',
@@ -64,8 +64,8 @@ describe('ensureCanonicalRalphArtifacts', () => {
 
       const canonicalPrd = await readFile(result.canonicalPrdPath!, 'utf-8');
       const canonicalProgress = JSON.parse(await readFile(result.canonicalProgressPath, 'utf-8'));
-      assert.match(canonicalPrd, /Migrated from legacy `.omx\/prd\.json`/);
-      assert.equal(canonicalProgress.source, '.omx/progress.txt');
+      assert.match(canonicalPrd, /Migrated from legacy `.rcs\/prd\.json`/);
+      assert.equal(canonicalProgress.source, '.rcs/progress.txt');
       assert.equal(Array.isArray(canonicalProgress.entries), true);
       assert.equal(canonicalProgress.entries.length, 2);
       assert.equal(Array.isArray(canonicalProgress.visual_feedback), true);
@@ -79,12 +79,12 @@ describe('ensureCanonicalRalphArtifacts', () => {
   });
 
   it('prefers the newest timestamped canonical PRD when multiple canonical files exist', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-canonical-order-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-canonical-order-'));
     try {
-      const plansDir = join(cwd, '.omx', 'plans');
-      const canonicalProgress = join(cwd, '.omx', 'state', 'ralph-progress.json');
+      const plansDir = join(cwd, '.rcs', 'plans');
+      const canonicalProgress = join(cwd, '.rcs', 'state', 'ralph-progress.json');
       await mkdir(plansDir, { recursive: true });
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeFile(join(plansDir, 'prd-legacy.md'), '# Legacy canonical PRD\n');
       await writeFile(join(plansDir, 'prd-20260427T153000Z-alpha.md'), '# Older timestamped PRD\n');
       await writeFile(join(plansDir, 'prd-20260427T153100Z-alpha.md'), '# Newer timestamped PRD\n');
@@ -99,7 +99,7 @@ describe('ensureCanonicalRalphArtifacts', () => {
   });
 
   it('records visual feedback with numeric and qualitative guidance for the next iteration', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-visual-feedback-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-visual-feedback-'));
     try {
       const artifacts = await ensureCanonicalRalphArtifacts(cwd, 'sessVisual');
       await recordRalphVisualFeedback(cwd, {

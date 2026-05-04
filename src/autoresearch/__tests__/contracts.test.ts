@@ -13,7 +13,7 @@ import {
 } from '../contracts.js';
 
 async function initRepo(): Promise<string> {
-  const raw = await mkdtemp(join(tmpdir(), 'omx-autoresearch-contracts-'));
+  const raw = await mkdtemp(join(tmpdir(), 'rcs-autoresearch-contracts-'));
   const cwd = realpathSync(raw);
   execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
@@ -125,7 +125,7 @@ Stay in bounds.
   });
 
   it('rejects mission directories outside a git repository', async () => {
-    const missionDir = await mkdtemp(join(tmpdir(), 'omx-autoresearch-not-git-'));
+    const missionDir = await mkdtemp(join(tmpdir(), 'rcs-autoresearch-not-git-'));
     try {
       await writeFile(join(missionDir, 'mission.md'), '# Mission\nShip it\n', 'utf-8');
       await writeFile(

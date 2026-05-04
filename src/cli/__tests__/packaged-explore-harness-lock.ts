@@ -2,7 +2,7 @@ import { chmod, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const LOCK_ROOT = join(process.cwd(), '.omx', 'test-locks');
+const LOCK_ROOT = join(process.cwd(), '.rcs', 'test-locks');
 const LOCK_DIR = join(LOCK_ROOT, 'packaged-explore-harness.lock');
 const LOCK_TIMEOUT_MS = 120_000;
 const LOCK_POLL_MS = 100;
@@ -39,8 +39,8 @@ export async function withPackagedExploreHarnessLock<T>(fn: () => Promise<T>): P
 export async function withPackagedExploreHarnessHidden<T>(fn: () => Promise<T>): Promise<T> {
   return withPackagedExploreHarnessLock(async () => {
     const packageBinDir = join(process.cwd(), 'bin');
-    const packagedBinary = join(packageBinDir, process.platform === 'win32' ? 'omx-explore-harness.exe' : 'omx-explore-harness');
-    const packagedMeta = join(packageBinDir, 'omx-explore-harness.meta.json');
+    const packagedBinary = join(packageBinDir, process.platform === 'win32' ? 'rcs-explore-harness.exe' : 'rcs-explore-harness');
+    const packagedMeta = join(packageBinDir, 'rcs-explore-harness.meta.json');
     const originalBinary = existsSync(packagedBinary) ? await readFile(packagedBinary) : null;
     const originalMeta = existsSync(packagedMeta) ? await readFile(packagedMeta) : null;
 

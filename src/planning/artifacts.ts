@@ -7,7 +7,7 @@ import {
   selectLatestPlanningArtifactPath,
   selectMatchingTestSpecsForPrd,
 } from './artifact-names.js';
-import { omxPlansDir } from '../utils/paths.js';
+import { rcsPlansDir } from '../utils/paths.js';
 
 const PRD_PATTERN = /^prd-.*\.md$/i;
 const TEST_SPEC_PATTERN = /^test-?spec-.*\.md$/i;
@@ -87,8 +87,8 @@ function readMatchingPaths(dir: string, pattern: RegExp): string[] {
 }
 
 export function readPlanningArtifacts(cwd: string): PlanningArtifacts {
-  const plansDir = omxPlansDir(cwd);
-  const specsDir = join(cwd, '.omx', 'specs');
+  const plansDir = rcsPlansDir(cwd);
+  const specsDir = join(cwd, '.rcs', 'specs');
 
   return {
     plansDir,
@@ -315,8 +315,8 @@ type LaunchHintSelection =
 
 function launchHintPattern(mode: 'team' | 'ralph'): RegExp {
   return mode === 'team'
-    ? /(?<command>(?:omx\s+team|\$team)\s+(?<ralph>ralph\s+)?(?<count>\d+)(?::(?<role>[a-z][a-z0-9-]*))?\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi
-    : /(?<command>(?:omx\s+ralph|\$ralph)\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi;
+    ? /(?<command>(?:rcs\s+team|\$team)\s+(?<ralph>ralph\s+)?(?<count>\d+)(?::(?<role>[a-z][a-z0-9-]*))?\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi
+    : /(?<command>(?:rcs\s+ralph|\$ralph)\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi;
 }
 
 function collectLaunchHintMatches(

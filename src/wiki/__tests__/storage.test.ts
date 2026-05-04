@@ -59,9 +59,9 @@ describe('Wiki Storage', () => {
   });
 
   describe('getWikiDir', () => {
-    it('should return .omx/wiki path', () => {
+    it('should return .rcs/wiki path', () => {
       const dir = getWikiDir(tempDir);
-      expect(dir).toBe(path.join(tempDir, '.omx', 'wiki'));
+      expect(dir).toBe(path.join(tempDir, '.rcs', 'wiki'));
     });
   });
 
@@ -73,13 +73,13 @@ describe('Wiki Storage', () => {
 
     it('should create .gitignore with wiki/ entry', () => {
       ensureWikiDir(tempDir);
-      const gitignorePath = path.join(tempDir, '.omx', '.gitignore');
+      const gitignorePath = path.join(tempDir, '.rcs', '.gitignore');
       expect(fs.existsSync(gitignorePath)).toBe(true);
       expect(fs.readFileSync(gitignorePath, 'utf-8')).toContain('wiki/');
     });
 
     it('should append to existing .gitignore', () => {
-      const omcDir = path.join(tempDir, '.omx');
+      const omcDir = path.join(tempDir, '.rcs');
       fs.mkdirSync(omcDir, { recursive: true });
       fs.writeFileSync(path.join(omcDir, '.gitignore'), 'state/\n');
 
@@ -90,7 +90,7 @@ describe('Wiki Storage', () => {
     });
 
     it('should not duplicate wiki/ in .gitignore', () => {
-      const omcDir = path.join(tempDir, '.omx');
+      const omcDir = path.join(tempDir, '.rcs');
       fs.mkdirSync(omcDir, { recursive: true });
       fs.writeFileSync(path.join(omcDir, '.gitignore'), 'wiki/\n');
 

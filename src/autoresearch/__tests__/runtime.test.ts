@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { AutoresearchMissionContract } from '../contracts.js';
@@ -17,7 +17,7 @@ import {
 import { readModeState } from '../../modes/base.js';
 
 async function initRepo(): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), 'omx-autoresearch-runtime-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'rcs-autoresearch-runtime-'));
   execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
@@ -25,6 +25,14 @@ async function initRepo(): Promise<string> {
   execFileSync('git', ['add', 'README.md'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['commit', '-m', 'init'], { cwd, stdio: 'ignore' });
   return cwd;
+}
+
+function readHead(cwd: string): string {
+  const result = spawnSync('git', ['rev-parse', 'HEAD'], { cwd, encoding: 'utf-8' });
+  if (result.status !== 0) {
+    throw new Error((result.stderr || '').trim() || 'git rev-parse HEAD failed');
+  }
+  return (result.stdout || '').trim();
 }
 
 async function makeContract(repo: string): Promise<AutoresearchMissionContract> {
@@ -38,7 +46,7 @@ async function makeContract(repo: string): Promise<AutoresearchMissionContract> 
   await writeFile(missionFile, missionContent, 'utf-8');
   await writeFile(sandboxFile, sandboxContent, 'utf-8');
   await writeFile(join(repo, 'score.txt'), '1\n', 'utf-8');
-  await writeFile(join(repo, 'scripts', 'eval.js'), "import { readFileSync } from 'node:fs';\nconst score = Number(readFileSync('score.txt', 'utf-8').trim());\nprocess.stdout.write(JSON.stringify({ pass: true, score }));\n", 'utf-8');
+  await writeFile(join(repo, 'scripts', 'eval.js'), "const { readFileSync } = require('node:fs');\nconst score = Number(readFileSync('score.txt', 'utf-8').trim());\nprocess.stdout.write(JSON.stringify({ pass: true, score }));\n", 'utf-8');
   execFileSync('git', ['add', 'missions/demo/mission.md', 'missions/demo/sandbox.md', 'scripts/eval.js', 'score.txt'], { cwd: repo, stdio: 'ignore' });
   execFileSync('git', ['commit', '-m', 'add autoresearch fixtures'], { cwd: repo, stdio: 'ignore' });
   return {
@@ -63,7 +71,7 @@ describe('autoresearch runtime', () => {
     const repo = await initRepo();
     try {
       const contract = await makeContract(repo);
-      const instructions = buildAutoresearchInstructions(contract, { runId: 'missions-demo-20260314t000000z', iteration: 1, baselineCommit: 'abc1234', lastKeptCommit: 'abc1234', resultsFile: 'results.tsv', candidateFile: '.omx/logs/autoresearch/missions-demo-20260314t000000z/candidate.json', keepPolicy: 'score_improvement' });
+      const instructions = buildAutoresearchInstructions(contract, { runId: 'missions-demo-20260314t000000z', iteration: 1, baselineCommit: 'abc1234', lastKeptCommit: 'abc1234', resultsFile: 'results.tsv', candidateFile: '.rcs/logs/autoresearch/missions-demo-20260314t000000z/candidate.json', keepPolicy: 'score_improvement' });
       assert.match(instructions, /exactly one experiment cycle/i);
       assert.match(instructions, /required output field: pass/i);
       assert.match(instructions, /optional output field: score/i);
@@ -75,14 +83,14 @@ describe('autoresearch runtime', () => {
     }
   });
 
-  it('allows untracked .omx runtime files when checking reset safety', async () => {
+  it('allows untracked .rcs runtime files when checking reset safety', async () => {
     const repo = await initRepo();
     try {
-      await mkdir(join(repo, '.omx', 'logs'), { recursive: true });
-      await mkdir(join(repo, '.omx', 'state'), { recursive: true });
-      await writeFile(join(repo, '.omx', 'logs', 'hooks-2026-03-15.jsonl'), '{}\n', 'utf-8');
-      await writeFile(join(repo, '.omx', 'metrics.json'), '{}\n', 'utf-8');
-      await writeFile(join(repo, '.omx', 'state', 'hud-state.json'), '{}\n', 'utf-8');
+      await mkdir(join(repo, '.rcs', 'logs'), { recursive: true });
+      await mkdir(join(repo, '.rcs', 'state'), { recursive: true });
+      await writeFile(join(repo, '.rcs', 'logs', 'hooks-2026-03-15.jsonl'), '{}\n', 'utf-8');
+      await writeFile(join(repo, '.rcs', 'metrics.json'), '{}\n', 'utf-8');
+      await writeFile(join(repo, '.rcs', 'state', 'hud-state.json'), '{}\n', 'utf-8');
 
       assert.doesNotThrow(() => assertResetSafeWorktree(repo));
     } finally {
@@ -96,7 +104,7 @@ describe('autoresearch runtime', () => {
       const contract = await makeContract(repo);
       await mkdir(join(repo, 'node_modules', 'fixture-dep'), { recursive: true });
       await writeFile(join(repo, 'node_modules', 'fixture-dep', 'index.js'), 'export default 1;\n', 'utf-8');
-      const worktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t000000z');
+      const worktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t000000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t000000z', worktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -166,7 +174,7 @@ describe('autoresearch parity decisions', () => {
     const repo = await initRepo();
     try {
       const contract = await makeContract(repo);
-      const worktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t010000z');
+      const worktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t010000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t010000z', worktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -177,7 +185,7 @@ describe('autoresearch parity decisions', () => {
       await writeFile(join(worktreePath, 'score.txt'), '2\n', 'utf-8');
       execFileSync('git', ['add', 'score.txt'], { cwd: worktreePath, stdio: 'ignore' });
       execFileSync('git', ['commit', '-m', 'improve score'], { cwd: worktreePath, stdio: 'ignore' });
-      const improvedCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worktreePath, encoding: 'utf-8' }).trim();
+      const improvedCommit = readHead(worktreePath);
       const initialManifest = await loadAutoresearchRunManifest(repo, runtime.runId);
       await writeFile(runtime.candidateFile, `${JSON.stringify({
         status: 'candidate',
@@ -196,7 +204,7 @@ describe('autoresearch parity decisions', () => {
       await writeFile(join(worktreePath, 'score.txt'), '1\n', 'utf-8');
       execFileSync('git', ['add', 'score.txt'], { cwd: worktreePath, stdio: 'ignore' });
       execFileSync('git', ['commit', '-m', 'worse score'], { cwd: worktreePath, stdio: 'ignore' });
-      const worseCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worktreePath, encoding: 'utf-8' }).trim();
+      const worseCommit = readHead(worktreePath);
       const beforeDiscardManifest = await loadAutoresearchRunManifest(repo, runtime.runId);
       await writeFile(runtime.candidateFile, `${JSON.stringify({
         status: 'candidate',
@@ -209,7 +217,7 @@ describe('autoresearch parity decisions', () => {
 
       const discardDecision = await processAutoresearchCandidate(worktreeContract, beforeDiscardManifest, repo);
       assert.equal(discardDecision, 'discard');
-      const headAfterDiscard = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worktreePath, encoding: 'utf-8' }).trim();
+      const headAfterDiscard = readHead(worktreePath);
       assert.equal(headAfterDiscard, improvedCommit);
 
       const finalManifest = await loadAutoresearchRunManifest(repo, runtime.runId);

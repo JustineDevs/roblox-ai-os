@@ -17,7 +17,7 @@ import { monitorTeam } from '../runtime.js';
 import { readTeamEvents } from '../state/events.js';
 
 async function initRepo(): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), 'omx-cross-rebase-smoke-repo-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'rcs-cross-rebase-smoke-repo-'));
   execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
@@ -63,8 +63,8 @@ describe('cross-rebase smoke regression', () => {
     let worker1Path = '';
     let worker2Path = '';
     try {
-      worker1Path = await addWorktree(repo, 'wk1-cross-applied', 'omx-cross-applied-w1-');
-      worker2Path = await addWorktree(repo, 'wk2-cross-applied', 'omx-cross-applied-w2-');
+      worker1Path = await addWorktree(repo, 'wk1-cross-applied', 'rcs-cross-applied-w1-');
+      worker2Path = await addWorktree(repo, 'wk2-cross-applied', 'rcs-cross-applied-w2-');
 
       await writeFile(join(worker1Path, 'w1.txt'), 'from worker 1\n', 'utf-8');
       execFileSync('git', ['add', 'w1.txt'], { cwd: worker1Path, stdio: 'ignore' });
@@ -107,8 +107,8 @@ describe('cross-rebase smoke regression', () => {
       execFileSync('git', ['add', 'original.txt'], { cwd: repo, stdio: 'ignore' });
       execFileSync('git', ['commit', '-m', 'add original.txt'], { cwd: repo, stdio: 'ignore' });
 
-      worker1Path = await addWorktree(repo, 'wk1-cross-conflict', 'omx-cross-conflict-w1-');
-      worker2Path = await addWorktree(repo, 'wk2-cross-conflict', 'omx-cross-conflict-w2-');
+      worker1Path = await addWorktree(repo, 'wk1-cross-conflict', 'rcs-cross-conflict-w1-');
+      worker2Path = await addWorktree(repo, 'wk2-cross-conflict', 'rcs-cross-conflict-w2-');
 
       execFileSync('git', ['mv', 'original.txt', 'renamed-by-w1.txt'], { cwd: worker1Path, stdio: 'ignore' });
       execFileSync('git', ['commit', '-m', 'worker-1 renames original'], { cwd: worker1Path, stdio: 'ignore' });
@@ -131,7 +131,7 @@ describe('cross-rebase smoke regression', () => {
       const events = await readTeamEvents('cross-rebase-conflict', repo, { wakeableOnly: false });
       const wakeable = await readTeamEvents('cross-rebase-conflict', repo, { wakeableOnly: true });
       const leaderMailbox = await listMailboxMessages('cross-rebase-conflict', 'leader-fixed', repo);
-      const reportPath = join(repo, '.omx', 'state', 'team', 'cross-rebase-conflict', 'integration-report.md');
+      const reportPath = join(repo, '.rcs', 'state', 'team', 'cross-rebase-conflict', 'integration-report.md');
       const report = await readFile(reportPath, 'utf-8');
 
       assert.equal(worker2HeadAfter, worker2HeadBefore);
@@ -156,8 +156,8 @@ describe('cross-rebase smoke regression', () => {
     let worker1Path = '';
     let worker2Path = '';
     try {
-      worker1Path = await addWorktree(repo, 'wk1-cross-skipped', 'omx-cross-skipped-w1-');
-      worker2Path = await addWorktree(repo, 'wk2-cross-skipped', 'omx-cross-skipped-w2-');
+      worker1Path = await addWorktree(repo, 'wk1-cross-skipped', 'rcs-cross-skipped-w1-');
+      worker2Path = await addWorktree(repo, 'wk2-cross-skipped', 'rcs-cross-skipped-w2-');
 
       await writeFile(join(worker1Path, 'w1.txt'), 'from worker 1\n', 'utf-8');
       execFileSync('git', ['add', 'w1.txt'], { cwd: worker1Path, stdio: 'ignore' });

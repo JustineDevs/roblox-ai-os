@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2026-04-24T07:34:27.399Z",
-  "version": "2026.02.28.1",
+  "generatedAt": "2026-05-03T15:46:03.845Z",
+  "version": "2026.05.03.1",
   "counts": {
-    "skillCount": 42,
+    "skillCount": 61,
     "promptCount": 30,
-    "activeSkillCount": 27,
+    "activeSkillCount": 46,
     "activeAgentCount": 18
   },
   "coreSkills": [
@@ -98,6 +98,139 @@
     {
       "name": "deep-interview",
       "category": "planning",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "brief",
+      "category": "planning",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "blueprint",
+      "category": "planning",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "forge",
+      "category": "execution",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "crew",
+      "category": "execution",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "autoforge",
+      "category": "execution",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "brief-audience",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "brief-motivation",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "blueprint-psych",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "blueprint-loop",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "blueprint-retention",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "blueprint-social",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "forge-reward-loop",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "forge-daily-loop",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "forge-event-loop",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "forge-progression",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "forge-status",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "forge-fomo",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "forge-mastery",
+      "category": "design",
+      "status": "active",
+      "core": false,
+      "internalRequired": false
+    },
+    {
+      "name": "forge-community",
+      "category": "design",
       "status": "active",
       "core": false,
       "internalRequired": false
@@ -268,7 +401,7 @@
       "internalRequired": false
     },
     {
-      "name": "omx-setup",
+      "name": "rcs-setup",
       "category": "utility",
       "status": "active",
       "core": false,

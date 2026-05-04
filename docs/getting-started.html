@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Getting Started - oh-my-codex Docs</title>
+    <title>Getting Started - RCS Docs</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <header>
       <nav class="container nav" aria-label="Primary">
-        <a class="brand" href="./index.html">oh-my-codex</a>
+        <a class="brand" href="./index.html">RCS</a>
         <a href="./index.html">Home</a>
         <a class="active" href="./getting-started.html">Getting Started</a>
         <a href="./agents.html">Agents</a>
@@ -30,48 +30,53 @@
       </ul>
 
       <h2>Installation</h2>
-      <pre><code>npm install -g @openai/codex oh-my-codex
-omx doctor</code></pre>
-      <p>When <code>oh-my-codex</code> actually bumps to a newer version, the global npm install now prints an explicit reminder instead of launching <code>omx setup</code> automatically. When you're ready, rerun <code>omx setup</code> manually or use <code>omx update</code> to check npm and then run the same setup refresh path. Fresh OMX-managed <code>gpt-5.5</code> configs now recommend <code>model_context_window = 250000</code> and <code>model_auto_compact_token_limit = 200000</code> only when those keys are missing.</p>
-      <p><code>omx doctor</code> verifies the install shape. Before treating the runtime as ready, also prove that the active Codex profile can perform a real request:</p>
+      <pre><code>npm install -g @openai/codex @jstn-sdk/rcs
+rcs doctor</code></pre>
+      <p>When <code>@jstn-sdk/rcs</code> actually bumps to a newer version, the global npm install prints an explicit reminder instead of launching <code>rcs setup</code> automatically. When you're ready, rerun <code>rcs setup</code> manually or use <code>rcs update</code> to check npm and then run the same setup refresh path. Fresh RCS-managed <code>gpt-5.5</code> configs now recommend <code>model_context_window = 250000</code> and <code>model_auto_compact_token_limit = 200000</code> only when those keys are missing.</p>
+      <p><code>rcs doctor</code> verifies the install shape. Before treating the runtime as ready, also prove that the active Codex profile can perform a real request:</p>
       <pre><code>codex login status
-omx exec --skip-git-repo-check -C . &quot;Reply with exactly OMX-EXEC-OK&quot;</code></pre>
+rcs exec --skip-git-repo-check -C . &quot;Reply with exactly RCS-EXEC-OK&quot;</code></pre>
 
       <h2>Recommended Launch</h2>
-      <pre><code>omx --xhigh --madmax   # trusted environments
-omx                    # standard launch</code></pre>
+      <pre><code>rcs --xhigh --madmax   # trusted environments
+rcs                    # standard launch</code></pre>
 
       <h2>First Run Walkthrough</h2>
       <ol>
         <li>Create or enter a project directory.</li>
-        <li>Install or update OMX globally.</li>
-        <li>After install or real OMX version bumps, rerun <code>omx setup</code> yourself when you're ready, or use <code>omx update</code> when you also want npm to update OMX first.</li>
-        <li>Run <code>omx doctor</code>, then the <code>codex login status</code> plus <code>omx exec</code> smoke test above.</li>
-        <li>Start Codex CLI with <code>omx</code>.</li>
-        <li>Use <code>$deep-interview "clarify the auth change"</code> when intent or boundaries are still unclear.</li>
-        <li>Use <code>$ralplan "approve the auth plan and review tradeoffs"</code> to lock the implementation plan.</li>
-        <li>Choose <code>$ralph "carry the approved plan to completion"</code> or <code>$team 3:executor "execute the approved plan in parallel"</code> based on execution style.</li>
+        <li>Install or update RCS globally.</li>
+        <li>After install or real RCS version bumps, rerun <code>rcs setup</code> yourself when you're ready, or use <code>rcs update</code> when you also want npm to update RCS first.</li>
+        <li>Run <code>rcs doctor</code>, then the <code>codex login status</code> plus <code>rcs exec</code> smoke test above.</li>
+        <li>Start Codex CLI with <code>rcs</code>.</li>
+        <li>Use <code>$brief "clarify the creator workflow change"</code> when intent or boundaries are still unclear.</li>
+        <li>Use <code>$blueprint "approve the plan and review tradeoffs"</code> to lock the implementation plan.</li>
+        <li>Choose <code>$forge "carry the approved plan to completion"</code> or <code>$crew "execute the approved plan in parallel"</code> based on execution style.</li>
       </ol>
 
+      <h2>Creator Workflow First</h2>
+      <p>The canonical public path is:</p>
+      <pre><code>$brief -> $blueprint -> $forge / $crew -> $autoforge</code></pre>
+      <p>Older engine-facing surfaces such as <code>$deep-interview</code>, <code>$ralplan</code>, <code>$ralph</code>, <code>$team</code>, and <code>$autopilot</code> remain available as lower-level compatibility/runtime layers, but they are not the primary onboarding path.</p>
+
       <h2>Prompt Instruction Source</h2>
-      <p>OMX layers project instructions by default (extends Codex behavior, does not replace/bypass Codex core system policies):</p>
+      <p>RCS layers project instructions by default (extends Codex behavior, does not replace/bypass Codex core system policies):</p>
       <pre><code>-c model_instructions_file="&lt;cwd&gt;/AGENTS.md"</code></pre>
       <p>Override behavior when needed:</p>
-      <pre><code>OMX_BYPASS_DEFAULT_SYSTEM_PROMPT=0 omx
-OMX_MODEL_INSTRUCTIONS_FILE=/path/to/instructions.md omx</code></pre>
+      <pre><code>RCS_BYPASS_DEFAULT_SYSTEM_PROMPT=0 rcs
+RCS_MODEL_INSTRUCTIONS_FILE=/path/to/instructions.md rcs</code></pre>
 
       <h2>Troubleshooting</h2>
       <table>
         <thead><tr><th>Issue</th><th>What to check</th></tr></thead>
         <tbody>
-          <tr><td><code>omx</code> command not found</td><td>Re-run global install and ensure npm global bin is in PATH.</td></tr>
-          <tr><td>Prompts not available</td><td>Confirm files exist in <code>~/.codex/prompts/</code> and re-run <code>omx setup</code>.</td></tr>
+          <tr><td><code>rcs</code> command not found</td><td>Re-run global install and ensure npm global bin is in PATH.</td></tr>
+          <tr><td>Prompts not available</td><td>Confirm files exist in <code>~/.codex/prompts/</code> and re-run <code>rcs setup</code>.</td></tr>
           <tr><td>Skills not loading</td><td>Verify <code>~/.codex/skills/*/SKILL.md</code> files were installed.</td></tr>
-          <tr><td>Doctor reports config issues</td><td>Run <code>omx doctor</code> and apply the suggested fixes.</td></tr>
-          <tr><td>Doctor is green but execution fails</td><td>Run <code>codex login status</code> and <code>omx exec --skip-git-repo-check -C . &quot;Reply with exactly OMX-EXEC-OK&quot;</code> from the same shell/profile. A green doctor is install evidence, not proof of authenticated model execution.</td></tr>
+          <tr><td>Doctor reports config issues</td><td>Run <code>rcs doctor</code> and apply the suggested fixes.</td></tr>
+          <tr><td>Doctor is green but execution fails</td><td>Run <code>codex login status</code> and <code>rcs exec --skip-git-repo-check -C . &quot;Reply with exactly RCS-EXEC-OK&quot;</code> from the same shell/profile. A green doctor is install evidence, not proof of authenticated model execution.</td></tr>
           <tr><td>Custom or profile HOME cannot authenticate</td><td>Check the active <code>~/.codex</code> or <code>CODEX_HOME</code>. Containers, profile shells, and service users may not see the same auth/config as your normal user home.</td></tr>
           <tr><td>Local proxy or compatible endpoint returns 401</td><td>If you use a proxy, verify the active <code>~/.codex/config.toml</code> contains the expected <code>openai_base_url</code>. Proxy keys sent to the wrong endpoint can look like missing bearer auth or an incorrect API key.</td></tr>
-          <tr><td><code>omx doctor --team</code> sees a dead tmux team</td><td>If the team is intentionally abandoned, run <code>omx team shutdown &lt;team-name&gt; --force --confirm-issues</code>, then <code>omx cancel</code>, then <code>omx doctor --team</code>.</td></tr>
+          <tr><td><code>rcs doctor --team</code> sees a dead tmux team</td><td>If the team is intentionally abandoned, run <code>rcs team shutdown &lt;team-name&gt; --force --confirm-issues</code>, then <code>rcs cancel</code>, then <code>rcs doctor --team</code>.</td></tr>
         </tbody>
       </table>
       <p class="muted">Need deeper operator help? See <a href="./troubleshooting.md">Troubleshooting execution readiness</a>.</p>

@@ -9,7 +9,7 @@ const ENV_KEYS = ['CODEX_HOME', 'TMUX', 'TMUX_PANE', 'PATH'] as const;
 const originalFetch = globalThis.fetch;
 
 function writeNotificationConfig(codexHome: string): void {
-  writeFileSync(join(codexHome, '.omx-config.json'), JSON.stringify({
+  writeFileSync(join(codexHome, '.rcs-config.json'), JSON.stringify({
     notifications: {
       enabled: true,
       webhook: {
@@ -39,8 +39,8 @@ exit 2
 
 describe('notifyLifecycle tmux tail auto-capture', () => {
   let originalEnv: NodeJS.ProcessEnv;
-  const codexHome = mkdtempSync(join(tmpdir(), 'omx-notify-index-codex-home-'));
-  const fakeBinDir = mkdtempSync(join(tmpdir(), 'omx-notify-index-fake-bin-'));
+  const codexHome = mkdtempSync(join(tmpdir(), 'rcs-notify-index-codex-home-'));
+  const fakeBinDir = mkdtempSync(join(tmpdir(), 'rcs-notify-index-fake-bin-'));
 
   before(() => {
     originalEnv = { ...process.env };
@@ -82,7 +82,7 @@ describe('notifyLifecycle tmux tail auto-capture', () => {
         return new Response('', { status: 200 });
       };
 
-      const projectPath = mkdtempSync(join(tmpdir(), `omx-notify-index-project-${eventName}-`));
+      const projectPath = mkdtempSync(join(tmpdir(), `rcs-notify-index-project-${eventName}-`));
       const result = await notifyLifecycle(eventName, {
         sessionId: `sess-${eventName}-${Date.now()}`,
         projectPath,
@@ -115,7 +115,7 @@ describe('notifyLifecycle tmux tail auto-capture', () => {
       return new Response('', { status: 200 });
     };
 
-    writeFileSync(join(codexHome, '.omx-config.json'), JSON.stringify({
+    writeFileSync(join(codexHome, '.rcs-config.json'), JSON.stringify({
       notifications: {
         enabled: true,
         verbosity: 'verbose',
@@ -148,11 +148,11 @@ describe('notifyLifecycle tmux tail auto-capture', () => {
       },
     }, null, 2));
 
-    process.env.OMX_OPENCLAW = '1';
+    process.env.RCS_OPENCLAW = '1';
     const { resetOpenClawConfigCache } = await import('../../openclaw/config.js');
     resetOpenClawConfigCache();
 
-    const projectPath = mkdtempSync(join(tmpdir(), 'omx-notify-index-project-ask-'));
+    const projectPath = mkdtempSync(join(tmpdir(), 'rcs-notify-index-project-ask-'));
     const { notifyLifecycle } = await import(`../index.js?ask-user-question-await=${Date.now()}`);
 
     const askStarted = Date.now();
@@ -182,7 +182,7 @@ describe('notifyLifecycle tmux tail auto-capture', () => {
     assert.equal(openClawResolved, false, 'session-start should keep fire-and-forget OpenClaw dispatch');
 
     rmSync(projectPath, { recursive: true, force: true });
-    delete process.env.OMX_OPENCLAW;
+    delete process.env.RCS_OPENCLAW;
   });
 
   it('keeps auto-capturing tmux tail for live session-idle notifications', async () => {
@@ -195,7 +195,7 @@ describe('notifyLifecycle tmux tail auto-capture', () => {
     };
     writeNotificationConfig(codexHome);
 
-    const projectPath = mkdtempSync(join(tmpdir(), 'omx-notify-index-project-idle-'));
+    const projectPath = mkdtempSync(join(tmpdir(), 'rcs-notify-index-project-idle-'));
     const { notifyLifecycle } = await import('../index.js');
     const result = await notifyLifecycle('session-idle', {
       sessionId: `sess-idle-${Date.now()}`,

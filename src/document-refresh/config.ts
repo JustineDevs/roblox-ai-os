@@ -19,10 +19,10 @@ export const DEFAULT_DOCUMENT_REFRESH_RULES: DocumentRefreshRule[] = [
     ],
     refreshTargets: [
       "docs/codex-native-hooks.md",
-      ".omx/plans/*codex-native*",
-      ".omx/specs/*codex-native*",
-      ".omx/plans/*native-hook*",
-      ".omx/specs/*native-hook*",
+      ".rcs/plans/*codex-native*",
+      ".rcs/specs/*codex-native*",
+      ".rcs/plans/*native-hook*",
+      ".rcs/specs/*native-hook*",
     ],
   },
   {
@@ -33,8 +33,8 @@ export const DEFAULT_DOCUMENT_REFRESH_RULES: DocumentRefreshRule[] = [
     ],
     refreshTargets: [
       "docs/codex-native-hooks.md",
-      ".omx/plans/*document-refresh*",
-      ".omx/specs/*document-refresh*",
+      ".rcs/plans/*document-refresh*",
+      ".rcs/specs/*document-refresh*",
     ],
   },
   {
@@ -46,10 +46,10 @@ export const DEFAULT_DOCUMENT_REFRESH_RULES: DocumentRefreshRule[] = [
     refreshTargets: [
       "README.md",
       "docs/getting-started.html",
-      ".omx/plans/*cli*",
-      ".omx/specs/*cli*",
-      ".omx/plans/*operator*",
-      ".omx/specs/*operator*",
+      ".rcs/plans/*cli*",
+      ".rcs/specs/*cli*",
+      ".rcs/plans/*operator*",
+      ".rcs/specs/*operator*",
     ],
     ignoredGlobs: [
       "src/cli/**/__tests__/**",
@@ -68,10 +68,10 @@ export const DEFAULT_DOCUMENT_REFRESH_RULES: DocumentRefreshRule[] = [
     ],
     refreshTargets: [
       "docs/prompt-guidance-contract.md",
-      ".omx/plans/*prompt*",
-      ".omx/specs/*prompt*",
-      ".omx/plans/*guidance*",
-      ".omx/specs/*guidance*",
+      ".rcs/plans/*prompt*",
+      ".rcs/specs/*prompt*",
+      ".rcs/plans/*guidance*",
+      ".rcs/specs/*guidance*",
     ],
   },
 ];

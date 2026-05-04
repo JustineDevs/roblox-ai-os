@@ -1,5 +1,5 @@
 /**
- * Session Lifecycle Manager for oh-my-codex
+ * Session Lifecycle Manager for roblox-ai-os-creator-skills
  *
  * Tracks session start/end, detects stale sessions from crashed launches,
  * and provides structured logging for session events.
@@ -8,7 +8,7 @@
 import { readFile, writeFile, mkdir, unlink, appendFile, rm } from 'fs/promises';
 import { dirname, join } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { omxStateDir, omxLogsDir, sameFilePath } from '../utils/paths.js';
+import { rcsStateDir, rcsLogsDir, sameFilePath } from '../utils/paths.js';
 import { getStateFilePath } from '../mcp/state-paths.js';
 
 export interface SessionState {
@@ -30,11 +30,11 @@ const SESSION_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 // Long-running sessions (>2h) are legitimate and should not be reaped.
 
 function sessionPath(cwd: string): string {
-  return join(omxStateDir(cwd), SESSION_FILE);
+  return join(rcsStateDir(cwd), SESSION_FILE);
 }
 
 function historyPath(cwd: string): string {
-  return join(omxLogsDir(cwd), HISTORY_FILE);
+  return join(rcsLogsDir(cwd), HISTORY_FILE);
 }
 
 async function removeDeadSessionHudState(
@@ -66,13 +66,13 @@ async function removeDeadSessionHudState(
  * into a new Codex session.
  */
 export async function resetSessionMetrics(cwd: string, sessionId?: string): Promise<void> {
-  const omxDir = join(cwd, '.omx');
-  const stateDir = omxStateDir(cwd);
-  await mkdir(omxDir, { recursive: true });
+  const rcsDir = join(cwd, '.rcs');
+  const stateDir = rcsStateDir(cwd);
+  await mkdir(rcsDir, { recursive: true });
   await mkdir(stateDir, { recursive: true });
 
   const now = new Date().toISOString();
-  await writeFile(join(omxDir, 'metrics.json'), JSON.stringify({
+  await writeFile(join(rcsDir, 'metrics.json'), JSON.stringify({
     total_turns: 0,
     session_turns: 0,
     last_activity: now,
@@ -289,7 +289,7 @@ export async function writeSessionStart(
   sessionId: string,
   options: SessionStartOptions = {},
 ): Promise<SessionState> {
-  const stateDir = omxStateDir(cwd);
+  const stateDir = rcsStateDir(cwd);
   await mkdir(stateDir, { recursive: true });
   const pid = Number.isInteger(options.pid) && options.pid && options.pid > 0
     ? options.pid
@@ -315,9 +315,9 @@ export async function writeSessionStart(
 }
 
 /**
- * Reconcile a native/Codex SessionStart with the canonical OMX launch session.
+ * Reconcile a native/Codex SessionStart with the canonical RCS launch session.
  * If an authoritative current session already exists for this cwd/run, preserve
- * its OMX scope id and refresh PID/native metadata. Otherwise establish a fresh
+ * its RCS scope id and refresh PID/native metadata. Otherwise establish a fresh
  * canonical session using the native session id.
  */
 export async function reconcileNativeSessionStart(
@@ -379,7 +379,7 @@ export async function writeSessionEnd(cwd: string, sessionId: string): Promise<v
   const endTime = new Date().toISOString();
 
   // Archive to session history
-  const logsDir = omxLogsDir(cwd);
+  const logsDir = rcsLogsDir(cwd);
   await mkdir(logsDir, { recursive: true });
 
   const historyEntry = {
@@ -416,11 +416,11 @@ export async function writeSessionEnd(cwd: string, sessionId: string): Promise<v
  * Append a structured JSONL entry to the daily log file.
  */
 export async function appendToLog(cwd: string, entry: Record<string, unknown>): Promise<void> {
-  const logsDir = omxLogsDir(cwd);
+  const logsDir = rcsLogsDir(cwd);
   await mkdir(logsDir, { recursive: true });
 
   const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  const logFile = join(logsDir, `omx-${date}.jsonl`);
+  const logFile = join(logsDir, `rcs-${date}.jsonl`);
   const line = JSON.stringify({ ...entry, _ts: new Date().toISOString() }) + '\n';
 
   await appendFile(logFile, line);

@@ -7,20 +7,20 @@ import { getPackageRoot } from '../utils/package.js';
 import { codexPromptsDir } from '../utils/paths.js';
 
 export const ASK_USAGE = [
-  'Usage: omx ask <claude|gemini> <question or task>',
-  '   or: omx ask <claude|gemini> -p "<prompt>"',
-  '   or: omx ask claude --print "<prompt>"',
-  '   or: omx ask gemini --prompt "<prompt>"',
-  '   or: omx ask <claude|gemini> --agent-prompt <role> "<prompt>"',
-  '   or: omx ask <claude|gemini> --agent-prompt=<role> --prompt "<prompt>"',
+  'Usage: rcs ask <claude|gemini> <question or task>',
+  '   or: rcs ask <claude|gemini> -p "<prompt>"',
+  '   or: rcs ask claude --print "<prompt>"',
+  '   or: rcs ask gemini --prompt "<prompt>"',
+  '   or: rcs ask <claude|gemini> --agent-prompt <role> "<prompt>"',
+  '   or: rcs ask <claude|gemini> --agent-prompt=<role> --prompt "<prompt>"',
 ].join('\n');
 
 const ASK_PROVIDERS = ['claude', 'gemini'] as const;
 type AskProvider = typeof ASK_PROVIDERS[number];
 const ASK_PROVIDER_SET = new Set<string>(ASK_PROVIDERS);
-const ASK_ADVISOR_SCRIPT_ENV = 'OMX_ASK_ADVISOR_SCRIPT';
+const ASK_ADVISOR_SCRIPT_ENV = 'RCS_ASK_ADVISOR_SCRIPT';
 const ASK_AGENT_PROMPT_FLAG = '--agent-prompt';
-const ASK_ORIGINAL_TASK_ENV = 'OMX_ASK_ORIGINAL_TASK';
+const ASK_ORIGINAL_TASK_ENV = 'RCS_ASK_ORIGINAL_TASK';
 const SAFE_ROLE_PATTERN = /^[a-z][a-z0-9-]*$/;
 
 export interface ParsedAskArgs {
@@ -40,7 +40,7 @@ function resolveAskPromptsDir(cwd: string, env: NodeJS.ProcessEnv = process.env)
   }
 
   try {
-    const scopePath = join(cwd, '.omx', 'setup-scope.json');
+    const scopePath = join(cwd, '.rcs', 'setup-scope.json');
     if (existsSync(scopePath)) {
       const parsed = JSON.parse(readFileSync(scopePath, 'utf-8')) as Partial<{ scope: string }>;
       if (parsed.scope === 'project' || parsed.scope === 'project-local') {
@@ -64,7 +64,7 @@ async function resolveAgentPromptContent(
   }
 
   if (!existsSync(promptsDir)) {
-    throw new Error(`[ask] prompts directory not found: ${promptsDir}. Run "omx setup" to install prompts.`);
+    throw new Error(`[ask] prompts directory not found: ${promptsDir}. Run "rcs setup" to install prompts.`);
   }
 
   const promptPath = join(promptsDir, `${normalizedRole}.md`);

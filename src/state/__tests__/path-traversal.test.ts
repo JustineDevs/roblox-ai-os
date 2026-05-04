@@ -18,7 +18,7 @@ describe('state CLI path traversal prevention', () => {
   });
 
   it('rejects traversal in mode for state_write', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-traversal-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-traversal-'));
     try {
       const resp = await executeStateOperation('state_write', {
         mode: '../../outside',
@@ -34,7 +34,7 @@ describe('state CLI path traversal prevention', () => {
   });
 
   it('rejects unsupported mode names for state_read', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-traversal-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-traversal-'));
     try {
       const resp = await executeStateOperation('state_read', {
         mode: 'custom_mode',

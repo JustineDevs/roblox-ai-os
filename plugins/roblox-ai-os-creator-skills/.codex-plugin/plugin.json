@@ -1,0 +1,30 @@
+{
+  "name": "roblox-ai-os-creator-skills",
+  "version": "0.1.0",
+  "description": "Roblox Creator Skills workflow and runtime bundle for Codex CLI",
+  "author": {
+    "name": "JustineDevs",
+    "url": "https://github.com/JustineDevs"
+  },
+  "homepage": "https://github.com/JustineDevs/roblox-ai-os",
+  "repository": "https://github.com/JustineDevs/roblox-ai-os.git",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "openai",
+    "cli",
+    "agents",
+    "orchestration",
+    "multi-agent"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json",
+  "interface": {
+    "displayName": "RCS",
+    "shortDescription": "Roblox Creator Skills workflow bundle for Codex CLI.",
+    "longDescription": "Plugin delivery covers RCS skill discovery plus plugin-scoped MCP and app metadata. Runtime wiring, hooks, AGENTS scaffolding, HUD, and canonical .rcs state remain setup-owned so creators can run briefing, blueprinting, forging, crew orchestration, and psychology-aware design workflows from one package.",
+    "developerName": "JustineDevs",
+    "category": "Developer Tools"
+  }
+}

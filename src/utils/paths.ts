@@ -1,6 +1,6 @@
 /**
- * Path utilities for oh-my-codex
- * Resolves Codex CLI config, skills, prompts, and state directories
+ * Path utilities for RCS (Roblox AI OS / Creator Skills runtime).
+ * Resolves Codex CLI config, skills, prompts, and state directories.
  */
 
 import { createHash } from "crypto";
@@ -15,8 +15,8 @@ export function codexHome(): string {
   return process.env.CODEX_HOME || join(homedir(), ".codex");
 }
 
-export const OMX_ENTRY_PATH_ENV = "OMX_ENTRY_PATH";
-export const OMX_STARTUP_CWD_ENV = "OMX_STARTUP_CWD";
+export const RCS_ENTRY_PATH_ENV = "RCS_ENTRY_PATH";
+export const RCS_STARTUP_CWD_ENV = "RCS_STARTUP_CWD";
 
 function resolveLauncherPath(rawPath: string, baseCwd: string): string {
   const absolutePath = isAbsolute(rawPath) ? rawPath : resolve(baseCwd, rawPath);
@@ -46,7 +46,7 @@ export function sameFilePath(leftPath: string, rightPath: string): boolean {
   return canonicalizeComparablePath(leftPath) === canonicalizeComparablePath(rightPath);
 }
 
-export function resolveOmxEntryPath(
+export function resolveRcsEntryPath(
   options: {
     argv1?: string | null;
     cwd?: string;
@@ -58,26 +58,29 @@ export function resolveOmxEntryPath(
   const argv1 = hasExplicitArgv1 ? options.argv1 : process.argv[1];
   const rawPath = typeof argv1 === "string" ? argv1.trim() : "";
   if (hasExplicitArgv1 && rawPath !== "") {
-    const startupCwd = String(env[OMX_STARTUP_CWD_ENV] ?? "").trim() || cwd;
+    const startupCwd = String(env[RCS_STARTUP_CWD_ENV] ?? "").trim() || cwd;
     return resolveLauncherPath(rawPath, startupCwd);
   }
 
-  const fromEnv = String(env[OMX_ENTRY_PATH_ENV] ?? "").trim();
+  const fromEnv = String(env[RCS_ENTRY_PATH_ENV] ?? "").trim();
   if (fromEnv !== "") return fromEnv;
 
   if (rawPath === "") return null;
 
-  const startupCwd = String(env[OMX_STARTUP_CWD_ENV] ?? "").trim() || cwd;
+  const startupCwd = String(env[RCS_STARTUP_CWD_ENV] ?? "").trim() || cwd;
   return resolveLauncherPath(rawPath, startupCwd);
 }
 
-function isOmxCliEntryPath(value: string | null | undefined): boolean {
+function isRcsCliEntryPath(value: string | null | undefined): boolean {
   if (typeof value !== "string") return false;
   const normalized = value.trim().replace(/\\/g, "/");
-  return normalized.endsWith('/dist/cli/omx.js') || normalized.endsWith('/omx.js')
+  return normalized.endsWith('/dist/cli/rcs.js')
+    || normalized.endsWith('/rcs.js')
+    || normalized.endsWith('/dist/cli/rcs.js')
+    || normalized.endsWith('/rcs.js')
 }
 
-export function resolveOmxCliEntryPath(
+export function resolveRcsCliEntryPath(
   options: {
     argv1?: string | null;
     cwd?: string;
@@ -85,15 +88,15 @@ export function resolveOmxCliEntryPath(
     packageRootDir?: string;
   } = {},
 ): string | null {
-  const entry = resolveOmxEntryPath(options);
-  if (isOmxCliEntryPath(entry)) return entry;
+  const entry = resolveRcsEntryPath(options);
+  if (isRcsCliEntryPath(entry)) return entry;
 
   const packageRootDir = options.packageRootDir || packageRoot();
-  const fallback = resolveLauncherPath(join(packageRootDir, 'dist', 'cli', 'omx.js'), options.cwd || process.cwd());
+  const fallback = resolveLauncherPath(join(packageRootDir, 'dist', 'cli', 'rcs.js'), options.cwd || process.cwd());
   return existsSync(fallback) ? fallback : entry;
 }
 
-export function rememberOmxLaunchContext(
+export function rememberRcsLaunchContext(
   options: {
     argv1?: string | null;
     cwd?: string;
@@ -101,23 +104,23 @@ export function rememberOmxLaunchContext(
   } = {},
 ): void {
   const { cwd = process.cwd(), env = process.env } = options;
-  if (String(env[OMX_STARTUP_CWD_ENV] ?? "").trim() === "") {
-    env[OMX_STARTUP_CWD_ENV] = cwd;
+  if (String(env[RCS_STARTUP_CWD_ENV] ?? "").trim() === "") {
+    env[RCS_STARTUP_CWD_ENV] = cwd;
   }
-  if (String(env[OMX_ENTRY_PATH_ENV] ?? "").trim() !== "") return;
+  if (String(env[RCS_ENTRY_PATH_ENV] ?? "").trim() !== "") return;
 
   const resolved = Object.prototype.hasOwnProperty.call(options, "argv1")
-    ? resolveOmxEntryPath({
+    ? resolveRcsEntryPath({
       argv1: options.argv1,
       cwd,
       env,
     })
-    : resolveOmxEntryPath({
+    : resolveRcsEntryPath({
       cwd,
       env,
     });
   if (resolved) {
-    env[OMX_ENTRY_PATH_ENV] = resolved;
+    env[RCS_ENTRY_PATH_ENV] = resolved;
   }
 }
 
@@ -283,44 +286,44 @@ async function hashSkillDirectory(
   return hashes;
 }
 
-/** oh-my-codex state directory (.omx/state/) */
-export function omxStateDir(projectRoot?: string): string {
-  return join(projectRoot || process.cwd(), ".omx", "state");
+/** RCS state directory (.rcs/state/) */
+export function rcsStateDir(projectRoot?: string): string {
+  return join(projectRoot || process.cwd(), ".rcs", "state");
 }
 
-/** oh-my-codex project memory file (.omx/project-memory.json) */
-export function omxProjectMemoryPath(projectRoot?: string): string {
-  return join(projectRoot || process.cwd(), ".omx", "project-memory.json");
+/** RCS project memory file (.rcs/project-memory.json) */
+export function rcsProjectMemoryPath(projectRoot?: string): string {
+  return join(projectRoot || process.cwd(), ".rcs", "project-memory.json");
 }
 
-/** oh-my-codex notepad file (.omx/notepad.md) */
-export function omxNotepadPath(projectRoot?: string): string {
-  return join(projectRoot || process.cwd(), ".omx", "notepad.md");
+/** RCS notepad file (.rcs/notepad.md) */
+export function rcsNotepadPath(projectRoot?: string): string {
+  return join(projectRoot || process.cwd(), ".rcs", "notepad.md");
 }
 
-/** oh-my-codex wiki directory (.omx/wiki/) */
-export function omxWikiDir(projectRoot?: string): string {
-  return join(projectRoot || process.cwd(), ".omx", "wiki");
+/** RCS wiki directory (.rcs/wiki/) */
+export function rcsWikiDir(projectRoot?: string): string {
+  return join(projectRoot || process.cwd(), ".rcs", "wiki");
 }
 
-/** oh-my-codex plans directory (.omx/plans/) */
-export function omxPlansDir(projectRoot?: string): string {
-  return join(projectRoot || process.cwd(), ".omx", "plans");
+/** RCS plans directory (.rcs/plans/) */
+export function rcsPlansDir(projectRoot?: string): string {
+  return join(projectRoot || process.cwd(), ".rcs", "plans");
 }
 
-/** oh-my-codex adapters directory (.omx/adapters/) */
-export function omxAdaptersDir(projectRoot?: string): string {
-  return join(projectRoot || process.cwd(), ".omx", "adapters");
+/** RCS adapters directory (.rcs/adapters/) */
+export function rcsAdaptersDir(projectRoot?: string): string {
+  return join(projectRoot || process.cwd(), ".rcs", "adapters");
 }
 
-/** oh-my-codex logs directory (.omx/logs/) */
-export function omxLogsDir(projectRoot?: string): string {
-  return join(projectRoot || process.cwd(), ".omx", "logs");
+/** RCS logs directory (.rcs/logs/) */
+export function rcsLogsDir(projectRoot?: string): string {
+  return join(projectRoot || process.cwd(), ".rcs", "logs");
 }
 
-/** User-scope install/update stamp path ($CODEX_HOME/.omx/install-state.json) */
-export function omxUserInstallStampPath(codexHomeDir?: string): string {
-  return join(codexHomeDir || codexHome(), ".omx", "install-state.json");
+/** User-scope install/update stamp path ($CODEX_HOME/.rcs/install-state.json) */
+export function rcsUserInstallStampPath(codexHomeDir?: string): string {
+  return join(codexHomeDir || codexHome(), ".rcs", "install-state.json");
 }
 
 /** Get the package root directory (where agents/, skills/, prompts/ live) */

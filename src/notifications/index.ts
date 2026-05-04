@@ -1,7 +1,7 @@
 /**
  * Notification System - Public API
  *
- * Multi-platform lifecycle notifications for oh-my-codex.
+ * Multi-platform lifecycle notifications for Roblox Creator Skills.
  * Sends notifications to Discord, Telegram, Slack, and generic webhooks
  * on session lifecycle events.
  *
@@ -139,7 +139,7 @@ import { formatNotification } from "./formatter.js";
 import { dispatchNotifications } from "./dispatcher.js";
 import { getCurrentTmuxSession, sanitizeTmuxAlertText } from "./tmux.js";
 import { basename } from "path";
-import { omxStateDir } from "../utils/paths.js";
+import { rcsStateDir } from "../utils/paths.js";
 import {
   shouldSendLifecycleNotification,
   recordLifecycleNotificationSent,
@@ -174,7 +174,7 @@ export async function shouldDispatchOpenClaw(
   tempContract: NotifyTempContract | null,
   env: NodeJS.ProcessEnv = process.env,
 ) : Promise<boolean> {
-  if (env.OMX_OPENCLAW !== "1") return false;
+  if (env.RCS_OPENCLAW !== "1") return false;
   if (!tempContract?.active) return true;
   if (!isOpenClawSelectedInTempContract(tempContract)) return false;
 
@@ -255,7 +255,7 @@ export async function notifyLifecycle(
       payload.tmuxTailLive = data.tmuxTailLive;
     }
 
-    const lifecycleStateDir = payload.projectPath ? omxStateDir(payload.projectPath) : "";
+    const lifecycleStateDir = payload.projectPath ? rcsStateDir(payload.projectPath) : "";
     const normalizedIdleTmuxTail = event === "session-idle" ? parseTmuxTail(payload.tmuxTail || "") : "";
     const sessionIdleTmuxTailAllowed = event !== "session-idle"
       || shouldIncludeSessionIdleTmuxTail(lifecycleStateDir, payload.sessionId, normalizedIdleTmuxTail);

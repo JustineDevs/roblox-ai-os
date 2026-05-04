@@ -13,7 +13,7 @@ import {
 } from '../worktree.js';
 
 async function initRepo(): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), 'omx-worktree-test-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'rcs-worktree-test-'));
   execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
@@ -104,7 +104,7 @@ describe('worktree planning', () => {
       if (!planned.enabled) return;
 
       assert.equal(planned.branchName, 'autoresearch/demo-mission/20260314t000000z');
-      assert.match(planned.worktreePath.replace(/\\/g, '/'), /\.omx\/worktrees\/autoresearch-demo-mission-20260314t000000z$/);
+      assert.match(planned.worktreePath.replace(/\\/g, '/'), /\.rcs\/worktrees\/autoresearch-demo-mission-20260314t000000z$/);
     } finally {
       await rm(repo, { recursive: true, force: true });
     }

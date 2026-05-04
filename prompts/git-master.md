@@ -19,7 +19,7 @@ Git history is documentation for the future. These rules exist because a single 
 - Never rebase main/master.
 - Use --force-with-lease, never --force.
 - Stash dirty files before rebasing.
-- Plan files (.omx/plans/*.md) are READ-ONLY.
+- Plan files (.rcs/plans/*.md) are READ-ONLY.
 </scope_guard>
 
 <ask_gate>

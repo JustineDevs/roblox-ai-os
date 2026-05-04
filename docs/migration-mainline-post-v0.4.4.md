@@ -8,14 +8,14 @@ You are affected if you:
 
 - invoke removed prompts or skills from old notes/scripts,
 - depend on pre-consolidation catalog names,
-- use `omx setup` and need predictable install scope behavior,
-- run `omx team`/tmux workflows and want the latest reliability fixes,
+- use `rcs setup` and need predictable install scope behavior,
+- run `rcs team`/tmux workflows and want the latest reliability fixes,
 - use notifier output and need verbosity control.
 
 ## What changed (high level)
 
 - Catalog consolidation for prompts/skills and cleanup of deprecated entries.
-- `omx setup` now supports scope-aware install modes (`user`, `project`). Legacy `project-local` values are auto-migrated.
+- `rcs setup` now supports scope-aware install modes (`user`, `project`). Legacy `project-local` values are auto-migrated.
 - Spark worker routing added for team workers (`--spark`, `--madmax-spark`).
 - Notifier verbosity controls added.
 - tmux runtime hardening updates landed, including post-review pane capture/input hardening.
@@ -31,7 +31,7 @@ You are affected if you:
 ### Removed skills
 
 - `deepinit`
-- `learn-about-omx`
+- `learn-about-rcs`
 - `learner`
 - `pipeline`
 - `project-session-manager`
@@ -52,8 +52,8 @@ Use these replacements in docs, scripts, and personal shortcuts.
 | `$ultrapilot` | `$team` | Use team-based parallel orchestration. |
 | `$psm` / `$project-session-manager` | No in-repo replacement | Remove from automation or maintain out-of-tree tooling. |
 | `$release` | No in-repo replacement | Use your project release process directly. |
-| `$deepinit` | `omx agents-init [path]` | Lightweight CLI successor for AGENTS.md bootstrap only; immediate child directories only, unmanaged files preserved unless `--force`. |
-| `$learn-about-omx` / `$learner` / `$writer-memory` | No in-repo replacement | Remove stale references from workflows/docs. |
+| `$deepinit` | `rcs agents-init [path]` | Lightweight CLI successor for AGENTS.md bootstrap only; immediate child directories only, unmanaged files preserved unless `--force`. |
+| `$learn-about-rcs` / `$learner` / `$writer-memory` | No in-repo replacement | Remove stale references from workflows/docs. |
 
 ## Verification checklist after upgrade
 
@@ -61,7 +61,7 @@ Run this checklist after pulling latest mainline:
 
 - [ ] Confirm removed references are gone from local notes/scripts:
   ```bash
-  rg -n "deep-executor|scientist|pipeline|project-session-manager|\bpsm\b|ultrapilot|learn-about-omx|writer-memory|learner|deepinit|\brelease\b" README.md docs scripts .omx -S
+  rg -n "deep-executor|scientist|pipeline|project-session-manager|\bpsm\b|ultrapilot|learn-about-rcs|writer-memory|learner|deepinit|\brelease\b" README.md docs scripts .rcs -S
   ```
 - [ ] Confirm current prompt catalog no longer contains removed prompts:
   ```bash
@@ -73,15 +73,15 @@ Run this checklist after pulling latest mainline:
   ```
 - [ ] Validate setup scope options are available:
   ```bash
-  omx help | rg -e "--scope|project"
+  rcs help | rg -e "--scope|project"
   ```
 - [ ] Validate team/tmux health checks:
   ```bash
-  omx doctor --team
+  rcs doctor --team
   ```
 - [ ] If using spark worker routing, verify flags are available:
   ```bash
-  omx --help | rg "spark|madmax-spark"
+  rcs --help | rg "spark|madmax-spark"
   ```
 
 ## Related docs

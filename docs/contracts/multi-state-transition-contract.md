@@ -1,14 +1,14 @@
 # Multi-state transition compatibility contract
 
 This document freezes the first-pass peer workflow state model for the approved
-multi-state compatibility rollout from `.omx/plans/prd-multi-state-compat.md`.
+multi-state compatibility rollout from `.rcs/plans/prd-multi-state-compat.md`.
 
 ## Canonical sources of truth
 
 The runtime must treat workflow state as a combination of:
 
-- mode state files under `.omx/state/{scope}/<mode>-state.json`
-- canonical workflow enumeration under `.omx/state/{scope}/skill-active-state.json`
+- mode state files under `.rcs/state/{scope}/<mode>-state.json`
+- canonical workflow enumeration under `.rcs/state/{scope}/skill-active-state.json`
 
 `skill-active-state.json` is the canonical active-set inventory. Legacy top-level
 fields such as `skill` or `phase` may remain as compatibility metadata, but they
@@ -56,26 +56,26 @@ Every denied transition must:
 2. name the denied combination explicitly
 3. explain how to clear incompatible state before retrying
 4. mention both supported clearing surfaces:
-   - `omx state ...`
-   - `omx_state.*` MCP tools
+   - `rcs state ...`
+   - `rcs_state.*` MCP tools
 
 Example operator guidance shape:
 
 > Cannot activate `<requested>` while `<active-set>` is still active. Clear the
-> incompatible state first via `omx state ...` or the `omx_state.*` MCP tools,
+> incompatible state first via `rcs state ...` or the `rcs_state.*` MCP tools,
 > then retry the transition.
 
 ### Operator recovery examples
 
 CLI parity surface:
 
-- `omx state clear --input '{"mode":"team"}' --json`
-- `omx state clear --input '{"mode":"ralph","all_sessions":true}' --json`
+- `rcs state clear --input '{"mode":"team"}' --json`
+- `rcs state clear --input '{"mode":"ralph","all_sessions":true}' --json`
 
 MCP parity surface:
 
-- `omx_state.state_clear({ mode: "team" })`
-- `omx_state.state_clear({ mode: "ralph", all_sessions: true })`
+- `rcs_state.state_clear({ mode: "team" })`
+- `rcs_state.state_clear({ mode: "ralph", all_sessions: true })`
 
 ## Brownfield consumer expectations
 
@@ -110,6 +110,6 @@ Implementation should be considered complete only when tests prove:
 2. `team + ralph` is allowed in both activation orders
 3. `team + ultrawork` is allowed in both activation orders
 4. unsupported overlaps deny without mutation
-5. denial messages mention both `omx state` and `omx_state.*`
+5. denial messages mention both `rcs state` and `rcs_state.*`
 6. HUD / overlay / stop-hook consumers honor the combined set consistently
 7. `autopilot` and `autoresearch` still reject unsupported overlap attempts; `autopilot -> ralplan` is the only review-driven planning loopback exception

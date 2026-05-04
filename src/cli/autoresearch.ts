@@ -2,27 +2,27 @@ import { CODEX_BYPASS_FLAG, MADMAX_FLAG } from './constants.js';
 import { parseInitArgs } from './autoresearch-guided.js';
 
 export const AUTORESEARCH_DEPRECATION_MESSAGE = [
-  'omx autoresearch is hard-deprecated.',
+  'rcs autoresearch is hard-deprecated.',
   'Use the `$autoresearch` skill for the hook-native persistent loop.',
   'Use `$deep-interview --autoresearch` to create or refine mission artifacts before execution.',
   'Direct CLI launch, resume, run, bare mission-dir aliases, and tmux split-pane launch are no longer supported.',
 ].join(' ');
 
-export const AUTORESEARCH_HELP = `omx autoresearch - Hard-deprecated legacy command surface
+export const AUTORESEARCH_HELP = `rcs autoresearch - Hard-deprecated legacy command surface
 
 Usage:
-  omx autoresearch --help
+  rcs autoresearch --help
 
 Deprecated legacy forms (all fail intentionally):
-  omx autoresearch
-  omx autoresearch [--topic T] [--evaluator CMD] [--keep-policy P] [--slug S]
-  omx autoresearch init [--topic T] [--evaluator CMD] [--keep-policy P] [--slug S]
-  omx autoresearch run <mission-dir> [codex-args...]
-  omx autoresearch <mission-dir> [codex-args...]
-  omx autoresearch --resume <run-id> [codex-args...]
+  rcs autoresearch
+  rcs autoresearch [--topic T] [--evaluator CMD] [--keep-policy P] [--slug S]
+  rcs autoresearch init [--topic T] [--evaluator CMD] [--keep-policy P] [--slug S]
+  rcs autoresearch run <mission-dir> [codex-args...]
+  rcs autoresearch <mission-dir> [codex-args...]
+  rcs autoresearch --resume <run-id> [codex-args...]
 
 Migration:
-  - Use \`$deep-interview --autoresearch\` to clarify the mission and write canonical artifacts under \`.omx/specs/autoresearch-{slug}/\`
+  - Use \`$deep-interview --autoresearch\` to clarify the mission and write canonical artifacts under \`.rcs/specs/autoresearch-{slug}/\`
   - Use \`$autoresearch "your mission"\` for the stateful validator-gated execution loop
   - Choose validation mode at init:
       1. mission-validator-script

@@ -1,5 +1,5 @@
 /**
- * OMX Code Intelligence MCP Server
+ * RCS Code Intelligence MCP Server
  * Provides LSP-like diagnostics, symbol search, and AST pattern matching.
  * Uses pragmatic CLI wrappers (tsc, ast-grep/sg) rather than full LSP protocol.
  */
@@ -316,7 +316,7 @@ async function searchWorkspaceSymbols(
 // ── MCP Server ──────────────────────────────────────────────────────────────
 
 const server = new Server(
-  { name: 'omx-code-intel', version: '0.1.0' },
+  { name: 'rcs-code-intel', version: '0.1.0' },
   { capabilities: { tools: {} } }
 );
 

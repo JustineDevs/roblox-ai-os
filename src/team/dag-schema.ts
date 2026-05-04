@@ -218,7 +218,7 @@ export function readTeamDagHandoffForLatestPlan(cwd: string): TeamDagResolution 
   const planSlug = planningSlugFromPrdPath(prdPath);
   if (!prdPath || !planSlug) return { dag: null, source: 'none' };
 
-  const plansDir = join(cwd, '.omx', 'plans');
+  const plansDir = join(cwd, '.rcs', 'plans');
   if (selection.testSpecPaths.length === 0) {
     return { dag: null, source: 'none', planSlug, error: 'missing_matching_test_spec' };
   }

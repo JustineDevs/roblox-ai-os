@@ -47,8 +47,8 @@ function asTaskStatus(value: unknown): SidecarTask['status'] {
 }
 
 function stateRoot(cwd: string, env: NodeJS.ProcessEnv): string {
-  const explicit = safeString(env.OMX_TEAM_STATE_ROOT);
-  return explicit ? resolve(cwd, explicit) : join(cwd, '.omx', 'state');
+  const explicit = safeString(env.RCS_TEAM_STATE_ROOT);
+  return explicit ? resolve(cwd, explicit) : join(cwd, '.rcs', 'state');
 }
 
 function teamRoot(teamName: string, cwd: string, env: NodeJS.ProcessEnv): string {
@@ -389,7 +389,7 @@ export async function collectSidecarSnapshot(
   const highlights = buildHighlights(workers, tasks);
   const topology = buildTopology(workers, tasks);
   return {
-    schema_version: 'omx.sidecar/v1',
+    schema_version: 'rcs.sidecar/v1',
     generated_at: (options.now ?? new Date()).toISOString(),
     team_name: config.name,
     team_task: config.task,

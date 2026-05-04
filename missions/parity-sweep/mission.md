@@ -1,5 +1,5 @@
 # Mission
-Bring `omx autoresearch` to parity with the currently approved full-parity plan in one bounded sweep.
+Bring `rcs autoresearch` to parity with the currently approved full-parity plan in one bounded sweep.
 
 Primary targets:
 - fresh run-tagged lanes

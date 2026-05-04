@@ -56,7 +56,7 @@ async function readPluginManifest(
   const pluginManifestPath = join(
     root,
     "plugins",
-    "oh-my-codex",
+    "roblox-ai-os-creator-skills",
     ".codex-plugin",
     "plugin.json",
   );

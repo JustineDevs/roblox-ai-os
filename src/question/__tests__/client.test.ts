@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  OmxQuestionError,
-  runOmxQuestion,
-  type OmxQuestionProcessRunner,
+  RcsQuestionError,
+  runRcsQuestion,
+  type RcsQuestionProcessRunner,
 } from '../client.js';
 
-function makeRunner(stdout: unknown, code = 0, stderr = ''): OmxQuestionProcessRunner {
+function makeRunner(stdout: unknown, code = 0, stderr = ''): RcsQuestionProcessRunner {
   return async () => ({
     code,
     stdout: typeof stdout === 'string' ? stdout : JSON.stringify(stdout),
@@ -14,9 +14,9 @@ function makeRunner(stdout: unknown, code = 0, stderr = ''): OmxQuestionProcessR
   });
 }
 
-describe('runOmxQuestion', () => {
+describe('runRcsQuestion', () => {
   it('parses a successful blocking stdout payload', async () => {
-    const result = await runOmxQuestion(
+    const result = await runRcsQuestion(
       {
         question: 'What next?',
         options: [{ label: 'Launch', value: 'launch' }],
@@ -25,7 +25,7 @@ describe('runOmxQuestion', () => {
       },
       {
         cwd: '/repo',
-        argv1: '/repo/dist/cli/omx.js',
+        argv1: '/repo/dist/cli/rcs.js',
         runner: makeRunner({
           ok: true,
           question_id: 'q-1',
@@ -77,7 +77,7 @@ describe('runOmxQuestion', () => {
 
   it('throws explicit question errors from stdout payloads', async () => {
     await assert.rejects(
-      runOmxQuestion(
+      runRcsQuestion(
         {
           question: 'What next?',
           options: [{ label: 'Launch', value: 'launch' }],
@@ -85,18 +85,18 @@ describe('runOmxQuestion', () => {
         },
         {
           cwd: '/repo',
-          argv1: '/repo/dist/cli/omx.js',
+          argv1: '/repo/dist/cli/rcs.js',
           runner: makeRunner({
             ok: false,
             error: {
               code: 'team_blocked',
-              message: 'omx question is unavailable while this session owns active team mode.',
+              message: 'rcs question is unavailable while this session owns active team mode.',
             },
           }, 1),
         },
       ),
       (error) => {
-        assert.ok(error instanceof OmxQuestionError);
+        assert.ok(error instanceof RcsQuestionError);
         assert.equal(error.code, 'team_blocked');
         assert.match(error.message, /team_blocked/);
         return true;

@@ -6,30 +6,30 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { setup } from '../setup.js';
 
-describe('omx setup skills overwrite behavior', () => {
+describe('rcs setup skills overwrite behavior', () => {
   it('installs wiki during setup even though it is omitted from the current manifest', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
 
       const wikiSkill = join(wd, '.codex', 'skills', 'wiki', 'SKILL.md');
       assert.equal(existsSync(wikiSkill), true);
-      assert.ok((await readFile(wikiSkill, 'utf-8')).includes('description: "[OMX] '));
+      assert.ok((await readFile(wikiSkill, 'utf-8')).includes('description: "[RCS] '));
     } finally {
       process.chdir(previousCwd);
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('adds an [OMX] description badge to installed shipped skills without changing the shipped source files', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+  it('adds an [RCS] description badge to installed shipped skills without changing the shipped source files', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -39,12 +39,12 @@ describe('omx setup skills overwrite behavior', () => {
 
       assert.ok(
         (await readFile(installedHelpSkill, 'utf-8')).includes(
-          'description: "[OMX] Guide on using oh-my-codex plugin"',
+          'description: "[RCS] Guide on using Roblox Creator Skills"',
         ),
       );
       assert.ok(
         (await readFile(shippedHelpSkill, 'utf-8')).includes(
-          'description: Guide on using oh-my-codex plugin',
+          'description: Guide on using Roblox Creator Skills',
         ),
       );
     } finally {
@@ -54,10 +54,10 @@ describe('omx setup skills overwrite behavior', () => {
   });
 
   it('installs only active/internal catalog skills (skips alias/merged)', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -66,6 +66,10 @@ describe('omx setup skills overwrite behavior', () => {
       const installed = new Set(await readdir(skillsDir));
 
       assert.equal(installed.has('analyze'), true);
+      assert.equal(installed.has('brief'), true);
+      assert.equal(installed.has('brief-audience'), true);
+      assert.equal(installed.has('autoforge'), true);
+      assert.equal(installed.has('forge-community'), true);
       assert.equal(installed.has('team'), true);
       assert.equal(installed.has('worker'), true);
       assert.equal(installed.has('autoresearch'), true);
@@ -98,10 +102,10 @@ describe('omx setup skills overwrite behavior', () => {
   });
 
   it('removes stale web-clone installs during normal hard-deprecation refresh', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -125,10 +129,10 @@ describe('omx setup skills overwrite behavior', () => {
   });
 
   it('removes stale alias/merged skill directories on --force', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -154,10 +158,10 @@ describe('omx setup skills overwrite behavior', () => {
   });
 
   it('keeps newly cataloged pipeline skill fresh on --force', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -176,10 +180,10 @@ describe('omx setup skills overwrite behavior', () => {
   });
 
   it('retains wiki on --force while still removing unrelated stale alias skills', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -203,10 +207,10 @@ describe('omx setup skills overwrite behavior', () => {
   });
 
   it('refreshes existing skill files by default and restores packaged content', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -221,7 +225,7 @@ describe('omx setup skills overwrite behavior', () => {
       await setup({ scope: 'project' });
       assert.equal(await readFile(skillPath, 'utf-8'), installed);
 
-      const backupsRoot = join(wd, '.omx', 'backups', 'setup');
+      const backupsRoot = join(wd, '.rcs', 'backups', 'setup');
       assert.equal(existsSync(backupsRoot), true);
 
       await setup({ scope: 'project', force: true });
@@ -233,10 +237,10 @@ describe('omx setup skills overwrite behavior', () => {
   });
 
   it('preserves unrelated user-authored skill directories during setup and --force refresh', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -257,11 +261,11 @@ describe('omx setup skills overwrite behavior', () => {
     }
   });
 
-  it('does not keep stacking the [OMX] description badge on repeated setup runs', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+  it('does not keep stacking the [RCS] description badge on repeated setup runs', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
 
       await setup({ scope: 'project' });
@@ -269,9 +273,9 @@ describe('omx setup skills overwrite behavior', () => {
 
       const installedHelpSkill = join(wd, '.codex', 'skills', 'help', 'SKILL.md');
       const content = await readFile(installedHelpSkill, 'utf-8');
-      const matches = content.match(/\[OMX\] Guide on using oh-my-codex plugin/g) ?? [];
+      const matches = content.match(/\[RCS\] Guide on using Roblox Creator Skills/g) ?? [];
       assert.equal(matches.length, 1);
-      assert.doesNotMatch(content, /\[OMX\] \[OMX\]/);
+      assert.doesNotMatch(content, /\[RCS\] \[RCS\]/);
     } finally {
       process.chdir(previousCwd);
       await rm(wd, { recursive: true, force: true });
@@ -279,12 +283,12 @@ describe('omx setup skills overwrite behavior', () => {
   });
 
   it('logs skip/remove decisions in verbose mode', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       process.chdir(wd);
       console.log = (...args: unknown[]) => {
         logs.push(args.map((arg) => String(arg)).join(' '));
@@ -307,7 +311,7 @@ describe('omx setup skills overwrite behavior', () => {
   });
 
   it('prints a migration hint when legacy ~/.agents/skills overlaps canonical user skills', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-setup-skills-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-skills-'));
     const previousCwd = process.cwd();
     const previousHome = process.env.HOME;
     const previousCodexHome = process.env.CODEX_HOME;
@@ -318,7 +322,7 @@ describe('omx setup skills overwrite behavior', () => {
       const codexHome = join(home, '.codex');
       process.env.HOME = home;
       process.env.CODEX_HOME = codexHome;
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       await mkdir(join(home, '.agents', 'skills', 'help'), { recursive: true });
       await writeFile(join(home, '.agents', 'skills', 'help', 'SKILL.md'), '# legacy help\n');
       process.chdir(wd);

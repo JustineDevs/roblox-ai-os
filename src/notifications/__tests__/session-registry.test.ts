@@ -7,7 +7,7 @@ import { tmpdir } from 'os';
 import { randomUUID } from 'crypto';
 import type { SessionMapping } from '../session-registry.js';
 
-// The session-registry module uses hardcoded paths under ~/.omx/state/.
+// The session-registry module uses hardcoded paths under ~/.rcs/state/.
 // We test the data shapes and logic patterns rather than filesystem integration
 // to avoid polluting the real state directory.
 
@@ -185,8 +185,8 @@ async function importSessionRegistryFresh() {
 
 describe('session-registry lock contention behavior', () => {
   it('registerMessage times out and returns false instead of blocking indefinitely', async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), 'omx-session-registry-lock-'));
-    const stateDir = join(homeDir, '.omx', 'state');
+    const homeDir = await mkdtemp(join(tmpdir(), 'rcs-session-registry-lock-'));
+    const stateDir = join(homeDir, '.rcs', 'state');
     const lockPath = join(stateDir, 'reply-session-registry.lock');
     const originalHome = process.env.HOME;
     const originalUserProfile = process.env.USERPROFILE;
@@ -216,8 +216,8 @@ describe('session-registry lock contention behavior', () => {
 
 describe('lookupByMessageId', () => {
   it('prefers the most recent mapping when a platform message id is reused', async () => {
-    const homeDir = await mkdtemp(join(tmpdir(), 'omx-session-registry-reuse-'));
-    const stateDir = join(homeDir, '.omx', 'state');
+    const homeDir = await mkdtemp(join(tmpdir(), 'rcs-session-registry-reuse-'));
+    const stateDir = join(homeDir, '.rcs', 'state');
     const registryPath = join(stateDir, 'reply-session-registry.jsonl');
     const originalHome = process.env.HOME;
     const originalUserProfile = process.env.USERPROFILE;

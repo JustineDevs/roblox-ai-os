@@ -1,5 +1,5 @@
-export const OMX_NOTIFY_TEMP_ENV = 'OMX_NOTIFY_TEMP';
-export const OMX_NOTIFY_TEMP_CONTRACT_ENV = 'OMX_NOTIFY_TEMP_CONTRACT';
+export const RCS_NOTIFY_TEMP_ENV = 'RCS_NOTIFY_TEMP';
+export const RCS_NOTIFY_TEMP_CONTRACT_ENV = 'RCS_NOTIFY_TEMP_CONTRACT';
 
 export type NotifyTempSource = 'none' | 'cli' | 'env' | 'providers';
 
@@ -82,7 +82,7 @@ export function parseNotifyTempContractFromArgs(
     passthroughArgs.push(arg);
   }
 
-  const envActivated = env[OMX_NOTIFY_TEMP_ENV] === '1';
+  const envActivated = env[RCS_NOTIFY_TEMP_ENV] === '1';
   const canonicalSelectors = toUnique(selectors);
   const providerActivated = canonicalSelectors.length > 0;
   const active = cliActivated || envActivated || providerActivated;
@@ -114,13 +114,13 @@ export function serializeNotifyTempContract(contract: NotifyTempContract): strin
 
 
 export function isNotifyTempEnvActive(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env[OMX_NOTIFY_TEMP_ENV] === '1';
+  return env[RCS_NOTIFY_TEMP_ENV] === '1';
 }
 
 export function readNotifyTempContractFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): NotifyTempContract | null {
-  const raw = env[OMX_NOTIFY_TEMP_CONTRACT_ENV];
+  const raw = env[RCS_NOTIFY_TEMP_CONTRACT_ENV];
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as Partial<NotifyTempContract>;

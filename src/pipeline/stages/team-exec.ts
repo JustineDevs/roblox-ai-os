@@ -3,7 +3,7 @@
  *
  * Wraps the existing team mode (tmux-based Codex CLI workers) into a
  * PipelineStage. The execution backend is always teams — this is the
- * canonical OMX execution surface.
+ * canonical RCS execution surface.
  */
 
 import { readFileSync } from 'node:fs';
@@ -32,7 +32,7 @@ export interface TeamExecStageOptions {
   extraEnv?: Record<string, string>;
 }
 
-const APPROVED_TEAM_LAUNCH_PATTERN = /(?<command>(?:omx\s+team|\$team)\s+(?<ralph>ralph\s+)?(?<count>\d+)(?::(?<role>[a-z][a-z0-9-]*))?\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi;
+const APPROVED_TEAM_LAUNCH_PATTERN = /(?<command>(?:rcs\s+team|\$team)\s+(?<ralph>ralph\s+)?(?<count>\d+)(?::(?<role>[a-z][a-z0-9-]*))?\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi;
 
 function decodeQuotedValue(raw: string): string | null {
   const normalized = raw.trim();
@@ -287,7 +287,7 @@ function buildTeamRuntimeCliLaunchInput(descriptor: TeamExecDescriptor): TeamRun
 /**
  * Create a team-exec pipeline stage.
  *
- * This stage delegates to the existing `omx team` infrastructure, which
+ * This stage delegates to the existing `rcs team` infrastructure, which
  * starts real Codex CLI workers in tmux panes. When RALPLAN names a
  * concrete approved PRD handoff, team-exec reuses that exact task text;
  * otherwise it stays on the generic request-task path.
@@ -369,7 +369,7 @@ export interface TeamExecDescriptor {
 }
 
 /**
- * Build the `omx team` CLI instruction from a descriptor.
+ * Build the `rcs team` CLI instruction from a descriptor.
  */
 export function buildTeamInstruction(
   descriptor: TeamExecDescriptor,

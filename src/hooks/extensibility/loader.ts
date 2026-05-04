@@ -4,8 +4,8 @@ import { mkdir, readdir, readFile, stat } from 'fs/promises';
 import { basename, join } from 'path';
 import type { HookPluginDescriptor } from './types.js';
 
-export const HOOK_PLUGIN_ENABLE_ENV = 'OMX_HOOK_PLUGINS';
-export const HOOK_PLUGIN_TIMEOUT_ENV = 'OMX_HOOK_PLUGIN_TIMEOUT_MS';
+export const HOOK_PLUGIN_ENABLE_ENV = 'RCS_HOOK_PLUGINS';
+export const HOOK_PLUGIN_TIMEOUT_ENV = 'RCS_HOOK_PLUGIN_TIMEOUT_MS';
 
 function sanitizePluginId(fileName: string): string {
   const stem = basename(fileName, '.mjs');
@@ -32,7 +32,7 @@ function readTimeout(raw: string | undefined, fallback: number): number {
 }
 
 export function hooksDir(cwd: string): string {
-  return join(cwd, '.omx', 'hooks');
+  return join(cwd, '.rcs', 'hooks');
 }
 
 export function isHookPluginsEnabled(env: NodeJS.ProcessEnv = process.env): boolean {

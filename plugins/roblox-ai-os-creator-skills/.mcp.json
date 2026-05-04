@@ -1,0 +1,44 @@
+{
+  "mcpServers": {
+    "rcs_state": {
+      "command": "rcs",
+      "args": [
+        "mcp-serve",
+        "state"
+      ],
+      "enabled": true
+    },
+    "rcs_memory": {
+      "command": "rcs",
+      "args": [
+        "mcp-serve",
+        "memory"
+      ],
+      "enabled": true
+    },
+    "rcs_code_intel": {
+      "command": "rcs",
+      "args": [
+        "mcp-serve",
+        "code-intel"
+      ],
+      "enabled": true
+    },
+    "rcs_trace": {
+      "command": "rcs",
+      "args": [
+        "mcp-serve",
+        "trace"
+      ],
+      "enabled": true
+    },
+    "rcs_wiki": {
+      "command": "rcs",
+      "args": [
+        "mcp-serve",
+        "wiki"
+      ],
+      "enabled": true
+    }
+  }
+}

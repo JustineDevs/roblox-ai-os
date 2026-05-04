@@ -1,5 +1,5 @@
 /**
- * Base mode lifecycle management for oh-my-codex
+ * Base mode lifecycle management for roblox-ai-os-creator-skills
  * All execution modes (autopilot, autoresearch, deep-interview, ralph, ultrawork, team, ultraqa, ralplan) share this base.
  */
 
@@ -139,7 +139,7 @@ export async function startMode(
     task_description: taskDescription,
     started_at: new Date().toISOString(),
     ...(transitionMessage ? { transition_message: transitionMessage } : {}),
-    ...(mode === 'ralph' && scope.sessionId ? { owner_omx_session_id: scope.sessionId } : {}),
+    ...(mode === 'ralph' && scope.sessionId ? { owner_rcs_session_id: scope.sessionId } : {}),
   };
 
   const withContext = withModeRuntimeContext({}, stateBase) as ModeState;
@@ -213,8 +213,8 @@ export async function updateModeState(
   if (!Object.prototype.hasOwnProperty.call(updates, 'run_outcome')) {
     delete updatedBase.run_outcome;
   }
-  if (mode === 'ralph' && scope.sessionId && typeof updatedBase.owner_omx_session_id !== 'string') {
-    updatedBase.owner_omx_session_id = scope.sessionId;
+  if (mode === 'ralph' && scope.sessionId && typeof updatedBase.owner_rcs_session_id !== 'string') {
+    updatedBase.owner_rcs_session_id = scope.sessionId;
   }
   const normalizedBase = normalizeModeStateOrThrow(mode, updatedBase as ModeState);
   const updated = withModeRuntimeContext(current, normalizedBase) as ModeState;

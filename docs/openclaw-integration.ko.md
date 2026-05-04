@@ -43,7 +43,7 @@ clawdbot agent를 사용하는 프로덕션 환경에서는 다음 설정을 권
       "gateways": {
         "local": {
           "type": "command",
-          "command": "(clawdbot agent --session-id omx-hooks --message {{instruction}} --thinking minimal --deliver --reply-channel discord --reply-to 'channel:1468539002985644084' --timeout 120 --json >>/tmp/omx-openclaw-agent.jsonl 2>&1 || true)",
+          "command": "(clawdbot agent --session-id rcs-hooks --message {{instruction}} --thinking minimal --deliver --reply-channel discord --reply-to 'channel:1468539002985644084' --timeout 120 --json >>/tmp/rcs-openclaw-agent.jsonl 2>&1 || true)",
           "timeout": 120000
         }
       }
@@ -53,8 +53,8 @@ clawdbot agent를 사용하는 프로덕션 환경에서는 다음 설정을 권
 ```
 
 **주요 설정 설명:**
-- `|| true`: clawdbot 실패 시 OMX 세션이 차단되지 않도록 합니다
-- `>>/tmp/omx-openclaw-agent.jsonl`: 구조화된 JSONL 로그를 append 모드로 기록합니다
+- `|| true`: clawdbot 실패 시 RCS 세션이 차단되지 않도록 합니다
+- `>>/tmp/rcs-openclaw-agent.jsonl`: 구조화된 JSONL 로그를 append 모드로 기록합니다
 - `--reply-to 'channel:CHANNEL_ID'`: 채널 별칭 대신 ID를 사용하여 안정적인 전달을 보장합니다
 - `timeout: 120000`: 2분 타임아웃으로 clawdbot agent 작업이 완료될 시간을 확보합니다
 
@@ -62,16 +62,16 @@ clawdbot agent를 사용하는 프로덕션 환경에서는 다음 설정을 권
 
 ```bash
 # JSONL 로그에서 최근 항목 확인
-tail -n 120 /tmp/omx-openclaw-agent.jsonl | jq -s '.[] | {timestamp: (.timestamp // .time), status: (.status // .error // "ok")}'
+tail -n 120 /tmp/rcs-openclaw-agent.jsonl | jq -s '.[] | {timestamp: (.timestamp // .time), status: (.status // .error // "ok")}'
 
 # 오류 검색
-rg '"error"|"failed"|"timeout"' /tmp/omx-openclaw-agent.jsonl | tail -20
+rg '"error"|"failed"|"timeout"' /tmp/rcs-openclaw-agent.jsonl | tail -20
 ```
 
 ## 빠른 업데이트 명령어 (jq)
 
 ```bash
-CONFIG_FILE="$HOME/.codex/.omx-config.json"
+CONFIG_FILE="$HOME/.codex/.rcs-config.json"
 
 jq '.notifications.verbosity = "verbose" |
     .notifications.openclaw.hooks["session-start"].instruction = "[session-start|exec]\nproject={{projectName}} session={{sessionId}} tmux={{tmuxSession}}\n요약: 시작 맥락 1문장\n우선순위: 지금 할 일 1~2개\n주의사항: 리스크/의존성(없으면 없음)" |

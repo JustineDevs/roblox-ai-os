@@ -1,10 +1,10 @@
 # GPT-5.5 Prompt Guidance Contract
 
-Status: contributor-facing contract for OMX prompt and orchestration surfaces.
+Status: contributor-facing contract for RCS prompt and orchestration surfaces.
 
 ## Purpose
 
-This document explains the active **behavioral prompt contract** for OMX after Issue [#2007](https://github.com/Yeachan-Heo/oh-my-codex/issues/2007): align prompt and instruction surfaces with OpenAI's official [GPT-5.5 prompt guidance](https://developers.openai.com/api/docs/guides/prompt-guidance) while preserving OMX product contracts.
+This document explains the active **behavioral prompt contract** for RCS after Issue [#2007](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/2007): align prompt and instruction surfaces with OpenAI's official [GPT-5.5 prompt guidance](https://developers.openai.com/api/docs/guides/prompt-guidance) while preserving RCS product contracts.
 
 Use it when you edit any of these surfaces:
 
@@ -33,7 +33,7 @@ Workflow skills may use a compact reference to the shared workflow guidance patt
 
 ## Exact-model mini adaptation seam
 
-OMX also has a narrow **instruction-composition seam** for subagents/workers whose **final resolved model** is exactly `gpt-5.4-mini`.
+RCS also has a narrow **instruction-composition seam** for subagents/workers whose **final resolved model** is exactly `gpt-5.4-mini`.
 That seam is part of prompt delivery, but it is intentionally narrower than the general GPT-5.5 behavioral contract described below.
 
 Contributor rules for that seam:
@@ -54,14 +54,14 @@ Primary implementation surfaces for this seam:
 
 ## What this contract is — and is not
 
-This contract is about **how OMX prompts should behave**. It is not the same thing as OMX's routing metadata.
+This contract is about **how RCS prompts should behave**. It is not the same thing as RCS's routing metadata.
 
 - **Behavioral contract:** outcome-first defaults, concise collaboration style, low-risk follow-through, localized task updates, evidence-backed validation, and explicit stop rules.
 - **Adjacent but separate routing layer:** role/tier/posture metadata such as `frontier-orchestrator`, `deep-worker`, and `fast-lane` in `src/agents/native-config.ts` and `docs/shared/agent-tiers.md`.
 
 If you are changing prompt prose, use this document first. If you are changing routing metadata or native config overlays, use the routing docs/tests first.
 
-## The 5 core GPT-5.5 patterns OMX should enforce
+## The 5 core GPT-5.5 patterns RCS should enforce
 
 ### 1. Outcome-first, success-criteria-led prompts
 
@@ -102,7 +102,7 @@ Example prompt text:
 
 Also preserve agent-owned safe runtime work:
 
-> Do not ask or instruct humans to perform ordinary non-destructive, reversible actions; execute those safe reversible OMX/runtime operations and ordinary commands yourself.
+> Do not ask or instruct humans to perform ordinary non-destructive, reversible actions; execute those safe reversible RCS/runtime operations and ordinary commands yourself.
 
 ### 4. Localized task-update overrides that preserve earlier non-conflicting instructions
 
@@ -116,7 +116,7 @@ Scenario examples for `continue`, `make a PR`, and `merge if CI green` reinforce
 
 ### 5. Evidence budgets, validation, and explicit stop rules
 
-GPT-5.5 guidance favors enough retrieval/validation to answer correctly, then stopping. OMX prompts should continue tool use while correctness depends on repository inspection, official docs, diagnostics, tests, citations, or verification, but avoid extra loops that only improve phrasing or gather nonessential evidence.
+GPT-5.5 guidance favors enough retrieval/validation to answer correctly, then stopping. RCS prompts should continue tool use while correctness depends on repository inspection, official docs, diagnostics, tests, citations, or verification, but avoid extra loops that only improve phrasing or gather nonessential evidence.
 
 For coding work, prompts should ask for concrete validation:
 
@@ -227,7 +227,7 @@ npm test
 
 ## References
 
-- Implementation issue: [#2007](https://github.com/Yeachan-Heo/oh-my-codex/issues/2007)
+- Implementation issue: [#2007](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/2007)
 - Official source: [OpenAI GPT-5.5 prompt guidance](https://developers.openai.com/api/docs/guides/prompt-guidance)
-- Prior rollout history: [#608](https://github.com/Yeachan-Heo/oh-my-codex/issues/608), [#611](https://github.com/Yeachan-Heo/oh-my-codex/pull/611), [#612](https://github.com/Yeachan-Heo/oh-my-codex/pull/612)
+- Prior rollout history: [#608](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/608), [#611](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/pull/611), [#612](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/pull/612)
 - Guidance schema: `docs/guidance-schema.md`

@@ -1,4 +1,4 @@
-name: PR Check
+name: RCS PR Check
 
 on:
   pull_request_target:
@@ -69,9 +69,9 @@ jobs:
       - name: Remind contributors to target dev for normal contributions
         run: |
           message='Normal contributions should target `dev`. If this PR was opened against `main` by accident, please retarget it to `dev`. Maintainer-directed `main` PRs are still allowed.'
-          echo "::warning title=Retarget normal PRs to dev::$message"
+            echo "::warning title=Retarget normal RCS PRs to dev::$message"
           {
-            echo '## PR base guidance'
+            echo '## RCS PR base guidance'
             echo
             echo "$message"
           } >> "$GITHUB_STEP_SUMMARY"

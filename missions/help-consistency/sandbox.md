@@ -4,7 +4,7 @@ evaluator:
   format: json
   keep_policy: pass_only
 ---
-Stay tightly scoped to help/test/fixture consistency for `omx autoresearch`.
+Stay tightly scoped to help/test/fixture consistency for `rcs autoresearch`.
 
 Allowed changes:
 - CLI help text

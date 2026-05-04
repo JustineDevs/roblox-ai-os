@@ -82,7 +82,7 @@ export interface HookPluginTmuxSendKeysResult {
 export type HookPluginSendKeysOptions = HookPluginTmuxSendKeysOptions;
 export type HookPluginSendKeysResult = HookPluginTmuxSendKeysResult;
 
-export interface HookPluginOmxSessionState {
+export interface HookPluginRcsSessionState {
   session_id: string;
   native_session_id?: string;
   started_at?: string;
@@ -94,14 +94,14 @@ export interface HookPluginOmxSessionState {
   [key: string]: unknown;
 }
 
-export interface HookPluginOmxHudState {
+export interface HookPluginRcsHudState {
   last_turn_at?: string;
   turn_count?: number;
   last_agent_output?: string;
   [key: string]: unknown;
 }
 
-export interface HookPluginOmxNotifyFallbackState {
+export interface HookPluginRcsNotifyFallbackState {
   pid?: number;
   parent_pid?: number;
   started_at?: string;
@@ -118,24 +118,24 @@ export interface HookPluginOmxNotifyFallbackState {
   [key: string]: unknown;
 }
 
-export interface HookPluginOmxUpdateCheckState {
+export interface HookPluginRcsUpdateCheckState {
   last_checked_at?: string;
   last_seen_latest?: string;
   [key: string]: unknown;
 }
 
-export interface HookPluginOmxSdk {
+export interface HookPluginRcsSdk {
   session: {
-    read: () => Promise<HookPluginOmxSessionState | null>;
+    read: () => Promise<HookPluginRcsSessionState | null>;
   };
   hud: {
-    read: () => Promise<HookPluginOmxHudState | null>;
+    read: () => Promise<HookPluginRcsHudState | null>;
   };
   notifyFallback: {
-    read: () => Promise<HookPluginOmxNotifyFallbackState | null>;
+    read: () => Promise<HookPluginRcsNotifyFallbackState | null>;
   };
   updateCheck: {
-    read: () => Promise<HookPluginOmxUpdateCheckState | null>;
+    read: () => Promise<HookPluginRcsUpdateCheckState | null>;
   };
 }
 
@@ -154,7 +154,7 @@ export interface HookPluginSdk {
     delete: (key: string) => Promise<void>;
     all: <T extends Record<string, unknown> = Record<string, unknown>>() => Promise<T>;
   };
-  omx: HookPluginOmxSdk;
+  rcs: HookPluginRcsSdk;
 }
 
 export interface HookPluginModule {

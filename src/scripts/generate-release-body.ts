@@ -182,7 +182,7 @@ function replaceTitle(markdown: string, currentTag: string): string {
   if (!/^#\s+/m.test(markdown)) {
     throw new Error('release body template is missing a top-level title');
   }
-  return markdown.replace(/^#\s+.*$/m, `# oh-my-codex ${currentTag}`);
+  return markdown.replace(/^#\s+.*$/m, `# roblox-ai-os-creator-skills ${currentTag}`);
 }
 
 function findSectionEnd(lines: string[], startIndex: number): number {
@@ -241,7 +241,7 @@ export async function getGitHubCompareContributors(
     headers: {
       Accept: 'application/vnd.github+json',
       Authorization: `Bearer ${githubToken}`,
-      'User-Agent': 'oh-my-codex-release-body-generator',
+      'User-Agent': 'roblox-ai-os-creator-skills-release-body-generator',
       'X-GitHub-Api-Version': '2022-11-28',
     },
   });

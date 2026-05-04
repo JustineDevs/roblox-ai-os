@@ -15,7 +15,7 @@ import {
   writeUserInstallStamp,
 } from '../update.js';
 
-const PACKAGE_NAME = 'oh-my-codex';
+const PACKAGE_NAME = '@jstn-sdk/rcs';
 
 describe('isNewerVersion', () => {
   it('returns true when latest has higher major', () => {
@@ -113,8 +113,8 @@ describe('install stamp helpers', () => {
   });
 
   it('writes and reads the user-scope install stamp schema', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'omx-install-stamp-'));
-    const stampPath = join(root, '.codex', '.omx', 'install-state.json');
+    const root = await mkdtemp(join(tmpdir(), 'rcs-install-stamp-'));
+    const stampPath = join(root, '.codex', '.rcs', 'install-state.json');
 
     try {
       await writeUserInstallStamp(
@@ -167,13 +167,15 @@ describe('maybeCheckAndPromptUpdate', () => {
   }
 
   it('runs setup refresh after a successful auto-update', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-'));
     const originalLog = console.log;
+    const originalCodexHome = process.env.CODEX_HOME;
     const prompts: string[] = [];
     const setupRefreshCalls: string[] = [];
     console.log = (...args: unknown[]) => {
       prompts.push(args.map((arg) => String(arg)).join(' '));
     };
+    process.env.CODEX_HOME = join(cwd, '.codex');
 
     try {
       await withInteractiveTty(async () => {
@@ -193,13 +195,20 @@ describe('maybeCheckAndPromptUpdate', () => {
       assert.match(prompts.join('\n'), /Updated to v0\.9\.0/);
     } finally {
       console.log = originalLog;
+      if (typeof originalCodexHome === 'string') {
+        process.env.CODEX_HOME = originalCodexHome;
+      } else {
+        delete process.env.CODEX_HOME;
+      }
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
   it('preserves local config semantics by avoiding force setup during auto-update', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-'));
+    const originalCodexHome = process.env.CODEX_HOME;
     const receivedCwds: string[] = [];
+    process.env.CODEX_HOME = join(cwd, '.codex');
 
     try {
       await withInteractiveTty(async () => {
@@ -217,12 +226,17 @@ describe('maybeCheckAndPromptUpdate', () => {
 
       assert.deepEqual(receivedCwds, [cwd]);
     } finally {
+      if (typeof originalCodexHome === 'string') {
+        process.env.CODEX_HOME = originalCodexHome;
+      } else {
+        delete process.env.CODEX_HOME;
+      }
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
   it('does not update or refresh setup when the prompt is declined', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-'));
     let updateAttempts = 0;
     let setupRefreshCalls = 0;
 
@@ -251,7 +265,7 @@ describe('maybeCheckAndPromptUpdate', () => {
   });
 
   it('does not refresh setup when the global update fails', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-'));
     const originalLog = console.log;
     const logs: string[] = [];
     let setupRefreshCalls = 0;
@@ -275,7 +289,7 @@ describe('maybeCheckAndPromptUpdate', () => {
       });
 
       assert.equal(setupRefreshCalls, 0);
-      assert.match(logs.join('\n'), /Update failed\. Run manually: npm install -g oh-my-codex@latest/);
+      assert.match(logs.join('\n'), /Update failed\. Run manually: npm install -g @jstn-sdk\/rcs@latest/);
     } finally {
       console.log = originalLog;
       await rm(cwd, { recursive: true, force: true });
@@ -283,7 +297,7 @@ describe('maybeCheckAndPromptUpdate', () => {
   });
 
   it('skips the update flow when the fetched version is not newer', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-'));
     let promptCalls = 0;
     let updateAttempts = 0;
 
@@ -314,12 +328,12 @@ describe('maybeCheckAndPromptUpdate', () => {
   });
 
   it('respects the passive launch-time cadence before checking npm', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-'));
-    const statePath = join(cwd, '.omx', 'state', 'update-check.json');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-'));
+    const statePath = join(cwd, '.rcs', 'state', 'update-check.json');
     let latestCalls = 0;
 
     try {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeFile(statePath, JSON.stringify({
         last_checked_at: new Date().toISOString(),
         last_seen_latest: '9.9.9',
@@ -344,9 +358,9 @@ describe('maybeCheckAndPromptUpdate', () => {
 
 describe('runImmediateUpdate', () => {
   it('bypasses the passive cadence and updates immediately on explicit request', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-now-'));
-    const statePath = join(cwd, '.omx', 'state', 'update-check.json');
-    const stampPath = join(cwd, '.codex', '.omx', 'install-state.json');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-now-'));
+    const statePath = join(cwd, '.rcs', 'state', 'update-check.json');
+    const stampPath = join(cwd, '.codex', '.rcs', 'install-state.json');
     const originalCodexHome = process.env.CODEX_HOME;
     const originalLog = console.log;
     const logs: string[] = [];
@@ -362,7 +376,7 @@ describe('runImmediateUpdate', () => {
     process.env.CODEX_HOME = join(cwd, '.codex');
 
     try {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeFile(statePath, JSON.stringify({
         last_checked_at: new Date().toISOString(),
         last_seen_latest: '0.14.1',
@@ -390,7 +404,7 @@ describe('runImmediateUpdate', () => {
       assert.equal(updateCalls, 1);
       assert.equal(setupCalls, 1);
       assert.deepEqual(refreshCwds, [cwd]);
-      assert.match(logs.join('\n'), /Running: npm install -g oh-my-codex@latest/);
+      assert.match(logs.join('\n'), /Running: npm install -g @jstn-sdk\/rcs@latest/);
       assert.match(logs.join('\n'), /Updated to v0\.14\.1/);
 
       const stamp = JSON.parse(await readFile(stampPath, 'utf-8')) as {
@@ -411,8 +425,8 @@ describe('runImmediateUpdate', () => {
   });
 
   it('reports up-to-date status for explicit update when npm is already current', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-now-'));
-    const stampPath = join(cwd, '.codex', '.omx', 'install-state.json');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-now-'));
+    const stampPath = join(cwd, '.codex', '.rcs', 'install-state.json');
     const originalCodexHome = process.env.CODEX_HOME;
     const originalLog = console.log;
     const logs: string[] = [];
@@ -463,8 +477,8 @@ describe('runImmediateUpdate', () => {
   });
 
   it('runs setup refresh for explicit update when current version matches but setup stamp is stale', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-now-'));
-    const stampPath = join(cwd, '.codex', '.omx', 'install-state.json');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-now-'));
+    const stampPath = join(cwd, '.codex', '.rcs', 'install-state.json');
     const originalCodexHome = process.env.CODEX_HOME;
     const originalLog = console.log;
     const logs: string[] = [];
@@ -520,8 +534,9 @@ describe('runImmediateUpdate', () => {
   });
 
   it('continues explicit update when update-check state cannot be written', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-now-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-now-'));
     const originalLog = console.log;
+    const originalCodexHome = process.env.CODEX_HOME;
     const logs: string[] = [];
     let updateCalls = 0;
     let refreshCalls = 0;
@@ -529,6 +544,7 @@ describe('runImmediateUpdate', () => {
     console.log = (...args: unknown[]) => {
       logs.push(args.map((arg) => String(arg)).join(' '));
     };
+    process.env.CODEX_HOME = join(cwd, '.codex');
 
     try {
       const result = await runImmediateUpdate(cwd, {
@@ -553,13 +569,18 @@ describe('runImmediateUpdate', () => {
       assert.match(logs.join('\n'), /Updated to v0\.14\.1/);
     } finally {
       console.log = originalLog;
+      if (typeof originalCodexHome === 'string') {
+        process.env.CODEX_HOME = originalCodexHome;
+      } else {
+        delete process.env.CODEX_HOME;
+      }
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
   it('fails without writing the success stamp when the fresh setup handoff fails', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-now-'));
-    const stampPath = join(cwd, '.codex', '.omx', 'install-state.json');
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-now-'));
+    const stampPath = join(cwd, '.codex', '.rcs', 'install-state.json');
     const originalCodexHome = process.env.CODEX_HOME;
     const originalLog = console.log;
     const logs: string[] = [];
@@ -600,17 +621,17 @@ describe('runImmediateUpdate', () => {
 
 describe('post-update setup refresh handoff', () => {
   it('uses the installed package bin entry when resolving the refreshed CLI', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-bin-contract-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-bin-contract-'));
     const globalRoot = join(cwd, 'global-root');
     const packageRoot = join(globalRoot, PACKAGE_NAME);
-    const cliRelativePath = join('dist', 'custom', 'omx-entry.js');
+    const cliRelativePath = join('dist', 'custom', 'rcs-entry.js');
     const cliEntry = join(packageRoot, cliRelativePath);
 
     try {
       await mkdir(dirname(cliEntry), { recursive: true });
       await writeFile(
         join(packageRoot, 'package.json'),
-        JSON.stringify({ name: PACKAGE_NAME, version: '0.14.1', bin: { omx: cliRelativePath } }, null, 2),
+        JSON.stringify({ name: PACKAGE_NAME, version: '0.14.1', bin: { rcs: cliRelativePath } }, null, 2),
       );
       await writeFile(cliEntry, '#!/usr/bin/env node\n');
 
@@ -621,9 +642,9 @@ describe('post-update setup refresh handoff', () => {
   });
 
   it('falls back to the current published CLI layout when package metadata is unavailable', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-bin-fallback-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-bin-fallback-'));
     const globalRoot = join(cwd, 'global-root');
-    const cliEntry = join(globalRoot, PACKAGE_NAME, 'dist', 'cli', 'omx.js');
+    const cliEntry = join(globalRoot, PACKAGE_NAME, 'dist', 'cli', 'rcs.js');
 
     try {
       await mkdir(dirname(cliEntry), { recursive: true });
@@ -636,7 +657,7 @@ describe('post-update setup refresh handoff', () => {
   });
 
   it('returns null when neither package bin nor fallback CLI entry exists', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-update-bin-missing-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-update-bin-missing-'));
 
     try {
       assert.equal(await resolveInstalledCliEntry(join(cwd, 'global-root')), null);
@@ -648,7 +669,7 @@ describe('post-update setup refresh handoff', () => {
   it('does not impose a timeout on the interactive setup refresh handoff', () => {
     let receivedTimeout: unknown = Symbol('unset');
     const result = spawnInstalledSetupRefresh(
-      '/tmp/omx.js',
+      '/tmp/rcs.js',
       '/tmp/project',
       ((_command, _args, options) => {
         receivedTimeout = options?.timeout;

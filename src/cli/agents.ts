@@ -11,10 +11,10 @@ export const RESERVED_NATIVE_AGENT_NAMES = new Set(['default', 'worker', 'explor
 const DEFAULT_AGENT_MODEL = 'gpt-5.5';
 const AGENTS_USAGE = [
   'Usage:',
-  '  omx agents list [--scope user|project]',
-  '  omx agents add <name> [--scope user|project] [--force]',
-  '  omx agents edit <name> [--scope user|project]',
-  '  omx agents remove <name> [--scope user|project] [--force]',
+  '  rcs agents list [--scope user|project]',
+  '  rcs agents add <name> [--scope user|project] [--force]',
+  '  rcs agents edit <name> [--scope user|project]',
+  '  rcs agents remove <name> [--scope user|project] [--force]',
   '',
   'Manage Codex native agent TOML files under ~/.codex/agents/ or ./.codex/agents/.',
   '',
@@ -72,7 +72,7 @@ function parseScopeArg(args: string[]): AgentScope | undefined {
 }
 
 function inferMutationScope(cwd = process.cwd()): AgentScope {
-  const persistedScopePath = join(cwd, '.omx', 'setup-scope.json');
+  const persistedScopePath = join(cwd, '.rcs', 'setup-scope.json');
   if (existsSync(persistedScopePath)) {
     try {
       const parsed = JSON.parse(readFileSync(persistedScopePath, 'utf8')) as { scope?: string };
@@ -281,21 +281,21 @@ export async function agentsCommand(args: string[]): Promise<void> {
     }
     case 'add': {
       const name = args[1];
-      assert.ok(name, 'Usage: omx agents add <name>');
+      assert.ok(name, 'Usage: rcs agents add <name>');
       const path = await addNativeAgent(name, { cwd: process.cwd(), scope, force });
       console.log(`Created native agent: ${path}`);
       return;
     }
     case 'edit': {
       const name = args[1];
-      assert.ok(name, 'Usage: omx agents edit <name>');
+      assert.ok(name, 'Usage: rcs agents edit <name>');
       const path = await editNativeAgent(name, { cwd: process.cwd(), scope });
       console.log(`Edited native agent: ${path}`);
       return;
     }
     case 'remove': {
       const name = args[1];
-      assert.ok(name, 'Usage: omx agents remove <name>');
+      assert.ok(name, 'Usage: rcs agents remove <name>');
       const path = await removeNativeAgent(name, { cwd: process.cwd(), scope, force });
       console.log(`Removed native agent: ${path}`);
       return;

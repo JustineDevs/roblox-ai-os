@@ -10,22 +10,22 @@ import type { NotificationConfig, NotificationPayload } from '../notifier.js';
 
 describe('loadNotificationConfig', () => {
   it('returns null when config file does not exist', async () => {
-    const fakePath = join(tmpdir(), `omx-test-${randomUUID()}`);
+    const fakePath = join(tmpdir(), `rcs-test-${randomUUID()}`);
     const config = await loadNotificationConfig(fakePath);
     assert.equal(config, null);
   });
 
   it('returns parsed config when file exists', async () => {
-    const tmpDir = join(tmpdir(), `omx-test-${randomUUID()}`);
-    const omxDir = join(tmpDir, '.omx');
-    mkdirSync(omxDir, { recursive: true });
+    const tmpDir = join(tmpdir(), `rcs-test-${randomUUID()}`);
+    const rcsDir = join(tmpDir, '.rcs');
+    mkdirSync(rcsDir, { recursive: true });
 
     const configData: NotificationConfig = {
       desktop: true,
       discord: { webhookUrl: 'https://discord.com/api/webhooks/test' },
       telegram: { botToken: '123:abc', chatId: '456' },
     };
-    writeFileSync(join(omxDir, 'notifications.json'), JSON.stringify(configData));
+    writeFileSync(join(rcsDir, 'notifications.json'), JSON.stringify(configData));
 
     try {
       const config = await loadNotificationConfig(tmpDir);
@@ -40,10 +40,10 @@ describe('loadNotificationConfig', () => {
   });
 
   it('returns null for invalid JSON', async () => {
-    const tmpDir = join(tmpdir(), `omx-test-${randomUUID()}`);
-    const omxDir = join(tmpDir, '.omx');
-    mkdirSync(omxDir, { recursive: true });
-    writeFileSync(join(omxDir, 'notifications.json'), 'not-json');
+    const tmpDir = join(tmpdir(), `rcs-test-${randomUUID()}`);
+    const rcsDir = join(tmpDir, '.rcs');
+    mkdirSync(rcsDir, { recursive: true });
+    writeFileSync(join(rcsDir, 'notifications.json'), 'not-json');
 
     try {
       const config = await loadNotificationConfig(tmpDir);

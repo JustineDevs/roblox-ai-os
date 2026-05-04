@@ -125,7 +125,7 @@ function matchesDestructiveFixture(command: string): boolean {
 }
 
 function isMcpLikeToolName(toolName: string): boolean {
-  return /^(mcp__|omx_(?:state|memory|trace|code_intel)\b|state_|project_memory_|notepad_|trace_)/i.test(toolName);
+  return /^(mcp__|rcs_(?:state|memory|trace|code_intel)\b|state_|project_memory_|notepad_|trace_)/i.test(toolName);
 }
 
 const MCP_TRANSPORT_FAILURE_PATTERNS = [
@@ -141,7 +141,7 @@ const MCP_TRANSPORT_FAILURE_PATTERNS = [
   /mcp(?: server)? .*closed/i,
 ];
 
-type OmxParityCommand =
+type RcsParityCommand =
   | "state"
   | "notepad"
   | "project-memory"
@@ -166,7 +166,7 @@ export function detectMcpTransportFailure(
 
   const mcpContextDetected = isMcpLikeToolName(normalized.toolName)
     || /\bmcp\b/i.test(combined)
-    || /\bomx-(?:state|memory|trace|code-intel)-server\b/i.test(combined);
+    || /\brcs-(?:state|memory|trace|code-intel)-server\b/i.test(combined);
   if (!mcpContextDetected) return null;
   if (!combined) return null;
   if (!MCP_TRANSPORT_FAILURE_PATTERNS.some((pattern) => pattern.test(combined))) {
@@ -179,8 +179,8 @@ export function detectMcpTransportFailure(
   };
 }
 
-function resolveOmxParityTarget(toolName: string): { command: OmxParityCommand; tool: string } | null {
-  const match = toolName.match(/^mcp__omx_(state|memory|trace|code_intel)__([a-z0-9_]+)$/i);
+function resolveRcsParityTarget(toolName: string): { command: RcsParityCommand; tool: string } | null {
+  const match = toolName.match(/^mcp__rcs_(state|memory|trace|code_intel)__([a-z0-9_]+)$/i);
   if (!match) return null;
 
   const [, server, tool] = match;
@@ -200,11 +200,11 @@ function shellSingleQuote(value: string): string {
   return `'${value.replace(/'/g, `'\"'\"'`)}'`;
 }
 
-function buildOmxParityFallbackCommand(payload: CodexHookPayload, toolName: string): string | null {
-  const target = resolveOmxParityTarget(toolName);
+function buildRcsParityFallbackCommand(payload: CodexHookPayload, toolName: string): string | null {
+  const target = resolveRcsParityTarget(toolName);
   if (!target) return null;
   const input = safeObject(payload.tool_input) ?? {};
-  return `omx ${target.command} ${target.tool} --input ${shellSingleQuote(JSON.stringify(input))} --json`;
+  return `rcs ${target.command} ${target.tool} --input ${shellSingleQuote(JSON.stringify(input))} --json`;
 }
 
 const LORE_TRAILER_PREFIXES = [
@@ -219,7 +219,7 @@ const LORE_TRAILER_PREFIXES = [
   "Related:",
 ] as const;
 
-const OMX_COAUTHOR_TRAILER = "Co-authored-by: OmX <omx@oh-my-codex.dev>";
+const RCS_COAUTHOR_TRAILER = "Co-authored-by: RCS <rcs@roblox-ai-os.dev>";
 
 function isDoubleQuotedShellEscapeTarget(char: string | undefined): boolean {
   return char === "\"" || char === "\\" || char === "$" || char === "`" || char === "\n";
@@ -499,7 +499,7 @@ export function parseGitCommitCommand(commandText: string): GitCommitCommandPars
 }
 
 function isLoreTrailerLine(line: string): boolean {
-  return line === OMX_COAUTHOR_TRAILER
+  return line === RCS_COAUTHOR_TRAILER
     || LORE_TRAILER_PREFIXES.some((prefix) => line.startsWith(prefix));
 }
 
@@ -547,7 +547,7 @@ function buildGitCommitComplianceErrors(message: string | null): string[] {
   const normalized = message.replace(/\r\n?/g, "\n").trim();
   if (!normalized) {
     return [
-      "Provide a non-empty Lore-format commit message with an intent-first subject, narrative body, Lore trailers, and the OmX co-author trailer.",
+      "Provide a non-empty Lore-format commit message with an intent-first subject, narrative body, Lore trailers, and the RCS co-author trailer.",
     ];
   }
 
@@ -567,8 +567,8 @@ function buildGitCommitComplianceErrors(message: string | null): string[] {
   if (!trailerLines.some((line) => LORE_TRAILER_PREFIXES.some((prefix) => line.startsWith(prefix)))) {
     errors.push("Add at least one Lore trailer such as `Constraint:`, `Confidence:`, or `Tested:`.");
   }
-  if (!trailerLines.includes(OMX_COAUTHOR_TRAILER)) {
-    errors.push(`Add the required co-author trailer: \`${OMX_COAUTHOR_TRAILER}\`.`);
+  if (!trailerLines.includes(RCS_COAUTHOR_TRAILER)) {
+    errors.push(`Add the required co-author trailer: \`${RCS_COAUTHOR_TRAILER}\`.`);
   }
 
   return errors;
@@ -589,12 +589,12 @@ function buildGitCommitEnforcementOutput(commandText: string): Record<string, un
   return {
     decision: "block",
     reason:
-      "git commit is blocked until the inline commit message satisfies the Lore format and includes the required OmX co-author trailer.",
+      "git commit is blocked until the inline commit message satisfies the Lore format and includes the required RCS co-author trailer.",
     hookSpecificOutput: {
       hookEventName: "PreToolUse",
     },
     systemMessage: [
-      "git commit is blocked until the inline commit message follows the Lore protocol and includes `Co-authored-by: OmX <omx@oh-my-codex.dev>`.",
+      "git commit is blocked until the inline commit message follows the Lore protocol and includes `Co-authored-by: RCS <rcs@roblox-ai-os.dev>`.",
       ...errors.map((error) => `- ${error}`),
     ].join("\n"),
   };
@@ -735,22 +735,22 @@ function buildSloppyFallbackPreToolUseOutput(commandText: string): Record<string
   };
 }
 
-function commandInvokesOmxQuestion(command: string): boolean {
+function commandInvokesRcsQuestion(command: string): boolean {
   const tokens = tokenizeShellCommand(command)?.map((token) => token.toLowerCase()) ?? [];
   for (let index = 0; index < tokens.length; index += 1) {
     const rawToken = tokens[index] || '';
     const token = rawToken.replace(/\\/g, '/').split('/').pop() || '';
-    if ((token === 'omx' || token === 'omx.js') && tokens[index + 1] === 'question') return true;
-    if ((token === 'node' || token === 'node.exe') && /(?:^|\/)omx\.js$/.test(tokens[index + 1] || '') && tokens[index + 2] === 'question') return true;
+    if ((token === 'rcs' || token === 'rcs.js') && tokens[index + 1] === 'question') return true;
+    if ((token === 'node' || token === 'node.exe') && /(?:^|\/)rcs\.js$/.test(tokens[index + 1] || '') && tokens[index + 2] === 'question') return true;
   }
-  return /\bomx\s+question\b/i.test(command) || /\bomx\.js['"]?\s+question\b/i.test(command);
+  return /\brcs\s+question\b/i.test(command) || /\brcs\.js['"]?\s+question\b/i.test(command);
 }
 
 function isQuestionReturnPaneAssignment(token: string): boolean {
   const equalsIndex = token.indexOf('=');
   if (equalsIndex <= 0) return false;
   const name = token.slice(0, equalsIndex);
-  if (!['OMX_QUESTION_RETURN_PANE', 'OMX_LEADER_PANE_ID', 'TMUX_PANE'].includes(name)) return false;
+  if (!['RCS_QUESTION_RETURN_PANE', 'RCS_LEADER_PANE_ID', 'TMUX_PANE'].includes(name)) return false;
   const value = token.slice(equalsIndex + 1);
   return /^%\d+$/.test(value) || /^\$\{?TMUX_PANE\}?$/.test(value);
 }
@@ -760,13 +760,13 @@ function hasInheritedQuestionReturnPaneBridge(): boolean {
   // already accepts outside tmux; TMUX_PANE alone is not stable across all
   // Bash/background-terminal tool paths that this enforcement protects.
   const explicitPane = safeString(
-    process.env.OMX_QUESTION_RETURN_PANE || process.env.OMX_LEADER_PANE_ID,
+    process.env.RCS_QUESTION_RETURN_PANE || process.env.RCS_LEADER_PANE_ID,
   ).trim();
   return /^%\d+$/.test(explicitPane);
 }
 
 function commandHasPowerShellQuestionReturnPane(command: string): boolean {
-  return /\$env:(?:OMX_QUESTION_RETURN_PANE|OMX_LEADER_PANE_ID)\s*=\s*(?:['"]?%\d+['"]?|\$env:TMUX_PANE)\b/i.test(command)
+  return /\$env:(?:RCS_QUESTION_RETURN_PANE|RCS_LEADER_PANE_ID)\s*=\s*(?:['"]?%\d+['"]?|\$env:TMUX_PANE)\b/i.test(command)
     || /\$env:TMUX_PANE\s*=\s*['"]?%\d+['"]?/i.test(command);
 }
 
@@ -776,65 +776,65 @@ function commandHasQuestionReturnPane(command: string): boolean {
   return (tokenizeShellCommand(command) ?? []).some(isQuestionReturnPaneAssignment);
 }
 
-function commandInvokesOmxTeam(command: string): boolean {
+function commandInvokesRcsTeam(command: string): boolean {
   const tokens = tokenizeShellCommand(command)?.map((token) => token.toLowerCase()) ?? [];
   for (let index = 0; index < tokens.length; index += 1) {
     const rawToken = tokens[index] || '';
     const token = rawToken.replace(/\\/g, '/').split('/').pop() || '';
-    if ((token === 'omx' || token === 'omx.js') && tokens[index + 1] === 'team') return true;
-    if ((token === 'node' || token === 'node.exe') && /(?:^|\/)omx\.js$/.test(tokens[index + 1] || '') && tokens[index + 2] === 'team') return true;
+    if ((token === 'rcs' || token === 'rcs.js') && tokens[index + 1] === 'team') return true;
+    if ((token === 'node' || token === 'node.exe') && /(?:^|\/)rcs\.js$/.test(tokens[index + 1] || '') && tokens[index + 2] === 'team') return true;
   }
-  return /\bomx\s+team\b/i.test(command) || /\bomx\.js['"]?\s+team\b/i.test(command);
+  return /\brcs\s+team\b/i.test(command) || /\brcs\.js['"]?\s+team\b/i.test(command);
 }
 
-function commandInvokesOmxHud(command: string): boolean {
+function commandInvokesRcsHud(command: string): boolean {
   const tokens = tokenizeShellCommand(command)?.map((token) => token.toLowerCase()) ?? [];
   for (let index = 0; index < tokens.length; index += 1) {
     const rawToken = tokens[index] || '';
     const token = rawToken.replace(/\\/g, '/').split('/').pop() || '';
-    if ((token === 'omx' || token === 'omx.js') && tokens[index + 1] === 'hud') return true;
-    if ((token === 'node' || token === 'node.exe') && /(?:^|\/)omx\.js$/.test(tokens[index + 1] || '') && tokens[index + 2] === 'hud') return true;
+    if ((token === 'rcs' || token === 'rcs.js') && tokens[index + 1] === 'hud') return true;
+    if ((token === 'node' || token === 'node.exe') && /(?:^|\/)rcs\.js$/.test(tokens[index + 1] || '') && tokens[index + 2] === 'hud') return true;
   }
-  return /\bomx\s+hud\b/i.test(command) || /\bomx\.js['"]?\s+hud\b/i.test(command);
+  return /\brcs\s+hud\b/i.test(command) || /\brcs\.js['"]?\s+hud\b/i.test(command);
 }
 
-function buildNativeOmxHudPreToolUseEnforcementOutput(
+function buildNativeRcsHudPreToolUseEnforcementOutput(
   command: string,
   payload: CodexHookPayload,
 ): Record<string, unknown> | null {
-  if (!isNativeOutsideTmuxSurface(payload) || !commandInvokesOmxHud(command)) return null;
+  if (!isNativeOutsideTmuxSurface(payload) || !commandInvokesRcsHud(command)) return null;
 
   return {
     decision: "block",
-    reason: "omx hud cannot be launched directly from Codex App/native outside-tmux Bash sessions.",
-    systemMessage: "omx hud is blocked from Bash in Codex App/native outside-tmux sessions; use SessionStart/HUD context instead, or launch OMX CLI from an attached tmux shell first for the tmux HUD runtime.",
+    reason: "rcs hud cannot be launched directly from Codex App/native outside-tmux Bash sessions.",
+    systemMessage: "rcs hud is blocked from Bash in Codex App/native outside-tmux sessions; use SessionStart/HUD context instead, or launch RCS CLI from an attached tmux shell first for the tmux HUD runtime.",
   };
 }
 
-function buildNativeOmxTeamPreToolUseEnforcementOutput(
+function buildNativeRcsTeamPreToolUseEnforcementOutput(
   command: string,
   payload: CodexHookPayload,
 ): Record<string, unknown> | null {
-  if (!isNativeOutsideTmuxSurface(payload) || !commandInvokesOmxTeam(command)) return null;
+  if (!isNativeOutsideTmuxSurface(payload) || !commandInvokesRcsTeam(command)) return null;
 
   return {
     decision: "block",
-    reason: "omx team cannot be launched directly from Codex App/native outside-tmux Bash sessions.",
-    systemMessage: `omx team is blocked from Bash in Codex App/native outside-tmux sessions; launch OMX CLI from an attached tmux shell first. Original command: ${command}`,
+    reason: "rcs team cannot be launched directly from Codex App/native outside-tmux Bash sessions.",
+    systemMessage: `rcs team is blocked from Bash in Codex App/native outside-tmux sessions; launch RCS CLI from an attached tmux shell first. Original command: ${command}`,
   };
 }
 
-function buildOmxQuestionPreToolUseEnforcementOutput(
+function buildRcsQuestionPreToolUseEnforcementOutput(
   command: string,
   payload: CodexHookPayload,
 ): Record<string, unknown> | null {
-  if (!commandInvokesOmxQuestion(command)) return null;
+  if (!commandInvokesRcsQuestion(command)) return null;
 
   if (isNativeOutsideTmuxSurface(payload)) {
     return {
       decision: "block",
-      reason: "omx question cannot be launched directly from Codex App/native outside-tmux Bash sessions.",
-      systemMessage: `omx question is blocked from Codex App/native outside-tmux Bash because no attached tmux pane is available. Use the native structured question tool when available, or ask exactly one concise plain-text question. Original command: ${command}`,
+      reason: "rcs question cannot be launched directly from Codex App/native outside-tmux Bash sessions.",
+      systemMessage: `rcs question is blocked from Codex App/native outside-tmux Bash because no attached tmux pane is available. Use the native structured question tool when available, or ask exactly one concise plain-text question. Original command: ${command}`,
     };
   }
 
@@ -842,8 +842,8 @@ function buildOmxQuestionPreToolUseEnforcementOutput(
 
   return {
     decision: "block",
-    reason: "omx question Bash invocations must preserve the leader pane return target.",
-    systemMessage: `omx question is blocked from Bash until the command preserves the leader pane with \`OMX_QUESTION_RETURN_PANE=$TMUX_PANE\` or an explicit \`%pane\` value. Original command: ${command}`,
+    reason: "rcs question Bash invocations must preserve the leader pane return target.",
+    systemMessage: `rcs question is blocked from Bash until the command preserves the leader pane with \`RCS_QUESTION_RETURN_PANE=$TMUX_PANE\` or an explicit \`%pane\` value. Original command: ${command}`,
   };
 }
 
@@ -854,11 +854,11 @@ export function buildNativePreToolUseOutput(
   if (!normalized.isBash) return null;
   const gitCommitEnforcement = buildGitCommitEnforcementOutput(normalized.normalizedCommand);
   if (gitCommitEnforcement) return gitCommitEnforcement;
-  const hudEnforcement = buildNativeOmxHudPreToolUseEnforcementOutput(normalized.normalizedCommand, payload);
+  const hudEnforcement = buildNativeRcsHudPreToolUseEnforcementOutput(normalized.normalizedCommand, payload);
   if (hudEnforcement) return hudEnforcement;
-  const teamEnforcement = buildNativeOmxTeamPreToolUseEnforcementOutput(normalized.normalizedCommand, payload);
+  const teamEnforcement = buildNativeRcsTeamPreToolUseEnforcementOutput(normalized.normalizedCommand, payload);
   if (teamEnforcement) return teamEnforcement;
-  const questionEnforcement = buildOmxQuestionPreToolUseEnforcementOutput(normalized.normalizedCommand, payload);
+  const questionEnforcement = buildRcsQuestionPreToolUseEnforcementOutput(normalized.normalizedCommand, payload);
   if (questionEnforcement) return questionEnforcement;
   const documentRefreshWarning = buildDocumentRefreshPreToolUseOutput(
     normalized.normalizedCommand,
@@ -894,17 +894,17 @@ export function buildNativePostToolUseOutput(
   const normalized = normalizePostToolUsePayload(payload);
   const mcpTransportFailure = normalized.isBash ? null : detectMcpTransportFailure(payload);
   if (mcpTransportFailure) {
-    const fallbackCommand = buildOmxParityFallbackCommand(payload, mcpTransportFailure.toolName);
+    const fallbackCommand = buildRcsParityFallbackCommand(payload, mcpTransportFailure.toolName);
     const fallbackText = fallbackCommand
       ? `Retry via CLI parity with \`${fallbackCommand}\`.`
-      : "Retry via the matching OMX CLI parity surface instead of retrying the MCP transport blindly.";
+      : "Retry via the matching RCS CLI parity surface instead of retrying the MCP transport blindly.";
     return {
       decision: "block",
-      reason: "The MCP tool appears to have lost its transport/server connection. Preserve state, debug the transport failure, and use OMX CLI/file-backed fallbacks instead of retrying blindly.",
+      reason: "The MCP tool appears to have lost its transport/server connection. Preserve state, debug the transport failure, and use RCS CLI/file-backed fallbacks instead of retrying blindly.",
       hookSpecificOutput: {
         hookEventName: "PostToolUse",
         additionalContext:
-          `Clear MCP transport-death signal detected. Preserve current team/runtime state. ${fallbackText} OMX MCP servers are plain Node stdio processes, so they still shut down when stdin/transport closes. If this happened during team runtime, inspect first with \`omx team status <team>\` or \`omx team api read-stall-state --input '{"team_name":"<team>"}' --json\`, and only force cleanup after capturing needed state. For root-cause debugging, rerun with \`OMX_MCP_TRANSPORT_DEBUG=1\` to log why the stdio transport closed.`,
+          `Clear MCP transport-death signal detected. Preserve current team/runtime state. ${fallbackText} RCS MCP servers are plain Node stdio processes, so they still shut down when stdin/transport closes. If this happened during team runtime, inspect first with \`rcs team status <team>\` or \`rcs team api read-stall-state --input '{"team_name":"<team>"}' --json\`, and only force cleanup after capturing needed state. For root-cause debugging, rerun with \`RCS_MCP_TRANSPORT_DEBUG=1\` to log why the stdio transport closed.`,
       },
     };
   }

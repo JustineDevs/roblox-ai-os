@@ -16,7 +16,7 @@ interface CompatRunResult {
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(testDir, '..', '..', '..');
-const defaultTarget = join(repoRoot, 'dist', 'cli', 'omx.js');
+const defaultTarget = join(repoRoot, 'dist', 'cli', 'rcs.js');
 const fixturesRoot = join(repoRoot, 'src', 'compat', 'fixtures', 'doctor');
 
 function readFixture(name: string): string {
@@ -28,7 +28,7 @@ function shouldSkipForSpawnPermissions(err?: string): boolean {
 }
 
 function resolveCompatTarget(): { command: string; argsPrefix: string[] } {
-  const override = process.env.OMX_COMPAT_TARGET?.trim();
+  const override = process.env.RCS_COMPAT_TARGET?.trim();
   const targetPath = override
     ? (isAbsolute(override) ? override : resolve(process.cwd(), override))
     : defaultTarget;
@@ -51,7 +51,7 @@ function runCompatTarget(cwd: string, argv: string[], envOverrides: Record<strin
 }
 
 function normalizeInstallDoctorOutput(text: string, home: string, cwd: string): string {
-  const repoStateDir = join(cwd, '.omx', 'state').replace(/\\/g, '/');
+  const repoStateDir = join(cwd, '.rcs', 'state').replace(/\\/g, '/');
   return text
     .replaceAll(join(home, '.codex').replace(/\\/g, '/'), '<CODEX_HOME>')
     .replaceAll(`/private${repoStateDir}`, '<REPO_STATE_DIR>')
@@ -71,7 +71,7 @@ function normalizeInstallDoctorOutput(text: string, home: string, cwd: string): 
       if (line.startsWith('Results: ')) {
         return 'Results: <RESULTS>';
       }
-      if (line.startsWith('Run "omx setup')) {
+      if (line.startsWith('Run "rcs setup')) {
         return 'Run <SETUP_FOLLOWUP>';
       }
       return line;
@@ -81,11 +81,11 @@ function normalizeInstallDoctorOutput(text: string, home: string, cwd: string): 
 
 describe('compat doctor contract', () => {
   it('matches onboarding warning copy for first setup expectations', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-compat-doctor-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-compat-doctor-'));
     const home = join(wd, 'home');
     const codexHome = join(home, '.codex');
     await mkdir(codexHome, { recursive: true });
-    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers.non_omx]\ncommand = "node"\n');
+    await writeFile(join(codexHome, 'config.toml'), '[mcp_servers.non_rcs]\ncommand = "node"\n');
 
     try {
       const result = runCompatTarget(wd, ['doctor'], { HOME: home, CODEX_HOME: codexHome });
@@ -99,11 +99,11 @@ describe('compat doctor contract', () => {
   });
 
   it('matches doctor --team resume_blocker behavior', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-compat-doctor-team-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-compat-doctor-team-'));
     try {
-      const teamRoot = join(wd, '.omx', 'state', 'team', 'alpha');
+      const teamRoot = join(wd, '.rcs', 'state', 'team', 'alpha');
       await mkdir(join(teamRoot, 'workers', 'worker-1'), { recursive: true });
-      await writeFile(join(teamRoot, 'config.json'), JSON.stringify({ name: 'alpha', tmux_session: 'omx-team-alpha' }));
+      await writeFile(join(teamRoot, 'config.json'), JSON.stringify({ name: 'alpha', tmux_session: 'rcs-team-alpha' }));
       const fakeBin = join(wd, 'bin');
       await mkdir(fakeBin, { recursive: true });
       const tmuxPath = join(fakeBin, 'tmux');

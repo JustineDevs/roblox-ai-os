@@ -8,23 +8,23 @@ Usage:
   scripts/run-autoresearch-showcase.sh <showcase> [<showcase> ...]
 
 Available showcases:
-  omx-self       -> missions/in-action-cat-shellout-demo
+  rcs-self       -> missions/in-action-cat-shellout-demo
   ml-tabular     -> missions/ml-kaggle-model-optimization
   bayesopt       -> missions/noisy-bayesopt-highdim
   latent         -> missions/noisy-latent-subspace-discovery
   sorting        -> missions/adaptive-sort-optimization
-  all            -> omx-self ml-tabular bayesopt latent sorting
+  all            -> rcs-self ml-tabular bayesopt latent sorting
 
 Examples:
   scripts/run-autoresearch-showcase.sh --list
   scripts/run-autoresearch-showcase.sh bayesopt
-  scripts/run-autoresearch-showcase.sh omx-self ml-tabular
+  scripts/run-autoresearch-showcase.sh rcs-self ml-tabular
 USAGE
 }
 
 mission_for() {
   case "$1" in
-    omx-self)   printf '%s' 'missions/in-action-cat-shellout-demo' ;;
+    rcs-self)   printf '%s' 'missions/in-action-cat-shellout-demo' ;;
     ml-tabular) printf '%s' 'missions/ml-kaggle-model-optimization' ;;
     bayesopt)   printf '%s' 'missions/noisy-bayesopt-highdim' ;;
     latent)     printf '%s' 'missions/noisy-latent-subspace-discovery' ;;
@@ -35,7 +35,7 @@ mission_for() {
 
 list_showcases() {
   cat <<'LIST'
-omx-self   missions/in-action-cat-shellout-demo
+rcs-self   missions/in-action-cat-shellout-demo
 ml-tabular missions/ml-kaggle-model-optimization
 bayesopt   missions/noisy-bayesopt-highdim
 latent     missions/noisy-latent-subspace-discovery
@@ -60,7 +60,7 @@ fi
 
 args=("$@")
 if [[ " ${args[*]} " == *" all "* ]]; then
-  args=(omx-self ml-tabular bayesopt latent sorting)
+  args=(rcs-self ml-tabular bayesopt latent sorting)
 fi
 
 for showcase in "${args[@]}"; do
@@ -71,5 +71,5 @@ for showcase in "${args[@]}"; do
   }
 
   printf '\n==> Running showcase %s (%s)\n' "$showcase" "$mission"
-  omx autoresearch "$mission"
+  rcs autoresearch "$mission"
 done

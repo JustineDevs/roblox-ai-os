@@ -10,7 +10,7 @@ describe('stateCommand', () => {
       stdout: (line) => out.push(line),
       stderr: () => undefined,
     });
-    assert.match(out.join('\n'), /Usage: omx state/);
+    assert.match(out.join('\n'), /Usage: rcs state/);
   });
 
   it('emits a frozen compact JSON envelope when --json is set', async () => {

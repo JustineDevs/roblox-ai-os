@@ -1,4 +1,4 @@
-# `omx autoresearch` Full-Parity Review Notes
+# `rcs autoresearch` Full-Parity Review Notes
 
 Date: 2026-03-14  
 Reviewer lane: worker-3
@@ -7,8 +7,8 @@ Reviewer lane: worker-3
 
 Compared the implementation and operator-facing docs against:
 
-- `.omx/plans/prd-autoresearch-full-parity.md`
-- `.omx/plans/test-spec-autoresearch-full-parity.md`
+- `.rcs/plans/prd-autoresearch-full-parity.md`
+- `.rcs/plans/test-spec-autoresearch-full-parity.md`
 
 Reviewed code and docs:
 
@@ -27,7 +27,7 @@ Reviewed code and docs:
 
 The branch now matches the PRD/test-spec shape much more closely than the earlier scaffold review:
 
-- `omx autoresearch` exposes both fresh launch and `--resume <run-id>` flows.
+- `rcs autoresearch` exposes both fresh launch and `--resume <run-id>` flows.
 - the runtime owns a thin-supervisor loop boundary via repo-root candidate handoff + post-session evaluator decisions.
 - repo-root active-run locking and authoritative per-run manifests are present.
 - fresh launches create run-tagged autoresearch lanes instead of silently reusing one long-lived lane.
@@ -59,8 +59,8 @@ The branch now matches the PRD/test-spec shape much more closely than the earlie
 
 ### 2. Repo-root state authority
 **Pass.**
-- repo-root active-run lock lives at `.omx/state/autoresearch-state.json`.
-- per-run manifest, candidate, ledger, and latest evaluator files live under `.omx/logs/autoresearch/<run-id>/`.
+- repo-root active-run lock lives at `.rcs/state/autoresearch-state.json`.
+- per-run manifest, candidate, ledger, and latest evaluator files live under `.rcs/logs/autoresearch/<run-id>/`.
 - worktree-local runtime artifacts are limited to `results.tsv` and allowlisted logs.
 
 ### 3. Fresh-run semantics

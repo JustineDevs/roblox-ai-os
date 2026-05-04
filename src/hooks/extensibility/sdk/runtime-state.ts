@@ -1,20 +1,20 @@
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import type {
-  HookPluginOmxHudState,
-  HookPluginOmxNotifyFallbackState,
-  HookPluginOmxSessionState,
-  HookPluginOmxUpdateCheckState,
+  HookPluginRcsHudState,
+  HookPluginRcsNotifyFallbackState,
+  HookPluginRcsSessionState,
+  HookPluginRcsUpdateCheckState,
   HookPluginSdk,
 } from '../types.js';
-import { omxRootStateFilePath } from './paths.js';
+import { rcsRootStateFilePath } from './paths.js';
 import { getReadScopedStateFilePaths } from '../../../mcp/state-paths.js';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
-async function readOmxStateFile<T extends Record<string, unknown>>(
+async function readRcsStateFile<T extends Record<string, unknown>>(
   path: string,
   normalize?: (value: Record<string, unknown>) => T | null,
 ): Promise<T | null> {
@@ -28,17 +28,17 @@ async function readOmxStateFile<T extends Record<string, unknown>>(
   }
 }
 
-function normalizeSessionState(value: Record<string, unknown>): HookPluginOmxSessionState | null {
+function normalizeSessionState(value: Record<string, unknown>): HookPluginRcsSessionState | null {
   return typeof value.session_id === 'string' && value.session_id.trim()
-    ? value as HookPluginOmxSessionState
+    ? value as HookPluginRcsSessionState
     : null;
 }
 
-export function createHookPluginOmxApi(cwd: string): HookPluginSdk['omx'] {
+export function createHookPluginRcsStateApi(cwd: string): HookPluginSdk['rcs'] {
   return {
     session: {
-      read: () => readOmxStateFile<HookPluginOmxSessionState>(
-        omxRootStateFilePath(cwd, 'session.json'),
+      read: () => readRcsStateFile<HookPluginRcsSessionState>(
+        rcsRootStateFilePath(cwd, 'session.json'),
         normalizeSessionState,
       ),
     },
@@ -47,17 +47,17 @@ export function createHookPluginOmxApi(cwd: string): HookPluginSdk['omx'] {
         const [hudStatePath] = await getReadScopedStateFilePaths('hud-state.json', cwd, undefined, {
           rootFallback: false,
         });
-        return readOmxStateFile<HookPluginOmxHudState>(hudStatePath);
+        return readRcsStateFile<HookPluginRcsHudState>(hudStatePath);
       },
     },
     notifyFallback: {
-      read: () => readOmxStateFile<HookPluginOmxNotifyFallbackState>(
-        omxRootStateFilePath(cwd, 'notify-fallback-state.json'),
+      read: () => readRcsStateFile<HookPluginRcsNotifyFallbackState>(
+        rcsRootStateFilePath(cwd, 'notify-fallback-state.json'),
       ),
     },
     updateCheck: {
-      read: () => readOmxStateFile<HookPluginOmxUpdateCheckState>(
-        omxRootStateFilePath(cwd, 'update-check.json'),
+      read: () => readRcsStateFile<HookPluginRcsUpdateCheckState>(
+        rcsRootStateFilePath(cwd, 'update-check.json'),
       ),
     },
   };

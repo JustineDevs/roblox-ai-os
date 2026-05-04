@@ -1,26 +1,26 @@
 import { execFileSync } from 'node:child_process';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { resolveOmxFirstPartyMcpEntrypointForPluginTarget } from '../config/omx-first-party-mcp.js';
+import { resolveRcsFirstPartyMcpEntrypointForPluginTarget } from '../config/rcs-first-party-mcp.js';
 
 export type McpServerName = 'state' | 'memory' | 'code_intel' | 'trace' | 'wiki';
 
 const SERVER_DISABLE_ENV: Record<McpServerName, string> = {
-  state: 'OMX_STATE_SERVER_DISABLE_AUTO_START',
-  memory: 'OMX_MEMORY_SERVER_DISABLE_AUTO_START',
-  code_intel: 'OMX_CODE_INTEL_SERVER_DISABLE_AUTO_START',
-  trace: 'OMX_TRACE_SERVER_DISABLE_AUTO_START',
-  wiki: 'OMX_WIKI_SERVER_DISABLE_AUTO_START',
+  state: 'RCS_STATE_SERVER_DISABLE_AUTO_START',
+  memory: 'RCS_MEMORY_SERVER_DISABLE_AUTO_START',
+  code_intel: 'RCS_CODE_INTEL_SERVER_DISABLE_AUTO_START',
+  trace: 'RCS_TRACE_SERVER_DISABLE_AUTO_START',
+  wiki: 'RCS_WIKI_SERVER_DISABLE_AUTO_START',
 };
 
-const GLOBAL_DISABLE_ENV = 'OMX_MCP_SERVER_DISABLE_AUTO_START';
-const LIFECYCLE_DEBUG_ENV = 'OMX_MCP_TRANSPORT_DEBUG';
-const PARENT_WATCHDOG_INTERVAL_ENV = 'OMX_MCP_PARENT_WATCHDOG_INTERVAL_MS';
-const DUPLICATE_SIBLING_WATCHDOG_INTERVAL_ENV = 'OMX_MCP_DUPLICATE_SIBLING_WATCHDOG_INTERVAL_MS';
-const DUPLICATE_SIBLING_PRE_TRAFFIC_GRACE_ENV = 'OMX_MCP_DUPLICATE_SIBLING_PRE_TRAFFIC_GRACE_MS';
-const DUPLICATE_SIBLING_POST_TRAFFIC_IDLE_ENV = 'OMX_MCP_DUPLICATE_SIBLING_POST_TRAFFIC_IDLE_MS';
-const DUPLICATE_SIBLING_INITIAL_DELAY_ENV = 'OMX_MCP_DUPLICATE_SIBLING_INITIAL_DELAY_MS';
-const DUPLICATE_SIBLING_INITIAL_DELAY_MAX_ENV = 'OMX_MCP_DUPLICATE_SIBLING_INITIAL_DELAY_MAX_MS';
-export const MCP_ENTRYPOINT_MARKER_ENV = 'OMX_MCP_ENTRYPOINT_MARKER';
+const GLOBAL_DISABLE_ENV = 'RCS_MCP_SERVER_DISABLE_AUTO_START';
+const LIFECYCLE_DEBUG_ENV = 'RCS_MCP_TRANSPORT_DEBUG';
+const PARENT_WATCHDOG_INTERVAL_ENV = 'RCS_MCP_PARENT_WATCHDOG_INTERVAL_MS';
+const DUPLICATE_SIBLING_WATCHDOG_INTERVAL_ENV = 'RCS_MCP_DUPLICATE_SIBLING_WATCHDOG_INTERVAL_MS';
+const DUPLICATE_SIBLING_PRE_TRAFFIC_GRACE_ENV = 'RCS_MCP_DUPLICATE_SIBLING_PRE_TRAFFIC_GRACE_MS';
+const DUPLICATE_SIBLING_POST_TRAFFIC_IDLE_ENV = 'RCS_MCP_DUPLICATE_SIBLING_POST_TRAFFIC_IDLE_MS';
+const DUPLICATE_SIBLING_INITIAL_DELAY_ENV = 'RCS_MCP_DUPLICATE_SIBLING_INITIAL_DELAY_MS';
+const DUPLICATE_SIBLING_INITIAL_DELAY_MAX_ENV = 'RCS_MCP_DUPLICATE_SIBLING_INITIAL_DELAY_MAX_MS';
+export const MCP_ENTRYPOINT_MARKER_ENV = 'RCS_MCP_ENTRYPOINT_MARKER';
 const DEFAULT_PARENT_WATCHDOG_INTERVAL_MS = 1_000;
 const DEFAULT_DUPLICATE_SIBLING_WATCHDOG_INTERVAL_MS = 5_000;
 const DEFAULT_DUPLICATE_SIBLING_PRE_TRAFFIC_GRACE_MS = 2_000;
@@ -66,7 +66,7 @@ export function extractMcpEntrypointMarker(command: string): string | null {
   if (entrypointMatch?.[1]) return entrypointMatch[1].toLowerCase();
 
   const mcpServeMatch = normalizedCommand.match(MCP_SERVE_TARGET_PATTERN);
-  return resolveOmxFirstPartyMcpEntrypointForPluginTarget(mcpServeMatch?.[1]);
+  return resolveRcsFirstPartyMcpEntrypointForPluginTarget(mcpServeMatch?.[1]);
 }
 
 export function resolveCurrentMcpEntrypointMarker(
@@ -348,7 +348,7 @@ export function autoStartStdioMcpServer(
   const logLifecycle = (message: string, error?: unknown) => {
     if (!lifecycleDebugEnabled) return;
     const detail = error ? ` ${error instanceof Error ? error.message : String(error)}` : '';
-    process.stderr.write(`[omx-${serverName}-server] ${message}${detail}\n`);
+    process.stderr.write(`[rcs-${serverName}-server] ${message}${detail}\n`);
   };
 
   const parentWatchdog = trackedParentPid > 1
@@ -442,7 +442,7 @@ export function autoStartStdioMcpServer(
     try {
       await server.close();
     } catch (error) {
-      console.error(`[omx-${serverName}-server] shutdown failed`, error);
+      console.error(`[rcs-${serverName}-server] shutdown failed`, error);
     }
 
     logLifecycle('transport shutdown: exit');

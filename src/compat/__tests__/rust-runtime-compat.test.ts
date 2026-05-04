@@ -12,13 +12,13 @@ function repoRoot(): string {
   return join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 }
 
-function runOmx(
+function runRcsCli(
   cwd: string,
   argv: string[],
   envOverrides: Record<string, string> = {},
 ): { status: number | null; stdout: string; stderr: string; error?: string } {
-  const omxBin = join(repoRoot(), 'dist', 'cli', 'omx.js');
-  const result = spawnSync(process.execPath, [omxBin, ...argv], {
+  const rcsBin = join(repoRoot(), 'dist', 'cli', 'rcs.js');
+  const result = spawnSync(process.execPath, [rcsBin, ...argv], {
     cwd,
     encoding: 'utf-8',
     env: { ...process.env, ...envOverrides },
@@ -34,13 +34,13 @@ async function withTempTeamStateRoot<T>(
   teamStateRoot: string,
   fn: () => Promise<T>,
 ): Promise<T> {
-  const previousRoot = process.env.OMX_TEAM_STATE_ROOT;
-  process.env.OMX_TEAM_STATE_ROOT = teamStateRoot;
+  const previousRoot = process.env.RCS_TEAM_STATE_ROOT;
+  process.env.RCS_TEAM_STATE_ROOT = teamStateRoot;
   try {
     return await fn();
   } finally {
-    if (previousRoot === undefined) delete process.env.OMX_TEAM_STATE_ROOT;
-    else process.env.OMX_TEAM_STATE_ROOT = previousRoot;
+    if (previousRoot === undefined) delete process.env.RCS_TEAM_STATE_ROOT;
+    else process.env.RCS_TEAM_STATE_ROOT = previousRoot;
   }
 }
 
@@ -100,9 +100,9 @@ switch (command.command) {
 
 describe('rust runtime legacy-reader compatibility', () => {
   it('keeps team status on the manifest-authored compatibility view', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-rust-compat-team-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-rust-compat-team-'));
     try {
-      const teamStateRoot = join(wd, '.omx', 'state');
+      const teamStateRoot = join(wd, '.rcs', 'state');
       await withTempTeamStateRoot(teamStateRoot, async () => {
         await initTeamState('rust-compat-team', 'compatibility lane', 'executor', 1, wd);
 
@@ -113,14 +113,14 @@ describe('rust runtime legacy-reader compatibility', () => {
         const manifest = JSON.parse(await readFile(manifestPath, 'utf-8')) as Record<string, unknown>;
 
         config.workspace_mode = 'single';
-        config.tmux_session = 'omx-team-legacy-rust-compat-team';
+        config.tmux_session = 'rcs-team-legacy-rust-compat-team';
         manifest.workspace_mode = 'worktree';
-        manifest.tmux_session = 'omx-team-rust-compat-team';
+        manifest.tmux_session = 'rcs-team-rust-compat-team';
 
         await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
         await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
-        const result = runOmx(wd, ['team', 'status', 'rust-compat-team', '--json'], { OMX_TEAM_STATE_ROOT: teamStateRoot });
+        const result = runRcsCli(wd, ['team', 'status', 'rust-compat-team', '--json'], { RCS_TEAM_STATE_ROOT: teamStateRoot });
         if (shouldSkipForSpawnPermissions(result.error)) return;
 
         assert.equal(result.status, 0, result.stderr || result.stdout);
@@ -130,7 +130,7 @@ describe('rust runtime legacy-reader compatibility', () => {
           status?: string;
           workspace_mode?: string | null;
         };
-        assert.equal(payload.command, 'omx team status');
+        assert.equal(payload.command, 'rcs team status');
         assert.equal(payload.team_name, 'rust-compat-team');
         assert.equal(payload.status, 'ok');
         assert.equal(payload.workspace_mode, 'worktree');
@@ -141,9 +141,9 @@ describe('rust runtime legacy-reader compatibility', () => {
   });
 
   it('keeps doctor --team on the manifest-authored tmux session', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-rust-compat-doctor-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-rust-compat-doctor-'));
     try {
-      const teamStateRoot = join(wd, '.omx', 'state');
+      const teamStateRoot = join(wd, '.rcs', 'state');
       await withTempTeamStateRoot(teamStateRoot, async () => {
         await initTeamState('rust-compat-doctor', 'compatibility lane', 'executor', 1, wd);
 
@@ -153,8 +153,8 @@ describe('rust runtime legacy-reader compatibility', () => {
         const config = JSON.parse(await readFile(configPath, 'utf-8')) as Record<string, unknown>;
         const manifest = JSON.parse(await readFile(manifestPath, 'utf-8')) as Record<string, unknown>;
 
-        config.tmux_session = 'omx-team-legacy-rust-compat-doctor';
-        manifest.tmux_session = 'omx-team-rust-compat-doctor';
+        config.tmux_session = 'rcs-team-legacy-rust-compat-doctor';
+        manifest.tmux_session = 'rcs-team-rust-compat-doctor';
 
         await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`);
         await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -164,14 +164,14 @@ describe('rust runtime legacy-reader compatibility', () => {
         const tmuxPath = join(fakeBin, 'tmux');
         await writeFile(
           tmuxPath,
-          '#!/bin/sh\nif [ "$1" = "list-sessions" ]; then echo "omx-team-rust-compat-doctor"; exit 0; fi\nexit 0\n',
+          '#!/bin/sh\nif [ "$1" = "list-sessions" ]; then echo "rcs-team-rust-compat-doctor"; exit 0; fi\nexit 0\n',
         );
         await chmod(tmuxPath, 0o755);
 
-        const result = runOmx(
+        const result = runRcsCli(
           wd,
           ['doctor', '--team'],
-          { PATH: `${fakeBin}:${process.env.PATH || ''}`, OMX_TEAM_STATE_ROOT: teamStateRoot },
+          { PATH: `${fakeBin}:${process.env.PATH || ''}`, RCS_TEAM_STATE_ROOT: teamStateRoot },
         );
         if (shouldSkipForSpawnPermissions(result.error)) return;
 
@@ -186,9 +186,9 @@ describe('rust runtime legacy-reader compatibility', () => {
   });
 
   it('keeps HUD team state on the session-scoped compatibility file', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-rust-compat-hud-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-rust-compat-hud-'));
     try {
-      const stateRoot = join(wd, '.omx', 'state');
+      const stateRoot = join(wd, '.rcs', 'state');
       const sessionId = 'hud-rust-compat';
       const sessionStateDir = join(stateRoot, 'sessions', sessionId);
       await mkdir(sessionStateDir, { recursive: true });
@@ -224,17 +224,17 @@ describe('rust runtime legacy-reader compatibility', () => {
   });
 
   it('prefers bridge-authored dispatch/mailbox compatibility views over stale legacy files', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-rust-compat-bridge-'));
-    const previousRuntimeBinary = process.env.OMX_RUNTIME_BINARY;
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-rust-compat-bridge-'));
+    const previousRuntimeBinary = process.env.RCS_RUNTIME_BINARY;
     try {
-      const teamStateRoot = join(wd, '.omx', 'state');
+      const teamStateRoot = join(wd, '.rcs', 'state');
       await withTempTeamStateRoot(teamStateRoot, async () => {
         await initTeamState('rust-compat-bridge', 'compatibility lane', 'executor', 2, wd);
         const fakeBin = join(wd, 'bin');
         await mkdir(fakeBin, { recursive: true });
-        const runtimePath = join(fakeBin, 'omx-runtime');
+        const runtimePath = join(fakeBin, 'rcs-runtime');
         await writeCompatRuntimeFixture(runtimePath);
-        process.env.OMX_RUNTIME_BINARY = runtimePath;
+        process.env.RCS_RUNTIME_BINARY = runtimePath;
 
         const teamDir = join(teamStateRoot, 'team', 'rust-compat-bridge');
         await writeFile(
@@ -261,8 +261,8 @@ describe('rust runtime legacy-reader compatibility', () => {
         assert.equal(mailbox.some((entry) => entry.message_id === 'legacy-msg'), false, 'bridge compat view should win over stale legacy mailbox file');
       });
     } finally {
-      if (typeof previousRuntimeBinary === 'string') process.env.OMX_RUNTIME_BINARY = previousRuntimeBinary;
-      else delete process.env.OMX_RUNTIME_BINARY;
+      if (typeof previousRuntimeBinary === 'string') process.env.RCS_RUNTIME_BINARY = previousRuntimeBinary;
+      else delete process.env.RCS_RUNTIME_BINARY;
       await rm(wd, { recursive: true, force: true });
     }
   });

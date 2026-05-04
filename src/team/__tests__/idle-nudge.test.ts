@@ -16,20 +16,20 @@ if [[ $# -gt 0 ]]; then
 fi
 
 if [[ "\$cmd" == "capture-pane" ]]; then
-  if [[ "\${OMX_FAIL_CAPTURE:-0}" == "1" ]]; then
+  if [[ "\${RCS_FAIL_CAPTURE:-0}" == "1" ]]; then
     exit 1
   fi
 
   token=""
-  if [[ -n "\${OMX_CAPTURE_SEQ_FILE:-}" && -f "\${OMX_CAPTURE_SEQ_FILE}" ]]; then
-    token="\$(head -n 1 "\${OMX_CAPTURE_SEQ_FILE}" || true)"
+  if [[ -n "\${RCS_CAPTURE_SEQ_FILE:-}" && -f "\${RCS_CAPTURE_SEQ_FILE}" ]]; then
+    token="\$(head -n 1 "\${RCS_CAPTURE_SEQ_FILE}" || true)"
     if [[ -n "\$token" ]]; then
-      tail -n +2 "\${OMX_CAPTURE_SEQ_FILE}" > "\${OMX_CAPTURE_SEQ_FILE}.tmp" || true
-      mv "\${OMX_CAPTURE_SEQ_FILE}.tmp" "\${OMX_CAPTURE_SEQ_FILE}"
+      tail -n +2 "\${RCS_CAPTURE_SEQ_FILE}" > "\${RCS_CAPTURE_SEQ_FILE}.tmp" || true
+      mv "\${RCS_CAPTURE_SEQ_FILE}.tmp" "\${RCS_CAPTURE_SEQ_FILE}"
     fi
   fi
   if [[ -z "\$token" ]]; then
-    token="\${OMX_CAPTURE_TOKEN:-IDLE}"
+    token="\${RCS_CAPTURE_TOKEN:-IDLE}"
   fi
 
   case "\$token" in
@@ -52,7 +52,7 @@ if [[ "\$cmd" == "capture-pane" ]]; then
 fi
 
 if [[ "\$cmd" == "send-keys" ]]; then
-  if [[ "\${OMX_FAIL_SEND_KEYS:-0}" == "1" ]]; then
+  if [[ "\${RCS_FAIL_SEND_KEYS:-0}" == "1" ]]; then
     exit 1
   fi
   exit 0
@@ -71,17 +71,17 @@ async function withFakeTmux(run: (ctx: {
   tmuxLogPath: string;
   setCaptureSequence: (tokens: string[]) => Promise<void>;
 }) => Promise<void>): Promise<void> {
-  const root = await mkdtemp(join(tmpdir(), 'omx-idle-nudge-test-'));
+  const root = await mkdtemp(join(tmpdir(), 'rcs-idle-nudge-test-'));
   const binDir = join(root, 'bin');
   const tmuxPath = join(binDir, 'tmux');
   const tmuxLogPath = join(root, 'tmux.log');
   const captureSeqPath = join(root, 'capture-seq.txt');
 
   const prevPath = process.env.PATH;
-  const prevCaptureSeq = process.env.OMX_CAPTURE_SEQ_FILE;
-  const prevCaptureToken = process.env.OMX_CAPTURE_TOKEN;
-  const prevFailSendKeys = process.env.OMX_FAIL_SEND_KEYS;
-  const prevFailCapture = process.env.OMX_FAIL_CAPTURE;
+  const prevCaptureSeq = process.env.RCS_CAPTURE_SEQ_FILE;
+  const prevCaptureToken = process.env.RCS_CAPTURE_TOKEN;
+  const prevFailSendKeys = process.env.RCS_FAIL_SEND_KEYS;
+  const prevFailCapture = process.env.RCS_FAIL_CAPTURE;
 
   try {
     await mkdir(binDir, { recursive: true });
@@ -89,10 +89,10 @@ async function withFakeTmux(run: (ctx: {
     await chmod(tmuxPath, 0o755);
 
     process.env.PATH = `${binDir}:${prevPath ?? ''}`;
-    process.env.OMX_CAPTURE_SEQ_FILE = captureSeqPath;
-    process.env.OMX_CAPTURE_TOKEN = 'IDLE';
-    delete process.env.OMX_FAIL_SEND_KEYS;
-    delete process.env.OMX_FAIL_CAPTURE;
+    process.env.RCS_CAPTURE_SEQ_FILE = captureSeqPath;
+    process.env.RCS_CAPTURE_TOKEN = 'IDLE';
+    delete process.env.RCS_FAIL_SEND_KEYS;
+    delete process.env.RCS_FAIL_CAPTURE;
 
     await run({
       tmuxLogPath,
@@ -104,17 +104,17 @@ async function withFakeTmux(run: (ctx: {
     if (typeof prevPath === 'string') process.env.PATH = prevPath;
     else delete process.env.PATH;
 
-    if (typeof prevCaptureSeq === 'string') process.env.OMX_CAPTURE_SEQ_FILE = prevCaptureSeq;
-    else delete process.env.OMX_CAPTURE_SEQ_FILE;
+    if (typeof prevCaptureSeq === 'string') process.env.RCS_CAPTURE_SEQ_FILE = prevCaptureSeq;
+    else delete process.env.RCS_CAPTURE_SEQ_FILE;
 
-    if (typeof prevCaptureToken === 'string') process.env.OMX_CAPTURE_TOKEN = prevCaptureToken;
-    else delete process.env.OMX_CAPTURE_TOKEN;
+    if (typeof prevCaptureToken === 'string') process.env.RCS_CAPTURE_TOKEN = prevCaptureToken;
+    else delete process.env.RCS_CAPTURE_TOKEN;
 
-    if (typeof prevFailSendKeys === 'string') process.env.OMX_FAIL_SEND_KEYS = prevFailSendKeys;
-    else delete process.env.OMX_FAIL_SEND_KEYS;
+    if (typeof prevFailSendKeys === 'string') process.env.RCS_FAIL_SEND_KEYS = prevFailSendKeys;
+    else delete process.env.RCS_FAIL_SEND_KEYS;
 
-    if (typeof prevFailCapture === 'string') process.env.OMX_FAIL_CAPTURE = prevFailCapture;
-    else delete process.env.OMX_FAIL_CAPTURE;
+    if (typeof prevFailCapture === 'string') process.env.RCS_FAIL_CAPTURE = prevFailCapture;
+    else delete process.env.RCS_FAIL_CAPTURE;
 
     await rm(root, { recursive: true, force: true });
   }
@@ -151,12 +151,12 @@ describe('idle-nudge', () => {
       await withMockedNow(10_000, async (setNow) => {
         const tracker = new NudgeTracker({ delayMs: 0, maxCount: 3, message: 'nudge' });
 
-        const first = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const first = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(first, ['%2']);
         const firstLog = await readFile(tmuxLogPath, 'utf-8');
 
         setNow(11_000); // < 5000ms scan interval
-        const second = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const second = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(second, []);
 
         const secondLog = await readFile(tmuxLogPath, 'utf-8');
@@ -168,7 +168,7 @@ describe('idle-nudge', () => {
   it('never nudges the leader pane', async () => {
     await withFakeTmux(async ({ tmuxLogPath }) => {
       const tracker = new NudgeTracker({ delayMs: 0, maxCount: 3, message: 'nudge' });
-      const nudged = await tracker.checkAndNudge(['%1'], '%1', 'omx-team-a');
+      const nudged = await tracker.checkAndNudge(['%1'], '%1', 'rcs-team-a');
       assert.deepEqual(nudged, []);
 
       assert.equal(existsSync(tmuxLogPath), false);
@@ -182,12 +182,12 @@ describe('idle-nudge', () => {
       await withMockedNow(10_000, async (setNow) => {
         const tracker = new NudgeTracker({ delayMs: 0, maxCount: 1, message: 'nudge' });
 
-        const first = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const first = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(first, ['%2']);
         const firstLog = await readFile(tmuxLogPath, 'utf-8');
 
         setNow(16_000); // > 5000ms scan interval
-        const second = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const second = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(second, []);
 
         const secondLog = await readFile(tmuxLogPath, 'utf-8');
@@ -210,23 +210,23 @@ describe('idle-nudge', () => {
       await withMockedNow(10_000, async (setNow) => {
         const tracker = new NudgeTracker({ delayMs: 10_000, maxCount: 3, message: 'nudge' });
 
-        const r1 = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const r1 = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(r1, []);
 
         setNow(16_000);
-        const r2 = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const r2 = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(r2, []);
 
         setNow(22_000);
-        const r3 = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const r3 = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(r3, []);
 
         setNow(28_000);
-        const r4 = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const r4 = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(r4, []);
 
         setNow(39_000);
-        const r5 = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const r5 = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(r5, ['%2']);
         assert.equal(tracker.totalNudges, 1);
       });
@@ -235,11 +235,11 @@ describe('idle-nudge', () => {
 
   it('does not count nudges when sendToWorker fails', async () => {
     await withFakeTmux(async () => {
-      process.env.OMX_FAIL_SEND_KEYS = '1';
+      process.env.RCS_FAIL_SEND_KEYS = '1';
 
       await withMockedNow(10_000, async () => {
         const tracker = new NudgeTracker({ delayMs: 0, maxCount: 3, message: 'nudge' });
-        const nudged = await tracker.checkAndNudge(['%2'], undefined, 'omx-team-a');
+        const nudged = await tracker.checkAndNudge(['%2'], undefined, 'rcs-team-a');
         assert.deepEqual(nudged, []);
         assert.equal(tracker.totalNudges, 0);
         assert.deepEqual(tracker.getSummary(), {});
@@ -249,7 +249,7 @@ describe('idle-nudge', () => {
 
   it('returns empty capture and non-idle when capture-pane command fails', async () => {
     await withFakeTmux(async () => {
-      process.env.OMX_FAIL_CAPTURE = '1';
+      process.env.RCS_FAIL_CAPTURE = '1';
       const captured = await capturePane('%2');
       assert.equal(captured, '');
 

@@ -1,5 +1,5 @@
 /**
- * omx doctor - Validate oh-my-codex installation
+ * rcs doctor - Validate Roblox Creator Skills installation
  */
 
 import { existsSync } from "fs";
@@ -11,7 +11,7 @@ import {
 	codexPromptsDir,
 	userSkillsDir,
 	projectSkillsDir,
-	omxStateDir,
+	rcsStateDir,
 	detectLegacySkillRootOverlap,
 } from "../utils/paths.js";
 import {
@@ -27,14 +27,14 @@ import {
 } from "./explore.js";
 import { getPackageRoot } from "../utils/package.js";
 import {
-	hasLegacyOmxTeamRunTable,
+	hasLegacyRcsTeamRunTable,
 	getModelContextRecommendation,
 } from "../config/generator.js";
 import { getMissingManagedCodexHookEvents } from "../config/codex-hooks.js";
-import { OMX_FIRST_PARTY_MCP_SERVER_NAMES } from "../config/omx-first-party-mcp.js";
+import { RCS_FIRST_PARTY_MCP_SERVER_NAMES } from "../config/rcs-first-party-mcp.js";
 import { getDefaultBridge, isBridgeEnabled } from "../runtime/bridge.js";
 import {
-	OMX_EXPLORE_CMD_ENV,
+	RCS_EXPLORE_CMD_ENV,
 	isExploreCommandRoutingEnabled,
 } from "../hooks/explore-routing.js";
 import { isLeaderRuntimeStale } from "../team/leader-activity.js";
@@ -45,8 +45,8 @@ import {
 	type SetupInstallMode,
 } from "./setup-preferences.js";
 import {
-	OMX_LOCAL_MARKETPLACE_NAME,
-	resolvePackagedOmxMarketplace,
+	RCS_LOCAL_MARKETPLACE_NAME,
+	resolvePackagedRcsMarketplace,
 } from "./plugin-marketplace.js";
 
 interface DoctorOptions {
@@ -101,7 +101,7 @@ function resolveDoctorPaths(cwd: string, scope: DoctorSetupScope): DoctorPaths {
 			hooksPath: join(codexHomeDir, "hooks.json"),
 			promptsDir: join(codexHomeDir, "prompts"),
 			skillsDir: projectSkillsDir(cwd),
-			stateDir: omxStateDir(cwd),
+			stateDir: rcsStateDir(cwd),
 		};
 	}
 
@@ -111,7 +111,7 @@ function resolveDoctorPaths(cwd: string, scope: DoctorSetupScope): DoctorPaths {
 		hooksPath: join(codexHome(), "hooks.json"),
 		promptsDir: codexPromptsDir(),
 		skillsDir: userSkillsDir(),
-		stateDir: omxStateDir(cwd),
+			stateDir: rcsStateDir(cwd),
 	};
 }
 
@@ -125,11 +125,11 @@ export async function doctor(options: DoctorOptions = {}): Promise<void> {
 	const scopeResolution = await resolveDoctorScope(cwd);
 	const paths = resolveDoctorPaths(cwd, scopeResolution.scope);
 	const scopeSourceMessage =
-		scopeResolution.source === "persisted"
-			? " (from .omx/setup-scope.json)"
-			: "";
+			scopeResolution.source === "persisted"
+				? " (from .rcs/setup-scope.json)"
+				: "";
 
-	console.log("oh-my-codex doctor");
+	console.log("RCS doctor");
 	console.log("==================\n");
 	console.log(
 		`Resolved setup scope: ${scopeResolution.scope}${scopeSourceMessage}`,
@@ -226,12 +226,12 @@ export async function doctor(options: DoctorOptions = {}): Promise<void> {
 	);
 
 	if (failCount > 0) {
-		console.log('\nRun "omx setup" to fix installation issues.');
-	} else if (warnCount > 0) {
-		console.log('\nRun "omx setup --force" to refresh all components.');
-	} else {
-		console.log("\nAll checks passed! oh-my-codex is ready.");
-	}
+			console.log('\nRun "rcs setup" to fix installation issues.');
+		} else if (warnCount > 0) {
+			console.log('\nRun "rcs setup --force" to refresh all components.');
+		} else {
+			console.log("\nAll checks passed! RCS is ready.");
+		}
 }
 
 interface TeamDoctorIssue {
@@ -247,7 +247,7 @@ interface TeamDoctorIssue {
 }
 
 async function doctorTeam(): Promise<void> {
-	console.log("oh-my-codex doctor --team");
+	console.log("RCS doctor --team");
 	console.log("=========================\n");
 
 	const issues = await collectTeamDoctorIssues(process.cwd());
@@ -268,7 +268,7 @@ async function doctorTeam(): Promise<void> {
 	}
 
 	console.log(`\nResults: ${warningCount} warnings, ${failureCount} failed`);
-	// Ensure non-zero exit for `omx doctor --team` failures.
+	// Ensure non-zero exit for `rcs doctor --team` failures.
 	if (failureCount > 0) process.exitCode = 1;
 }
 
@@ -276,7 +276,7 @@ async function collectTeamDoctorIssues(
 	cwd: string,
 ): Promise<TeamDoctorIssue[]> {
 	const issues: TeamDoctorIssue[] = [];
-	const stateDir = omxStateDir(cwd);
+	const stateDir = rcsStateDir(cwd);
 	const teamsRoot = join(stateDir, "team");
 	const nowMs = Date.now();
 	const lagThresholdMs = 60_000;
@@ -324,7 +324,7 @@ async function collectTeamDoctorIssues(
 		const manifestPath = join(teamDir, "manifest.v2.json");
 		const configPath = join(teamDir, "config.json");
 
-		let tmuxSession = `omx-team-${teamName}`;
+		let tmuxSession = `rcs-team-${teamName}`;
 		let workerLaunchMode: "interactive" | "prompt" = "interactive";
 		let promptWorkers: Array<{ name?: string; pid?: number }> = [];
 		if (existsSync(manifestPath)) {
@@ -468,8 +468,8 @@ async function collectTeamDoctorIssues(
 			if (leaderIsStale && !tmuxUnavailable) {
 				// Check if any team tmux session has live worker panes
 				for (const teamName of teamDirs) {
-					const session = knownTeamSessions.has(`omx-team-${teamName}`)
-						? `omx-team-${teamName}`
+					const session = knownTeamSessions.has(`rcs-team-${teamName}`)
+						? `rcs-team-${teamName}`
 						: [...knownTeamSessions].find((s) => s.includes(teamName));
 					if (!session || !tmuxSessions.has(session)) continue;
 					issues.push({
@@ -549,7 +549,7 @@ function listTeamTmuxSessions(): Set<string> | null {
 	const sessions = (res.stdout || "")
 		.split("\n")
 		.map((s) => s.trim())
-		.filter((s) => s.startsWith("omx-team-"));
+			.filter((s) => s.startsWith("rcs-team-"));
 	return new Set(sessions);
 }
 
@@ -628,13 +628,13 @@ export function checkExploreHarness(
 	env: NodeJS.ProcessEnv = process.env,
 ): Check {
 	const packageRoot = getPackageRoot();
-	const manifestPath = join(packageRoot, "crates", "omx-explore", "Cargo.toml");
+	const manifestPath = join(packageRoot, "crates", "rcs-explore", "Cargo.toml");
 	if (!existsSync(manifestPath)) {
 		return {
 			name: "Explore Harness",
 			status: "warn",
 			message:
-				"Rust harness sources not found in this install (omx explore unavailable until packaged or OMX_EXPLORE_BIN is set)",
+				"Rust harness sources not found in this install (rcs explore unavailable until packaged or RCS_EXPLORE_BIN is set)",
 		};
 	}
 
@@ -651,7 +651,7 @@ export function checkExploreHarness(
 		return {
 			name: "Explore Harness",
 			status: "warn",
-			message: `OMX_EXPLORE_BIN is set but path was not found (${override})`,
+			message: `RCS_EXPLORE_BIN is set but path was not found (${override})`,
 		};
 	}
 
@@ -686,7 +686,7 @@ export function checkExploreHarness(
 			return {
 				name: "Explore Harness",
 				status: "warn",
-				message: `Rust harness sources are packaged, but no compatible packaged prebuilt or cargo was found (install Rust or set ${EXPLORE_BIN_ENV} for omx explore)`,
+				message: `Rust harness sources are packaged, but no compatible packaged prebuilt or cargo was found (install Rust or set ${EXPLORE_BIN_ENV} for rcs explore)`,
 			};
 		}
 		return {
@@ -755,21 +755,21 @@ async function checkConfig(configPath: string): Promise<Check> {
 			};
 		}
 
-		if (hasLegacyOmxTeamRunTable(content)) {
+		if (hasLegacyRcsTeamRunTable(content)) {
 			return {
 				name: "Config",
 				status: "warn",
 				message:
-					'retired [mcp_servers.omx_team_run] table still present; run "omx setup --force" to repair the config',
+					'retired [mcp_servers.rcs_team_run] table still present; run "rcs setup --force" to repair the config',
 			};
 		}
 
-		const hasOmx = content.includes("omx_") || content.includes("oh-my-codex");
-		if (hasOmx) {
+		const hasRcsTomlSignals = content.includes("rcs_") || content.includes("roblox-ai-os-creator-skills");
+		if (hasRcsTomlSignals) {
 			return {
 				name: "Config",
 				status: "pass",
-				message: "config.toml has OMX entries",
+				message: "config.toml has RCS entries",
 			};
 		}
 
@@ -777,7 +777,7 @@ async function checkConfig(configPath: string): Promise<Check> {
 			name: "Config",
 			status: "warn",
 			message:
-				'config.toml exists but no OMX entries yet (expected before first setup; run "omx setup --force" once)',
+				'config.toml exists but no RCS entries yet (expected before first setup; run "rcs setup --force" once)',
 		};
 	} catch {
 		return {
@@ -795,7 +795,7 @@ function formatContextRecommendationWarning(
 ): string {
 	return `${configuredValues.join(
 		", ",
-	)} exceeds the OMX setup recommendation for gpt-5.5 (${recommendedContextWindow} / ${recommendedAutoCompactLimit}); doctor does not rewrite user config, so lower these values or verify your active Codex runtime/provider behavior if this customization is intentional`;
+	)} exceeds the RCS setup recommendation for gpt-5.5 (${recommendedContextWindow} / ${recommendedAutoCompactLimit}); doctor does not rewrite user config, so lower these values or verify your active Codex runtime/provider behavior if this customization is intentional`;
 }
 
 async function checkModelContextRecommendation(
@@ -848,7 +848,7 @@ async function checkModelContextRecommendation(
 }
 
 async function checkExploreRouting(configPath: string): Promise<Check> {
-	const envValue = process.env[OMX_EXPLORE_CMD_ENV];
+	const envValue = process.env[RCS_EXPLORE_CMD_ENV];
 	if (
 		typeof envValue === "string" &&
 		!isExploreCommandRoutingEnabled(process.env)
@@ -857,7 +857,7 @@ async function checkExploreRouting(configPath: string): Promise<Check> {
 			name: "Explore routing",
 			status: "warn",
 			message:
-				"disabled by environment override; enable with USE_OMX_EXPLORE_CMD=1 (or remove the explicit opt-out)",
+				"disabled by environment override; enable with USE_RCS_EXPLORE_CMD=1 (or remove the explicit opt-out)",
 		};
 	}
 
@@ -876,20 +876,20 @@ async function checkExploreRouting(configPath: string): Promise<Check> {
 			shell_environment_policy?: { set?: Record<string, unknown> };
 		};
 		const configuredValue =
-			parsed?.shell_environment_policy?.set?.USE_OMX_EXPLORE_CMD ??
-			parsed?.env?.USE_OMX_EXPLORE_CMD;
+			parsed?.shell_environment_policy?.set?.USE_RCS_EXPLORE_CMD ??
+			parsed?.env?.USE_RCS_EXPLORE_CMD;
 
 		if (
 			typeof configuredValue === "string" &&
 			!isExploreCommandRoutingEnabled({
-				USE_OMX_EXPLORE_CMD: configuredValue,
+				USE_RCS_EXPLORE_CMD: configuredValue,
 			})
 		) {
 			return {
 				name: "Explore routing",
 				status: "warn",
 				message:
-					'disabled in config.toml; set USE_OMX_EXPLORE_CMD = "1" under [shell_environment_policy.set] to restore default explore-first routing',
+					'disabled in config.toml; set USE_RCS_EXPLORE_CMD = "1" under [shell_environment_policy.set] to restore default explore-first routing',
 			};
 		}
 
@@ -915,15 +915,15 @@ async function checkNativeHooks(
 		if (existsSync(configPath)) {
 			try {
 				const configContent = await readFile(configPath, "utf-8");
-				const hasOmx =
-					configContent.includes("omx_") ||
-					configContent.includes("oh-my-codex");
-				if (hasOmx) {
+				const hasRcsTomlSignals =
+					configContent.includes("rcs_") ||
+					configContent.includes("roblox-ai-os-creator-skills");
+				if (hasRcsTomlSignals) {
 					return {
 						name: "Native hooks",
 						status: "warn",
 						message:
-							'hooks.json not found even though config.toml has OMX entries; run "omx setup --force" to restore native hook coverage',
+							'hooks.json not found even though config.toml has RCS entries; run "rcs setup --force" to restore native hook coverage',
 					};
 				}
 			} catch {
@@ -947,7 +947,7 @@ async function checkNativeHooks(
 				name: "Native hooks",
 				status: "fail",
 				message:
-					'invalid hooks.json; Codex may skip OMX hook coverage until "omx setup --force" repairs it',
+					'invalid hooks.json; Codex may skip RCS hook coverage until "rcs setup --force" repairs it',
 			};
 		}
 
@@ -955,7 +955,7 @@ async function checkNativeHooks(
 			return {
 				name: "Native hooks",
 				status: "warn",
-				message: `hooks.json is missing OMX-managed coverage for ${missingEvents.join(", ")}; run "omx setup --force" to restore native hooks`,
+				message: `hooks.json is missing RCS-managed coverage for ${missingEvents.join(", ")}; run "rcs setup --force" to restore native hooks`,
 			};
 		}
 
@@ -963,7 +963,7 @@ async function checkNativeHooks(
 			name: "Native hooks",
 			status: "pass",
 			message:
-				"hooks.json includes OMX-managed coverage for all native hook events",
+				"hooks.json includes RCS-managed coverage for all native hook events",
 		};
 	} catch {
 		return {
@@ -1062,20 +1062,20 @@ function getParsedMarketplaceRegistration(
 	const parsed = parseToml(content) as {
 		marketplaces?: Record<string, { source_type?: unknown; source?: unknown }>;
 	};
-	return parsed.marketplaces?.[OMX_LOCAL_MARKETPLACE_NAME] ?? null;
+	return parsed.marketplaces?.[RCS_LOCAL_MARKETPLACE_NAME] ?? null;
 }
 
 async function checkPluginMarketplaceRegistration(
 	configPath: string,
 ): Promise<Check> {
-	const packagedMarketplace = await resolvePackagedOmxMarketplace(
+	const packagedMarketplace = await resolvePackagedRcsMarketplace(
 		getPackageRoot(),
 	);
 	if (!packagedMarketplace) {
 		return {
 			name: "Skills",
 			status: "warn",
-			message: `plugin mode selected, but packaged ${OMX_LOCAL_MARKETPLACE_NAME} metadata was not found; reinstall oh-my-codex or run from a package that includes plugins/`,
+			message: `plugin mode selected, but packaged ${RCS_LOCAL_MARKETPLACE_NAME} metadata was not found; reinstall @jstn-sdk/rcs or run from a package that includes plugins/`,
 		};
 	}
 
@@ -1083,7 +1083,7 @@ async function checkPluginMarketplaceRegistration(
 		return {
 			name: "Skills",
 			status: "warn",
-			message: `plugin mode selected, but ${OMX_LOCAL_MARKETPLACE_NAME} is not registered because config.toml is missing; run "omx setup --plugin --force"`,
+			message: `plugin mode selected, but ${RCS_LOCAL_MARKETPLACE_NAME} is not registered because config.toml is missing; run "rcs setup --plugin --force"`,
 		};
 	}
 
@@ -1094,27 +1094,27 @@ async function checkPluginMarketplaceRegistration(
 			return {
 				name: "Skills",
 				status: "warn",
-				message: `plugin mode selected, but Codex marketplace ${OMX_LOCAL_MARKETPLACE_NAME} is not registered; run "omx setup --plugin --force"`,
+				message: `plugin mode selected, but Codex marketplace ${RCS_LOCAL_MARKETPLACE_NAME} is not registered; run "rcs setup --plugin --force"`,
 			};
 		}
 		if (registration.source_type !== "local") {
 			return {
 				name: "Skills",
 				status: "warn",
-				message: `Codex marketplace ${OMX_LOCAL_MARKETPLACE_NAME} has source_type=${String(registration.source_type)} (expected local); run "omx setup --plugin --force"`,
+				message: `Codex marketplace ${RCS_LOCAL_MARKETPLACE_NAME} has source_type=${String(registration.source_type)} (expected local); run "rcs setup --plugin --force"`,
 			};
 		}
 		if (registration.source !== getPackageRoot()) {
 			return {
 				name: "Skills",
 				status: "warn",
-				message: `Codex marketplace ${OMX_LOCAL_MARKETPLACE_NAME} points to ${String(registration.source)} (expected ${getPackageRoot()}); run "omx setup --plugin --force"`,
+				message: `Codex marketplace ${RCS_LOCAL_MARKETPLACE_NAME} points to ${String(registration.source)} (expected ${getPackageRoot()}); run "rcs setup --plugin --force"`,
 			};
 		}
 		return {
 			name: "Skills",
 			status: "pass",
-			message: `plugin marketplace ${OMX_LOCAL_MARKETPLACE_NAME} registered; OMX skills are supplied by ${packagedMarketplace.pluginRoot}`,
+			message: `plugin marketplace ${RCS_LOCAL_MARKETPLACE_NAME} registered; RCS skills are supplied by ${packagedMarketplace.pluginRoot}`,
 		};
 	} catch {
 		return {
@@ -1190,7 +1190,7 @@ function checkAgentsMd(
 		return {
 			name: "AGENTS.md",
 			status: "warn",
-			message: `not found in ${userAgentsMd} (run omx setup --scope user)`,
+			message: `not found in ${userAgentsMd} (run rcs setup --scope user)`,
 		};
 	}
 
@@ -1214,7 +1214,7 @@ function checkAgentsMd(
 		name: "AGENTS.md",
 		status: "warn",
 		message:
-			"not found in project root (run omx agents-init . or omx setup --scope project)",
+			"not found in project root (run rcs agents-init . or rcs setup --scope project)",
 	};
 }
 
@@ -1280,7 +1280,7 @@ async function checkMcpServers(
 				name: "MCP Servers",
 				status: "warn",
 				message:
-					'plugin mode selected, but config.toml is missing; run "omx setup --plugin --force" to register plugin discovery',
+					'plugin mode selected, but config.toml is missing; run "rcs setup --plugin --force" to register plugin discovery',
 			};
 		}
 		return {
@@ -1292,11 +1292,11 @@ async function checkMcpServers(
 	try {
 		const content = await readFile(configPath, "utf-8");
 		const mcpCount = (content.match(/\[mcp_servers\./g) || []).length;
-		if (hasLegacyOmxTeamRunTable(content)) {
+		if (hasLegacyRcsTeamRunTable(content)) {
 			return {
 				name: "MCP Servers",
 				status: "warn",
-				message: `${mcpCount} servers configured, but retired [mcp_servers.omx_team_run] is not supported; run "omx setup --force" to repair the config`,
+				message: `${mcpCount} servers configured, but retired [mcp_servers.rcs_team_run] is not supported; run "rcs setup --force" to repair the config`,
 			};
 		}
 		if (installMode === "plugin") {
@@ -1304,24 +1304,24 @@ async function checkMcpServers(
 				name: "MCP Servers",
 				status: "pass",
 				message:
-					"plugin mode uses plugin-scoped MCP metadata; setup-owned OMX MCP tables are intentionally omitted",
+					"plugin mode uses plugin-scoped MCP metadata; setup-owned RCS MCP tables are intentionally omitted",
 			};
 		}
 		if (mcpCount > 0) {
-			const hasOmx = OMX_FIRST_PARTY_MCP_SERVER_NAMES.some((name) =>
+			const hasRcsFirstPartyMcp = RCS_FIRST_PARTY_MCP_SERVER_NAMES.some((name) =>
 				content.includes(name),
 			);
-			if (hasOmx) {
+			if (hasRcsFirstPartyMcp) {
 				return {
 					name: "MCP Servers",
 					status: "pass",
-					message: `${mcpCount} servers configured (OMX present)`,
+					message: `${mcpCount} servers configured (RCS present)`,
 				};
 			}
 			return {
 				name: "MCP Servers",
 				status: "warn",
-				message: `${mcpCount} servers but no OMX servers yet (expected before first setup; run "omx setup --force" once)`,
+				message: `${mcpCount} servers but no RCS servers yet (expected before first setup; run "rcs setup --force" once)`,
 			};
 		}
 		return {

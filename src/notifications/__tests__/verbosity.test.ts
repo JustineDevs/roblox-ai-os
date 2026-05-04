@@ -35,43 +35,43 @@ const basePayload: FullNotificationPayload = {
 // ---------------------------------------------------------------------------
 
 describe('getVerbosity', () => {
-  const origEnv = process.env.OMX_NOTIFY_VERBOSITY;
+  const origEnv = process.env.RCS_NOTIFY_VERBOSITY;
 
   afterEach(() => {
     if (origEnv === undefined) {
-      delete process.env.OMX_NOTIFY_VERBOSITY;
+      delete process.env.RCS_NOTIFY_VERBOSITY;
     } else {
-      process.env.OMX_NOTIFY_VERBOSITY = origEnv;
+      process.env.RCS_NOTIFY_VERBOSITY = origEnv;
     }
   });
 
   it('defaults to "session" when no config or env var', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     assert.equal(getVerbosity(makeConfig()), 'session');
   });
 
   it('reads verbosity from config', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     assert.equal(getVerbosity(makeConfig({ verbosity: 'minimal' })), 'minimal');
   });
 
   it('env var overrides config', () => {
-    process.env.OMX_NOTIFY_VERBOSITY = 'verbose';
+    process.env.RCS_NOTIFY_VERBOSITY = 'verbose';
     assert.equal(getVerbosity(makeConfig({ verbosity: 'minimal' })), 'verbose');
   });
 
   it('ignores invalid env var and falls back to config', () => {
-    process.env.OMX_NOTIFY_VERBOSITY = 'invalid';
+    process.env.RCS_NOTIFY_VERBOSITY = 'invalid';
     assert.equal(getVerbosity(makeConfig({ verbosity: 'agent' })), 'agent');
   });
 
   it('ignores invalid config value and falls back to default', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     assert.equal(getVerbosity(makeConfig({ verbosity: 'bogus' as VerbosityLevel })), 'session');
   });
 
   it('handles null config gracefully', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     assert.equal(getVerbosity(null), 'session');
   });
 });
@@ -148,48 +148,48 @@ describe('shouldIncludeTmuxTail', () => {
 // ---------------------------------------------------------------------------
 
 describe('isEventEnabled with verbosity', () => {
-  const origEnv = process.env.OMX_NOTIFY_VERBOSITY;
+  const origEnv = process.env.RCS_NOTIFY_VERBOSITY;
 
   afterEach(() => {
     if (origEnv === undefined) {
-      delete process.env.OMX_NOTIFY_VERBOSITY;
+      delete process.env.RCS_NOTIFY_VERBOSITY;
     } else {
-      process.env.OMX_NOTIFY_VERBOSITY = origEnv;
+      process.env.RCS_NOTIFY_VERBOSITY = origEnv;
     }
   });
 
   it('minimal config blocks session-idle', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     const config = makeConfig({ verbosity: 'minimal' });
     assert.equal(isEventEnabled(config, 'session-idle'), false);
   });
 
   it('minimal config allows session-end', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     const config = makeConfig({ verbosity: 'minimal' });
     assert.equal(isEventEnabled(config, 'session-end'), true);
   });
 
   it('session config allows session-idle', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     const config = makeConfig({ verbosity: 'session' });
     assert.equal(isEventEnabled(config, 'session-idle'), true);
   });
 
   it('session config blocks ask-user-question', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     const config = makeConfig({ verbosity: 'session' });
     assert.equal(isEventEnabled(config, 'ask-user-question'), false);
   });
 
   it('env var override takes precedence', () => {
-    process.env.OMX_NOTIFY_VERBOSITY = 'verbose';
+    process.env.RCS_NOTIFY_VERBOSITY = 'verbose';
     const config = makeConfig({ verbosity: 'minimal' });
     assert.equal(isEventEnabled(config, 'ask-user-question'), true);
   });
 
   it('openclaw-only config passes the platform gate', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     const config: FullNotificationConfig = {
       enabled: true,
       openclaw: { enabled: true },
@@ -198,7 +198,7 @@ describe('isEventEnabled with verbosity', () => {
   });
 
   it('openclaw-only config returns true when event has no per-event override', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     const config: FullNotificationConfig = {
       enabled: true,
       openclaw: { enabled: true },
@@ -207,7 +207,7 @@ describe('isEventEnabled with verbosity', () => {
   });
 
   it('openclaw-only config returns false when globally disabled', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     const config: FullNotificationConfig = {
       enabled: false,
       openclaw: { enabled: true },
@@ -216,7 +216,7 @@ describe('isEventEnabled with verbosity', () => {
   });
 
   it('openclaw-only config falls through to top-level check when event config exists without platform overrides', () => {
-    delete process.env.OMX_NOTIFY_VERBOSITY;
+    delete process.env.RCS_NOTIFY_VERBOSITY;
     const config: FullNotificationConfig = {
       enabled: true,
       openclaw: { enabled: true },

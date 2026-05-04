@@ -4,7 +4,7 @@ Status: approved migration contract for runtime, hooks, MCP state, and prompt/do
 
 ## Purpose
 
-This document locks the canonical terminal stop vocabulary for active OMX workflows.
+This document locks the canonical terminal stop vocabulary for active RCS workflows.
 It exists so runtime code, native/fallback Stop handlers, MCP state, and user-facing handoff guidance all describe the same end-of-turn semantics.
 
 ## Canonical terminal lifecycle outcomes
@@ -17,11 +17,11 @@ These are the only canonical user-facing terminal lifecycle outcomes for the exp
 | `blocked` | Progress cannot continue because a non-user prerequisite is missing. | Do not auto-continue until the blocker changes. | Report the blocker, why it matters, and the required handoff. |
 | `failed` | The workflow or verification failed. | Do not auto-continue until the failure is addressed. | Report failure evidence, impact, and recommended recovery. |
 | `userinterlude` | The user intentionally interrupted or paused the run. | Do not auto-continue unless the user explicitly restarts it. | Report that the stop was user-originated, not model-originated. |
-| `askuserQuestion` | OMX must ask the user a blocking question before safe progress can continue. | Do not auto-continue until the question is answered. | Ask one concrete blocking question and record the question metadata. |
+| `askuserQuestion` | RCS must ask the user a blocking question before safe progress can continue. | Do not auto-continue until the question is answered. | Ask one concrete blocking question and record the question metadata. |
 
 `askuserQuestion` and `userinterlude` are intentionally distinct:
 
-- `askuserQuestion` is model-originated and should normally be backed by `omx question` or equivalent machine-readable question metadata.
+- `askuserQuestion` is model-originated and should normally be backed by `rcs question` or equivalent machine-readable question metadata.
 - `userinterlude` is user-originated interruption/stop intent.
 
 ## Legacy compatibility rules
@@ -31,7 +31,7 @@ Legacy values may still appear in persisted state during migration, but they are
 | Legacy value | Canonical interpretation |
 | --- | --- |
 | `finish`, `complete`, `completed`, `done` | normalize to `finished` |
-| `blocked_on_user` | compatibility-only user-wait signal; map to `askuserQuestion` when question metadata proves OMX asked a blocking question, otherwise map to `userinterlude`/user-wait compatibility according to the surrounding context |
+| `blocked_on_user` | compatibility-only user-wait signal; map to `askuserQuestion` when question metadata proves RCS asked a blocking question, otherwise map to `userinterlude`/user-wait compatibility according to the surrounding context |
 | `cancelled`, `canceled`, `abort`, `aborted` | internal legacy/admin stop compatibility only; do **not** present as a canonical user-facing lifecycle outcome |
 
 ### `cancelled` policy

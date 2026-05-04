@@ -26,16 +26,16 @@ type HooksFile = {
   [key: string]: unknown;
 };
 
-function runOmx(
+function runRcsCli(
   cwd: string,
   argv: string[],
   envOverrides: Record<string, string> = {},
 ): { status: number | null; stdout: string; stderr: string; error: string } {
   const testDir = dirname(fileURLToPath(import.meta.url));
   const repoRoot = join(testDir, "..", "..", "..");
-  const omxBin = join(repoRoot, "dist", "cli", "omx.js");
+  const rcsBin = join(repoRoot, "dist", "cli", "rcs.js");
   const resolvedHome = envOverrides.HOME ?? process.env.HOME;
-  const result = spawnSync(process.execPath, [omxBin, ...argv], {
+  const result = spawnSync(process.execPath, [rcsBin, ...argv], {
     cwd,
     encoding: "utf-8",
     env: {
@@ -94,9 +94,9 @@ function cloneRegistration(entry: HookRegistration): HookRegistration {
   return structuredClone(entry) as HookRegistration;
 }
 
-describe("omx setup/uninstall shared ownership for native hooks", () => {
+describe("rcs setup/uninstall shared ownership for native hooks", () => {
   it("setup merges managed wrappers into an existing user-owned hooks.json", async () => {
-    const wd = await mkdtemp(join(tmpdir(), "omx-setup-hooks-existing-user-file-"));
+    const wd = await mkdtemp(join(tmpdir(), "rcs-setup-hooks-existing-user-file-"));
     try {
       const home = join(wd, "home");
       const codexDir = join(wd, ".codex");
@@ -113,7 +113,7 @@ describe("omx setup/uninstall shared ownership for native hooks", () => {
         },
       });
 
-      const setupResult = runOmx(wd, ["setup", "--scope", "project"], {
+      const setupResult = runRcsCli(wd, ["setup", "--scope", "project"], {
         HOME: home,
       });
       if (shouldSkipForSpawnPermissions(setupResult.error)) return;
@@ -147,13 +147,13 @@ describe("omx setup/uninstall shared ownership for native hooks", () => {
     }
   });
 
-  it("setup preserves user hooks while deduping stale OMX wrappers", async () => {
-    const wd = await mkdtemp(join(tmpdir(), "omx-setup-hooks-ownership-"));
+  it("setup preserves user hooks while deduping stale RCS wrappers", async () => {
+    const wd = await mkdtemp(join(tmpdir(), "rcs-setup-hooks-ownership-"));
     try {
       const home = join(wd, "home");
       await mkdir(home, { recursive: true });
 
-      const initial = runOmx(wd, ["setup", "--scope", "project"], { HOME: home });
+      const initial = runRcsCli(wd, ["setup", "--scope", "project"], { HOME: home });
       if (shouldSkipForSpawnPermissions(initial.error)) return;
       assert.equal(initial.status, 0, initial.stderr || initial.stdout);
 
@@ -165,7 +165,7 @@ describe("omx setup/uninstall shared ownership for native hooks", () => {
       const staleManagedSessionStart = cloneRegistration(generatedSessionStart[0]!);
       if (staleManagedSessionStart.hooks?.[0]) {
         staleManagedSessionStart.hooks[0].command = 'node "/tmp/old/codex-native-hook.js"';
-        staleManagedSessionStart.hooks[0].statusMessage = "stale omx wrapper";
+        staleManagedSessionStart.hooks[0].statusMessage = "stale rcs wrapper";
       }
 
       await writeHooksJson(hooksPath, {
@@ -184,7 +184,7 @@ describe("omx setup/uninstall shared ownership for native hooks", () => {
         },
       });
 
-      const refreshedSetup = runOmx(wd, ["setup", "--scope", "project"], { HOME: home });
+      const refreshedSetup = runRcsCli(wd, ["setup", "--scope", "project"], { HOME: home });
       if (shouldSkipForSpawnPermissions(refreshedSetup.error)) return;
       assert.equal(refreshedSetup.status, 0, refreshedSetup.stderr || refreshedSetup.stdout);
 
@@ -219,13 +219,13 @@ describe("omx setup/uninstall shared ownership for native hooks", () => {
     }
   });
 
-  it("uninstall removes only OMX-managed wrappers and preserves user hook content", async () => {
-    const wd = await mkdtemp(join(tmpdir(), "omx-uninstall-hooks-ownership-"));
+  it("uninstall removes only RCS-managed wrappers and preserves user hook content", async () => {
+    const wd = await mkdtemp(join(tmpdir(), "rcs-uninstall-hooks-ownership-"));
     try {
       const home = join(wd, "home");
       await mkdir(home, { recursive: true });
 
-      const initial = runOmx(wd, ["setup", "--scope", "project"], { HOME: home });
+      const initial = runRcsCli(wd, ["setup", "--scope", "project"], { HOME: home });
       if (shouldSkipForSpawnPermissions(initial.error)) return;
       assert.equal(initial.status, 0, initial.stderr || initial.stdout);
 
@@ -247,7 +247,7 @@ describe("omx setup/uninstall shared ownership for native hooks", () => {
         },
       });
 
-      const uninstall = runOmx(wd, ["uninstall"], { HOME: home });
+      const uninstall = runRcsCli(wd, ["uninstall"], { HOME: home });
       if (shouldSkipForSpawnPermissions(uninstall.error)) return;
       assert.equal(uninstall.status, 0, uninstall.stderr || uninstall.stdout);
 
@@ -260,7 +260,7 @@ describe("omx setup/uninstall shared ownership for native hooks", () => {
       assert.equal(
         allCommands.some((command) => command.includes("codex-native-hook.js")),
         false,
-        "uninstall should strip only OMX-managed wrappers",
+        "uninstall should strip only RCS-managed wrappers",
       );
     } finally {
       await rm(wd, { recursive: true, force: true });

@@ -22,7 +22,7 @@ function makeEvent(event = 'session-start'): HookEventEnvelope {
 
 describe('HookPluginSdk public surface', () => {
   it('does not expose a pluginState alias at runtime', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-sdk-surface-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-sdk-surface-'));
     try {
       const sdk = createHookPluginSdk({ cwd, pluginName: 'test', event: makeEvent() });
       assert.equal('state' in sdk, true);

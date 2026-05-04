@@ -10,7 +10,7 @@ import { initTeamState } from '../state.js';
 const longDisplay = 'this-is-a-very-long-team-display-name-that-would-overflow';
 
 async function writePhase(cwd: string, teamName: string, currentPhase: string, updatedAt: string): Promise<void> {
-  await writeFile(join(cwd, '.omx', 'state', 'team', teamName, 'phase.json'), JSON.stringify({
+  await writeFile(join(cwd, '.rcs', 'state', 'team', teamName, 'phase.json'), JSON.stringify({
     current_phase: currentPhase,
     max_fix_attempts: 3,
     current_fix_attempt: 0,
@@ -40,18 +40,18 @@ describe('team identity', () => {
     assert.equal(scope.paneId, '%42');
   });
 
-  it('resolves display names from OMX_TEAM_STATE_ROOT when cwd has no local team state', async () => {
-    const leaderCwd = await mkdtemp(join(tmpdir(), 'omx-team-identity-leader-'));
-    const workerCwd = await mkdtemp(join(tmpdir(), 'omx-team-identity-worker-'));
+  it('resolves display names from RCS_TEAM_STATE_ROOT when cwd has no local team state', async () => {
+    const leaderCwd = await mkdtemp(join(tmpdir(), 'rcs-team-identity-leader-'));
+    const workerCwd = await mkdtemp(join(tmpdir(), 'rcs-team-identity-worker-'));
     try {
-      await initTeamState('shared-demo-aaaaaaaa', 'task', 'executor', 1, leaderCwd, undefined, { OMX_SESSION_ID: 'session-shared' }, {
+      await initTeamState('shared-demo-aaaaaaaa', 'task', 'executor', 1, leaderCwd, undefined, { RCS_SESSION_ID: 'session-shared' }, {
         display_name: 'shared-demo', requested_name: 'shared-demo', identity_source: 'env-session',
       });
 
       assert.equal(
         resolveTeamNameForCurrentContext('shared-demo', workerCwd, {
-          OMX_SESSION_ID: 'session-shared',
-          OMX_TEAM_STATE_ROOT: join(leaderCwd, '.omx', 'state'),
+          RCS_SESSION_ID: 'session-shared',
+          RCS_TEAM_STATE_ROOT: join(leaderCwd, '.rcs', 'state'),
         }),
         'shared-demo-aaaaaaaa',
       );
@@ -64,12 +64,12 @@ describe('team identity', () => {
 
 
   it('prefers active display-name candidates over retained terminal states', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-identity-active-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-identity-active-'));
     try {
-      await initTeamState('demo-active', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-active' }, {
+      await initTeamState('demo-active', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-active' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
-      await initTeamState('demo-terminal', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-terminal' }, {
+      await initTeamState('demo-terminal', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-terminal' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
       await writePhase(cwd, 'demo-terminal', 'complete', '2026-01-01T00:00:00.000Z');
@@ -82,12 +82,12 @@ describe('team identity', () => {
 
 
   it('prefers active display-name candidates over an exact retained terminal directory', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-identity-exact-terminal-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-identity-exact-terminal-'));
     try {
-      await initTeamState('demo', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-terminal' }, {
+      await initTeamState('demo', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-terminal' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
-      await initTeamState('demo-aaaaaaaa', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-active' }, {
+      await initTeamState('demo-aaaaaaaa', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-active' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
       await writePhase(cwd, 'demo', 'complete', '2026-01-01T00:00:00.000Z');
@@ -99,46 +99,46 @@ describe('team identity', () => {
   });
 
   it('uses current leader identity to break active display-name ties', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-identity-current-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-identity-current-'));
     try {
-      await initTeamState('demo-aaaaaaaa', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-a' }, {
+      await initTeamState('demo-aaaaaaaa', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-a' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
-      await initTeamState('demo-bbbbbbbb', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-b' }, {
+      await initTeamState('demo-bbbbbbbb', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-b' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
 
-      assert.equal(resolveTeamNameForCurrentContext('demo', cwd, { OMX_SESSION_ID: 'session-b' }), 'demo-bbbbbbbb');
+      assert.equal(resolveTeamNameForCurrentContext('demo', cwd, { RCS_SESSION_ID: 'session-b' }), 'demo-bbbbbbbb');
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
   it('uses current leader identity before latest retained terminal state', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-identity-terminal-current-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-identity-terminal-current-'));
     try {
-      await initTeamState('demo-old-current', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-current' }, {
+      await initTeamState('demo-old-current', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-current' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
-      await initTeamState('demo-new-other', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-other' }, {
+      await initTeamState('demo-new-other', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-other' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
       await writePhase(cwd, 'demo-old-current', 'failed', '2026-01-01T00:00:00.000Z');
       await writePhase(cwd, 'demo-new-other', 'complete', '2026-01-02T00:00:00.000Z');
 
-      assert.equal(resolveTeamNameForCurrentContext('demo', cwd, { OMX_SESSION_ID: 'session-current' }), 'demo-old-current');
+      assert.equal(resolveTeamNameForCurrentContext('demo', cwd, { RCS_SESSION_ID: 'session-current' }), 'demo-old-current');
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
   it('resolves the latest retained terminal display-name state only when unambiguous', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-identity-latest-terminal-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-identity-latest-terminal-'));
     try {
-      await initTeamState('demo-old', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-old' }, {
+      await initTeamState('demo-old', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-old' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
-      await initTeamState('demo-new', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-new' }, {
+      await initTeamState('demo-new', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-new' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
       await writePhase(cwd, 'demo-old', 'failed', '2026-01-01T00:00:00.000Z');
@@ -156,7 +156,7 @@ describe('team identity', () => {
 
 
   it('sanitizes unsafe lookup input instead of returning raw path-like names', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-identity-unsafe-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-identity-unsafe-'));
     try {
       assert.equal(resolveTeamNameForCurrentContext('../../victim', cwd, {}), 'victim');
       assert.equal(resolveTeamNameForCurrentContext('Demo Team', cwd, {}), 'demo-team');
@@ -167,16 +167,16 @@ describe('team identity', () => {
   });
 
   it('resolves display names to the current session candidate and fails closed on ambiguity', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-identity-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-identity-'));
     try {
-      await initTeamState('demo-aaaaaaaa', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-a' }, {
+      await initTeamState('demo-aaaaaaaa', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-a' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
-      await initTeamState('demo-bbbbbbbb', 'task', 'executor', 1, cwd, undefined, { OMX_SESSION_ID: 'session-b' }, {
+      await initTeamState('demo-bbbbbbbb', 'task', 'executor', 1, cwd, undefined, { RCS_SESSION_ID: 'session-b' }, {
         display_name: 'demo', requested_name: 'demo', identity_source: 'env-session',
       });
 
-      assert.equal(resolveTeamNameForCurrentContext('demo', cwd, { OMX_SESSION_ID: 'session-a' }), 'demo-aaaaaaaa');
+      assert.equal(resolveTeamNameForCurrentContext('demo', cwd, { RCS_SESSION_ID: 'session-a' }), 'demo-aaaaaaaa');
       assert.equal(resolveTeamNameForCurrentContext('demo-bbbbbbbb', cwd, {}), 'demo-bbbbbbbb');
       assert.throws(() => resolveTeamNameForCurrentContext('demo', cwd, {}), TeamLookupAmbiguityError);
     } finally {

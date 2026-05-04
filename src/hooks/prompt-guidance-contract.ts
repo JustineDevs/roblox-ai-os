@@ -17,7 +17,7 @@ const ROOT_TEMPLATE_PATTERNS = [
   rx('ASK only.*destructive.*irreversible.*credential-gated.*external-production.*materially scope-changing'),
   rx('AUTO-CONTINUE branches.*permission-handoff phrasing'),
   rx('do not ask or instruct humans.*ordinary non-destructive.*reversible actions'),
-  rx('OMX runtime manipulation.*agent responsibilities'),
+  rx('RCS runtime manipulation.*agent responsibilities'),
   rx('Keep going unless blocked'),
   rx('Ask only when blocked|Ask only when progress is impossible'),
   rx('local overrides?.*non-conflicting instructions'),
@@ -247,22 +247,22 @@ export const SKILL_CONTRACTS: GuidanceSurfaceContract[] = [
 export const PROMPT_REFACTOR_MARKER_CONTRACTS = [
   {
     id: 'runtime-overlay-markers',
-    markers: ['<!-- OMX:RUNTIME:START -->', '<!-- OMX:RUNTIME:END -->'],
+    markers: ['<!-- RCS:RUNTIME:START -->', '<!-- RCS:RUNTIME:END -->'],
     requiredPaths: ['templates/AGENTS.md', 'src/hooks/agents-overlay.ts'],
   },
   {
     id: 'team-worker-overlay-markers',
-    markers: ['<!-- OMX:TEAM:WORKER:START -->', '<!-- OMX:TEAM:WORKER:END -->'],
+    markers: ['<!-- RCS:TEAM:WORKER:START -->', '<!-- RCS:TEAM:WORKER:END -->'],
     requiredPaths: ['templates/AGENTS.md', 'src/team/worker-bootstrap.ts', 'src/hooks/agents-overlay.ts'],
   },
   {
     id: 'model-table-markers',
-    markers: ['<!-- OMX:MODELS:START -->', '<!-- OMX:MODELS:END -->'],
+    markers: ['<!-- RCS:MODELS:START -->', '<!-- RCS:MODELS:END -->'],
     requiredPaths: ['templates/AGENTS.md', 'src/utils/agents-model-table.ts'],
   },
   {
     id: 'generated-agents-marker',
-    markers: ['<!-- omx:generated:agents-md -->'],
+    markers: ['<!-- rcs:generated:agents-md -->'],
     requiredPaths: ['src/utils/agents-md.ts'],
   },
 ];
@@ -306,7 +306,7 @@ export const PROMPT_REFACTOR_INVARIANT_CONTRACTS: GuidanceSurfaceContract[] = [
   {
     id: 'deep-interview-question-gate',
     path: 'skills/deep-interview/SKILL.md',
-    requiredPatterns: [rx('omx\\s+question'), rx('Socratic|interview'), rx('ambiguity')],
+    requiredPatterns: [rx('rcs\\s+question'), rx('Socratic|interview'), rx('ambiguity')],
   },
   {
     id: 'cancel-safety-boundary',

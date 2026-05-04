@@ -39,10 +39,10 @@ describe("codex hooks helpers", () => {
     );
     assert.match(JSON.stringify(sessionStart), /echo keep-me/);
     assert.match(JSON.stringify(sessionStart), /echo standalone-user/);
-    assert.doesNotMatch(JSON.stringify(sessionStart), /Loading OMX session context/);
+    assert.doesNotMatch(JSON.stringify(sessionStart), /Loading RCS session context/);
   });
 
-  it("removes only OMX-managed wrappers during uninstall cleanup", () => {
+  it("removes only RCS-managed wrappers during uninstall cleanup", () => {
     const managedOnly = JSON.stringify(buildManagedCodexHooksConfig("/repo"));
     const preserved = JSON.stringify({
       hooks: {

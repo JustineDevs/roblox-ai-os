@@ -1,14 +1,16 @@
 import { createHash } from 'node:crypto';
 import { chmodSync, createWriteStream, existsSync, readdirSync } from 'node:fs';
-import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, stat } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, extname, join, resolve } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { Readable } from 'node:stream';
+import { fileURLToPath } from 'node:url';
+import { gunzipSync } from 'node:zlib';
 import { spawnPlatformCommandSync } from '../utils/platform-command.js';
 import { getPackageRoot } from '../utils/package.js';
 
-export type NativeProduct = 'omx-explore-harness' | 'omx-sparkshell';
+export type NativeProduct = 'rcs-explore-harness' | 'rcs-sparkshell';
 export type NativeLibc = 'musl' | 'glibc';
 
 export interface NativeReleaseAsset {
@@ -50,12 +52,12 @@ export interface ResolveLinuxNativeLibcPreferenceOptions {
   detectedRuntime?: NativeLibc;
 }
 
-const NATIVE_AUTO_FETCH_ENV = 'OMX_NATIVE_AUTO_FETCH';
-const NATIVE_MANIFEST_URL_ENV = 'OMX_NATIVE_MANIFEST_URL';
-const NATIVE_RELEASE_BASE_URL_ENV = 'OMX_NATIVE_RELEASE_BASE_URL';
-const NATIVE_CACHE_DIR_ENV = 'OMX_NATIVE_CACHE_DIR';
-export const EXPLORE_BIN_ENV = 'OMX_EXPLORE_BIN';
-export const SPARKSHELL_BIN_ENV = 'OMX_SPARKSHELL_BIN';
+const NATIVE_AUTO_FETCH_ENV = 'RCS_NATIVE_AUTO_FETCH';
+const NATIVE_MANIFEST_URL_ENV = 'RCS_NATIVE_MANIFEST_URL';
+const NATIVE_RELEASE_BASE_URL_ENV = 'RCS_NATIVE_RELEASE_BASE_URL';
+const NATIVE_CACHE_DIR_ENV = 'RCS_NATIVE_CACHE_DIR';
+export const EXPLORE_BIN_ENV = 'RCS_EXPLORE_BIN';
+export const SPARKSHELL_BIN_ENV = 'RCS_SPARKSHELL_BIN';
 
 function packageJsonPath(packageRoot = getPackageRoot()): string {
   return join(packageRoot, 'package.json');
@@ -110,9 +112,9 @@ export function resolveNativeCacheRoot(env: NodeJS.ProcessEnv = process.env): st
   const override = env[NATIVE_CACHE_DIR_ENV]?.trim();
   if (override) return resolve(override);
   if (process.platform === 'win32') {
-    return resolve(env.LOCALAPPDATA?.trim() || join(homedir(), 'AppData', 'Local'), 'oh-my-codex', 'native');
+    return resolve(env.LOCALAPPDATA?.trim() || join(homedir(), 'AppData', 'Local'), 'roblox-ai-os-creator-skills', 'native');
   }
-  return resolve(env.XDG_CACHE_HOME?.trim() || join(homedir(), '.cache'), 'oh-my-codex', 'native');
+  return resolve(env.XDG_CACHE_HOME?.trim() || join(homedir(), '.cache'), 'roblox-ai-os-creator-skills', 'native');
 }
 
 export function resolveCachedNativeBinaryPath(
@@ -229,12 +231,30 @@ export function isRepositoryCheckout(packageRoot = getPackageRoot()): boolean {
   return existsSync(join(packageRoot, '.git')) || existsSync(join(packageRoot, 'src'));
 }
 
+function resolveLocalFileSource(source: string): string | null {
+  if (source.startsWith('file://')) return fileURLToPath(source);
+  if (source.startsWith('/')) return source;
+  if (/^[A-Za-z]:[\\/]/.test(source)) return resolve(source);
+  return null;
+}
+
 export async function loadNativeReleaseManifest(
   packageRoot = getPackageRoot(),
   version?: string,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<NativeReleaseManifest> {
   const url = await resolveNativeManifestUrl(packageRoot, version, env);
+  const localPath = resolveLocalFileSource(url);
+  if (localPath) {
+    try {
+      return JSON.parse(await readFile(localPath, 'utf-8')) as NativeReleaseManifest;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        throw new Error(`[native-assets] failed to fetch native release manifest (404 Not Found) from ${url}`);
+      }
+      throw error;
+    }
+  }
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`[native-assets] failed to fetch native release manifest (${response.status} ${response.statusText}) from ${url}`);
@@ -255,6 +275,12 @@ function isUnavailableArchiveError(error: unknown): boolean {
 }
 
 async function downloadFile(url: string, destinationPath: string): Promise<void> {
+  const localPath = resolveLocalFileSource(url);
+  if (localPath) {
+    await mkdir(dirname(destinationPath), { recursive: true });
+    await copyFile(localPath, destinationPath);
+    return;
+  }
   const response = await fetch(url);
   if (!response.ok || !response.body) {
     throw new Error(`[native-assets] failed to download ${url} (${response.status} ${response.statusText})`);
@@ -269,8 +295,63 @@ async function sha256ForFile(path: string): Promise<string> {
   return hash.digest('hex');
 }
 
+function readTarString(buffer: Buffer, start: number, length: number): string {
+  return buffer.subarray(start, start + length).toString('utf8').replace(/\0.*$/, '').trim();
+}
+
+function readTarOctal(buffer: Buffer, start: number, length: number): number {
+  const raw = readTarString(buffer, start, length).replace(/\0/g, '').trim();
+  if (!raw) return 0;
+  return Number.parseInt(raw.replace(/\s/g, ''), 8) || 0;
+}
+
+async function extractTarBuffer(buffer: Buffer, destinationDir: string): Promise<void> {
+  await mkdir(destinationDir, { recursive: true });
+  let offset = 0;
+
+  while (offset + 512 <= buffer.length) {
+    const header = buffer.subarray(offset, offset + 512);
+    if (header.every((byte) => byte === 0)) break;
+
+    const name = readTarString(header, 0, 100);
+    const prefix = readTarString(header, 345, 155);
+    const entryPath = prefix ? `${prefix}/${name}` : name;
+    const size = readTarOctal(header, 124, 12);
+    const typeFlag = readTarString(header, 156, 1) || '0';
+    const contentStart = offset + 512;
+    const contentEnd = contentStart + size;
+    const targetPath = join(destinationDir, entryPath);
+
+    if (typeFlag === '5') {
+      await mkdir(targetPath, { recursive: true });
+    } else if (entryPath) {
+      await mkdir(dirname(targetPath), { recursive: true });
+      await writeFile(targetPath, buffer.subarray(contentStart, contentEnd));
+    }
+
+    const paddedSize = Math.ceil(size / 512) * 512;
+    offset = contentStart + paddedSize;
+  }
+}
+
+async function extractTarArchive(archivePath: string, destinationDir: string): Promise<boolean> {
+  if (!(archivePath.endsWith('.tar.gz') || archivePath.endsWith('.tgz') || archivePath.endsWith('.tar'))) {
+    return false;
+  }
+
+  const archiveBuffer = await readFile(archivePath);
+  const tarBuffer = archivePath.endsWith('.tar')
+    ? archiveBuffer
+    : gunzipSync(archiveBuffer);
+  await extractTarBuffer(tarBuffer, destinationDir);
+  return true;
+}
+
 async function extractArchive(archivePath: string, destinationDir: string): Promise<void> {
   await mkdir(destinationDir, { recursive: true });
+  if (await extractTarArchive(archivePath, destinationDir)) {
+    return;
+  }
   const ext = extname(archivePath).toLowerCase();
   if (ext === '.zip') {
     const { result } = spawnPlatformCommandSync(

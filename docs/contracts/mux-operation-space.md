@@ -1,6 +1,6 @@
-# OMX ↔ mux canonical operation space
+# RCS ↔ mux canonical operation space
 
-This document defines the mux boundary owned by OMX core semantics.
+This document defines the mux boundary owned by RCS core semantics.
 
 ## Canonical operations
 
@@ -33,7 +33,7 @@ This document defines the mux boundary owned by OMX core semantics.
 
 ## TmuxAdapter implementation
 
-`TmuxAdapter` is fully implemented in `crates/omx-mux/src/tmux.rs`. All six canonical operations are supported. All `MuxOperation`, `MuxOutcome`, `MuxTarget`, and related types derive `Serialize`/`Deserialize`.
+`TmuxAdapter` is fully implemented in `crates/rcs-mux/src/tmux.rs`. All six canonical operations are supported. All `MuxOperation`, `MuxOutcome`, `MuxTarget`, and related types derive `Serialize`/`Deserialize`.
 
 Exact tmux CLI invocations per operation:
 
@@ -46,4 +46,4 @@ Exact tmux CLI invocations per operation:
 | `Attach` | `tmux attach-session -t <target>` |
 | `Detach` | `tmux detach-client -t <target>` |
 
-Target handles use the format `session_name:window_index.pane_index` (e.g. `"omx:0.1"`). `MuxTarget::Detached` is rejected for all operations that require a real pane.
+Target handles use the format `session_name:window_index.pane_index` (e.g. `"rcs:0.1"`). `MuxTarget::Detached` is rejected for all operations that require a real pane.

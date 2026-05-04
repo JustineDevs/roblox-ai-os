@@ -174,14 +174,14 @@ function buildLaunchHints(
 ): FollowupLaunchHints {
   if (mode === 'team') {
     return {
-      shellCommand: `omx team ${recommendedHeadcount}:${fallbackRole} ${toQuotedCliArg(task)}`,
+      shellCommand: `rcs team ${recommendedHeadcount}:${fallbackRole} ${toQuotedCliArg(task)}`,
       skillCommand: `$team ${recommendedHeadcount}:${fallbackRole} ${toQuotedCliArg(task)}`,
       rationale: 'Launch team directly when coordinated parallel delivery plus built-in verification lanes are sufficient without a separate linked Ralph launch.',
     };
   }
 
   return {
-    shellCommand: `omx ralph ${toQuotedCliArg(task)}`,
+    shellCommand: `rcs ralph ${toQuotedCliArg(task)}`,
     skillCommand: `$ralph ${toQuotedCliArg(task)}`,
     rationale: 'Launch Ralph directly when one persistent implementation + verification loop is sufficient without team coordination overhead.',
   };
@@ -196,7 +196,7 @@ function buildVerificationPlan(
     return {
       summary: 'Use team as the coordinated execution and verification owner: delivery lanes run in parallel while a dedicated verification lane captures fresh evidence before shutdown.',
       checkpoints: [
-        'Launch via `omx team ...` (or `$team ...`) so the team runtime owns both parallel delivery and coordinated verification.',
+        'Launch via `rcs team ...` (or `$team ...`) so the team runtime owns both parallel delivery and coordinated verification.',
         `Keep ${qualityLane?.role ?? 'the verification lane'} focused on tests, regression coverage, and evidence capture before team shutdown.`,
         'Escalate to a separate Ralph run only when a later manual follow-up still needs a persistent single-owner verification/fix loop.',
       ],

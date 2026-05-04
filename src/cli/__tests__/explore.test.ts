@@ -26,20 +26,20 @@ import {
 import { writePage, WIKI_SCHEMA_VERSION } from '../../wiki/index.js';
 import { withPackagedExploreHarnessHidden, withPackagedExploreHarnessLock } from './packaged-explore-harness-lock.js';
 
-function runOmx(
+function runRcsCli(
   cwd: string,
   argv: string[],
   envOverrides: Record<string, string> = {},
 ): { status: number | null; stdout: string; stderr: string; error?: string } {
   const testDir = dirname(fileURLToPath(import.meta.url));
   const repoRoot = join(testDir, '..', '..', '..');
-  const omxBin = join(repoRoot, 'dist', 'cli', 'omx.js');
-  const nodeWrapper = join(cwd, '.omx-test-node.sh');
+  const rcsBin = join(repoRoot, 'dist', 'cli', 'rcs.js');
+  const nodeWrapper = join(cwd, '.rcs-test-node.sh');
   if (!existsSync(nodeWrapper)) {
     writeFileSync(nodeWrapper, '#!/bin/sh\nexec node "$@"\n');
     chmodSync(nodeWrapper, 0o755);
   }
-  const r = spawnSync(nodeWrapper, [omxBin, ...argv], {
+  const r = spawnSync(nodeWrapper, [rcsBin, ...argv], {
     cwd,
     encoding: 'utf-8',
     env: { ...process.env, CODEX_HOME: '', ...envOverrides },
@@ -54,6 +54,11 @@ function normalizeDarwinTmpPath(value: string): string {
 
 function shouldSkipForSpawnPermissions(err?: string): boolean {
   return typeof err === 'string' && /(EPERM|EACCES)/i.test(err);
+}
+
+function shouldSkipLocalListen(err: unknown): boolean {
+  const code = err && typeof err === 'object' && 'code' in err ? String((err as NodeJS.ErrnoException).code) : '';
+  return code === 'EPERM' || code === 'EACCES';
 }
 
 async function runExploreCommandForTest(
@@ -311,7 +316,7 @@ describe('parseExploreArgs', () => {
 
 describe('loadExplorePrompt', () => {
   it('reads prompt file content', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-prompt-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-prompt-'));
     try {
       const promptPath = join(wd, 'prompt.md');
       await writeFile(promptPath, '  find symbol refs  \n');
@@ -324,7 +329,7 @@ describe('loadExplorePrompt', () => {
 
 describe('buildExplorePromptWithWikiContext', () => {
   it('injects wiki matches into the explore prompt when local wiki pages exist', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-wiki-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-wiki-'));
     try {
       writePage(wd, {
         filename: 'runtime.md',
@@ -343,19 +348,19 @@ describe('buildExplorePromptWithWikiContext', () => {
       });
 
       const prompt = buildExplorePromptWithWikiContext('how does session-start work', wd);
-      assert.match(prompt, /\[OMX Wiki Context\]/);
+      assert.match(prompt, /\[RCS Wiki Context\]/);
       assert.match(prompt, /Runtime Architecture/);
       assert.match(prompt, /prefer repository-backed facts/i);
       assert.match(prompt, /Wiki mismatch/);
       assert.match(prompt, /Original Explore Prompt/);
-      assert.equal(existsSync(join(wd, '.omx', 'wiki', 'log.md')), false);
+      assert.equal(existsSync(join(wd, '.rcs', 'wiki', 'log.md')), false);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
   it('does not mutate wiki logs when building read-only wiki context', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-wiki-log-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-wiki-log-'));
     try {
       writePage(wd, {
         filename: 'runtime.md',
@@ -374,7 +379,7 @@ describe('buildExplorePromptWithWikiContext', () => {
       });
 
       buildExplorePromptWithWikiContext('session-start lifecycle', wd);
-      const logPath = join(wd, '.omx', 'wiki', 'log.md');
+      const logPath = join(wd, '.rcs', 'wiki', 'log.md');
       assert.equal(existsSync(logPath), false);
 
       // sanity: direct query callers still log by default
@@ -388,10 +393,10 @@ describe('buildExplorePromptWithWikiContext', () => {
   });
 
   it('warns when wiki pages are missing or too weak', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-no-wiki-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-no-wiki-'));
     try {
       const prompt = buildExplorePromptWithWikiContext('find auth', wd);
-      assert.match(prompt, /\[OMX Wiki Status\]/);
+      assert.match(prompt, /\[RCS Wiki Status\]/);
       assert.match(prompt, /build an initial project wiki/i);
       assert.match(prompt, /Original Explore Prompt/);
     } finally {
@@ -400,7 +405,7 @@ describe('buildExplorePromptWithWikiContext', () => {
   });
 
   it('warns when the wiki directory is missing entirely', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-missing-wiki-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-missing-wiki-'));
     try {
       const prompt = buildExplorePromptWithWikiContext('find auth', wd);
       assert.match(prompt, /Wiki evidence is weak or missing/i);
@@ -413,12 +418,12 @@ describe('buildExplorePromptWithWikiContext', () => {
 
 describe('resolvePackagedExploreHarnessCommand', () => {
   it('uses a packaged native binary when metadata matches the current platform', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-packaged-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-packaged-'));
     try {
       const binDir = join(wd, 'bin');
       await mkdir(binDir, { recursive: true });
       await writeFile(join(wd, 'package.json'), '{}\n');
-      await writeFile(join(binDir, 'omx-explore-harness.meta.json'), JSON.stringify({
+      await writeFile(join(binDir, 'rcs-explore-harness.meta.json'), JSON.stringify({
         binaryName: packagedExploreHarnessBinaryName(),
         platform: process.platform,
         arch: process.arch,
@@ -435,12 +440,12 @@ describe('resolvePackagedExploreHarnessCommand', () => {
   });
 
   it('ignores packaged binaries built for a different platform', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-packaged-mismatch-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-packaged-mismatch-'));
     try {
       const binDir = join(wd, 'bin');
       await mkdir(binDir, { recursive: true });
       await writeFile(join(wd, 'package.json'), '{}\n');
-      await writeFile(join(binDir, 'omx-explore-harness.meta.json'), JSON.stringify({
+      await writeFile(join(binDir, 'rcs-explore-harness.meta.json'), JSON.stringify({
         binaryName: packagedExploreHarnessBinaryName('linux'),
         platform: process.platform === 'win32' ? 'linux' : 'win32',
         arch: process.arch,
@@ -456,18 +461,18 @@ describe('resolvePackagedExploreHarnessCommand', () => {
 
 describe('resolveExploreHarnessCommand', () => {
   it('uses env override when provided', () => {
-    const resolved = resolveExploreHarnessCommand('/repo', { OMX_EXPLORE_BIN: '/tmp/omx-explore-stub' } as NodeJS.ProcessEnv);
-    assert.deepEqual(resolved, { command: '/tmp/omx-explore-stub', args: [] });
+    const resolved = resolveExploreHarnessCommand('/repo', { RCS_EXPLORE_BIN: '/tmp/rcs-explore-stub' } as NodeJS.ProcessEnv);
+    assert.deepEqual(resolved, { command: '/tmp/rcs-explore-stub', args: [] });
   });
 
   it('prefers a packaged native harness binary when present', async () => {
     await withPackagedExploreHarnessLock(async () => {
-      const wd = await mkdtemp(join(tmpdir(), 'omx-explore-native-'));
+      const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-native-'));
       try {
         const binDir = join(wd, 'bin');
         await mkdir(binDir, { recursive: true });
         await writeFile(join(wd, 'package.json'), '{}\n');
-        await writeFile(join(binDir, 'omx-explore-harness.meta.json'), JSON.stringify({
+        await writeFile(join(binDir, 'rcs-explore-harness.meta.json'), JSON.stringify({
           binaryName: packagedExploreHarnessBinaryName(),
           platform: process.platform,
           arch: process.arch,
@@ -485,15 +490,15 @@ describe('resolveExploreHarnessCommand', () => {
   });
 
   it('uses an existing repo-built native harness before cargo fallback', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-target-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-target-'));
     try {
       const targetDir = join(wd, 'target', 'release');
       await mkdir(targetDir, { recursive: true });
       await writeFile(join(wd, 'package.json'), '{}\n');
       await writeFile(join(targetDir, packagedExploreHarnessBinaryName()), '#!/bin/sh\nexit 0\n');
       await chmod(join(targetDir, packagedExploreHarnessBinaryName()), 0o755);
-      await mkdir(join(wd, 'crates', 'omx-explore'), { recursive: true });
-      await writeFile(join(wd, 'crates', 'omx-explore', 'Cargo.toml'), '[package]\nname="omx-explore-harness"\nversion="0.0.0"\n');
+      await mkdir(join(wd, 'crates', 'rcs-explore'), { recursive: true });
+      await writeFile(join(wd, 'crates', 'rcs-explore', 'Cargo.toml'), '[package]\nname="rcs-explore-harness"\nversion="0.0.0"\n');
 
       const repoBuilt = repoBuiltExploreHarnessCommand(wd);
       assert.deepEqual(repoBuilt, { command: join(targetDir, packagedExploreHarnessBinaryName()), args: [] });
@@ -506,24 +511,24 @@ describe('resolveExploreHarnessCommand', () => {
   });
 
   it('builds cargo fallback command otherwise', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-fallback-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-fallback-'));
     try {
-      const crateDir = join(wd, 'crates', 'omx-explore');
+      const crateDir = join(wd, 'crates', 'rcs-explore');
       await mkdir(crateDir, { recursive: true });
       await writeFile(join(wd, 'package.json'), '{}\n');
-      await writeFile(join(crateDir, 'Cargo.toml'), '[package]\nname = "omx-explore-harness"\nversion = "0.0.0"\n');
+      await writeFile(join(crateDir, 'Cargo.toml'), '[package]\nname = "rcs-explore-harness"\nversion = "0.0.0"\n');
 
       const resolved = resolveExploreHarnessCommand(wd, {} as NodeJS.ProcessEnv);
       assert.equal(resolved.command, 'cargo');
       assert.ok(resolved.args.includes('--manifest-path'));
-      assert.ok(resolved.args.includes(join(wd, 'crates', 'omx-explore', 'Cargo.toml')));
+      assert.ok(resolved.args.includes(join(wd, 'crates', 'rcs-explore', 'Cargo.toml')));
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
   it('hydrates a native harness for packaged installs before attempting cargo fallback', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-hydrated-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-hydrated-'));
     try {
       const assetRoot = join(wd, 'assets');
       const cacheDir = join(wd, 'cache');
@@ -532,54 +537,64 @@ describe('resolveExploreHarnessCommand', () => {
       await mkdir(stagingDir, { recursive: true });
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/oh-my-codex.git' },
+        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
       }));
-      await mkdir(join(wd, 'crates', 'omx-explore'), { recursive: true });
-      await writeFile(join(wd, 'crates', 'omx-explore', 'Cargo.toml'), '[package]\nname=\"omx-explore-harness\"\nversion=\"0.8.15\"\n');
+      await mkdir(join(wd, 'crates', 'rcs-explore'), { recursive: true });
+      await writeFile(join(wd, 'crates', 'rcs-explore', 'Cargo.toml'), '[package]\nname=\"rcs-explore-harness\"\nversion=\"0.8.15\"\n');
       const binaryPath = join(stagingDir, packagedExploreHarnessBinaryName());
       await writeFile(binaryPath, '#!/bin/sh\necho hydrated-explore\n');
       await chmod(binaryPath, 0o755);
 
-      const archiveName = `omx-explore-harness-${process.platform}-${process.arch}.tar.gz`;
+      const archiveName = `rcs-explore-harness-${process.platform}-${process.arch}.tar.gz`;
       const archivePath = join(assetRoot, archiveName);
       const archive = spawnSync('tar', ['-czf', archivePath, '-C', stagingDir, packagedExploreHarnessBinaryName()], { encoding: 'utf-8' });
       assert.equal(archive.status, 0, archive.stderr || archive.stdout);
       const archiveBuffer = await readFile(archivePath);
       const checksum = createHash('sha256').update(archiveBuffer).digest('hex');
 
-      const server = await new Promise<{ baseUrl: string; close: () => Promise<void> }>((resolve) => {
-        const srv = createServer(async (req, res) => {
-          const url = new URL(req.url || '/', 'http://127.0.0.1');
-          const filePath = join(assetRoot, url.pathname.replace(/^\//, ''));
-          try {
-            res.writeHead(200);
-            res.end(await readFile(filePath));
-          } catch {
-            res.writeHead(404);
-            res.end('missing');
-          }
-        });
-        srv.listen(0, '127.0.0.1', () => {
-          const address = srv.address();
-          if (!address || typeof address === 'string') throw new Error('bad address');
-          resolve({
-            baseUrl: `http://127.0.0.1:${address.port}`,
-            close: () => new Promise<void>((done, reject) => srv.close((err: Error | undefined) => err ? reject(err) : done())),
+      let server: { baseUrl: string; close: () => Promise<void> };
+      try {
+        server = await new Promise<{ baseUrl: string; close: () => Promise<void> }>((resolve, reject) => {
+          const srv = createServer(async (req, res) => {
+            const url = new URL(req.url || '/', 'http://127.0.0.1');
+            const filePath = join(assetRoot, url.pathname.replace(/^\//, ''));
+            try {
+              res.writeHead(200);
+              res.end(await readFile(filePath));
+            } catch {
+              res.writeHead(404);
+              res.end('missing');
+            }
+          });
+          srv.once('error', reject);
+          srv.listen(0, '127.0.0.1', () => {
+            const address = srv.address();
+            if (!address || typeof address === 'string') {
+              reject(new Error('bad address'));
+              return;
+            }
+            resolve({
+              baseUrl: `http://127.0.0.1:${address.port}`,
+              close: () => new Promise<void>((done, rejectClose) => srv.close((err: Error | undefined) => err ? rejectClose(err) : done())),
+            });
           });
         });
-      });
+      } catch (err) {
+        if (shouldSkipLocalListen(err)) return;
+        throw err;
+      }
 
       try {
         await writeFile(join(assetRoot, 'native-release-manifest.json'), JSON.stringify({
           version: '0.8.15',
           assets: [{
-            product: 'omx-explore-harness',
+            product: 'rcs-explore-harness',
             version: '0.8.15',
             platform: process.platform,
             arch: process.arch,
             archive: archiveName,
-            binary: 'omx-explore-harness',
-            binary_path: 'omx-explore-harness',
+            binary: 'rcs-explore-harness',
+            binary_path: 'rcs-explore-harness',
             sha256: checksum,
             size: archiveBuffer.length,
             download_url: `${server.baseUrl}/${archiveName}`,
@@ -587,8 +602,8 @@ describe('resolveExploreHarnessCommand', () => {
         }, null, 2));
 
         const resolved = await resolveExploreHarnessCommandWithHydration(wd, {
-          OMX_NATIVE_MANIFEST_URL: `${server.baseUrl}/native-release-manifest.json`,
-          OMX_NATIVE_CACHE_DIR: cacheDir,
+          RCS_NATIVE_MANIFEST_URL: `${server.baseUrl}/native-release-manifest.json`,
+          RCS_NATIVE_CACHE_DIR: cacheDir,
         } as NodeJS.ProcessEnv);
         assert.notEqual(resolved.command, 'cargo');
         assert.match(resolved.command, /cache/);
@@ -601,32 +616,42 @@ describe('resolveExploreHarnessCommand', () => {
   });
 
   it('reports a clean fallback error when the native manifest is unavailable for packaged installs', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-missing-manifest-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-missing-manifest-'));
     try {
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/oh-my-codex.git' },
+        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
       }));
-      const server = await new Promise<{ baseUrl: string; close: () => Promise<void> }>((resolve) => {
-        const srv = createServer((_req, res) => {
-          res.writeHead(404);
-          res.end('missing');
-        });
-        srv.listen(0, '127.0.0.1', () => {
-          const address = srv.address();
-          if (!address || typeof address === 'string') throw new Error('bad address');
-          resolve({
-            baseUrl: `http://127.0.0.1:${address.port}`,
-            close: () => new Promise<void>((done, reject) => srv.close((err: Error | undefined) => err ? reject(err) : done())),
+      let server: { baseUrl: string; close: () => Promise<void> };
+      try {
+        server = await new Promise<{ baseUrl: string; close: () => Promise<void> }>((resolve, reject) => {
+          const srv = createServer((_req, res) => {
+            res.writeHead(404);
+            res.end('missing');
+          });
+          srv.once('error', reject);
+          srv.listen(0, '127.0.0.1', () => {
+            const address = srv.address();
+            if (!address || typeof address === 'string') {
+              reject(new Error('bad address'));
+              return;
+            }
+            resolve({
+              baseUrl: `http://127.0.0.1:${address.port}`,
+              close: () => new Promise<void>((done, rejectClose) => srv.close((err: Error | undefined) => err ? rejectClose(err) : done())),
+            });
           });
         });
-      });
+      } catch (err) {
+        if (shouldSkipLocalListen(err)) return;
+        throw err;
+      }
 
       try {
         await assert.rejects(
           () => resolveExploreHarnessCommandWithHydration(wd, {
-            OMX_NATIVE_MANIFEST_URL: `${server.baseUrl}/native-release-manifest.json`,
-            OMX_NATIVE_CACHE_DIR: join(wd, 'cache'),
+            RCS_NATIVE_MANIFEST_URL: `${server.baseUrl}/native-release-manifest.json`,
+            RCS_NATIVE_CACHE_DIR: join(wd, 'cache'),
           } as NodeJS.ProcessEnv),
           /no compatible native harness is available/,
         );
@@ -641,18 +666,18 @@ describe('resolveExploreHarnessCommand', () => {
 
 describe('buildExploreHarnessArgs', () => {
   it('includes cwd, prompt, prompt contract, and constrained model settings', () => {
-    const wd = join(tmpdir(), 'omx-explore-arg-test');
+    const wd = join(tmpdir(), 'rcs-explore-arg-test');
     const isolatedCodexHome = join(
       tmpdir(),
-      `omx-explore-defaults-${process.pid}-${Date.now()}`,
+      `rcs-explore-defaults-${process.pid}-${Date.now()}`,
     );
     const savedEnv = new Map<string, string | undefined>();
     for (const key of [
       'CODEX_HOME',
-      'OMX_DEFAULT_FRONTIER_MODEL',
-      'OMX_DEFAULT_STANDARD_MODEL',
-      'OMX_DEFAULT_SPARK_MODEL',
-      'OMX_SPARK_MODEL',
+      'RCS_DEFAULT_FRONTIER_MODEL',
+      'RCS_DEFAULT_STANDARD_MODEL',
+      'RCS_DEFAULT_SPARK_MODEL',
+      'RCS_SPARK_MODEL',
     ] as const) {
       savedEnv.set(key, process.env[key]);
       delete process.env[key];
@@ -661,7 +686,7 @@ describe('buildExploreHarnessArgs', () => {
     try {
       const args = buildExploreHarnessArgs('find auth', wd, {
         CODEX_HOME: isolatedCodexHome,
-        OMX_EXPLORE_SPARK_MODEL: 'spark-model',
+        RCS_EXPLORE_SPARK_MODEL: 'spark-model',
       } as NodeJS.ProcessEnv, '/pkg');
       assert.deepEqual(args.slice(0, 3), ['--cwd', wd, '--prompt']);
       assert.match(args[3] || '', /Original Explore Prompt/);
@@ -685,17 +710,17 @@ describe('buildExploreHarnessArgs', () => {
   });
 
   it('honors configured env overrides for fallback model and instructions file', async () => {
-    const codexHome = await mkdtemp(join(tmpdir(), 'omx-explore-config-env-'));
-    await writeFile(join(codexHome, '.omx-config.json'), JSON.stringify({
+    const codexHome = await mkdtemp(join(tmpdir(), 'rcs-explore-config-env-'));
+    await writeFile(join(codexHome, '.rcs-config.json'), JSON.stringify({
       env: {
-        OMX_DEFAULT_STANDARD_MODEL: 'standard-local',
-        OMX_DEFAULT_SPARK_MODEL: 'spark-local',
-        OMX_EXPLORE_MODEL_INSTRUCTIONS_FILE: '/config/explore-instructions.md',
+        RCS_DEFAULT_STANDARD_MODEL: 'standard-local',
+        RCS_DEFAULT_SPARK_MODEL: 'spark-local',
+        RCS_EXPLORE_MODEL_INSTRUCTIONS_FILE: '/config/explore-instructions.md',
       },
     }));
 
     try {
-      const wd = join(tmpdir(), 'omx-explore-arg-test');
+      const wd = join(tmpdir(), 'rcs-explore-arg-test');
       const args = buildExploreHarnessArgs('find auth', wd, {
         CODEX_HOME: codexHome,
       } as NodeJS.ProcessEnv, '/pkg');
@@ -715,16 +740,16 @@ describe('buildExploreHarnessArgs', () => {
   });
 
   it('applies persisted project CODEX_HOME fallback before reading explore config overrides', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-project-codex-home-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-project-codex-home-'));
     const badHome = join(wd, 'home-as-file');
     await writeFile(badHome, 'not-a-directory');
-    await mkdir(join(wd, '.omx'), { recursive: true });
-    await writeFile(join(wd, '.omx', 'setup-scope.json'), JSON.stringify({ scope: 'project' }));
+    await mkdir(join(wd, '.rcs'), { recursive: true });
+    await writeFile(join(wd, '.rcs', 'setup-scope.json'), JSON.stringify({ scope: 'project' }));
     await mkdir(join(wd, '.codex'), { recursive: true });
-    await writeFile(join(wd, '.codex', '.omx-config.json'), JSON.stringify({
+    await writeFile(join(wd, '.codex', '.rcs-config.json'), JSON.stringify({
       env: {
-        OMX_DEFAULT_STANDARD_MODEL: 'standard-project',
-        OMX_DEFAULT_SPARK_MODEL: 'spark-project',
+        RCS_DEFAULT_STANDARD_MODEL: 'standard-project',
+        RCS_DEFAULT_SPARK_MODEL: 'spark-project',
       },
     }));
 
@@ -775,7 +800,7 @@ describe('resolveExploreSparkShellRoute', () => {
 
 describe('exploreCommand', () => {
   it('routes qualifying read-only shell commands through sparkshell instead of the direct harness', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-sparkshell-route-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-sparkshell-route-'));
     try {
       const sparkshellStub = join(wd, 'sparkshell-stub.sh');
       const harnessStub = join(wd, 'explore-stub.sh');
@@ -788,9 +813,9 @@ describe('exploreCommand', () => {
       await chmod(sparkshellStub, 0o755);
       await chmod(harnessStub, 0o755);
 
-      const result = runOmx(wd, ['explore', '--prompt', 'git log --oneline'], {
-        OMX_SPARKSHELL_BIN: sparkshellStub,
-        OMX_EXPLORE_BIN: harnessStub,
+      const result = runRcsCli(wd, ['explore', '--prompt', 'git log --oneline'], {
+        RCS_SPARKSHELL_BIN: sparkshellStub,
+        RCS_EXPLORE_BIN: harnessStub,
       });
       if (shouldSkipForSpawnPermissions(result.error)) return;
 
@@ -805,7 +830,7 @@ describe('exploreCommand', () => {
   });
 
   it('falls back to the explore harness when sparkshell backend is unavailable', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-sparkshell-fallback-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-sparkshell-fallback-'));
     try {
       const harnessStub = join(wd, 'explore-stub.sh');
       await writeFile(
@@ -814,9 +839,9 @@ describe('exploreCommand', () => {
       );
       await chmod(harnessStub, 0o755);
 
-      const result = runOmx(wd, ['explore', '--prompt', 'git log --oneline'], {
-        OMX_SPARKSHELL_BIN: join(wd, 'missing-sparkshell'),
-        OMX_EXPLORE_BIN: harnessStub,
+      const result = runRcsCli(wd, ['explore', '--prompt', 'git log --oneline'], {
+        RCS_SPARKSHELL_BIN: join(wd, 'missing-sparkshell'),
+        RCS_EXPLORE_BIN: harnessStub,
       });
       if (shouldSkipForSpawnPermissions(result.error)) return;
 
@@ -830,13 +855,13 @@ describe('exploreCommand', () => {
   });
 
   it('falls back to the explore harness when sparkshell is GLIBC-incompatible', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-sparkshell-glibc-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-sparkshell-glibc-'));
     try {
       const sparkshellStub = join(wd, 'sparkshell-stub.sh');
       const harnessStub = join(wd, 'explore-stub.sh');
       await writeFile(
         sparkshellStub,
-        "#!/bin/sh\necho \"omx-sparkshell: /lib/x86_64-linux-gnu/libc.so.6: version \\`GLIBC_2.39' not found\" 1>&2\nexit 1\n",
+        "#!/bin/sh\necho \"rcs-sparkshell: /lib/x86_64-linux-gnu/libc.so.6: version \\`GLIBC_2.39' not found\" 1>&2\nexit 1\n",
       );
       await writeFile(
         harnessStub,
@@ -845,9 +870,9 @@ describe('exploreCommand', () => {
       await chmod(sparkshellStub, 0o755);
       await chmod(harnessStub, 0o755);
 
-      const result = runOmx(wd, ['explore', '--prompt', 'git log --oneline'], {
-        OMX_SPARKSHELL_BIN: sparkshellStub,
-        OMX_EXPLORE_BIN: harnessStub,
+      const result = runRcsCli(wd, ['explore', '--prompt', 'git log --oneline'], {
+        RCS_SPARKSHELL_BIN: sparkshellStub,
+        RCS_EXPLORE_BIN: harnessStub,
       });
       if (shouldSkipForSpawnPermissions(result.error)) return;
 
@@ -862,7 +887,7 @@ describe('exploreCommand', () => {
   });
 
   it('passes prompt to harness and preserves markdown stdout', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-cmd-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-cmd-'));
     try {
       const stub = join(wd, 'explore-stub.sh');
       const capturePath = join(wd, 'capture.txt');
@@ -885,16 +910,16 @@ describe('exploreCommand', () => {
         return true;
       }) as typeof process.stderr.write;
 
-      const originalEnv = process.env.OMX_EXPLORE_BIN;
-      process.env.OMX_EXPLORE_BIN = stub;
+      const originalEnv = process.env.RCS_EXPLORE_BIN;
+      process.env.RCS_EXPLORE_BIN = stub;
       const originalCwd = process.cwd();
       process.chdir(wd);
       try {
         await exploreCommand(['--prompt', 'find', 'auth']);
       } finally {
         process.chdir(originalCwd);
-        if (originalEnv === undefined) delete process.env.OMX_EXPLORE_BIN;
-        else process.env.OMX_EXPLORE_BIN = originalEnv;
+        if (originalEnv === undefined) delete process.env.RCS_EXPLORE_BIN;
+        else process.env.RCS_EXPLORE_BIN = originalEnv;
         process.stdout.write = originalStdout;
         process.stderr.write = originalStderr;
       }
@@ -911,8 +936,8 @@ describe('exploreCommand', () => {
     }
   });
 
-  it('works end-to-end through omx explore', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-e2e-'));
+  it('works end-to-end through rcs explore', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-e2e-'));
     try {
       const stub = join(wd, 'explore-stub.sh');
       await writeFile(
@@ -921,7 +946,7 @@ describe('exploreCommand', () => {
       );
       await chmod(stub, 0o755);
 
-      const result = runOmx(wd, ['explore', '--prompt', 'find auth'], { OMX_EXPLORE_BIN: stub });
+      const result = runRcsCli(wd, ['explore', '--prompt', 'find auth'], { RCS_EXPLORE_BIN: stub });
       if (shouldSkipForSpawnPermissions(result.error)) return;
       assert.equal(result.status, 0, result.stderr || result.stdout);
       assert.equal(result.stdout, '# Answer\nReady to proceed\n');
@@ -931,23 +956,23 @@ describe('exploreCommand', () => {
   });
 
   it('passes project-local CODEX_HOME to the harness when persisted setup scope is project', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-project-codex-home-e2e-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-project-codex-home-e2e-'));
     try {
       const stub = join(wd, 'explore-stub.sh');
       const capturePath = join(wd, 'capture.txt');
       const badHome = join(wd, 'home-as-file');
       await writeFile(badHome, 'not-a-directory');
-      await mkdir(join(wd, '.omx'), { recursive: true });
-      await writeFile(join(wd, '.omx', 'setup-scope.json'), JSON.stringify({ scope: 'project' }));
+      await mkdir(join(wd, '.rcs'), { recursive: true });
+      await writeFile(join(wd, '.rcs', 'setup-scope.json'), JSON.stringify({ scope: 'project' }));
       await writeFile(
         stub,
         `#!/bin/sh\nprintf 'CODEX_HOME=%s\\n' \"$CODEX_HOME\" > ${JSON.stringify(capturePath)}\nprintf '# Answer\\nReady to proceed\\n'\n`,
       );
       await chmod(stub, 0o755);
 
-      const result = runOmx(wd, ['explore', '--prompt', 'find auth'], {
+      const result = runRcsCli(wd, ['explore', '--prompt', 'find auth'], {
         HOME: badHome,
-        OMX_EXPLORE_BIN: stub,
+        RCS_EXPLORE_BIN: stub,
       });
       if (shouldSkipForSpawnPermissions(result.error)) return;
       assert.equal(result.status, 0, result.stderr || result.stdout);
@@ -959,15 +984,15 @@ describe('exploreCommand', () => {
   });
 
   it('launches an env-node codex binary while keeping model shell commands allowlisted', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-harness-e2e-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-harness-e2e-'));
     try {
       await withPackagedExploreHarnessHidden(async () => {
         const capturePath = join(wd, 'capture.json');
         const codexStub = await writeEnvNodeCodexStub(wd, capturePath);
         const testPath = await createExploreTestPath(wd);
 
-        const result = runOmx(wd, ['explore', '--prompt', 'find buildTmuxPaneCommand'], {
-          OMX_EXPLORE_CODEX_BIN: codexStub,
+        const result = runRcsCli(wd, ['explore', '--prompt', 'find buildTmuxPaneCommand'], {
+          RCS_EXPLORE_CODEX_BIN: codexStub,
           PATH: testPath,
         });
         if (shouldSkipForSpawnPermissions(result.error)) return;
@@ -975,14 +1000,14 @@ describe('exploreCommand', () => {
         assert.equal(result.status, 0, result.stderr || result.stdout);
         assert.equal(result.stdout, '# Answer\nHarness completed\n');
         const captured = await readFile(capturePath, 'utf-8');
-        assert.match(captured, /PATH=.*omx-explore-allowlist-/);
-        assert.match(captured, /SHELL=.*omx-explore-allowlist-.*\/bin\/bash$/m);
+        assert.match(captured, /PATH=.*rcs-explore-allowlist-/);
+        assert.match(captured, /SHELL=.*rcs-explore-allowlist-.*\/bin\/bash$/m);
       assert.match(captured, /ALLOWED_STATUS=0/);
       assert.match(captured, /BLOCKED_STATUS=(?!0)\d+/);
       assert.match(captured, /--ARGV--[\s\S]*\nexec\n/);
       assert.match(captured, /model_instructions_file=.*explore-lightweight-AGENTS\.md/);
       assert.match(captured, /--ALLOWED_STDOUT--[\s\S]*ripgrep/i);
-      assert.match(captured, /--BLOCKED_STDERR--[\s\S]*not on the omx explore allowlist/);
+      assert.match(captured, /--BLOCKED_STDERR--[\s\S]*not on the rcs explore allowlist/);
       });
     } finally {
       await rm(wd, { recursive: true, force: true });
@@ -990,15 +1015,15 @@ describe('exploreCommand', () => {
   });
 
   it('bypasses a POSIX package-manager codex shim without broadening the allowlisted PATH', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-harness-posix-shim-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-harness-posix-shim-'));
     try {
       await withPackagedExploreHarnessHidden(async () => {
         const capturePath = join(wd, 'capture.txt');
         const codexShim = await writePosixPackageManagerCodexShim(wd, capturePath);
         const testPath = await createExploreTestPath(wd);
 
-        const result = runOmx(wd, ['explore', '--prompt', 'find buildTmuxPaneCommand'], {
-          OMX_EXPLORE_CODEX_BIN: codexShim,
+        const result = runRcsCli(wd, ['explore', '--prompt', 'find buildTmuxPaneCommand'], {
+          RCS_EXPLORE_CODEX_BIN: codexShim,
           PATH: testPath,
         });
         if (shouldSkipForSpawnPermissions(result.error)) return;
@@ -1008,7 +1033,7 @@ describe('exploreCommand', () => {
         const captured = await readFile(capturePath, 'utf-8');
         assert.match(captured, /ARGV0=.*\/node$/m);
         assert.match(captured, /ARGV1=.*node_modules\/@openai\/codex\/bin\/codex\.js$/m);
-        assert.match(captured, /PATH=.*omx-explore-allowlist-/);
+        assert.match(captured, /PATH=.*rcs-explore-allowlist-/);
         assert.doesNotMatch(captured, /PATH=.*node_modules\/\.bin/);
       });
     } finally {
@@ -1017,7 +1042,7 @@ describe('exploreCommand', () => {
   });
 
   it('supports --prompt-file end-to-end with the harness', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-harness-prompt-file-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-harness-prompt-file-'));
     try {
       await withPackagedExploreHarnessHidden(async () => {
         const capturePath = join(wd, 'capture.json');
@@ -1026,8 +1051,8 @@ describe('exploreCommand', () => {
         const promptPath = join(wd, 'prompt.md');
         await writeFile(promptPath, 'find prompt-file support\n');
 
-        const result = runOmx(wd, ['explore', '--prompt-file', promptPath], {
-          OMX_EXPLORE_CODEX_BIN: codexStub,
+        const result = runRcsCli(wd, ['explore', '--prompt-file', promptPath], {
+          RCS_EXPLORE_CODEX_BIN: codexStub,
           PATH: testPath,
         });
         if (shouldSkipForSpawnPermissions(result.error)) return;
@@ -1043,13 +1068,13 @@ describe('exploreCommand', () => {
   });
 
   it('preserves must-preserve facts in a long noisy summary fixture', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-fidelity-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-fidelity-'));
     try {
       await withPackagedExploreHarnessHidden(async () => {
         const harnessStub = await writeExploreHarnessScenarioStub(
           wd,
           `
-printf '%s\n' '# Answer' '## Critical facts' '- MUST: summary mode stayed read-only' '- MUST: blocked command stayed node --version' '- MUST: next command is omx team status <team-name>' '' '## Noise'
+printf '%s\n' '# Answer' '## Critical facts' '- MUST: summary mode stayed read-only' '- MUST: blocked command stayed node --version' '- MUST: next command is rcs team status <team-name>' '' '## Noise'
 i=0
 while [ "$i" -lt 80 ]; do
   printf '%s\n' "- distractor line $i"
@@ -1060,13 +1085,13 @@ exit 0
         );
 
         const result = await runExploreCommandForTest(wd, ['--prompt', 'surface the critical facts'], {
-          OMX_EXPLORE_BIN: harnessStub,
+          RCS_EXPLORE_BIN: harnessStub,
         });
 
         assert.equal(result.exitCode, 0, result.stderr || result.stdout);
         assert.match(result.stdout, /MUST: summary mode stayed read-only/);
         assert.match(result.stdout, /MUST: blocked command stayed node --version/);
-        assert.match(result.stdout, /MUST: next command is omx team status <team-name>/);
+        assert.match(result.stdout, /MUST: next command is rcs team status <team-name>/);
       });
     } finally {
       await rm(wd, { recursive: true, force: true });
@@ -1074,7 +1099,7 @@ exit 0
   });
 
   it('preserves buried critical facts in adversarial noisy output', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-adversarial-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-adversarial-'));
     try {
       await withPackagedExploreHarnessHidden(async () => {
         const harnessStub = await writeExploreHarnessScenarioStub(
@@ -1099,7 +1124,7 @@ exit 0
         );
 
         const result = await runExploreCommandForTest(wd, ['--prompt', 'extract buried signals'], {
-          OMX_EXPLORE_BIN: harnessStub,
+          RCS_EXPLORE_BIN: harnessStub,
         });
 
         assert.equal(result.exitCode, 0, result.stderr || result.stdout);
@@ -1113,22 +1138,22 @@ exit 0
   });
 
   it('falls back after spark failure with explicit output notice and actionable stderr guidance', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-fallback-success-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-fallback-success-'));
     try {
       await withPackagedExploreHarnessHidden(async () => {
         const harnessStub = await writeExploreHarnessScenarioStub(
           wd,
           `
-printf '[omx explore] fallback-attempt=model from=\`%s\` to=\`gpt-5.5\` reason=spark_attempt_failed exit=17. Cost/behavior boundary changed if fallback succeeds; stdout fallback notice is emitted only after successful fallback output.\n' "\${OMX_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
-printf '[omx explore] spark model \`%s\` unavailable or failed (exit 17). Falling back to \`gpt-5.5\`.\n' "\${OMX_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
-printf '[omx explore] spark stderr: spark timed out; retry with the frontier fallback\n' >&2
-printf '%s\n' '## OMX Explore fallback' '- fallback: model' '- from: \`spark-test-model\`' '- to: \`gpt-5.5\`' '- reason: spark attempt failed with exit 17' '- boundary: cost/behavior may differ from the low-cost spark path' '' '# Answer' '- recovered with fallback model' '- MUST: actionable recovery path remained available'
+printf '[rcs explore] fallback-attempt=model from=\`%s\` to=\`gpt-5.5\` reason=spark_attempt_failed exit=17. Cost/behavior boundary changed if fallback succeeds; stdout fallback notice is emitted only after successful fallback output.\n' "\${RCS_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
+printf '[rcs explore] spark model \`%s\` unavailable or failed (exit 17). Falling back to \`gpt-5.5\`.\n' "\${RCS_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
+printf '[rcs explore] spark stderr: spark timed out; retry with the frontier fallback\n' >&2
+printf '%s\n' '## RCS Explore fallback' '- fallback: model' '- from: \`spark-test-model\`' '- to: \`gpt-5.5\`' '- reason: spark attempt failed with exit 17' '- boundary: cost/behavior may differ from the low-cost spark path' '' '# Answer' '- recovered with fallback model' '- MUST: actionable recovery path remained available'
 `,
         );
 
         const result = await runExploreCommandForTest(wd, ['--prompt', 'validate fallback recovery'], {
-          OMX_EXPLORE_BIN: harnessStub,
-          OMX_EXPLORE_SPARK_MODEL: 'spark-test-model',
+          RCS_EXPLORE_BIN: harnessStub,
+          RCS_EXPLORE_SPARK_MODEL: 'spark-test-model',
         });
 
         assert.equal(result.exitCode, 0, result.stderr || result.stdout);
@@ -1136,7 +1161,7 @@ printf '%s\n' '## OMX Explore fallback' '- fallback: model' '- from: \`spark-tes
         assert.match(result.stderr, /stdout fallback notice is emitted only after successful fallback output/);
         assert.match(result.stderr, /spark model `spark-test-model` unavailable or failed \(exit 17\)/);
         assert.match(result.stderr, /spark stderr: spark timed out; retry with the frontier fallback/);
-        assert.match(result.stdout, /## OMX Explore fallback/);
+        assert.match(result.stdout, /## RCS Explore fallback/);
         assert.match(result.stdout, /fallback: model/);
         assert.match(result.stdout, /from: `spark-test-model`/);
         assert.match(result.stdout, /to: `gpt-5\.5`/);
@@ -1150,35 +1175,35 @@ printf '%s\n' '## OMX Explore fallback' '- fallback: model' '- from: \`spark-tes
   });
 
   it('reports both failed attempts with codes and final actionable stderr end-to-end', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-explore-fallback-failure-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-explore-fallback-failure-'));
     try {
       await withPackagedExploreHarnessHidden(async () => {
         const harnessStub = await writeExploreHarnessScenarioStub(
           wd,
           `
-printf '[omx explore] fallback-attempt=model from=\`%s\` to=\`gpt-5.5\` reason=spark_attempt_failed exit=23. Cost/behavior boundary changed if fallback succeeds; stdout fallback notice is emitted only after successful fallback output.\n' "\${OMX_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
-printf '[omx explore] spark model \`%s\` unavailable or failed (exit 23). Falling back to \`gpt-5.5\`.\n' "\${OMX_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
-printf '[omx explore] spark stderr: spark backend unavailable; install the fallback runtime\n' >&2
-printf '[omx explore] both spark (\`%s\`) and fallback (\`gpt-5.5\`) attempts failed (codes 23 / 29). Last stderr: fallback backend unavailable; set OMX_EXPLORE_BIN to a working harness\n' "\${OMX_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
+printf '[rcs explore] fallback-attempt=model from=\`%s\` to=\`gpt-5.5\` reason=spark_attempt_failed exit=23. Cost/behavior boundary changed if fallback succeeds; stdout fallback notice is emitted only after successful fallback output.\n' "\${RCS_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
+printf '[rcs explore] spark model \`%s\` unavailable or failed (exit 23). Falling back to \`gpt-5.5\`.\n' "\${RCS_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
+printf '[rcs explore] spark stderr: spark backend unavailable; install the fallback runtime\n' >&2
+printf '[rcs explore] both spark (\`%s\`) and fallback (\`gpt-5.5\`) attempts failed (codes 23 / 29). Last stderr: fallback backend unavailable; set RCS_EXPLORE_BIN to a working harness\n' "\${RCS_EXPLORE_SPARK_MODEL:-spark-test-model}" >&2
 exit 1
 `,
         );
 
         const result = await runExploreCommandForTest(wd, ['--prompt', 'validate failure guidance'], {
-          OMX_EXPLORE_BIN: harnessStub,
-          OMX_EXPLORE_SPARK_MODEL: 'spark-test-model',
+          RCS_EXPLORE_BIN: harnessStub,
+          RCS_EXPLORE_SPARK_MODEL: 'spark-test-model',
         });
 
         assert.equal(result.exitCode, 1, result.stderr || result.stdout);
         assert.match(result.stderr, /fallback-attempt=model from=`spark-test-model` to=`gpt-5\.5` reason=spark_attempt_failed exit=23/);
         assert.match(result.stderr, /stdout fallback notice is emitted only after successful fallback output/);
         assert.doesNotMatch(result.stderr, /output includes a fallback notice/);
-        assert.doesNotMatch(result.stdout, /## OMX Explore fallback/);
+        assert.doesNotMatch(result.stdout, /## RCS Explore fallback/);
         assert.match(result.stderr, /spark model `spark-test-model` unavailable or failed \(exit 23\)/);
         assert.match(result.stderr, /spark stderr: spark backend unavailable; install the fallback runtime/);
         assert.match(
           result.stderr,
-          /both spark \(`spark-test-model`\) and fallback \(`gpt-5\.5`\) attempts failed \(codes 23 \/ 29\)\. Last stderr: fallback backend unavailable; set OMX_EXPLORE_BIN to a working harness/,
+          /both spark \(`spark-test-model`\) and fallback \(`gpt-5\.5`\) attempts failed \(codes 23 \/ 29\)\. Last stderr: fallback backend unavailable; set RCS_EXPLORE_BIN to a working harness/,
         );
       });
     } finally {

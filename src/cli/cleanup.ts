@@ -4,9 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 const HELP = [
-  'Usage: omx cleanup [--dry-run]',
+  'Usage: rcs cleanup [--dry-run]',
   '',
-  'Kill orphaned OMX MCP server processes and remove stale OMX /tmp directories left behind by previous Codex App sessions.',
+  'Kill orphaned RCS MCP server processes and remove stale RCS /tmp directories left behind by previous Codex App sessions.',
   '',
   'Options:',
   '  --dry-run  List matching orphaned processes and stale /tmp directories without removing them',
@@ -16,10 +16,10 @@ const HELP = [
 const PROCESS_EXIT_POLL_MS = 100;
 const SIGTERM_GRACE_MS = 5_000;
 const STALE_TMP_MAX_AGE_MS = 60 * 60 * 1000;
-const OMX_MCP_SERVER_PATTERN = /(?:^|[\\/])dist[\\/]mcp[\\/](?:state|memory|code-intel|trace|wiki)-server\.(?:[cm]?js|ts)\b/i;
+const RCS_MCP_SERVER_PATTERN = /(?:^|[\\/])dist[\\/]mcp[\\/](?:state|memory|code-intel|trace|wiki)-server\.(?:[cm]?js|ts)\b/i;
 const CODEX_PROCESS_PATTERN = /(?:^|[\\/\s])codex(?:\.js)?(?:\s|$)|@openai[\\/]codex/i;
-const OMX_LAUNCH_PROCESS_PATTERN = /(?:^|[\\/\s])omx(?:\.js)?(?:\s|$)|(?:^|[\\/])(?:bin|dist[\\/]cli)[\\/]omx\.js(?:\s|$)|oh-my-codex[\\/]dist[\\/]cli[\\/]omx\.js/i;
-const OMX_TMP_DIRECTORY_PATTERN = /^(omc|omx|oh-my-codex)-/;
+const RCS_LAUNCH_PROCESS_PATTERN = /(?:^|[\\/\s])rcs(?:\.js)?(?:\s|$)|(?:^|[\\/])(?:bin|dist[\\/]cli)[\\/]rcs\.js(?:\s|$)|roblox-ai-os-creator-skills[\\/]dist[\\/]cli[\\/]rcs\.js/i;
+const RCS_TMP_DIRECTORY_PATTERN = /^(omc|rcs|roblox-ai-os-creator-skills)-/;
 const PROCESS_LIST_COMMAND_OPTIONS: ExecFileSyncOptionsWithStringEncoding = {
   encoding: 'utf-8',
   windowsHide: true,
@@ -99,9 +99,9 @@ function formatPlural(count: number, singular: string, plural = `${singular}s`):
   return `${count} ${count === 1 ? singular : plural}`;
 }
 
-export function isOmxMcpProcess(command: string): boolean {
+export function isRcsMcpProcess(command: string): boolean {
   const normalized = normalizeCommand(command);
-  return OMX_MCP_SERVER_PATTERN.test(normalized);
+  return RCS_MCP_SERVER_PATTERN.test(normalized);
 }
 
 export function parsePsOutput(output: string): ProcessEntry[] {
@@ -159,7 +159,7 @@ function parseWindowsProcessOutput(output: string): ProcessEntry[] {
     .filter((entry): entry is ProcessEntry => entry !== null);
 }
 
-function listWindowsOmxProcesses(
+function listWindowsRcsProcesses(
   runCommand: ProcessListCommandRunner,
 ): ProcessEntry[] {
   const output = runCommand(
@@ -175,10 +175,10 @@ function isBusyBoxPsCommandFieldError(error: unknown): boolean {
   return /bad -o argument ['"]command['"]|unsupported arguments:.*\bargs\b/i.test(error.message);
 }
 
-export function listOmxProcesses(
+export function listRcsProcesses(
   runCommand: ProcessListCommandRunner = defaultProcessListCommandRunner,
 ): ProcessEntry[] {
-  if (process.platform === 'win32') return listWindowsOmxProcesses(runCommand);
+  if (process.platform === 'win32') return listWindowsRcsProcesses(runCommand);
 
   try {
     const output = runCommand('ps', ['axww', '-o', 'pid=,ppid=,command='], PROCESS_LIST_COMMAND_OPTIONS);
@@ -197,8 +197,8 @@ function isCodexSessionProcess(command: string): boolean {
   return CODEX_PROCESS_PATTERN.test(normalizeCommand(command));
 }
 
-function isOmxLaunchProcess(command: string): boolean {
-  return OMX_LAUNCH_PROCESS_PATTERN.test(normalizeCommand(command));
+function isRcsLaunchProcess(command: string): boolean {
+  return RCS_LAUNCH_PROCESS_PATTERN.test(normalizeCommand(command));
 }
 
 function hasAncestorMatching(
@@ -280,7 +280,7 @@ export function findCleanupCandidates(
 
   return processes
     .filter((processEntry) => processEntry.pid !== currentPid)
-    .filter((processEntry) => isOmxMcpProcess(processEntry.command))
+    .filter((processEntry) => isRcsMcpProcess(processEntry.command))
     .filter((processEntry) => !protectedPids.has(processEntry.pid))
     .sort((left, right) => left.pid - right.pid)
     .map((processEntry) => ({
@@ -301,7 +301,7 @@ export function findLaunchSafeCleanupCandidates(
     if (candidate.ppid <= 1) return true;
     return (
       !hasAncestorMatching(processByPid, candidate.pid, isCodexSessionProcess) &&
-      !hasAncestorMatching(processByPid, candidate.pid, isOmxLaunchProcess)
+      !hasAncestorMatching(processByPid, candidate.pid, isRcsLaunchProcess)
     );
   });
 }
@@ -348,7 +348,7 @@ function formatCandidate(candidate: CleanupCandidate): string {
   return `PID ${candidate.pid} (PPID ${candidate.ppid}, ${candidate.reason}) ${candidate.command}`;
 }
 
-export async function cleanupOmxMcpProcesses(
+export async function cleanupRcsMcpProcesses(
   args: readonly string[],
   dependencies: CleanupDependencies = {},
 ): Promise<CleanupResult> {
@@ -366,7 +366,7 @@ export async function cleanupOmxMcpProcesses(
   const dryRun = args.includes('--dry-run');
   const writeLine = dependencies.writeLine ?? ((line: string) => console.log(line));
   const currentPid = dependencies.currentPid ?? process.pid;
-  const listProcessesImpl = dependencies.listProcesses ?? listOmxProcesses;
+  const listProcessesImpl = dependencies.listProcesses ?? listRcsProcesses;
   const selectCandidates = dependencies.selectCandidates ?? findCleanupCandidates;
   const isPidAlive = dependencies.isPidAlive ?? defaultIsPidAlive;
   const sendSignal = dependencies.sendSignal ?? ((pid: number, signal: NodeJS.Signals) => process.kill(pid, signal));
@@ -376,8 +376,8 @@ export async function cleanupOmxMcpProcesses(
   const candidates = selectCandidates(listProcessesImpl(), currentPid);
   if (candidates.length === 0) {
     writeLine(dryRun
-      ? 'Dry run: no orphaned OMX MCP server processes found.'
-      : 'No orphaned OMX MCP server processes found.');
+      ? 'Dry run: no orphaned RCS MCP server processes found.'
+      : 'No orphaned RCS MCP server processes found.');
     return {
       dryRun,
       candidates,
@@ -388,7 +388,7 @@ export async function cleanupOmxMcpProcesses(
   }
 
   if (dryRun) {
-    writeLine(`Dry run: would terminate ${candidates.length} orphaned OMX MCP server process(es):`);
+    writeLine(`Dry run: would terminate ${candidates.length} orphaned RCS MCP server process(es):`);
     for (const candidate of candidates) writeLine(`  ${formatCandidate(candidate)}`);
     return {
       dryRun: true,
@@ -399,7 +399,7 @@ export async function cleanupOmxMcpProcesses(
     };
   }
 
-  writeLine(`Found ${candidates.length} orphaned OMX MCP server process(es). Sending SIGTERM...`);
+  writeLine(`Found ${candidates.length} orphaned RCS MCP server process(es). Sending SIGTERM...`);
   for (const candidate of candidates) {
     try {
       sendSignal(candidate.pid, 'SIGTERM');
@@ -448,7 +448,7 @@ export async function cleanupOmxMcpProcesses(
     failedPids.push(...remainingAfterKill);
   }
 
-  writeLine(`Killed ${terminatedCount} orphaned OMX MCP server process(es)${forceKilledCount > 0 ? ` (${forceKilledCount} required SIGKILL)` : ''}.`);
+  writeLine(`Killed ${terminatedCount} orphaned RCS MCP server process(es)${forceKilledCount > 0 ? ` (${forceKilledCount} required SIGKILL)` : ''}.`);
   if (failedPids.length > 0) {
     writeLine(`Warning: ${failedPids.length} process(es) still appear alive: ${failedPids.join(', ')}`);
   }
@@ -476,7 +476,7 @@ export async function cleanupStaleTmpDirectories(
 
   const staleDirectories: string[] = [];
   for (const entry of await listTmpEntries(tmpRoot)) {
-    if (!entry.isDirectory() || !OMX_TMP_DIRECTORY_PATTERN.test(entry.name)) continue;
+    if (!entry.isDirectory() || !RCS_TMP_DIRECTORY_PATTERN.test(entry.name)) continue;
 
     const entryPath = join(tmpRoot, entry.name);
     let entryStat: { mtimeMs: number };
@@ -494,15 +494,15 @@ export async function cleanupStaleTmpDirectories(
 
   if (staleDirectories.length === 0) {
     writeLine(dryRun
-      ? 'Dry run: no stale OMX /tmp directories found.'
-      : 'No stale OMX /tmp directories found.');
+      ? 'Dry run: no stale RCS /tmp directories found.'
+      : 'No stale RCS /tmp directories found.');
     return 0;
   }
 
   const summaryTarget = formatPlural(
     staleDirectories.length,
-    'stale OMX /tmp directory',
-    'stale OMX /tmp directories',
+    'stale RCS /tmp directory',
+    'stale RCS /tmp directories',
   );
   if (dryRun) {
     writeLine(`Dry run: would remove ${summaryTarget}:`);
@@ -527,8 +527,8 @@ export async function cleanupStaleTmpDirectories(
   writeLine(
     `Removed ${formatPlural(
       removedCount,
-      'stale OMX /tmp directory',
-      'stale OMX /tmp directories',
+      'stale RCS /tmp directory',
+      'stale RCS /tmp directories',
     )}.`,
   );
   return removedCount;
@@ -538,7 +538,7 @@ export async function cleanupCommand(
   args: string[],
   dependencies: CleanupCommandDependencies = {},
 ): Promise<void> {
-  const cleanupProcesses = dependencies.cleanupProcesses ?? cleanupOmxMcpProcesses;
+  const cleanupProcesses = dependencies.cleanupProcesses ?? cleanupRcsMcpProcesses;
   const cleanupTmpDirectories = dependencies.cleanupTmpDirectories ?? cleanupStaleTmpDirectories;
 
   await cleanupProcesses(args);

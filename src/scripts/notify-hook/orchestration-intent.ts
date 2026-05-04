@@ -10,9 +10,9 @@ export const TEAM_ORCHESTRATION_INTENTS = [
   'pending-mailbox-review',
 ] as const;
 
-export const ORCHESTRATION_INTENT_TAG_PREFIX = '[OMX_INTENT:';
+export const ORCHESTRATION_INTENT_TAG_PREFIX = '[RCS_INTENT:';
 
-const ORCHESTRATION_INTENT_TAG_RE = /\s*\[OMX_INTENT:[a-z0-9-]+\]/gi;
+const ORCHESTRATION_INTENT_TAG_RE = /\s*\[RCS_INTENT:[a-z0-9-]+\]/gi;
 
 export function buildOrchestrationIntentTag(intent) {
   const normalizedIntent = safeString(intent).trim();

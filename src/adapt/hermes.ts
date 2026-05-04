@@ -12,8 +12,8 @@ import {
 } from "./contracts.js";
 
 const HERMES_HOME_ENV = "HERMES_HOME";
-const HERMES_ROOT_ENV = "OMX_ADAPT_HERMES_ROOT";
-const HERMES_BOOTSTRAP_ENV = "OMX_ADAPT_HERMES_BOOTSTRAP";
+const HERMES_ROOT_ENV = "RCS_ADAPT_HERMES_ROOT";
+const HERMES_BOOTSTRAP_ENV = "RCS_ADAPT_HERMES_BOOTSTRAP";
 const HERMES_DEFAULT_HOME = join(homedir(), ".hermes");
 const ACP_COMMANDS = ["hermes acp", "hermes-acp", "python -m acp_adapter"];
 const STATUS_COMMANDS = [
@@ -126,7 +126,7 @@ function resolveDefaultHermesSiblingRoot(cwd: string): string {
   return resolve(
     cwd,
     "..",
-    "hermes-codex-skill-omx-aware-prd",
+    "hermes-codex-skill-rcs-aware-prd",
     "external",
     "hermes-agent",
   );
@@ -356,17 +356,17 @@ export function buildHermesBootstrapMetadata(evidence: HermesEvidence): AdaptBoo
   ];
 
   const nextSteps = [
-    `Set ${HERMES_HOME_ENV} to the Hermes profile home you want OMX to observe.`,
+    `Set ${HERMES_HOME_ENV} to the Hermes profile home you want RCS to observe.`,
     `Run ${ACP_COMMANDS[0]} from ${evidence.hermesRoot} when validating ACP availability.`,
-    `Use ${STATUS_COMMANDS[0]} to confirm gateway status outside OMX if the runtime evidence looks stale.`,
+    `Use ${STATUS_COMMANDS[0]} to confirm gateway status outside RCS if the runtime evidence looks stale.`,
   ];
 
   if (process.env[HERMES_BOOTSTRAP_ENV]?.trim()) {
-    nextSteps.unshift(`Bootstrap override detected via ${HERMES_BOOTSTRAP_ENV}; keep Hermes-side reads pointed at OMX-owned adapter artifacts only.`);
+    nextSteps.unshift(`Bootstrap override detected via ${HERMES_BOOTSTRAP_ENV}; keep Hermes-side reads pointed at RCS-owned adapter artifacts only.`);
   }
 
   return {
-    summary: "Hermes bootstrap metadata maps OMX lifecycle intent into ACP and gateway guidance without claiming direct control over Hermes internals.",
+    summary: "Hermes bootstrap metadata maps RCS lifecycle intent into ACP and gateway guidance without claiming direct control over Hermes internals.",
     eventBridge: [
       "session-start -> session:start",
       "session-end -> session:end",
@@ -483,7 +483,7 @@ export function applyHermesProbe(
   if (!evidence.installed) {
     nextSteps.push(`If Hermes lives elsewhere, set ${HERMES_ROOT_ENV} and rerun the probe.`);
   } else if (!evidence.runtimeFiles.stateDbReadable) {
-    nextSteps.push(`Ensure ${HERMES_HOME_ENV} points at the Hermes profile whose state.db OMX should inspect.`);
+    nextSteps.push(`Ensure ${HERMES_HOME_ENV} points at the Hermes profile whose state.db RCS should inspect.`);
   }
 
   return {

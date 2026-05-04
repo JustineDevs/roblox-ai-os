@@ -1,9 +1,10 @@
+import { writeSync } from 'node:fs';
 import { searchSessionHistory, type SessionSearchReport, type SessionSearchOptions } from '../session-history/search.js';
 
-const HELP = `omx session - Search prior local session history
+const HELP = `rcs session - Search prior local session history
 
 Usage:
-  omx session search <query> [options]
+  rcs session search <query> [options]
 
 Options:
   --limit <n>          Maximum results to return (default: 10)
@@ -16,9 +17,9 @@ Options:
   -h, --help           Show this help
 
 Examples:
-  omx session search "worker inbox path"
-  omx session search all_workers_idle --since 7d --limit 5
-  omx session search "team api" --project current --json
+  rcs session search "worker inbox path"
+  rcs session search all_workers_idle --since 7d --limit 5
+  rcs session search "team api" --project current --json
 `;
 
 const HELP_TOKENS = new Set(['--help', '-h', 'help']);
@@ -140,7 +141,9 @@ export async function sessionCommand(args: string[]): Promise<void> {
   const parsed = parseSessionSearchArgs(args.slice(1));
   const report = await searchSessionHistory(parsed.options);
   if (parsed.json) {
-    console.log(JSON.stringify(report, null, 2));
+    const rendered = `${JSON.stringify(report, null, 2)}\n`;
+    if (process.stdout.isTTY) process.stdout.write(rendered);
+    else writeSync(1, rendered);
     return;
   }
   console.log(formatReport(report));

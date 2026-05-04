@@ -1,8 +1,10 @@
-# Ralph Upstream → OMX Parity Matrix
+# Ralph Upstream → RCS Parity Matrix
+
+> Archive compatibility reference: this matrix documents lower-level Ralph runtime parity work. The canonical public creator workflow remains `$brief -> $blueprint -> $forge / $crew -> $autoforge`.
 
 Baseline source: `docs/reference/ralph-upstream-baseline.md` (`165c3688bfde275560c001a0de4c7563cf82ad69`)
 
-| Rule ID | Upstream semantic rule | OMX implementation point(s) | Status | Verification reference |
+| Rule ID | Upstream semantic rule | RCS implementation point(s) | Status | Verification reference |
 |---|---|---|---|---|
 | R1 | Ralph iterations are persisted (`iteration`, `max_iterations`, phase progression). | `src/mcp/state-server.ts` (`state_write`), `src/cli/__tests__/session-scoped-runtime.test.ts` | adopted | V1, V4 |
 | R2 | Legacy phase labels must be normalized to canonical Ralph phases. | `src/mcp/state-server.ts` (Ralph phase normalizer), `src/mcp/__tests__/state-server-ralph-phase.test.ts` | adapted | V4 |
@@ -15,8 +17,8 @@ Baseline source: `docs/reference/ralph-upstream-baseline.md` (`165c3688bfde27556
 
 ## Status legend
 
-- **adopted**: behavior implemented directly in OMX runtime.
-- **adapted**: behavior implemented with OMX-specific contract/scope adjustments.
+- **adopted**: behavior implemented directly in RCS runtime.
+- **adapted**: behavior implemented with RCS-specific contract/scope adjustments.
 - **out-of-scope**: documented but intentionally not implemented as runtime behavior.
 
 

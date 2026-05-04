@@ -12,7 +12,7 @@ SEEDS = (17, 29, 43)
 def run_for_seed(seed: int) -> dict:
     config = json.loads(CONFIG_PATH.read_text())
     config['seed'] = seed
-    tmp_path = Path('.omx') / 'tmp' / f'noisy-bayesopt-seed-{seed}.json'
+    tmp_path = Path('.rcs') / 'tmp' / f'noisy-bayesopt-seed-{seed}.json'
     tmp_path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path.write_text(json.dumps(config))
 

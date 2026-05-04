@@ -1,12 +1,12 @@
 /**
  * OpenClaw Configuration Reader
  *
- * Reads OpenClaw config from the notifications.openclaw key in ~/.codex/.omx-config.json.
+ * Reads OpenClaw config from the notifications.openclaw key in ~/.codex/.rcs-config.json.
  * Also supports generic alias shapes under notifications.custom_cli_command
  * and notifications.custom_webhook_command, normalized to OpenClaw runtime config.
  *
  * Config is cached after first read (env vars don't change during process lifetime).
- * Config file path can be overridden via OMX_OPENCLAW_CONFIG env var (points to a separate file).
+ * Config file path can be overridden via RCS_OPENCLAW_CONFIG env var (points to a separate file).
  */
 
 import { existsSync, readFileSync } from "fs";
@@ -144,7 +144,7 @@ function normalizeFromCustomAliases(notifications: Record<string, unknown>): {
 			gatewayName,
 			parseInstruction(
 				cliAlias.instruction,
-				"OMX event {{event}} for {{projectPath}}",
+				"RCS event {{event}} for {{projectPath}}",
 			),
 			"custom_cli_command",
 		);
@@ -176,7 +176,7 @@ function normalizeFromCustomAliases(notifications: Record<string, unknown>): {
 			gatewayName,
 			parseInstruction(
 				webhookAlias.instruction,
-				"OMX event {{event}} for {{projectPath}}",
+				"RCS event {{event}} for {{projectPath}}",
 			),
 			"custom_webhook_command",
 		);
@@ -202,17 +202,17 @@ function isValidOpenClawConfig(
 	return Boolean(raw?.enabled && raw.gateways && raw.hooks);
 }
 
-function defaultOmxConfigPath(): string {
-	return join(codexHome(), ".omx-config.json");
+function defaultOpenClawRcsConfigPath(): string {
+	return join(codexHome(), ".rcs-config.json");
 }
 
 export function inspectOpenClawConfig(
 	env: NodeJS.ProcessEnv = process.env,
 ): OpenClawConfigInspection {
-	const activationGateEnabled = env.OMX_OPENCLAW === "1";
-	const commandGateEnabled = env.OMX_OPENCLAW_COMMAND === "1";
-	const envOverride = env.OMX_OPENCLAW_CONFIG?.trim();
-	const configPath = envOverride || defaultOmxConfigPath();
+	const activationGateEnabled = env.RCS_OPENCLAW === "1";
+	const commandGateEnabled = env.RCS_OPENCLAW_COMMAND === "1";
+	const envOverride = env.RCS_OPENCLAW_CONFIG?.trim();
+	const configPath = envOverride || defaultOpenClawRcsConfigPath();
 	const configExists = existsSync(configPath);
 
 	if (!activationGateEnabled) {
@@ -228,7 +228,7 @@ export function inspectOpenClawConfig(
 			aliasSources: [],
 			explicitOverridesAliases: false,
 			warnings: [],
-			detail: "OpenClaw is disabled locally because OMX_OPENCLAW=1 is not set.",
+			detail: "OpenClaw is disabled locally because RCS_OPENCLAW=1 is not set.",
 			config: null,
 		};
 	}
@@ -247,7 +247,7 @@ export function inspectOpenClawConfig(
 			explicitOverridesAliases: false,
 			warnings: [],
 			detail: envOverride
-				? `OMX_OPENCLAW_CONFIG points to ${configPath}, but the file does not exist.`
+				? `RCS_OPENCLAW_CONFIG points to ${configPath}, but the file does not exist.`
 				: `No OpenClaw config file was found at ${configPath}.`,
 			config: null,
 		};
@@ -272,7 +272,7 @@ export function inspectOpenClawConfig(
 					explicitOverridesAliases: false,
 					warnings: [],
 					detail:
-						"OMX_OPENCLAW_CONFIG is present but does not contain a valid OpenClaw config.",
+						"RCS_OPENCLAW_CONFIG is present but does not contain a valid OpenClaw config.",
 					config: null,
 				};
 			}
@@ -289,7 +289,7 @@ export function inspectOpenClawConfig(
 				aliasSources: [],
 				explicitOverridesAliases: false,
 				warnings: [],
-				detail: "OpenClaw config loaded from OMX_OPENCLAW_CONFIG.",
+				detail: "OpenClaw config loaded from RCS_OPENCLAW_CONFIG.",
 				config: raw,
 			};
 		}
@@ -313,7 +313,7 @@ export function inspectOpenClawConfig(
 				explicitOverridesAliases: false,
 				warnings: [],
 				detail:
-					"The OMX config file exists, but notifications are not configured.",
+					"The RCS config file exists, but notifications are not configured.",
 				config: null,
 			};
 		}
@@ -408,19 +408,19 @@ export function inspectOpenClawConfig(
  * Read and cache the OpenClaw configuration.
  *
  * Returns null when:
- * - OMX_OPENCLAW env var is not "1"
+ * - RCS_OPENCLAW env var is not "1"
  * - Config file does not exist
  * - Config file is invalid JSON
  * - Config has enabled: false
  *
  * Config is read from:
- * 1. OMX_OPENCLAW_CONFIG env var path (separate file), if set
- * 2. notifications.openclaw key in ~/.codex/.omx-config.json
+ * 1. RCS_OPENCLAW_CONFIG env var path (separate file), if set
+ * 2. notifications.openclaw key in ~/.codex/.rcs-config.json
  * 3. notifications.custom_cli_command / notifications.custom_webhook_command aliases
  */
 export function getOpenClawConfig(): OpenClawConfig | null {
-	// Activation gate: only active when OMX_OPENCLAW=1
-	if (process.env.OMX_OPENCLAW !== "1") {
+	// Activation gate: only active when RCS_OPENCLAW=1
+	if (process.env.RCS_OPENCLAW !== "1") {
 		return null;
 	}
 
@@ -430,10 +430,10 @@ export function getOpenClawConfig(): OpenClawConfig | null {
 	}
 
 	try {
-		const envOverride = process.env.OMX_OPENCLAW_CONFIG;
+		const envOverride = process.env.RCS_OPENCLAW_CONFIG;
 
 		if (envOverride) {
-			// OMX_OPENCLAW_CONFIG points to a separate config file
+			// RCS_OPENCLAW_CONFIG points to a separate config file
 			if (!existsSync(envOverride)) {
 				_cachedConfig = undefined;
 				return null;
@@ -449,15 +449,15 @@ export function getOpenClawConfig(): OpenClawConfig | null {
 			return raw;
 		}
 
-		// Primary: read from notifications block in .omx-config.json
-		const omxConfigPath = defaultOmxConfigPath();
-		if (!existsSync(omxConfigPath)) {
+		// Primary: read from notifications block in .rcs-config.json
+		const openclawConfigPath = defaultOpenClawRcsConfigPath();
+		if (!existsSync(openclawConfigPath)) {
 			_cachedConfig = undefined;
 			return null;
 		}
 
 		const fullConfig = JSON.parse(
-			readFileSync(omxConfigPath, "utf-8"),
+			readFileSync(openclawConfigPath, "utf-8"),
 		) as Record<string, unknown>;
 		const notifications = asRecord(fullConfig.notifications);
 		if (!notifications) {

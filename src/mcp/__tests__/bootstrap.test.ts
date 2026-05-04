@@ -24,11 +24,11 @@ const ALL_SERVERS: readonly McpServerName[] = [
 ] as const;
 
 const SERVER_DISABLE_ENV: Record<McpServerName, string> = {
-  state: 'OMX_STATE_SERVER_DISABLE_AUTO_START',
-  memory: 'OMX_MEMORY_SERVER_DISABLE_AUTO_START',
-  code_intel: 'OMX_CODE_INTEL_SERVER_DISABLE_AUTO_START',
-  trace: 'OMX_TRACE_SERVER_DISABLE_AUTO_START',
-  wiki: 'OMX_WIKI_SERVER_DISABLE_AUTO_START',
+  state: 'RCS_STATE_SERVER_DISABLE_AUTO_START',
+  memory: 'RCS_MEMORY_SERVER_DISABLE_AUTO_START',
+  code_intel: 'RCS_CODE_INTEL_SERVER_DISABLE_AUTO_START',
+  trace: 'RCS_TRACE_SERVER_DISABLE_AUTO_START',
+  wiki: 'RCS_WIKI_SERVER_DISABLE_AUTO_START',
 };
 
 const SERVER_ENTRYPOINTS: Array<{ server: McpServerName; file: string }> = [
@@ -40,14 +40,14 @@ const SERVER_ENTRYPOINTS: Array<{ server: McpServerName; file: string }> = [
 ];
 
 describe('mcp bootstrap auto-start guard', () => {
-  it('allows auto-start by default for every OMX MCP server', () => {
+  it('allows auto-start by default for every RCS MCP server', () => {
     for (const server of ALL_SERVERS) {
       assert.equal(shouldAutoStartMcpServer(server, {}), true, `${server} should auto-start by default`);
     }
   });
 
   it('disables all servers when global disable flag is set', () => {
-    const env = { OMX_MCP_SERVER_DISABLE_AUTO_START: '1' };
+    const env = { RCS_MCP_SERVER_DISABLE_AUTO_START: '1' };
 
     for (const server of ALL_SERVERS) {
       assert.equal(shouldAutoStartMcpServer(server, env), false, `${server} should honor global disable flag`);
@@ -184,19 +184,19 @@ describe('mcp duplicate sibling detection', () => {
 
   it('extracts same-entrypoint markers from command lines', () => {
     assert.equal(
-      extractMcpEntrypointMarker('node /tmp/oh-my-codex/dist/mcp/state-server.js'),
+      extractMcpEntrypointMarker('node /tmp/roblox-ai-os-creator-skills/dist/mcp/state-server.js'),
       'state-server.js',
     );
     assert.equal(
-      extractMcpEntrypointMarker('node C:\\\\tmp\\\\oh-my-codex\\\\dist\\\\mcp\\\\trace-server.ts'),
+      extractMcpEntrypointMarker('node C:\\\\tmp\\\\roblox-ai-os-creator-skills\\\\dist\\\\mcp\\\\trace-server.ts'),
       'trace-server.ts',
     );
     assert.equal(
-      extractMcpEntrypointMarker('node /tmp/dist/cli/omx.js mcp-serve state'),
+      extractMcpEntrypointMarker('node /tmp/dist/cli/rcs.js mcp-serve state'),
       'state-server.js',
     );
     assert.equal(
-      extractMcpEntrypointMarker('node /tmp/dist/cli/omx.js mcp-serve code-intel'),
+      extractMcpEntrypointMarker('node /tmp/dist/cli/rcs.js mcp-serve code-intel'),
       'code-intel-server.js',
     );
     assert.equal(extractMcpEntrypointMarker('node something-else.js'), null);
@@ -207,7 +207,7 @@ describe('mcp duplicate sibling detection', () => {
     assert.equal(
       resolveCurrentMcpEntrypointMarker(
         { [MCP_ENTRYPOINT_MARKER_ENV]: 'trace-server.js' },
-        '/repo/dist/cli/omx.js',
+        '/repo/dist/cli/rcs.js',
       ),
       'trace-server.js',
     );
@@ -262,9 +262,9 @@ describe('mcp duplicate sibling detection', () => {
 
   it('detects duplicate plugin-launched mcp-serve public-target siblings', () => {
     const processes = [
-      { pid: 101, ppid: 55, command: 'node /repo/dist/cli/omx.js mcp-serve state' },
-      { pid: 140, ppid: 55, command: 'node /repo/dist/cli/omx.js mcp-serve state' },
-      { pid: 160, ppid: 55, command: 'node /repo/dist/cli/omx.js mcp-serve memory' },
+      { pid: 101, ppid: 55, command: 'node /repo/dist/cli/rcs.js mcp-serve state' },
+      { pid: 140, ppid: 55, command: 'node /repo/dist/cli/rcs.js mcp-serve state' },
+      { pid: 160, ppid: 55, command: 'node /repo/dist/cli/rcs.js mcp-serve memory' },
     ];
 
     const older = analyzeDuplicateSiblingState(

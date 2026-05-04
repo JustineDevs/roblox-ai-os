@@ -10,7 +10,7 @@ import { monitorTeam } from '../runtime.js';
 import { planWorktreeTarget, ensureWorktree } from '../worktree.js';
 
 async function initRepo(): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), 'omx-team-hardening-e2e-repo-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-hardening-e2e-repo-'));
   execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
@@ -20,20 +20,20 @@ async function initRepo(): Promise<string> {
   return cwd;
 }
 
-const ORIGINAL_OMX_TEAM_STATE_ROOT = process.env.OMX_TEAM_STATE_ROOT;
+const ORIGINAL_RCS_TEAM_STATE_ROOT = process.env.RCS_TEAM_STATE_ROOT;
 
 beforeEach(() => {
-  delete process.env.OMX_TEAM_STATE_ROOT;
+  delete process.env.RCS_TEAM_STATE_ROOT;
 });
 
 afterEach(() => {
-  if (typeof ORIGINAL_OMX_TEAM_STATE_ROOT === 'string') process.env.OMX_TEAM_STATE_ROOT = ORIGINAL_OMX_TEAM_STATE_ROOT;
-  else delete process.env.OMX_TEAM_STATE_ROOT;
+  if (typeof ORIGINAL_RCS_TEAM_STATE_ROOT === 'string') process.env.RCS_TEAM_STATE_ROOT = ORIGINAL_RCS_TEAM_STATE_ROOT;
+  else delete process.env.RCS_TEAM_STATE_ROOT;
 });
 
 describe('team hardening e2e', () => {
   it('reopens an expired in-progress task and allows the next worker to complete the flow', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-hardening-e2e-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-hardening-e2e-'));
     try {
       await initTeamState('team-hardening-e2e', 'recover stuck work', 'executor', 2, cwd);
       const task = await createTask('team-hardening-e2e', { subject: 'recover me', description: 'd', status: 'pending' }, cwd);
@@ -41,7 +41,7 @@ describe('team hardening e2e', () => {
       assert.equal(firstClaim.ok, true);
       if (!firstClaim.ok) return;
 
-      const taskPath = join(cwd, '.omx', 'state', 'team', 'team-hardening-e2e', 'tasks', `task-${task.id}.json`);
+      const taskPath = join(cwd, '.rcs', 'state', 'team', 'team-hardening-e2e', 'tasks', `task-${task.id}.json`);
       const current = JSON.parse(await readFile(taskPath, 'utf-8')) as any;
       current.claim.leased_until = new Date(Date.now() - 1_000).toISOString();
       await writeAtomic(taskPath, JSON.stringify(current, null, 2));
@@ -85,10 +85,10 @@ describe('team hardening e2e', () => {
   });
 
   it('tolerates malformed worker status from an external team state root', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-team-hardening-worker-state-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-team-hardening-worker-state-'));
     const sharedRoot = join(cwd, 'shared-state');
     try {
-      process.env.OMX_TEAM_STATE_ROOT = sharedRoot;
+      process.env.RCS_TEAM_STATE_ROOT = sharedRoot;
       await initTeamState('team-hardening-worker-state', 'worker status corruption smoke', 'executor', 1, cwd);
 
       const statusPath = join(

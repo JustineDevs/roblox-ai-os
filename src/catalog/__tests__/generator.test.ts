@@ -20,7 +20,7 @@ async function readSourceManifestCounts(): Promise<{ skills: number; agents: num
 
 describe('catalog reader/contract', () => {
   it('prefers template manifest path when present', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'omx-catalog-'));
+    const root = await mkdtemp(join(tmpdir(), 'rcs-catalog-'));
     await mkdir(join(root, 'templates'), { recursive: true });
     await writeFile(
       join(root, 'templates', 'catalog-manifest.json'),

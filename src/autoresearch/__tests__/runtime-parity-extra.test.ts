@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -17,7 +17,7 @@ import {
 } from '../runtime.js';
 
 async function initRepo(): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), 'omx-autoresearch-parity-extra-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'rcs-autoresearch-parity-extra-'));
   execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
@@ -25,6 +25,14 @@ async function initRepo(): Promise<string> {
   execFileSync('git', ['add', 'README.md'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['commit', '-m', 'init'], { cwd, stdio: 'ignore' });
   return cwd;
+}
+
+function readHead(cwd: string): string {
+  const result = spawnSync('git', ['rev-parse', 'HEAD'], { cwd, encoding: 'utf-8' });
+  if (result.status !== 0) {
+    throw new Error((result.stderr || '').trim() || 'git rev-parse HEAD failed');
+  }
+  return (result.stdout || '').trim();
 }
 
 async function makeContract(repo: string, keepPolicy?: 'score_improvement' | 'pass_only'): Promise<AutoresearchMissionContract> {
@@ -64,7 +72,7 @@ describe('autoresearch runtime parity extras', () => {
     const repo = await initRepo();
     try {
       const contract = await makeContract(repo);
-      const worktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t020000z');
+      const worktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t020000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t020000z', worktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -90,7 +98,7 @@ describe('autoresearch runtime parity extras', () => {
     const repo = await initRepo();
     try {
       const contract = await makeContract(repo);
-      const worktreePathA = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t030000z');
+      const worktreePathA = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t030000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t030000z', worktreePathA, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -98,7 +106,7 @@ describe('autoresearch runtime parity extras', () => {
       const worktreeContractA = await materializeAutoresearchMissionToWorktree(contract, worktreePathA);
       const runtimeA = await prepareAutoresearchRuntime(worktreeContractA, repo, worktreePathA, { runTag: '20260314T030000Z' });
 
-      const worktreePathB = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t030500z');
+      const worktreePathB = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t030500z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t030500z', worktreePathB, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -119,14 +127,14 @@ describe('autoresearch runtime parity extras', () => {
     const repo = await initRepo();
     try {
       const contract = await makeContract(repo);
-      const worktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t040000z');
+      const worktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t040000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t040000z', worktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
       });
       const worktreeContract = await materializeAutoresearchMissionToWorktree(contract, worktreePath);
       const runtime = await prepareAutoresearchRuntime(worktreeContract, repo, worktreePath, { runTag: '20260314T040000Z' });
-      const statePath = join(repo, '.omx', 'state', 'autoresearch-state.json');
+      const statePath = join(repo, '.rcs', 'state', 'autoresearch-state.json');
       const idleState = {
         schema_version: 1,
         active: false,
@@ -185,7 +193,7 @@ describe('autoresearch runtime parity extras', () => {
     const repo = await initRepo();
     try {
       const contract = await makeContract(repo);
-      const worktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t050000z');
+      const worktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t050000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t050000z', worktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -195,7 +203,7 @@ describe('autoresearch runtime parity extras', () => {
       const manifest = JSON.parse(await readFile(runtime.manifestFile, 'utf-8')) as Record<string, unknown>;
       manifest.status = 'completed';
       await writeFile(runtime.manifestFile, `${JSON.stringify(manifest, null, 2)}\n`, 'utf-8');
-      await writeFile(join(repo, '.omx', 'state', 'autoresearch-state.json'), `${JSON.stringify({
+      await writeFile(join(repo, '.rcs', 'state', 'autoresearch-state.json'), `${JSON.stringify({
         schema_version: 1,
         active: false,
         run_id: runtime.runId,
@@ -219,7 +227,7 @@ describe('autoresearch runtime parity extras', () => {
     const repo = await initRepo();
     try {
       const contract = await makeContract(repo);
-      const worktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t060000z');
+      const worktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t060000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t060000z', worktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -265,7 +273,7 @@ describe('autoresearch runtime parity extras', () => {
     const repo = await initRepo();
     try {
       const contract = await makeContract(repo);
-      const worktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t070000z');
+      const worktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t070000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t070000z', worktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -291,7 +299,7 @@ describe('autoresearch runtime parity extras', () => {
       const failureResults = await readFile(runtime.resultsFile, 'utf-8');
       assert.match(failureResults, /^1\t.+\t\t\terror\tinvalid candidate$/m);
 
-      const secondWorktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t071000z');
+      const secondWorktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t071000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t071000z', secondWorktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -314,7 +322,7 @@ describe('autoresearch runtime parity extras', () => {
       assert.equal(failedManifest.status, 'failed');
       assert.match(failedManifest.stop_reason || '', /base_commit/i);
 
-      const thirdWorktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t072000z');
+      const thirdWorktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t072000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t072000z', thirdWorktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -337,7 +345,7 @@ describe('autoresearch runtime parity extras', () => {
     const repo = await initRepo();
     try {
       const contract = await makeContract(repo);
-      const worktreePath = join(repo, '.omx', 'worktrees', 'autoresearch-missions-demo-20260314t080000z');
+      const worktreePath = join(repo, '.rcs', 'worktrees', 'autoresearch-missions-demo-20260314t080000z');
       execFileSync('git', ['worktree', 'add', '-b', 'autoresearch/missions-demo/20260314t080000z', worktreePath, 'HEAD'], {
         cwd: repo,
         stdio: 'ignore',
@@ -361,7 +369,7 @@ describe('autoresearch runtime parity extras', () => {
       await writeFile(join(worktreePath, 'score.txt'), '0\n', 'utf-8');
       execFileSync('git', ['add', 'scripts/eval.js', 'score.txt'], { cwd: worktreePath, stdio: 'ignore' });
       execFileSync('git', ['commit', '-m', 'make evaluator fail'], { cwd: worktreePath, stdio: 'ignore' });
-      const failingCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worktreePath, encoding: 'utf-8' }).trim();
+      const failingCommit = readHead(worktreePath);
       await writeFile(runtime.candidateFile, `${JSON.stringify({
         status: 'candidate',
         candidate_commit: failingCommit,
@@ -376,7 +384,7 @@ describe('autoresearch runtime parity extras', () => {
       await writeFile(join(worktreePath, 'scripts', 'eval.js'), "process.stdout.write('not json');\n", 'utf-8');
       execFileSync('git', ['add', 'scripts/eval.js'], { cwd: worktreePath, stdio: 'ignore' });
       execFileSync('git', ['commit', '-m', 'break evaluator json'], { cwd: worktreePath, stdio: 'ignore' });
-      const parseErrorCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worktreePath, encoding: 'utf-8' }).trim();
+      const parseErrorCommit = readHead(worktreePath);
       await writeFile(runtime.candidateFile, `${JSON.stringify({
         status: 'candidate',
         candidate_commit: parseErrorCommit,

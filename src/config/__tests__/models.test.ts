@@ -27,19 +27,19 @@ describe('getModelForMode', () => {
   let originalSparkModel: string | undefined;
 
   beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), 'omx-models-'));
+    tempDir = await mkdtemp(join(tmpdir(), 'rcs-models-'));
     originalCodexHome = process.env.CODEX_HOME;
-    originalDefaultFrontierModel = process.env.OMX_DEFAULT_FRONTIER_MODEL;
-    originalDefaultStandardModel = process.env.OMX_DEFAULT_STANDARD_MODEL;
-    originalDefaultSparkModel = process.env.OMX_DEFAULT_SPARK_MODEL;
-    originalTeamChildModel = process.env.OMX_TEAM_CHILD_MODEL;
-    originalSparkModel = process.env.OMX_SPARK_MODEL;
+    originalDefaultFrontierModel = process.env.RCS_DEFAULT_FRONTIER_MODEL;
+    originalDefaultStandardModel = process.env.RCS_DEFAULT_STANDARD_MODEL;
+    originalDefaultSparkModel = process.env.RCS_DEFAULT_SPARK_MODEL;
+    originalTeamChildModel = process.env.RCS_TEAM_CHILD_MODEL;
+    originalSparkModel = process.env.RCS_SPARK_MODEL;
     process.env.CODEX_HOME = tempDir;
-    delete process.env.OMX_DEFAULT_FRONTIER_MODEL;
-    delete process.env.OMX_DEFAULT_STANDARD_MODEL;
-    delete process.env.OMX_DEFAULT_SPARK_MODEL;
-    delete process.env.OMX_TEAM_CHILD_MODEL;
-    delete process.env.OMX_SPARK_MODEL;
+    delete process.env.RCS_DEFAULT_FRONTIER_MODEL;
+    delete process.env.RCS_DEFAULT_STANDARD_MODEL;
+    delete process.env.RCS_DEFAULT_SPARK_MODEL;
+    delete process.env.RCS_TEAM_CHILD_MODEL;
+    delete process.env.RCS_SPARK_MODEL;
   });
 
   afterEach(async () => {
@@ -49,35 +49,35 @@ describe('getModelForMode', () => {
       delete process.env.CODEX_HOME;
     }
     if (typeof originalDefaultFrontierModel === 'string') {
-      process.env.OMX_DEFAULT_FRONTIER_MODEL = originalDefaultFrontierModel;
+      process.env.RCS_DEFAULT_FRONTIER_MODEL = originalDefaultFrontierModel;
     } else {
-      delete process.env.OMX_DEFAULT_FRONTIER_MODEL;
+      delete process.env.RCS_DEFAULT_FRONTIER_MODEL;
     }
     if (typeof originalDefaultStandardModel === 'string') {
-      process.env.OMX_DEFAULT_STANDARD_MODEL = originalDefaultStandardModel;
+      process.env.RCS_DEFAULT_STANDARD_MODEL = originalDefaultStandardModel;
     } else {
-      delete process.env.OMX_DEFAULT_STANDARD_MODEL;
+      delete process.env.RCS_DEFAULT_STANDARD_MODEL;
     }
     if (typeof originalDefaultSparkModel === 'string') {
-      process.env.OMX_DEFAULT_SPARK_MODEL = originalDefaultSparkModel;
+      process.env.RCS_DEFAULT_SPARK_MODEL = originalDefaultSparkModel;
     } else {
-      delete process.env.OMX_DEFAULT_SPARK_MODEL;
+      delete process.env.RCS_DEFAULT_SPARK_MODEL;
     }
     if (typeof originalTeamChildModel === 'string') {
-      process.env.OMX_TEAM_CHILD_MODEL = originalTeamChildModel;
+      process.env.RCS_TEAM_CHILD_MODEL = originalTeamChildModel;
     } else {
-      delete process.env.OMX_TEAM_CHILD_MODEL;
+      delete process.env.RCS_TEAM_CHILD_MODEL;
     }
     if (typeof originalSparkModel === 'string') {
-      process.env.OMX_SPARK_MODEL = originalSparkModel;
+      process.env.RCS_SPARK_MODEL = originalSparkModel;
     } else {
-      delete process.env.OMX_SPARK_MODEL;
+      delete process.env.RCS_SPARK_MODEL;
     }
     await rm(tempDir, { recursive: true, force: true });
   });
 
   async function writeConfig(config: Record<string, unknown>): Promise<void> {
-    await writeFile(join(tempDir, '.omx-config.json'), JSON.stringify(config));
+    await writeFile(join(tempDir, '.rcs-config.json'), JSON.stringify(config));
   }
 
   it('returns frontier default when config file does not exist', () => {
@@ -127,18 +127,18 @@ describe('getModelForMode', () => {
   });
 
   it('returns frontier default for malformed JSON', async () => {
-    await writeFile(join(tempDir, '.omx-config.json'), 'not-json');
+    await writeFile(join(tempDir, '.rcs-config.json'), 'not-json');
     assert.equal(getModelForMode('team'), DEFAULT_FRONTIER_MODEL);
   });
 
-  it('uses OMX_DEFAULT_FRONTIER_MODEL when config does not provide a value', () => {
-    process.env.OMX_DEFAULT_FRONTIER_MODEL = 'gpt-5.4-mini';
+  it('uses RCS_DEFAULT_FRONTIER_MODEL when config does not provide a value', () => {
+    process.env.RCS_DEFAULT_FRONTIER_MODEL = 'gpt-5.4-mini';
     assert.equal(getMainDefaultModel(), 'gpt-5.4-mini');
     assert.equal(getModelForMode('team'), 'gpt-5.4-mini');
   });
 
-  it('uses .omx-config.json env.OMX_DEFAULT_FRONTIER_MODEL when shell env is absent', async () => {
-    await writeConfig({ env: { OMX_DEFAULT_FRONTIER_MODEL: 'frontier-local' } });
+  it('uses .rcs-config.json env.RCS_DEFAULT_FRONTIER_MODEL when shell env is absent', async () => {
+    await writeConfig({ env: { RCS_DEFAULT_FRONTIER_MODEL: 'frontier-local' } });
     assert.equal(getMainDefaultModel(), 'frontier-local');
     assert.equal(getModelForMode('team'), 'frontier-local');
   });
@@ -151,32 +151,32 @@ describe('getModelForMode', () => {
     assert.equal(getModelForMode('team'), 'frontier-config');
   });
 
-  it('uses OMX_DEFAULT_STANDARD_MODEL when configured in shell env', () => {
-    process.env.OMX_DEFAULT_STANDARD_MODEL = 'gpt-5.4-mini-tuned';
+  it('uses RCS_DEFAULT_STANDARD_MODEL when configured in shell env', () => {
+    process.env.RCS_DEFAULT_STANDARD_MODEL = 'gpt-5.4-mini-tuned';
     assert.equal(getEnvConfiguredStandardDefaultModel(), 'gpt-5.4-mini-tuned');
     assert.equal(getStandardDefaultModel(), 'gpt-5.4-mini-tuned');
   });
 
-  it('uses .omx-config.json env.OMX_DEFAULT_STANDARD_MODEL when shell env is absent', async () => {
-    await writeConfig({ env: { OMX_DEFAULT_STANDARD_MODEL: 'standard-local' } });
+  it('uses .rcs-config.json env.RCS_DEFAULT_STANDARD_MODEL when shell env is absent', async () => {
+    await writeConfig({ env: { RCS_DEFAULT_STANDARD_MODEL: 'standard-local' } });
     assert.equal(getEnvConfiguredStandardDefaultModel(), 'standard-local');
     assert.equal(getStandardDefaultModel(), 'standard-local');
   });
 
-  it('prefers shell OMX_DEFAULT_FRONTIER_MODEL over .omx-config.json env override', async () => {
-    process.env.OMX_DEFAULT_FRONTIER_MODEL = 'frontier-shell';
-    await writeConfig({ env: { OMX_DEFAULT_FRONTIER_MODEL: 'frontier-local' } });
+  it('prefers shell RCS_DEFAULT_FRONTIER_MODEL over .rcs-config.json env override', async () => {
+    process.env.RCS_DEFAULT_FRONTIER_MODEL = 'frontier-shell';
+    await writeConfig({ env: { RCS_DEFAULT_FRONTIER_MODEL: 'frontier-local' } });
     assert.equal(getMainDefaultModel(), 'frontier-shell');
   });
 
-  it('keeps explicit config default ahead of OMX_DEFAULT_FRONTIER_MODEL', async () => {
-    process.env.OMX_DEFAULT_FRONTIER_MODEL = 'gpt-5.4-mini';
+  it('keeps explicit config default ahead of RCS_DEFAULT_FRONTIER_MODEL', async () => {
+    process.env.RCS_DEFAULT_FRONTIER_MODEL = 'gpt-5.4-mini';
     await writeConfig({ models: { default: 'o4-mini' } });
     assert.equal(getModelForMode('team'), 'o4-mini');
   });
 
-  it('keeps explicit mode config ahead of OMX_DEFAULT_FRONTIER_MODEL', async () => {
-    process.env.OMX_DEFAULT_FRONTIER_MODEL = 'gpt-5.4-mini';
+  it('keeps explicit mode config ahead of RCS_DEFAULT_FRONTIER_MODEL', async () => {
+    process.env.RCS_DEFAULT_FRONTIER_MODEL = 'gpt-5.4-mini';
     await writeConfig({ models: { team: 'gpt-4.1', default: 'o4-mini' } });
     assert.equal(getModelForMode('team'), 'gpt-4.1');
   });
@@ -184,18 +184,18 @@ describe('getModelForMode', () => {
 
 
   it('defaults team child model to standard mini independent of frontier defaults', () => {
-    process.env.OMX_DEFAULT_FRONTIER_MODEL = 'frontier-expensive';
+    process.env.RCS_DEFAULT_FRONTIER_MODEL = 'frontier-expensive';
     assert.equal(DEFAULT_TEAM_CHILD_MODEL, 'gpt-5.4-mini');
     assert.equal(getTeamChildModel(), 'gpt-5.4-mini');
   });
 
-  it('uses OMX_TEAM_CHILD_MODEL shell override for team child model', () => {
-    process.env.OMX_TEAM_CHILD_MODEL = 'team-child-custom';
+  it('uses RCS_TEAM_CHILD_MODEL shell override for team child model', () => {
+    process.env.RCS_TEAM_CHILD_MODEL = 'team-child-custom';
     assert.equal(getTeamChildModel(), 'team-child-custom');
   });
 
-  it('uses .omx-config.json env.OMX_TEAM_CHILD_MODEL when shell env is absent', async () => {
-    await writeConfig({ env: { OMX_TEAM_CHILD_MODEL: 'team-child-local' } });
+  it('uses .rcs-config.json env.RCS_TEAM_CHILD_MODEL when shell env is absent', async () => {
+    await writeConfig({ env: { RCS_TEAM_CHILD_MODEL: 'team-child-local' } });
     assert.equal(getTeamChildModel(), 'team-child-local');
   });
 
@@ -204,55 +204,55 @@ describe('getModelForMode', () => {
     assert.equal(getTeamLowComplexityModel(), 'gpt-4.1-mini');
   });
 
-  it('uses OMX_DEFAULT_SPARK_MODEL when low-complexity config is absent', async () => {
-    process.env.OMX_DEFAULT_SPARK_MODEL = 'gpt-5.3-codex-spark-fast';
+  it('uses RCS_DEFAULT_SPARK_MODEL when low-complexity config is absent', async () => {
+    process.env.RCS_DEFAULT_SPARK_MODEL = 'gpt-5.3-codex-spark-fast';
     await writeConfig({ models: { team: 'gpt-4.1' } });
     assert.equal(getSparkDefaultModel(), 'gpt-5.3-codex-spark-fast');
     assert.equal(getTeamLowComplexityModel(), 'gpt-5.3-codex-spark-fast');
   });
 
-  it('uses .omx-config.json env.OMX_DEFAULT_SPARK_MODEL when shell env is absent', async () => {
-    await writeConfig({ env: { OMX_DEFAULT_SPARK_MODEL: 'spark-local' }, models: { team: 'gpt-4.1' } });
+  it('uses .rcs-config.json env.RCS_DEFAULT_SPARK_MODEL when shell env is absent', async () => {
+    await writeConfig({ env: { RCS_DEFAULT_SPARK_MODEL: 'spark-local' }, models: { team: 'gpt-4.1' } });
     assert.equal(getSparkDefaultModel(), 'spark-local');
   });
 
-  it('falls back to legacy OMX_SPARK_MODEL when canonical spark env is absent', async () => {
-    process.env.OMX_SPARK_MODEL = 'gpt-5.3-codex-spark-fast';
+  it('falls back to legacy RCS_SPARK_MODEL when canonical spark env is absent', async () => {
+    process.env.RCS_SPARK_MODEL = 'gpt-5.3-codex-spark-fast';
     await writeConfig({ models: { team: 'gpt-4.1' } });
     assert.equal(getSparkDefaultModel(), 'gpt-5.3-codex-spark-fast');
     assert.equal(getTeamLowComplexityModel(), 'gpt-5.3-codex-spark-fast');
   });
 
-  it('prefers OMX_DEFAULT_SPARK_MODEL over legacy OMX_SPARK_MODEL', () => {
-    process.env.OMX_DEFAULT_SPARK_MODEL = 'spark-canonical';
-    process.env.OMX_SPARK_MODEL = 'spark-legacy';
+  it('prefers RCS_DEFAULT_SPARK_MODEL over legacy RCS_SPARK_MODEL', () => {
+    process.env.RCS_DEFAULT_SPARK_MODEL = 'spark-canonical';
+    process.env.RCS_SPARK_MODEL = 'spark-legacy';
     assert.equal(getSparkDefaultModel(), 'spark-canonical');
   });
 
-  it('reads normalized env overrides from .omx-config.json', async () => {
+  it('reads normalized env overrides from .rcs-config.json', async () => {
     await writeConfig({
       env: {
-        OMX_DEFAULT_FRONTIER_MODEL: ' frontier-local ',
-        OMX_DEFAULT_STANDARD_MODEL: ' standard-local ',
-        OMX_DEFAULT_SPARK_MODEL: ' spark-local ',
+        RCS_DEFAULT_FRONTIER_MODEL: ' frontier-local ',
+        RCS_DEFAULT_STANDARD_MODEL: ' standard-local ',
+        RCS_DEFAULT_SPARK_MODEL: ' spark-local ',
         EMPTY: '   ',
       },
     });
     assert.deepEqual(readConfiguredEnvOverrides(), {
-      OMX_DEFAULT_FRONTIER_MODEL: 'frontier-local',
-      OMX_DEFAULT_STANDARD_MODEL: 'standard-local',
-      OMX_DEFAULT_SPARK_MODEL: 'spark-local',
+      RCS_DEFAULT_FRONTIER_MODEL: 'frontier-local',
+      RCS_DEFAULT_STANDARD_MODEL: 'standard-local',
+      RCS_DEFAULT_SPARK_MODEL: 'spark-local',
     });
   });
 
-  it('keeps explicit low-complexity config ahead of OMX_DEFAULT_SPARK_MODEL', async () => {
-    process.env.OMX_DEFAULT_SPARK_MODEL = 'gpt-5.3-codex-spark-fast';
+  it('keeps explicit low-complexity config ahead of RCS_DEFAULT_SPARK_MODEL', async () => {
+    process.env.RCS_DEFAULT_SPARK_MODEL = 'gpt-5.3-codex-spark-fast';
     await writeConfig({ models: { team_low_complexity: 'gpt-4.1-mini' } });
     assert.equal(getTeamLowComplexityModel(), 'gpt-4.1-mini');
   });
 
   it('inherits the main default for standard agents when no standard override is configured', async () => {
-    process.env.OMX_DEFAULT_FRONTIER_MODEL = 'gpt-5.5-custom';
+    process.env.RCS_DEFAULT_FRONTIER_MODEL = 'gpt-5.5-custom';
     await writeConfig({ models: { team: 'gpt-4.1' } });
     assert.equal(getStandardDefaultModel(), 'gpt-5.5-custom');
   });

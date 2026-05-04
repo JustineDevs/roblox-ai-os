@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# OMX Tmux Claude Workers Demo Script
+# RCS Tmux Claude Workers Demo Script
 #
 # This script demonstrates the tmux-based multi-agent orchestration system
 # with Claude Code CLI workers. It showcases:
@@ -16,8 +16,8 @@
 #   WORKER_COUNT                    Number of workers (default: 3, minimum: 2)
 #   TEAM_TASK                       Task description (default: "tmux claude workers demo")
 #   TEAM_NAME                       Team identifier (default: slugified TEAM_TASK)
-#   OMX_TEAM_WORKER_LAUNCH_MODE     Worker launch mode (default: interactive)
-#   OMX_TEAM_WORKER_LAUNCH_ARGS     Arguments passed to Claude CLI
+#   RCS_TEAM_WORKER_LAUNCH_MODE     Worker launch mode (default: interactive)
+#   RCS_TEAM_WORKER_LAUNCH_ARGS     Arguments passed to Claude CLI
 #
 # Example:
 #   WORKER_COUNT=5 ./scripts/demo-claude-workers.sh
@@ -43,7 +43,7 @@ slugify() {
     | cut -c1-30
 }
 
-require_bin omx
+require_bin rcs
 require_bin jq
 require_bin tmux
 
@@ -59,7 +59,7 @@ fi
 
 TEAM_TASK="${TEAM_TASK:-tmux claude workers demo}"
 TEAM_NAME="${TEAM_NAME:-$(slugify "$TEAM_TASK")}"
-OMX_TEAM_WORKER_LAUNCH_MODE="${OMX_TEAM_WORKER_LAUNCH_MODE:-interactive}"
+RCS_TEAM_WORKER_LAUNCH_MODE="${RCS_TEAM_WORKER_LAUNCH_MODE:-interactive}"
 
 # All workers use Claude CLI for this demo
 build_claude_cli_map() {
@@ -72,38 +72,38 @@ build_claude_cli_map() {
   (IFS=,; echo "${entries[*]}")
 }
 
-OMX_TEAM_WORKER_CLI="${OMX_TEAM_WORKER_CLI:-auto}"
-OMX_TEAM_WORKER_CLI_MAP="${OMX_TEAM_WORKER_CLI_MAP:-$(build_claude_cli_map "$WORKER_COUNT")}"
+RCS_TEAM_WORKER_CLI="${RCS_TEAM_WORKER_CLI:-auto}"
+RCS_TEAM_WORKER_CLI_MAP="${RCS_TEAM_WORKER_CLI_MAP:-$(build_claude_cli_map "$WORKER_COUNT")}"
 
 TEAM_STARTED=0
 cleanup() {
   if ((TEAM_STARTED == 1)); then
     echo "[cleanup] shutting down team: $TEAM_NAME"
-    omx team shutdown "$TEAM_NAME" >/dev/null 2>&1 || true
+    rcs team shutdown "$TEAM_NAME" >/dev/null 2>&1 || true
     echo "[cleanup] cleaning state for team: $TEAM_NAME"
-    omx team api cleanup --input "{\"team_name\":\"$TEAM_NAME\"}" --json >/dev/null 2>&1 || true
+    rcs team api cleanup --input "{\"team_name\":\"$TEAM_NAME\"}" --json >/dev/null 2>&1 || true
   fi
 }
 trap cleanup EXIT
 
-echo "== OMX Tmux Claude Workers Demo v${SCRIPT_VERSION} =="
+echo "== RCS Tmux Claude Workers Demo v${SCRIPT_VERSION} =="
 echo "TEAM_TASK=$TEAM_TASK"
 echo "TEAM_NAME=$TEAM_NAME"
 echo "WORKER_COUNT=$WORKER_COUNT"
-echo "OMX_TEAM_WORKER_CLI=$OMX_TEAM_WORKER_CLI"
-echo "OMX_TEAM_WORKER_CLI_MAP=$OMX_TEAM_WORKER_CLI_MAP"
+echo "RCS_TEAM_WORKER_CLI=$RCS_TEAM_WORKER_CLI"
+echo "RCS_TEAM_WORKER_CLI_MAP=$RCS_TEAM_WORKER_CLI_MAP"
 echo ""
 echo "This demo showcases Claude Code CLI workers in tmux panes"
-echo "coordinated through the OMX team orchestration system."
+echo "coordinated through the RCS team orchestration system."
 echo ""
 
 echo "[1/10] Starting team with ${WORKER_COUNT} Claude workers..."
-omx team "${WORKER_COUNT}:executor" "$TEAM_TASK"
+rcs team "${WORKER_COUNT}:executor" "$TEAM_TASK"
 TEAM_STARTED=1
 echo ""
 
 echo "[2/10] Checking team status..."
-omx team status "$TEAM_NAME"
+rcs team status "$TEAM_NAME"
 echo ""
 
 echo "[3/10] Creating distributed tasks for workers..."
@@ -116,7 +116,7 @@ for i in $(seq 1 "$WORKER_COUNT"); do
     --arg description "$TASK_DESC" \
     --arg owner "worker-$i" \
     '{team_name:$team,subject:$subject,description:$description,owner:$owner}')"
-  CREATE_JSON="$(omx team api create-task --input "$CREATE_INPUT" --json)"
+  CREATE_JSON="$(rcs team api create-task --input "$CREATE_INPUT" --json)"
   TASK_ID="$(echo "$CREATE_JSON" | jq -r '.data.task.id // empty')"
   if [[ -n "$TASK_ID" ]]; then
     echo "  Created task $TASK_ID for worker-$i"
@@ -126,14 +126,14 @@ echo ""
 
 echo "[4/10] Listing all tasks..."
 LIST_INPUT="$(jq -nc --arg team "$TEAM_NAME" '{team_name:$team}')"
-omx team api list-tasks --input "$LIST_INPUT" --json | jq -r '.data.tasks[] | "  Task \(.id): \(.subject) [\(.status)]"'
+rcs team api list-tasks --input "$LIST_INPUT" --json | jq -r '.data.tasks[] | "  Task \(.id): \(.subject) [\(.status)]"'
 echo ""
 
 echo "[5/10] Workers claiming their assigned tasks..."
 for i in $(seq 1 "$WORKER_COUNT"); do
   WORKER_NAME="worker-$i"
   # Find task assigned to this worker
-  TASK_ID="$(omx team api list-tasks --input "$(jq -nc --arg team "$TEAM_NAME" '{team_name:$team}')" --json | \
+  TASK_ID="$(rcs team api list-tasks --input "$(jq -nc --arg team "$TEAM_NAME" '{team_name:$team}')" --json | \
     jq -r --arg owner "$WORKER_NAME" '.data.tasks[] | select(.owner == $owner) | .id' | head -1)"
 
   if [[ -n "$TASK_ID" ]]; then
@@ -142,7 +142,7 @@ for i in $(seq 1 "$WORKER_COUNT"); do
       --arg task "$TASK_ID" \
       --arg worker "$WORKER_NAME" \
       '{team_name:$team,task_id:$task,worker:$worker,expected_version:1}')"
-    CLAIM_JSON="$(omx team api claim-task --input "$CLAIM_INPUT" --json)"
+    CLAIM_JSON="$(rcs team api claim-task --input "$CLAIM_INPUT" --json)"
     if echo "$CLAIM_JSON" | jq -e '.ok' >/dev/null; then
       echo "  $WORKER_NAME claimed task $TASK_ID"
     fi
@@ -154,7 +154,7 @@ echo "[6/10] Simulating work completion - transitioning tasks to completed..."
 for i in $(seq 1 "$WORKER_COUNT"); do
   WORKER_NAME="worker-$i"
   # Get the claimed task for this worker
-  TASK_INFO="$(omx team api list-tasks --input "$(jq -nc --arg team "$TEAM_NAME" '{team_name:$team}')" --json | \
+  TASK_INFO="$(rcs team api list-tasks --input "$(jq -nc --arg team "$TEAM_NAME" '{team_name:$team}')" --json | \
     jq -r --arg owner "$WORKER_NAME" '.data.tasks[] | select(.owner == $owner and .status == "in_progress") | [.id, .claim.token] | @tsv' | head -1)"
 
   if [[ -n "$TASK_INFO" ]]; then
@@ -166,7 +166,7 @@ for i in $(seq 1 "$WORKER_COUNT"); do
       --arg task "$TASK_ID" \
       --arg token "$CLAIM_TOKEN" \
       '{team_name:$team,task_id:$task,from:"in_progress",to:"completed",claim_token:$token}')"
-    omx team api transition-task-status --input "$TRANSITION_INPUT" --json >/dev/null
+    rcs team api transition-task-status --input "$TRANSITION_INPUT" --json >/dev/null
     echo "  $WORKER_NAME completed task $TASK_ID"
   fi
 done
@@ -180,7 +180,7 @@ for i in $(seq 1 "$WORKER_COUNT"); do
     --arg to "worker-$i" \
     --arg body "Hello from leader! Great work on the demo task." \
     '{team_name:$team,from_worker:"leader-fixed",to_worker:$to,body:$body}')"
-  omx team api send-message --input "$SEND_INPUT" --json >/dev/null
+  rcs team api send-message --input "$SEND_INPUT" --json >/dev/null
   echo "  Sent message to worker-$i"
 done
 
@@ -188,7 +188,7 @@ done
 for i in $(seq 1 "$WORKER_COUNT"); do
   WORKER_NAME="worker-$i"
   MAILBOX_INPUT="$(jq -nc --arg team "$TEAM_NAME" --arg worker "$WORKER_NAME" '{team_name:$team,worker:$worker}')"
-  MAILBOX_JSON="$(omx team api mailbox-list --input "$MAILBOX_INPUT" --json)"
+  MAILBOX_JSON="$(rcs team api mailbox-list --input "$MAILBOX_INPUT" --json)"
   MESSAGE_COUNT="$(echo "$MAILBOX_JSON" | jq -r '.data.messages | length')"
   echo "  $WORKER_NAME has $MESSAGE_COUNT messages in mailbox"
 done
@@ -199,14 +199,14 @@ BROADCAST_INPUT="$(jq -nc \
   --arg team "$TEAM_NAME" \
   --arg body "Sync checkpoint: All workers verify tmux coordination complete" \
   '{team_name:$team,from_worker:"leader-fixed",body:$body}')"
-BROADCAST_RESULT="$(omx team api broadcast --input "$BROADCAST_INPUT" --json)"
+BROADCAST_RESULT="$(rcs team api broadcast --input "$BROADCAST_INPUT" --json)"
 BROADCAST_COUNT="$(echo "$BROADCAST_RESULT" | jq -r '.data.count')"
 echo "  Broadcasted to $BROADCAST_COUNT workers"
 echo ""
 
 echo "[9/10] Verifying team summary..."
 SUMMARY_INPUT="$(jq -nc --arg team "$TEAM_NAME" '{team_name:$team}')"
-SUMMARY_JSON="$(omx team api get-summary --input "$SUMMARY_INPUT" --json)"
+SUMMARY_JSON="$(rcs team api get-summary --input "$SUMMARY_INPUT" --json)"
 echo "$SUMMARY_JSON" | jq -e '.schema_version == "1.0" and .operation == "get-summary" and .ok == true' >/dev/null
 
 # Extract and display summary stats
@@ -219,8 +219,8 @@ echo "  Alive workers: $ALIVE_WORKERS"
 echo ""
 
 echo "[10/10] Shutting down team and cleaning up..."
-omx team shutdown "$TEAM_NAME"
-omx team api cleanup --input "{\"team_name\":\"$TEAM_NAME\"}" --json >/dev/null
+rcs team shutdown "$TEAM_NAME"
+rcs team api cleanup --input "{\"team_name\":\"$TEAM_NAME\"}" --json >/dev/null
 TEAM_STARTED=0
 echo ""
 
@@ -235,7 +235,7 @@ echo "  - Verified mailbox-based communication"
 echo "  - Tested broadcast messaging"
 echo "  - Clean shutdown and state cleanup"
 echo ""
-echo "The Claude workers were coordinated through the OMX"
+echo "The Claude workers were coordinated through the RCS"
 echo "team orchestration system using tmux for process isolation"
 echo "and the CLI interop API for state management."
 echo "=========================================="

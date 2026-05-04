@@ -19,7 +19,7 @@ function runCompiledRunner(root: string, envOverrides: Record<string, string> = 
 
 describe('run-test-files diagnostics', () => {
   it('applies a bounded node --test timeout so hanging tests fail with file context', () => {
-    const wd = mkdtempSync(join(tmpdir(), 'omx-run-test-files-'));
+    const wd = mkdtempSync(join(tmpdir(), 'rcs-run-test-files-'));
     try {
       const testsDir = join(wd, '__tests__');
       mkdirSync(testsDir, { recursive: true });
@@ -34,8 +34,8 @@ describe('run-test-files diagnostics', () => {
       );
 
       const result = runCompiledRunner(wd, {
-        OMX_NODE_TEST_TIMEOUT_MS: '250',
-        OMX_NODE_TEST_RUNNER_TIMEOUT_MS: '750',
+        RCS_NODE_TEST_TIMEOUT_MS: '250',
+        RCS_NODE_TEST_RUNNER_TIMEOUT_MS: '750',
       });
 
       assert.notEqual(result.status, 0);
@@ -48,7 +48,7 @@ describe('run-test-files diagnostics', () => {
   });
 
   it('logs that per-test timeout is disabled by default', () => {
-    const wd = mkdtempSync(join(tmpdir(), 'omx-run-test-files-'));
+    const wd = mkdtempSync(join(tmpdir(), 'rcs-run-test-files-'));
     try {
       const testsDir = join(wd, '__tests__');
       mkdirSync(testsDir, { recursive: true });

@@ -4,7 +4,7 @@ import { renderSidecar } from '../render.js';
 import type { SidecarSnapshot } from '../types.js';
 
 const SNAPSHOT: SidecarSnapshot = {
-  schema_version: 'omx.sidecar/v1',
+  schema_version: 'rcs.sidecar/v1',
   generated_at: '2026-04-27T02:01:00.000Z',
   team_name: 'demo',
   team_task: 'ship sidecar',
@@ -32,7 +32,7 @@ const SNAPSHOT: SidecarSnapshot = {
 describe('renderSidecar', () => {
   it('renders stacked text panels with core visualization vocabulary', () => {
     const output = renderSidecar(SNAPSHOT, { width: 88, color: false });
-    for (const label of ['OMX Sidecar · demo', 'Topology', 'Agents', 'Tasks', 'Highlights', 'Panes', 'Events']) {
+    for (const label of ['RCS Sidecar · demo', 'Topology', 'Agents', 'Tasks', 'Highlights', 'Panes', 'Events']) {
       assert.match(output, new RegExp(label));
     }
     assert.match(output, /worker-1 \[working\/alive\] executor task-1 %3 Δturns=7/);
@@ -59,7 +59,7 @@ describe('renderSidecar', () => {
       highlights: [{ ...SNAPSHOT.highlights[0]!, message: 'highlight\u001b[31m message' }],
     }, { width: 88, color: false });
 
-    assert.match(output, /OMX Sidecar · demo/);
+    assert.match(output, /RCS Sidecar · demo/);
     assert.match(output, /phase=team-exec/);
     assert.doesNotMatch(output, /\x1b\]/);
     assert.doesNotMatch(output, /\x1b\[[0-?]*[ -/]*[@-~]/);

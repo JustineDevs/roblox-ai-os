@@ -3,9 +3,9 @@ import type { CatalogAgentEntry, CatalogSkillEntry } from "../catalog/schema.js"
 
 const LIST_USAGE = [
   "Usage:",
-  "  omx list [--json]",
+  "  rcs list [--json]",
   "",
-  "List OMX skills and native agent prompts from the packaged catalog.",
+  "List RCS skills and native agent prompts from the packaged catalog.",
 ].join("\n");
 
 function formatEntry(entry: CatalogSkillEntry | CatalogAgentEntry): string {
@@ -15,7 +15,7 @@ function formatEntry(entry: CatalogSkillEntry | CatalogAgentEntry): string {
 }
 
 function printHumanList(contract: ReturnType<typeof toPublicCatalogContract>): void {
-  console.log(`OMX catalog ${contract.version}`);
+  console.log(`RCS catalog ${contract.version}`);
   console.log(
     `Skills: ${contract.counts.skillCount} (${contract.counts.activeSkillCount} active)`,
   );

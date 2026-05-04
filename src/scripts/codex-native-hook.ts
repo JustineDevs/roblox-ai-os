@@ -29,7 +29,7 @@ import {
   writeTeamLeaderAttention,
   writeTeamPhase,
 } from "../team/state.js";
-import { omxNotepadPath, omxProjectMemoryPath } from "../utils/paths.js";
+import { rcsNotepadPath, rcsProjectMemoryPath } from "../utils/paths.js";
 import { findGitLayout } from "../utils/git-layout.js";
 import { getStateFilePath, getStatePath } from "../mcp/state-paths.js";
 import {
@@ -102,7 +102,7 @@ interface NativeHookDispatchOptions {
 
 export interface NativeHookDispatchResult {
   hookEventName: CodexHookEventName | null;
-  omxEventName: string | null;
+  rcsEventName: string | null;
   skillState: SkillActiveState | null;
   outputJson: Record<string, unknown> | null;
 }
@@ -119,7 +119,7 @@ const STABLE_FINAL_RECOMMENDATION_PATTERNS = [
   /^\s*decision\s*:\s*(?:yes|no|ship|hold|release|do not release|proceed|do not proceed)\b[^\n\r]*/im,
 ] as const;
 const RELEASE_READINESS_FINALIZE_SYSTEM_MESSAGE =
-  "OMX release-readiness detected a stable final recommendation with no active worker tasks; emit one concise final decision summary and finalize.";
+  "RCS release-readiness detected a stable final recommendation with no active worker tasks; emit one concise final decision summary and finalize.";
 const EXECUTION_HANDOFF_PATTERNS = [
   /^(?:好|好的|行|可以|那就|那现在)?[，,\s]*(?:开始|继续|直接)\s*(?:执行|优化|实现|修改|修复)(?=$|\s|[，,。.!！?？])/u,
   /(?:按照|按|基于)(?:这个|上述|当前)?\s*(?:plan|计划|方案).{0,16}(?:开始|继续|直接)?\s*(?:执行|优化|实现|修改|修复)/u,
@@ -336,7 +336,7 @@ function readHookEventName(payload: CodexHookPayload): CodexHookEventName | null
   return null;
 }
 
-export function mapCodexHookEventToOmxEvent(
+export function mapCodexHookEventToRcsEvent(
   hookEventName: CodexHookEventName | null,
 ): string | null {
   switch (hookEventName) {
@@ -465,13 +465,13 @@ function activeRalphStateMatchesStopOwner(
   state: Record<string, unknown>,
   context: RalphStopOwnershipContext,
 ): boolean {
-  const ownerOmxSessionId = safeString(state.owner_omx_session_id).trim();
-  if (ownerOmxSessionId && ownerOmxSessionId !== context.sessionId) {
+  const ownerRcsSessionId = safeString(state.owner_rcs_session_id).trim();
+  if (ownerRcsSessionId && ownerRcsSessionId !== context.sessionId) {
     return false;
   }
 
   const stateSessionId = safeString(state.session_id).trim();
-  if (!ownerOmxSessionId && stateSessionId && stateSessionId !== context.sessionId) {
+  if (!ownerRcsSessionId && stateSessionId && stateSessionId !== context.sessionId) {
     return false;
   }
 
@@ -542,14 +542,14 @@ async function readActiveRalphState(
     readSessionState(cwd),
     readUsableSessionState(cwd),
   ]);
-  const currentOmxSessionId = safeString(usableSessionInfo?.session_id).trim();
+  const currentRcsSessionId = safeString(usableSessionInfo?.session_id).trim();
   const currentNativeSessionId = safeString(usableSessionInfo?.native_session_id).trim();
   const staleCurrentSessionId = rawSessionInfo && !isSessionStateUsable(rawSessionInfo, cwd)
     ? safeString(rawSessionInfo.session_id).trim()
     : "";
   const sessionCandidates = [...new Set([
     safeString(preferredSessionId).trim(),
-    currentOmxSessionId,
+    currentRcsSessionId,
   ].filter(Boolean))];
 
   // Ralph Stop stays authoritative-scope-only once the Stop payload is session-bound.
@@ -710,7 +710,7 @@ function tryReadGitValue(cwd: string, args: string[]): string | null {
 }
 
 
-function localExcludeAlreadyIgnoresOmx(cwd: string): boolean {
+function localExcludeAlreadyIgnoresRcsPath(cwd: string): boolean {
   const layout = findGitLayout(cwd);
   if (!layout) return false;
   const excludePath = join(layout.gitDir, "info", "exclude");
@@ -719,7 +719,7 @@ function localExcludeAlreadyIgnoresOmx(cwd: string): boolean {
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter((line) => line && !line.startsWith("#"));
-    return lines.includes(".omx/") || lines.includes(".omx");
+    return lines.includes(".rcs/") || lines.includes(".rcs");
   } catch {
     return false;
   }
@@ -738,10 +738,10 @@ function isPathIgnoredByGit(cwd: string, path: string): boolean {
   }
 }
 
-async function ensureOmxLocalIgnoreEntry(cwd: string): Promise<{ changed: boolean; excludePath?: string }> {
+async function ensureRcsLocalIgnoreEntry(cwd: string): Promise<{ changed: boolean; excludePath?: string }> {
   const repoRoot = tryReadGitValue(cwd, ["rev-parse", "--show-toplevel"]);
   if (!repoRoot) return { changed: false };
-  if (localExcludeAlreadyIgnoresOmx(repoRoot) || isPathIgnoredByGit(repoRoot, ".omx/")) {
+  if (localExcludeAlreadyIgnoresRcsPath(repoRoot) || isPathIgnoredByGit(repoRoot, ".rcs/")) {
     return { changed: false };
   }
 
@@ -753,11 +753,11 @@ async function ensureOmxLocalIgnoreEntry(cwd: string): Promise<{ changed: boolea
     ? await readFile(excludePath, "utf-8")
     : "";
   const lines = existing.split(/\r?\n/).map((line) => line.trim());
-  if (lines.includes(".omx/")) {
+  if (lines.includes(".rcs/")) {
     return { changed: false, excludePath };
   }
 
-  const next = `${existing}${existing.endsWith("\n") || existing.length === 0 ? "" : "\n"}.omx/\n`;
+  const next = `${existing}${existing.endsWith("\n") || existing.length === 0 ? "" : "\n"}.rcs/\n`;
   await writeFile(excludePath, next);
   return { changed: true, excludePath };
 }
@@ -781,9 +781,9 @@ async function buildSessionStartContext(
     nativeSessionId: options.nativeSessionId,
   }));
 
-  const localIgnoreResult = await ensureOmxLocalIgnoreEntry(cwd);
+  const localIgnoreResult = await ensureRcsLocalIgnoreEntry(cwd);
   if (localIgnoreResult.changed) {
-    sections.push(`Added .omx/ to ${localIgnoreResult.excludePath} to keep local OMX state out of source control without mutating tracked repo ignores.`);
+    sections.push(`Added .rcs/ to ${localIgnoreResult.excludePath} to keep local RCS state out of source control without mutating tracked repo ignores.`);
   }
 
   const modeSummaries: string[] = [];
@@ -804,10 +804,10 @@ async function buildSessionStartContext(
     modeSummaries.push(`- ${mode} phase: ${formatPhase(state.current_phase)}`);
   }
   if (modeSummaries.length > 0) {
-    sections.push(["[Active OMX modes]", ...modeSummaries].join("\n"));
+    sections.push(["[Active RCS modes]", ...modeSummaries].join("\n"));
   }
 
-  const projectMemory = await readJsonIfExists(omxProjectMemoryPath(cwd));
+  const projectMemory = await readJsonIfExists(rcsProjectMemoryPath(cwd));
   if (projectMemory) {
     const directives = Array.isArray(projectMemory.directives) ? projectMemory.directives : [];
     const notes = Array.isArray(projectMemory.notes) ? projectMemory.notes : [];
@@ -833,9 +833,9 @@ async function buildSessionStartContext(
     }
   }
 
-  if (existsSync(omxNotepadPath(cwd))) {
+  if (existsSync(rcsNotepadPath(cwd))) {
     try {
-      const notepad = await readFile(omxNotepadPath(cwd), "utf-8");
+      const notepad = await readFile(rcsNotepadPath(cwd), "utf-8");
       const header = "## PRIORITY";
       const idx = notepad.indexOf(header);
       if (idx >= 0) {
@@ -911,11 +911,11 @@ function resolveExecutionEnvironment(
       launcher: executionSurface.launcher,
       transport: executionSurface.transport,
       surface: "attached tmux runtime - tmux",
-      tmuxWorkflowGuidance: "omx team, omx hud, and omx question are directly usable in this session",
+      tmuxWorkflowGuidance: "rcs team, rcs hud, and rcs question are directly usable in this session",
       questionGuidance: "visible temporary renderer available from the current pane; primary success JSON is answers[]",
-      teamRuntimeInstruction: "Use the durable OMX team runtime via `omx team ...` for coordinated execution; do not replace it with in-process fanout.",
-      teamHelpInstruction: "If you need runtime syntax, run `omx team --help` yourself.",
-      deepInterviewInstruction: "Deep-interview must ask each interview round via `omx question`; do not fall back to `request_user_input` or plain-text questioning. This session is already attached to tmux, so `omx question` can open its temporary renderer directly over the leader pane. After starting `omx question` in a background terminal, wait for that terminal to finish and read the JSON answer before continuing the interview. Prefer `answers[0].answer` / `answers[]`; use legacy `answer` only as fallback. Deep-interview remains one question per round, so do not batch multiple interview rounds into one `questions[]` form. Stop remains blocked while a deep-interview question obligation is pending.",
+      teamRuntimeInstruction: "Use the durable RCS team runtime via `rcs team ...` for coordinated execution; do not replace it with in-process fanout.",
+      teamHelpInstruction: "If you need runtime syntax, run `rcs team --help` yourself.",
+      deepInterviewInstruction: "Deep-interview must ask each interview round via `rcs question`; do not fall back to `request_user_input` or plain-text questioning. This session is already attached to tmux, so `rcs question` can open its temporary renderer directly over the leader pane. After starting `rcs question` in a background terminal, wait for that terminal to finish and read the JSON answer before continuing the interview. Prefer `answers[0].answer` / `answers[]`; use legacy `answer` only as fallback. Deep-interview remains one question per round, so do not batch multiple interview rounds into one `questions[]` form. Stop remains blocked while a deep-interview question obligation is pending.",
       leaderPaneHint,
     };
   }
@@ -929,15 +929,15 @@ function resolveExecutionEnvironment(
       surface: isNativeOutsideTmux
         ? "native-hook / Codex App outside tmux with tmux return bridge"
         : "direct CLI outside tmux with tmux return bridge",
-      tmuxWorkflowGuidance: "omx team and omx hud need an attached tmux OMX CLI shell from this surface; omx question can use the detected bridge",
+      tmuxWorkflowGuidance: "rcs team and rcs hud need an attached tmux RCS CLI shell from this surface; rcs question can use the detected bridge",
       questionGuidance: questionBridgeHint,
       teamRuntimeInstruction: isNativeOutsideTmux
-        ? "This session is native-hook / Codex App outside tmux; `omx team` is a CLI/tmux runtime surface, not directly available here. Launch OMX CLI from an attached tmux shell first; do not replace it with in-process fanout."
-        : "This session is direct CLI outside tmux with a tmux return bridge for `omx question`; prompt-side `$team` does not auto-start the durable tmux team runtime here. If you intentionally want the runtime, run `omx team ...` yourself from shell instead of replacing it with in-process fanout.",
+        ? "This session is native-hook / Codex App outside tmux; `rcs team` is a CLI/tmux runtime surface, not directly available here. Launch RCS CLI from an attached tmux shell first; do not replace it with in-process fanout."
+        : "This session is direct CLI outside tmux with a tmux return bridge for `rcs question`; prompt-side `$team` does not auto-start the durable tmux team runtime here. If you intentionally want the runtime, run `rcs team ...` yourself from shell instead of replacing it with in-process fanout.",
       teamHelpInstruction: isNativeOutsideTmux
-        ? "If you need runtime syntax, run `omx team --help` from an attached tmux OMX CLI shell."
-        : "If you need runtime syntax, run `omx team --help` yourself from shell.",
-      deepInterviewInstruction: `Deep-interview is active, but this session is not attached to tmux. Do not invoke \`omx question\`, \`omx hud\`, or \`omx team\` from this surface. Ask each interview round through the native structured question tool when available; otherwise ask exactly one concise plain-text question and wait for the answer. A tmux return bridge (${leaderPaneHint}) is recorded for explicit attached-tmux recovery only, not for default Codex App/native fallback.`,
+        ? "If you need runtime syntax, run `rcs team --help` from an attached tmux RCS CLI shell."
+        : "If you need runtime syntax, run `rcs team --help` yourself from shell.",
+      deepInterviewInstruction: `Deep-interview is active, but this session is not attached to tmux. Do not invoke \`rcs question\`, \`rcs hud\`, or \`rcs team\` from this surface. Ask each interview round through the native structured question tool when available; otherwise ask exactly one concise plain-text question and wait for the answer. A tmux return bridge (${leaderPaneHint}) is recorded for explicit attached-tmux recovery only, not for default Codex App/native fallback.`,
       leaderPaneHint,
     };
   }
@@ -947,21 +947,21 @@ function resolveExecutionEnvironment(
     ? "native-hook / Codex App outside tmux"
     : "direct CLI outside tmux";
   const teamRuntimeInstruction = isNativeOutsideTmux
-    ? "This session is native-hook / Codex App outside tmux; `omx team` is a CLI/tmux runtime surface, not directly available here. Launch OMX CLI from an attached tmux shell first; do not replace it with in-process fanout."
-    : "This session is direct CLI outside tmux; prompt-side `$team` does not auto-start the durable tmux team runtime here. If you intentionally want the runtime, run `omx team ...` yourself from shell instead of replacing it with in-process fanout.";
+    ? "This session is native-hook / Codex App outside tmux; `rcs team` is a CLI/tmux runtime surface, not directly available here. Launch RCS CLI from an attached tmux shell first; do not replace it with in-process fanout."
+    : "This session is direct CLI outside tmux; prompt-side `$team` does not auto-start the durable tmux team runtime here. If you intentionally want the runtime, run `rcs team ...` yourself from shell instead of replacing it with in-process fanout.";
   const teamHelpInstruction = isNativeOutsideTmux
-    ? "If you need runtime syntax, run `omx team --help` from an attached tmux OMX CLI shell rather than from Codex App/native outside-tmux context."
-    : "If you need runtime syntax, run `omx team --help` yourself from shell.";
+    ? "If you need runtime syntax, run `rcs team --help` from an attached tmux RCS CLI shell rather than from Codex App/native outside-tmux context."
+    : "If you need runtime syntax, run `rcs team --help` yourself from shell.";
   return {
     kind: isNativeOutsideTmux ? "native-outside-tmux" : "direct-cli-outside-tmux",
     launcher: executionSurface.launcher,
     transport: executionSurface.transport,
     surface,
-    tmuxWorkflowGuidance: "omx team, omx hud, and omx question need an attached tmux OMX CLI shell or preserved question bridge from this surface",
+    tmuxWorkflowGuidance: "rcs team, rcs hud, and rcs question need an attached tmux RCS CLI shell or preserved question bridge from this surface",
     questionGuidance: questionBridgeHint,
     teamRuntimeInstruction,
     teamHelpInstruction,
-    deepInterviewInstruction: "Deep-interview is active, but this session is not attached to tmux. Do not invoke `omx question`, `omx hud`, or `omx team` from this surface. Ask each interview round through the native structured question tool when available; otherwise ask exactly one concise plain-text question and wait for the answer. Stop gating still applies to the interview, but no tmux question obligation should be created outside tmux.",
+    deepInterviewInstruction: "Deep-interview is active, but this session is not attached to tmux. Do not invoke `rcs question`, `rcs hud`, or `rcs team` from this surface. Ask each interview round through the native structured question tool when available; otherwise ask exactly one concise plain-text question and wait for the answer. Stop gating still applies to the interview, but no tmux question obligation should be created outside tmux.",
     leaderPaneHint: "",
   };
 }
@@ -979,14 +979,14 @@ function buildExecutionEnvironmentSection(
   return [
     "[Execution environment]",
     `- surface: ${environment.surface}`,
-    `- omx runtime surfaces: ${environment.tmuxWorkflowGuidance}`,
-    `- omx question: ${environment.questionGuidance}`,
+    `- rcs runtime surfaces: ${environment.tmuxWorkflowGuidance}`,
+    `- rcs question: ${environment.questionGuidance}`,
   ].join("\n");
 }
 
 function resolveQuestionLeaderPaneHint(cwd: string, payload?: CodexHookPayload): string {
   const payloadSessionId = safeString(payload?.session_id).trim();
-  const envSessionId = safeString(process.env.OMX_SESSION_ID || process.env.CODEX_SESSION_ID || process.env.SESSION_ID).trim();
+  const envSessionId = safeString(process.env.RCS_SESSION_ID || process.env.CODEX_SESSION_ID || process.env.SESSION_ID).trim();
   const sessionId = payloadSessionId || envSessionId;
   const candidatePaths = [
     ...(sessionId ? [getStatePath('deep-interview', cwd, sessionId), getStatePath('ralplan', cwd, sessionId), getStatePath('ralph', cwd, sessionId)] : []),
@@ -1067,7 +1067,7 @@ function buildNativeOutsideTmuxTeamPromptBlockState(
     thread_id: threadId,
     turn_id: turnId,
     active_skills: [],
-    transition_error: "Codex App/native outside-tmux sessions cannot activate the tmux-only `team` workflow directly. Launch OMX CLI from an attached tmux shell first, then run `omx team ...` there.",
+    transition_error: "Codex App/native outside-tmux sessions cannot activate the tmux-only `team` workflow directly. Launch RCS CLI from an attached tmux shell first, then run `rcs team ...` there.",
   };
 }
 
@@ -1083,8 +1083,8 @@ function buildAdditionalContextMessage(
   const match = detectPrimaryKeyword(prompt);
   if (!match) return promptPriorityMessage;
   const detectedKeywordMessage = matches.length > 1
-    ? `OMX native UserPromptSubmit detected workflow keywords ${matches.map((entry) => `"${entry.keyword}" -> ${entry.skill}`).join(", ")}.`
-    : `OMX native UserPromptSubmit detected workflow keyword "${match.keyword}" -> ${match.skill}.`;
+    ? `RCS native UserPromptSubmit detected workflow keywords ${matches.map((entry) => `"${entry.keyword}" -> ${entry.skill}`).join(", ")}.`
+    : `RCS native UserPromptSubmit detected workflow keyword "${match.keyword}" -> ${match.skill}.`;
   const activeSkills = Array.isArray(skillState?.active_skills)
     ? skillState.active_skills.map((entry) => entry.skill)
     : [];
@@ -1093,7 +1093,7 @@ function buildAdditionalContextMessage(
     : [];
   const teamDetected = activeSkills.includes("team");
   const ralphPromptActivationNote = skillState?.initialized_mode === "ralph"
-    ? "Prompt-side `$ralph` activation seeds Ralph workflow state only; it does not invoke `omx ralph`. Use `omx ralph --prd ...` only when you explicitly want the PRD-gated CLI startup path."
+    ? "Prompt-side `$ralph` activation seeds Ralph workflow state only; it does not invoke `rcs ralph`. Use `rcs ralph --prd ...` only when you explicitly want the PRD-gated CLI startup path."
     : null;
   const deepInterviewPromptActivationNote = skillState?.initialized_mode === "deep-interview"
     ? buildDeepInterviewQuestionBridgeInstruction(cwd, payload)
@@ -1111,7 +1111,7 @@ function buildAdditionalContextMessage(
 
   if (skillState?.transition_error) {
     return [
-      `OMX native UserPromptSubmit denied workflow keyword "${match.keyword}" -> ${match.skill}.`,
+      `RCS native UserPromptSubmit denied workflow keyword "${match.keyword}" -> ${match.skill}.`,
       skillState.transition_error,
       promptPriorityMessage,
       'Follow AGENTS.md routing and preserve workflow transition and planning-safety rules.',
@@ -1128,7 +1128,7 @@ function buildAdditionalContextMessage(
         : null,
       promptPriorityMessage,
       skillState.initialized_mode && skillState.initialized_state_path
-        ? `skill: ${skillState.initialized_mode} activated and initial state initialized at ${skillState.initialized_state_path}; write subsequent updates via omx_state MCP.`
+        ? `skill: ${skillState.initialized_mode} activated and initial state initialized at ${skillState.initialized_state_path}; write subsequent updates via rcs_state MCP.`
         : null,
       teamDetected
         ? buildTeamRuntimeInstruction(cwd, payload)
@@ -1140,7 +1140,7 @@ function buildAdditionalContextMessage(
 
   if (teamDetected) {
     const initializedStateMessage = skillState?.initialized_mode && skillState.initialized_state_path
-      ? `skill: ${skillState.initialized_mode} activated and initial state initialized at ${skillState.initialized_state_path}; write subsequent updates via omx_state MCP.`
+      ? `skill: ${skillState.initialized_mode} activated and initial state initialized at ${skillState.initialized_state_path}; write subsequent updates via rcs_state MCP.`
       : null;
     return [
       detectedKeywordMessage,
@@ -1166,7 +1166,7 @@ function buildAdditionalContextMessage(
         ? `planning preserved over simultaneous execution follow-up; deferred skills: ${deferredSkills.join(", ")}.`
         : null,
       promptPriorityMessage,
-      `skill: ${skillState.initialized_mode} activated and initial state initialized at ${skillState.initialized_state_path}; write subsequent updates via omx_state MCP.`,
+      `skill: ${skillState.initialized_mode} activated and initial state initialized at ${skillState.initialized_state_path}; write subsequent updates via rcs_state MCP.`,
       deepInterviewPromptActivationNote,
       ultraworkPromptActivationNote,
       ralphPromptActivationNote,
@@ -1197,7 +1197,7 @@ async function resolveTeamStateDirForWorkerContext(
 async function buildTeamWorkerStopOutput(
   cwd: string,
 ): Promise<Record<string, unknown> | null> {
-  const workerContext = parseTeamWorkerEnv(safeString(process.env.OMX_TEAM_INTERNAL_WORKER || process.env.OMX_TEAM_WORKER));
+  const workerContext = parseTeamWorkerEnv(safeString(process.env.RCS_TEAM_INTERNAL_WORKER || process.env.RCS_TEAM_WORKER));
   if (!workerContext) return null;
 
   const stateDir = await resolveTeamStateDirForWorkerContext(cwd, workerContext);
@@ -1229,10 +1229,10 @@ async function buildTeamWorkerStopOutput(
     return {
       decision: "block",
       reason:
-        `OMX team worker ${workerContext.workerName} is still assigned non-terminal task ${taskId} (${statusValue}); continue the current assigned task or report a concrete blocker before stopping.`,
+        `RCS team worker ${workerContext.workerName} is still assigned non-terminal task ${taskId} (${statusValue}); continue the current assigned task or report a concrete blocker before stopping.`,
       stopReason: `team_worker_${workerContext.workerName}_${taskId}_${statusValue}`,
       systemMessage:
-        `OMX team worker ${workerContext.workerName} is still assigned task ${taskId} (${statusValue}).`,
+        `RCS team worker ${workerContext.workerName} is still assigned task ${taskId} (${statusValue}).`,
     };
   }
 
@@ -1240,7 +1240,7 @@ async function buildTeamWorkerStopOutput(
 }
 
 function hasTeamWorkerContext(): boolean {
-  return parseTeamWorkerEnv(safeString(process.env.OMX_TEAM_INTERNAL_WORKER || process.env.OMX_TEAM_WORKER)) !== null;
+  return parseTeamWorkerEnv(safeString(process.env.RCS_TEAM_INTERNAL_WORKER || process.env.RCS_TEAM_WORKER)) !== null;
 }
 
 function isStopExempt(payload: CodexHookPayload): boolean {
@@ -1274,9 +1274,9 @@ async function buildModeBasedStopOutput(
   const phase = formatPhase(state.current_phase);
   return {
     decision: "block",
-    reason: `OMX ${mode} is still active (phase: ${phase}); continue the task and gather fresh verification evidence before stopping.`,
+    reason: `RCS ${mode} is still active (phase: ${phase}); continue the task and gather fresh verification evidence before stopping.`,
     stopReason: `${mode}_${phase}`,
-    systemMessage: `OMX ${mode} is still active (phase: ${phase}).`,
+    systemMessage: `RCS ${mode} is still active (phase: ${phase}).`,
   };
 }
 
@@ -1292,7 +1292,7 @@ async function readTeamModeStateForStop(
   const scopedState = await readStopSessionPinnedState("team-state.json", cwd, normalizedSessionId);
   if (scopedState) return scopedState;
 
-  const rootState = await readJsonIfExists(join(cwd, ".omx", "state", "team-state.json"));
+  const rootState = await readJsonIfExists(join(cwd, ".rcs", "state", "team-state.json"));
   if (rootState?.active !== true) return null;
 
   const ownerSessionId = safeString(rootState.session_id).trim();
@@ -1324,7 +1324,7 @@ async function buildTeamStopOutput(cwd: string, sessionId?: string): Promise<Rec
 
 function buildTeamStopReason(teamName: string, phase: string): string {
   const teamContext = teamName ? ` (${teamName})` : "";
-  return `OMX team pipeline is still active${teamContext} at phase ${phase}; continue coordinating until the team reaches a terminal phase. If system-generated worker auto-checkpoint commits exist, rewrite them into Lore-format final commits before merge/finalization.`;
+  return `RCS team pipeline is still active${teamContext} at phase ${phase}; continue coordinating until the team reaches a terminal phase. If system-generated worker auto-checkpoint commits exist, rewrite them into Lore-format final commits before merge/finalization.`;
 }
 
 function buildTeamStopOutputForPhase(teamName: string, phase: string): Record<string, unknown> {
@@ -1332,7 +1332,7 @@ function buildTeamStopOutputForPhase(teamName: string, phase: string): Record<st
     decision: "block",
     reason: buildTeamStopReason(teamName, phase),
     stopReason: `team_${phase}`,
-    systemMessage: `OMX team pipeline is still active at phase ${phase}.`,
+    systemMessage: `RCS team pipeline is still active at phase ${phase}.`,
   };
 }
 
@@ -1441,7 +1441,7 @@ function modeStateMatchesSkillStopContext(
   sessionId: string,
 ): boolean {
   const stateSessionId = safeString(
-    state.owner_omx_session_id
+    state.owner_rcs_session_id
       ?? state.session_id
       ?? state.codex_session_id
       ?? state.owner_codex_session_id,
@@ -1533,7 +1533,7 @@ async function readStopAutoNudgePhase(
       return "planning";
     }
   } else {
-    const rootModeState = await readJsonIfExists(join(cwd, ".omx", "state", "deep-interview-state.json"));
+    const rootModeState = await readJsonIfExists(join(cwd, ".rcs", "state", "deep-interview-state.json"));
     if (
       rootModeState?.active === true
       && safeString(rootModeState.current_phase).trim().toLowerCase() === "intent-first"
@@ -1594,14 +1594,14 @@ async function buildDeepInterviewQuestionStopOutput(
   if (!obligationId) return null;
 
   const systemMessage =
-    `OMX deep-interview is still active (phase: ${phase}) and requires a structured question via omx question before stopping; read the returned answers[] JSON before continuing.`;
+    `RCS deep-interview is still active (phase: ${phase}) and requires a structured question via rcs question before stopping; read the returned answers[] JSON before continuing.`;
 
   return {
     obligationId,
     output: {
       decision: "block",
       reason:
-        `Deep interview is still active (phase: ${phase}) and has a pending structured question obligation; use \`omx question\` before stopping.`,
+        `Deep interview is still active (phase: ${phase}) and has a pending structured question obligation; use \`rcs question\` before stopping.`,
       stopReason: "deep_interview_question_required",
       systemMessage,
     },
@@ -1846,9 +1846,9 @@ async function buildSkillStopOutput(
 
   return {
     decision: "block",
-    reason: `OMX skill ${blocker.skill} is still active (phase: ${blocker.phase}); continue until the current ${blocker.skill} workflow reaches a terminal state.`,
+    reason: `RCS skill ${blocker.skill} is still active (phase: ${blocker.phase}); continue until the current ${blocker.skill} workflow reaches a terminal state.`,
     stopReason: `skill_${blocker.skill}_${blocker.phase}`,
-    systemMessage: `OMX skill ${blocker.skill} is still active (phase: ${blocker.phase}).`,
+    systemMessage: `RCS skill ${blocker.skill} is still active (phase: ${blocker.phase}).`,
   };
 }
 
@@ -1982,7 +1982,7 @@ async function buildStopHookOutput(
       const completion = await readAutoresearchCompletionStatus(cwd, canonicalSessionId!.trim());
       if (!completion.complete) {
         const currentPhase = safeString(autoresearchState.current_phase ?? autoresearchState.currentPhase).trim() || 'executing';
-        const systemMessage = `OMX autoresearch is still active (phase: ${currentPhase}); continue until validator evidence is complete before stopping.`;
+        const systemMessage = `RCS autoresearch is still active (phase: ${currentPhase}); continue until validator evidence is complete before stopping.`;
         return await maybeReturnRepeatableStopOutput(
           payload,
           stateDir,
@@ -2141,7 +2141,7 @@ async function buildStopHookOutput(
           reason: effectiveResponse,
           stopReason: "auto_nudge",
           systemMessage:
-            "OMX native Stop detected a stall/permission-style handoff and continued the turn automatically.",
+            "RCS native Stop detected a stall/permission-style handoff and continued the turn automatically.",
         },
         canonicalSessionId,
       );
@@ -2173,7 +2173,7 @@ async function buildStopHookOutput(
   const blockingPath = formatStopStatePath(cwd, ralphState.path);
   const stopReason = `ralph_${currentPhase}`;
   const systemMessage =
-    `OMX Ralph is still active (phase: ${currentPhase}; state: ${blockingPath}); continue the task and gather fresh verification evidence before stopping.`;
+    `RCS Ralph is still active (phase: ${currentPhase}; state: ${blockingPath}); continue the task and gather fresh verification evidence before stopping.`;
 
   return await returnPersistentStopBlock(
     payload,
@@ -2196,10 +2196,10 @@ export async function dispatchCodexNativeHook(
 ): Promise<NativeHookDispatchResult> {
   const hookEventName = readHookEventName(payload);
   const cwd = options.cwd ?? (safeString(payload.cwd).trim() || process.cwd());
-  const stateDir = join(cwd, ".omx", "state");
+  const stateDir = join(cwd, ".rcs", "state");
   await mkdir(stateDir, { recursive: true });
 
-  const omxEventName = mapCodexHookEventToOmxEvent(hookEventName);
+  const rcsEventName = mapCodexHookEventToRcsEvent(hookEventName);
   let skillState: SkillActiveState | null = null;
   let triageAdditionalContext: string | null = null;
 
@@ -2306,7 +2306,7 @@ export async function dispatchCodexNativeHook(
             const effectiveTurnId = turnId || nowIso;
             if (decision.lane === "HEAVY") {
               triageAdditionalContext =
-                "OMX native UserPromptSubmit triage detected a multi-step goal with no workflow keyword. This is advisory prompt-routing context only; it did not activate autopilot or initialize workflow state. Prefer the existing autopilot-style workflow if AGENTS.md/runtime conditions allow it, unless newer user context narrows or opts out.";
+                "RCS native UserPromptSubmit triage detected a multi-step goal with no workflow keyword. This is advisory prompt-routing context only; it did not activate autopilot or initialize workflow state. Prefer the existing autopilot-style workflow if AGENTS.md/runtime conditions allow it, unless newer user context narrows or opts out.";
               const newState: TriageStateFile = {
                 version: 1,
                 last_triage: {
@@ -2323,16 +2323,16 @@ export async function dispatchCodexNativeHook(
             } else if (decision.lane === "LIGHT") {
               if (decision.destination === "explore") {
                 triageAdditionalContext =
-                  "OMX native UserPromptSubmit triage detected a read-only/question-shaped request with no workflow keyword. This is advisory prompt-routing context only. Prefer the explore role surface rather than escalating to autopilot.";
+                  "RCS native UserPromptSubmit triage detected a read-only/question-shaped request with no workflow keyword. This is advisory prompt-routing context only. Prefer the explore role surface rather than escalating to autopilot.";
               } else if (decision.destination === "executor") {
                 triageAdditionalContext =
-                  "OMX native UserPromptSubmit triage detected a narrow edit-shaped request with no workflow keyword. This is advisory prompt-routing context only. Prefer the executor role surface rather than autopilot.";
+                  "RCS native UserPromptSubmit triage detected a narrow edit-shaped request with no workflow keyword. This is advisory prompt-routing context only. Prefer the executor role surface rather than autopilot.";
               } else if (decision.destination === "designer") {
                 triageAdditionalContext =
-                  "OMX native UserPromptSubmit triage detected a visual/style request with no workflow keyword. This is advisory prompt-routing context only. Prefer the designer role surface.";
+                  "RCS native UserPromptSubmit triage detected a visual/style request with no workflow keyword. This is advisory prompt-routing context only. Prefer the designer role surface.";
               } else if (decision.destination === "researcher") {
                 triageAdditionalContext =
-                  "OMX native UserPromptSubmit triage detected an external documentation/reference research request with no workflow keyword. This is advisory prompt-routing context only. Prefer the researcher role surface rather than repo-local explore or autopilot.";
+                  "RCS native UserPromptSubmit triage detected an external documentation/reference research request with no workflow keyword. This is advisory prompt-routing context only. Prefer the researcher role surface rather than repo-local explore or autopilot.";
               }
               if (triageAdditionalContext !== null) {
                 const dest = decision.destination as "explore" | "executor" | "designer" | "researcher";
@@ -2363,17 +2363,17 @@ export async function dispatchCodexNativeHook(
     await reconcileHudForPromptSubmitFn(cwd, { sessionId: canonicalSessionId || sessionIdForState || undefined }).catch(() => {});
   }
 
-  if (omxEventName && !skipCanonicalSessionStartContext) {
+  if (rcsEventName && !skipCanonicalSessionStartContext) {
     const baseContext = buildBaseContext(cwd, payload, hookEventName!, canonicalSessionId);
     if (resolvedNativeSessionId) {
       baseContext.native_session_id = resolvedNativeSessionId;
       baseContext.codex_session_id = resolvedNativeSessionId;
     }
     if (canonicalSessionId) {
-      baseContext.omx_session_id = canonicalSessionId;
+      baseContext.rcs_session_id = canonicalSessionId;
     }
     const event: HookEventEnvelope = buildNativeHookEvent(
-      omxEventName,
+      rcsEventName,
       baseContext,
       {
         session_id: eventSessionId,
@@ -2416,7 +2416,7 @@ export async function dispatchCodexNativeHook(
 
   return {
     hookEventName,
-    omxEventName,
+    rcsEventName,
     skillState,
     outputJson,
   };
@@ -2464,14 +2464,14 @@ function writeNativeHookJsonStdout(output: Record<string, unknown>): void {
 
 function isStopDispatchFailureTestTrigger(payload: CodexHookPayload): boolean {
   return process.env.NODE_ENV === "test"
-    && process.env.OMX_NATIVE_HOOK_TEST_THROW_STOP_DISPATCH === "1"
+    && process.env.RCS_NATIVE_HOOK_TEST_THROW_STOP_DISPATCH === "1"
     && readHookEventName(payload) === "Stop";
 }
 
 function buildStopDispatchFailureOutput(error: unknown): Record<string, unknown> {
   const detail = error instanceof Error ? error.message : String(error);
   const reason =
-    "OMX native Stop hook failed before normal continuation handling. Continue once more, preserve runtime state, inspect the hook logs, and retry with a valid Stop JSON response.";
+    "RCS native Stop hook failed before normal continuation handling. Continue once more, preserve runtime state, inspect the hook logs, and retry with a valid Stop JSON response.";
   return {
     decision: "block",
     reason,
@@ -2485,7 +2485,7 @@ export async function runCodexNativeHookCli(): Promise<void> {
   if (parseError) {
     writeNativeHookJsonStdout({
       decision: "block",
-      reason: "OMX native hook received malformed JSON input. Preserve runtime state, inspect the emitting hook payload yourself, and retry with valid JSON.",
+      reason: "RCS native hook received malformed JSON input. Preserve runtime state, inspect the emitting hook payload yourself, and retry with valid JSON.",
       hookSpecificOutput: {
         hookEventName: "Unknown",
         additionalContext:
@@ -2511,7 +2511,7 @@ export async function runCodexNativeHookCli(): Promise<void> {
       throw error;
     }
     process.stderr.write(
-      `[omx] codex-native Stop hook dispatch failed: ${
+      `[rcs] codex-native Stop hook dispatch failed: ${
         error instanceof Error ? error.message : String(error)
       }\n`,
     );
@@ -2522,7 +2522,7 @@ export async function runCodexNativeHookCli(): Promise<void> {
 if (isCodexNativeHookMainModule(import.meta.url, process.argv[1])) {
   runCodexNativeHookCli().catch((error) => {
     process.stderr.write(
-      `[omx] codex-native-hook failed: ${
+      `[rcs] codex-native-hook failed: ${
         error instanceof Error ? error.message : String(error)
       }\n`,
     );

@@ -21,8 +21,8 @@ async function withTempRepo(prefix: string, run: (cwd: string) => Promise<void>)
 
 describe('skill-active state helpers', () => {
   it('prefers session-scoped canonical state over root state', async () => {
-    await withTempRepo('omx-skill-active-session-', async (cwd) => {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
+    await withTempRepo('rcs-skill-active-session-', async (cwd) => {
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeSkillActiveStateCopies(cwd, {
         active: true,
         skill: 'ralph',
@@ -50,8 +50,8 @@ describe('skill-active state helpers', () => {
   });
 
   it('drops stale entries from other sessions when syncing canonical state for the current session', async () => {
-    await withTempRepo('omx-skill-active-filter-', async (cwd) => {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
+    await withTempRepo('rcs-skill-active-filter-', async (cwd) => {
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeSkillActiveStateCopies(cwd, {
         active: true,
         skill: 'deep-interview',
@@ -80,7 +80,7 @@ describe('skill-active state helpers', () => {
       assert.equal(entry.updated_at, '2026-04-08T00:00:00.000Z');
       assert.equal(entry.session_id, 'new-session');
 
-      const rootState = JSON.parse(await readFile(join(cwd, '.omx', 'state', 'skill-active-state.json'), 'utf-8')) as {
+      const rootState = JSON.parse(await readFile(join(cwd, '.rcs', 'state', 'skill-active-state.json'), 'utf-8')) as {
         active_skills?: Array<{ skill: string; session_id?: string }>;
       };
       assert.deepEqual(rootState.active_skills, [{
@@ -95,8 +95,8 @@ describe('skill-active state helpers', () => {
   });
 
   it('preserves root-scoped team state when a session-scoped ralph overlap is activated', async () => {
-    await withTempRepo('omx-skill-active-team-ralph-', async (cwd) => {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
+    await withTempRepo('rcs-skill-active-team-ralph-', async (cwd) => {
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeSkillActiveStateCopies(cwd, {
         active: true,
         skill: 'team',
@@ -114,7 +114,7 @@ describe('skill-active state helpers', () => {
       });
 
       const rootState = JSON.parse(
-        await readFile(join(cwd, '.omx', 'state', 'skill-active-state.json'), 'utf-8'),
+        await readFile(join(cwd, '.rcs', 'state', 'skill-active-state.json'), 'utf-8'),
       ) as { active_skills?: Array<{ skill: string; phase?: string; session_id?: string }> };
       assert.deepEqual(
         rootState.active_skills?.map(({ skill, phase, session_id }) => ({
@@ -142,8 +142,8 @@ describe('skill-active state helpers', () => {
   });
 
   it('clears only the matching terminal session entry and preserves unrelated active skills', async () => {
-    await withTempRepo('omx-skill-active-terminal-clear-', async (cwd) => {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
+    await withTempRepo('rcs-skill-active-terminal-clear-', async (cwd) => {
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeSkillActiveStateCopies(cwd, {
         active: true,
         skill: 'custom-skill',
@@ -180,7 +180,7 @@ describe('skill-active state helpers', () => {
       );
 
       const rootState = JSON.parse(
-        await readFile(join(cwd, '.omx', 'state', 'skill-active-state.json'), 'utf-8'),
+        await readFile(join(cwd, '.rcs', 'state', 'skill-active-state.json'), 'utf-8'),
       ) as { active?: boolean; active_skills?: Array<{ skill: string; phase?: string; session_id?: string }> };
       assert.equal(rootState.active, true);
       assert.deepEqual(

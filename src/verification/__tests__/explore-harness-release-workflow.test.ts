@@ -32,8 +32,8 @@ describe('native release workflow', () => {
     assert.match(workflow, /actions\/download-artifact@v8/);
     assert.match(workflow, /softprops\/action-gh-release@v3/);
     assert.match(workflow, /generate-release-body\.js/);
-    assert.match(workflow, /omx-explore-harness/);
-    assert.match(workflow, /omx-sparkshell/);
+    assert.match(workflow, /rcs-explore-harness/);
+    assert.match(workflow, /rcs-sparkshell/);
     assert.match(workflow, /native-release-manifest\.json/);
     assert.match(workflow, /Publish Native Assets/);
     assert.match(workflow, /Smoke Verify Native Assets/);

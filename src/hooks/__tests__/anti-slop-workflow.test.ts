@@ -18,7 +18,7 @@ function assertMatchesAll(content: string, patterns: RegExp[]): void {
 }
 
 function assertCanonicalPluginParity(path: string): void {
-  const pluginPath = `plugins/oh-my-codex/${path}`;
+  const pluginPath = `plugins/roblox-ai-os-creator-skills/${path}`;
   assert.ok(existsSync(join(repoRoot, pluginPath)), `${pluginPath} must exist in the plugin mirror`);
   assert.equal(read(pluginPath), read(path), `${path} must match the plugin mirror exactly`);
 }
@@ -57,7 +57,7 @@ const aiSlopCleanerWorkflowPatterns = [
   /^     - \*\*Grounded compatibility\/fail-safe fallback\*\* — is scoped to an external\/version\/fail-safe boundary, documents the rationale, preserves failure evidence, and has regression tests for both the primary and fallback behavior$/m,
   /^   - Prefer root-cause repair, deletion, boundary repair, or explicit failure behavior before preserving fallback paths$/m,
   /^   - For broad, ambiguous, cross-layer, or architectural fallback-like code, invoke `\$ralplan` for consensus resolution before edits$/m,
-  /^   - Recursion guard: when already inside ralplan, ralph, team, or another OMX workflow, do not spawn a nested `\$ralplan`; record the finding and attach it to the active ralplan, leader, or plan handoff instead$/m,
+  /^   - Recursion guard: when already inside ralplan, ralph, team, or another RCS workflow, do not spawn a nested `\$ralplan`; record the finding and attach it to the active ralplan, leader, or plan handoff instead$/m,
   /^4\. \*\*Categorize issues before editing\*\*$/m,
   /^   - \*\*Fallback-like code\*\* — masking fallbacks, workaround branches, bypasses, swallowed errors, silent defaults, broad shims, alternate execution paths$/m,
   /^   - \*\*Duplication\*\* — repeated logic, copy-paste branches, redundant helpers$/m,
@@ -115,7 +115,7 @@ describe('anti-slop workflow surfaces', () => {
 
   it('defines the built-in ai-slop-cleaner workflow', () => {
     const skill = read('skills/ai-slop-cleaner/SKILL.md');
-    const pluginSkill = read('plugins/oh-my-codex/skills/ai-slop-cleaner/SKILL.md');
+    const pluginSkill = read('plugins/roblox-ai-os-creator-skills/skills/ai-slop-cleaner/SKILL.md');
     assert.equal(pluginSkill, skill);
     assertMatchesAll(skill, aiSlopCleanerWorkflowPatterns);
     assert.match(skill, /regression tests first/i);

@@ -1,7 +1,7 @@
 /**
- * OMX Trace MCP Server
+ * RCS Trace MCP Server
  * Provides trace timeline and summary tools for debugging agent flows.
- * Reads .omx/logs/ turn JSONL files produced by the notify hook.
+ * Reads .rcs/logs/ turn JSONL files produced by the notify hook.
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -188,8 +188,8 @@ interface Metrics {
   session_total_tokens?: number;
 }
 
-async function readMetrics(omxDir: string): Promise<Metrics | null> {
-  const metricsPath = join(omxDir, 'metrics.json');
+async function readMetrics(rcsDir: string): Promise<Metrics | null> {
+  const metricsPath = join(rcsDir, 'metrics.json');
   if (!existsSync(metricsPath)) return null;
   try {
     return JSON.parse(await readFile(metricsPath, 'utf-8'));
@@ -202,7 +202,7 @@ async function readMetrics(omxDir: string): Promise<Metrics | null> {
 // ── MCP Server ──────────────────────────────────────────────────────────────
 
 const server = new Server(
-  { name: 'omx-trace', version: '0.1.0' },
+  { name: 'rcs-trace', version: '0.1.0' },
   { capabilities: { tools: {} } }
 );
 
@@ -255,8 +255,8 @@ export async function handleTraceToolCall(request: {
       isError: true,
     };
   }
-  const omxDir = join(wd, '.omx');
-  const logsDir = join(omxDir, 'logs');
+  const rcsDir = join(wd, '.rcs');
+  const logsDir = join(rcsDir, 'logs');
 
   switch (name) {
     case 'trace_timeline': {
@@ -301,7 +301,7 @@ export async function handleTraceToolCall(request: {
       const [logSummary, modeEvents, metrics] = await Promise.all([
         summarizeLogFiles(logsDir),
         readModeEvents(wd),
-        readMetrics(omxDir),
+        readMetrics(rcsDir),
       ]);
 
       const modesByName: Record<string, { starts: number; ends: number }> = {};

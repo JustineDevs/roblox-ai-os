@@ -2,9 +2,9 @@ import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { getStateFilePath, readCurrentSessionId } from '../mcp/state-paths.js';
 import {
-  runOmxQuestion,
-  type OmxQuestionClientOptions,
-  type OmxQuestionSuccessPayload,
+  runRcsQuestion,
+  type RcsQuestionClientOptions,
+  type RcsQuestionSuccessPayload,
 } from './client.js';
 import {
   getQuestionRecordPath,
@@ -18,7 +18,7 @@ const DEEP_INTERVIEW_STATE_FILE = 'deep-interview-state.json';
 
 export interface DeepInterviewQuestionEnforcementState {
   obligation_id: string;
-  source: 'omx-question';
+  source: 'rcs-question';
   status: 'pending' | 'satisfied' | 'cleared';
   lifecycle_outcome: 'askuserQuestion';
   requested_at: string;
@@ -77,7 +77,7 @@ export function createDeepInterviewQuestionObligation(
 ): DeepInterviewQuestionEnforcementState {
   return {
     obligation_id: buildObligationId(now),
-    source: 'omx-question',
+    source: 'rcs-question',
     status: 'pending',
     lifecycle_outcome: 'askuserQuestion',
     requested_at: now.toISOString(),
@@ -262,8 +262,8 @@ export async function reconcileDeepInterviewQuestionEnforcementFromAnsweredRecor
 
 export async function runDeepInterviewQuestion(
   input: Partial<QuestionInput> & { question: string },
-  options: OmxQuestionClientOptions = {},
-): Promise<OmxQuestionSuccessPayload> {
+  options: RcsQuestionClientOptions = {},
+): Promise<RcsQuestionSuccessPayload> {
   const cwd = options.cwd ?? process.cwd();
   const sessionId = safeString(input.session_id).trim() || await readCurrentSessionId(cwd);
   const obligation = createDeepInterviewQuestionObligation();
@@ -275,7 +275,7 @@ export async function runDeepInterviewQuestion(
   );
 
   try {
-    const result = await runOmxQuestion(
+    const result = await runRcsQuestion(
       {
         ...input,
         source: input.source ?? 'deep-interview',

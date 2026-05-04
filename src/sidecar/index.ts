@@ -5,10 +5,10 @@ import type { CollectSidecarSnapshotOptions, SidecarFlags, SidecarSnapshot } fro
 
 export const SIDECAR_USAGE = [
   'Usage:',
-  '  omx sidecar <team-name>              Render sidecar once',
-  '  omx sidecar <team-name> --json       Output normalized sidecar snapshot',
-  '  omx sidecar <team-name> --watch      Refresh sidecar in the current terminal',
-  '  omx sidecar <team-name> --tmux       Open a right-side tmux pane running watch mode',
+  '  rcs sidecar <team-name>              Render sidecar once',
+  '  rcs sidecar <team-name> --json       Output normalized sidecar snapshot',
+  '  rcs sidecar <team-name> --watch      Refresh sidecar in the current terminal',
+  '  rcs sidecar <team-name> --tmux       Open a right-side tmux pane running watch mode',
   'Options:',
   '  --width <cols> / --width=<cols>      Sidecar width (default 48, minimum 30)',
   '  --interval-ms <ms>                   Watch refresh interval (default 1000)',
@@ -155,11 +155,11 @@ export async function sidecarCommand(args: string[]): Promise<void> {
 
   if (flags.tmux) {
     if (!process.env.TMUX) {
-      console.error('Not inside a tmux session. Start tmux first, then run: omx sidecar <team-name> --tmux');
+      console.error('Not inside a tmux session. Start tmux first, then run: rcs sidecar <team-name> --tmux');
       process.exitCode = 1;
       return;
     }
-    const paneId = launchSidecarTmuxPane({ cwd, teamName, width: flags.width, sessionId: process.env.OMX_SESSION_ID });
+    const paneId = launchSidecarTmuxPane({ cwd, teamName, width: flags.width, sessionId: process.env.RCS_SESSION_ID });
     if (!paneId) {
       console.error('Failed to create sidecar tmux pane. Ensure tmux is available.');
       process.exitCode = 1;

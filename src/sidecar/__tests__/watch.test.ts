@@ -5,7 +5,7 @@ import type { SidecarSnapshot } from '../types.js';
 
 function snapshot(): SidecarSnapshot {
   return {
-    schema_version: 'omx.sidecar/v1',
+    schema_version: 'rcs.sidecar/v1',
     generated_at: '2026-04-27T02:01:00.000Z',
     team_name: 'demo',
     team_task: 'ship sidecar',

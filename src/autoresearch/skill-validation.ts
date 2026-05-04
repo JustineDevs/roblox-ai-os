@@ -72,7 +72,7 @@ function resolveMaybeRelativePath(cwd: string, rawPath: string): string {
 function deriveDefaultArtifactPath(cwd: string, rawState: Record<string, unknown> | null): string | null {
   const slug = lookupString(rawState, 'slug', 'mission_slug', 'missionSlug');
   if (!slug) return null;
-  return join(cwd, '.omx', 'specs', `autoresearch-${slug}`, 'completion.json');
+  return join(cwd, '.rcs', 'specs', `autoresearch-${slug}`, 'completion.json');
 }
 
 function resolveArtifactPath(cwd: string, rawState: Record<string, unknown> | null): string | null {

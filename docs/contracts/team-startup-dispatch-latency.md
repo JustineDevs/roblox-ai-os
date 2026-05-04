@@ -7,7 +7,7 @@ Review lane: worker-3
 ## Scope
 
 This note documents the review contract for the team startup assignment-delay
-fix described by `.omx/plans/ralplan-team-worker-assignment-delay-20260430T110158Z.md`.
+fix described by `.rcs/plans/ralplan-team-worker-assignment-delay-20260430T110158Z.md`.
 It focuses on the startup window after tmux worker panes are created and before
 workers receive their first inbox trigger.
 

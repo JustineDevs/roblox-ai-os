@@ -8,7 +8,7 @@ import { listActiveSkills, readVisibleSkillActiveState } from '../../state/skill
 
 describe('modes/base deep-interview contract integration', () => {
   it('startMode persists deep-interview state', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-deep-interview-contract-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-deep-interview-contract-'));
     try {
       const started = await startMode('deep-interview', 'clarify a vague request', 3, wd);
       assert.equal(started.mode, 'deep-interview');
@@ -25,7 +25,7 @@ describe('modes/base deep-interview contract integration', () => {
 
 describe('modes/base autoresearch contract integration', () => {
   it('startMode auto-completes deep-interview when starting ralplan', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-interview-ralplan-handoff-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-interview-ralplan-handoff-'));
     try {
       await startMode('deep-interview', 'clarify contract', 3, wd);
       const started = await startMode('ralplan', 'plan contract', 5, wd);
@@ -34,7 +34,7 @@ describe('modes/base autoresearch contract integration', () => {
       assert.equal(started.transition_message, 'mode transiting: deep-interview -> ralplan');
 
       const completed = JSON.parse(
-        await readFile(join(wd, '.omx', 'state', 'deep-interview-state.json'), 'utf-8'),
+        await readFile(join(wd, '.rcs', 'state', 'deep-interview-state.json'), 'utf-8'),
       ) as { active?: boolean; current_phase?: string; completed_at?: string };
       assert.equal(completed.active, false);
       assert.equal(completed.current_phase, 'completed');
@@ -45,7 +45,7 @@ describe('modes/base autoresearch contract integration', () => {
   });
 
   it('startMode allows the approved team + ralph overlap', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-team-ralph-overlap-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-team-ralph-overlap-'));
     try {
       await startMode('team', 'demo team', 5, wd);
       const started = await startMode('ralph', 'demo ralph', 5, wd);
@@ -57,7 +57,7 @@ describe('modes/base autoresearch contract integration', () => {
   });
 
   it('startMode blocks autoresearch when ralph is active', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-autoresearch-contract-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-autoresearch-contract-'));
     try {
       await startMode('ralph', 'demo', 5, wd);
       await assert.rejects(
@@ -70,7 +70,7 @@ describe('modes/base autoresearch contract integration', () => {
   });
 
   it('startMode allows ultrawork overlap with any tracked mode', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-ralph-ultrawork-allow-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-ralph-ultrawork-allow-'));
     try {
       await startMode('ralph', 'demo', 5, wd);
       const started = await startMode('ultrawork', 'demo mission', 1, wd);
@@ -82,7 +82,7 @@ describe('modes/base autoresearch contract integration', () => {
   });
 
   it('startMode blocks execution-to-planning rollback auto-complete', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-rollback-deny-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-rollback-deny-'));
     try {
       await startMode('ralph', 'demo', 5, wd);
       await assert.rejects(
@@ -95,7 +95,7 @@ describe('modes/base autoresearch contract integration', () => {
   });
 
   it('startMode persists autoresearch state when no exclusive conflict exists', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-autoresearch-contract-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-autoresearch-contract-'));
     try {
       const started = await startMode('autoresearch', 'demo mission', 1, wd);
       assert.equal(started.mode, 'autoresearch');
@@ -116,7 +116,7 @@ describe('modes/base autoresearch contract integration', () => {
   });
 
   it('updateModeState syncs canonical autoresearch completion', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-autoresearch-canonical-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-autoresearch-canonical-'));
     try {
       await startMode('autoresearch', 'demo mission', 1, wd);
       await updateModeState('autoresearch', {

@@ -1,5 +1,5 @@
 /**
- * Pipeline stage interfaces for oh-my-codex
+ * Pipeline stage interfaces for roblox-ai-os-creator-skills
  *
  * Shared stage contracts for the strict Autopilot loop.
  * The pipeline sequences: ralplan -> ralph -> code-review.

@@ -1,5 +1,5 @@
 /**
- * HUD type definitions for oh-my-codex
+ * HUD type definitions for roblox-ai-os-creator-skills
  */
 
 /** Ralph loop state for HUD display */
@@ -116,7 +116,7 @@ export interface HudStatusLineConfig {
   preset?: HudPreset;
 }
 
-/** HUD configuration stored in .omx/hud-config.json */
+/** HUD configuration stored in .rcs/hud-config.json */
 export interface HudConfig {
   preset?: HudPreset;
   git?: HudGitConfig;
@@ -150,7 +150,7 @@ export const DEFAULT_HUD_CONFIG: ResolvedHudConfig = {
   },
 };
 
-/** CLI flags for omx hud */
+/** CLI flags for rcs hud */
 export interface HudFlags {
   watch: boolean;
   json: boolean;

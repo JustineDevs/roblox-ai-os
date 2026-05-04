@@ -28,7 +28,7 @@ function makeCtx(overrides: Partial<StageContext> = {}): StageContext {
 }
 
 async function setup(): Promise<string> {
-  tempDir = await mkdtemp(join(tmpdir(), 'omx-stages-test-'));
+  tempDir = await mkdtemp(join(tmpdir(), 'rcs-stages-test-'));
   return tempDir;
 }
 
@@ -76,7 +76,7 @@ describe('RALPLAN Stage', () => {
   });
 
   it('canSkip returns false when plans directory is empty', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
 
     const stage = createRalplanStage();
@@ -84,7 +84,7 @@ describe('RALPLAN Stage', () => {
   });
 
   it('canSkip returns false when only a prd- plan file exists', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(join(plansDir, 'prd-my-feature.md'), '# Plan\n');
 
@@ -93,7 +93,7 @@ describe('RALPLAN Stage', () => {
   });
 
   it('canSkip returns true when both prd and test spec plan files exist', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(join(plansDir, 'prd-my-feature.md'), '# Plan\n');
     await writeFile(join(plansDir, 'test-spec-my-feature.md'), '# Test Spec\n');
@@ -103,7 +103,7 @@ describe('RALPLAN Stage', () => {
   });
 
   it('canSkip returns false after non-clean code-review loopback even when plans exist', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(join(plansDir, 'prd-my-feature.md'), '# Plan\n');
     await writeFile(join(plansDir, 'test-spec-my-feature.md'), '# Test Spec\n');
@@ -118,7 +118,7 @@ describe('RALPLAN Stage', () => {
   });
 
   it('canSkip returns false when nested code-review artifacts are non-clean', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(join(plansDir, 'prd-my-feature.md'), '# Plan\n');
     await writeFile(join(plansDir, 'test-spec-my-feature.md'), '# Test Spec\n');
@@ -135,7 +135,7 @@ describe('RALPLAN Stage', () => {
   });
 
   it('surfaces deep-interview specs in ralplan artifacts for downstream traceability', async () => {
-    const specsDir = join(tempDir, '.omx', 'specs');
+    const specsDir = join(tempDir, '.rcs', 'specs');
     await mkdir(specsDir, { recursive: true });
     await writeFile(join(specsDir, 'deep-interview-my-feature.md'), '# Deep Interview Spec\n');
 
@@ -151,7 +151,7 @@ describe('RALPLAN Stage', () => {
     const stage = createRalplanStage({
       executor: {
         async draft() {
-          const plansDir = join(tempDir, '.omx', 'plans');
+          const plansDir = join(tempDir, '.rcs', 'plans');
           await mkdir(plansDir, { recursive: true });
           const prdPath = join(plansDir, 'prd-runtime.md');
           await writeFile(prdPath, '# Runtime Plan\n');
@@ -178,7 +178,7 @@ describe('RALPLAN Stage', () => {
   });
 
   it('canSkip returns false for non-prd plan files', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(join(plansDir, 'autopilot-spec.md'), '# Spec\n');
 
@@ -224,12 +224,12 @@ describe('Team Exec Stage', () => {
   });
 
   it('derives the team-exec task from a relative latest approved PRD handoff path', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     const approvedPrdPath = join(plansDir, 'prd-zeta.md');
     await writeFile(
       approvedPrdPath,
-      '# Zeta plan\n\nLaunch via omx team 5:debugger "Execute zeta handoff"\n',
+      '# Zeta plan\n\nLaunch via rcs team 5:debugger "Execute zeta handoff"\n',
     );
     await writeFile(join(plansDir, 'test-spec-zeta.md'), '# Zeta test spec\n');
 
@@ -244,7 +244,7 @@ describe('Team Exec Stage', () => {
             task: 'original request task',
             data: 'plan-content',
             stage: 'ralplan',
-            latestPlanPath: join('.omx', 'plans', 'prd-zeta.md'),
+            latestPlanPath: join('.rcs', 'plans', 'prd-zeta.md'),
           },
         },
       }));
@@ -264,11 +264,11 @@ describe('Team Exec Stage', () => {
   });
 
   it('derives the team-exec task when latestPlanPath is already cwd-prefixed', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-zeta.md'),
-      '# Zeta plan\n\nLaunch via omx team 5:debugger "Execute zeta handoff"\n',
+      '# Zeta plan\n\nLaunch via rcs team 5:debugger "Execute zeta handoff"\n',
     );
     await writeFile(join(plansDir, 'test-spec-zeta.md'), '# Zeta test spec\n');
 
@@ -284,7 +284,7 @@ describe('Team Exec Stage', () => {
           ralplan: {
             task: 'original request task',
             stage: 'ralplan',
-            latestPlanPath: join(relativeCwd, '.omx', 'plans', 'prd-zeta.md'),
+            latestPlanPath: join(relativeCwd, '.rcs', 'plans', 'prd-zeta.md'),
           },
         },
       }));
@@ -298,11 +298,11 @@ describe('Team Exec Stage', () => {
   });
 
   it('derives the team-exec task when latestPlanPath resolves through equivalent relative segments', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-zeta.md'),
-      '# Zeta plan\n\nLaunch via omx team 5:debugger "Execute zeta handoff"\n',
+      '# Zeta plan\n\nLaunch via rcs team 5:debugger "Execute zeta handoff"\n',
     );
     await writeFile(join(plansDir, 'test-spec-zeta.md'), '# Zeta test spec\n');
 
@@ -318,7 +318,7 @@ describe('Team Exec Stage', () => {
           ralplan: {
             task: 'original request task',
             stage: 'ralplan',
-            latestPlanPath: join('..', relativeCwd, '.omx', 'plans', 'prd-zeta.md'),
+            latestPlanPath: join('..', relativeCwd, '.rcs', 'plans', 'prd-zeta.md'),
           },
         },
       }));
@@ -332,7 +332,7 @@ describe('Team Exec Stage', () => {
   });
 
   it('derives the team-exec task from single-quoted approved handoff text with escapes', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-zeta.md'),
@@ -347,7 +347,7 @@ describe('Team Exec Stage', () => {
         ralplan: {
           task: 'original request task',
           stage: 'ralplan',
-          latestPlanPath: join('.omx', 'plans', 'prd-zeta.md'),
+          latestPlanPath: join('.rcs', 'plans', 'prd-zeta.md'),
         },
       },
     }));
@@ -361,7 +361,7 @@ describe('Team Exec Stage', () => {
   });
 
   it('preserves literal backslashes in single-quoted approved handoff text', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-zeta.md'),
@@ -379,7 +379,7 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
         ralplan: {
           task: 'original request task',
           stage: 'ralplan',
-          latestPlanPath: join('.omx', 'plans', 'prd-zeta.md'),
+          latestPlanPath: join('.rcs', 'plans', 'prd-zeta.md'),
         },
       },
     }));
@@ -393,16 +393,16 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
   });
 
   it('derives the team-exec task from the latest ralplan draft when numeric PRD slugs sort lexically out of order', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-issue-9.md'),
-      '# Issue 9 plan\n\nLaunch via omx team 2:executor "Execute issue 9 handoff"\n',
+      '# Issue 9 plan\n\nLaunch via rcs team 2:executor "Execute issue 9 handoff"\n',
     );
     await writeFile(join(plansDir, 'test-spec-issue-9.md'), '# Issue 9 test spec\n');
     await writeFile(
       join(plansDir, 'prd-issue-10.md'),
-      '# Issue 10 plan\n\nLaunch via omx team 3:debugger "Execute issue 10 handoff"\n',
+      '# Issue 10 plan\n\nLaunch via rcs team 3:debugger "Execute issue 10 handoff"\n',
     );
     await writeFile(join(plansDir, 'test-spec-issue-10.md'), '# Issue 10 test spec\n');
 
@@ -413,10 +413,10 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
         ralplan: {
           task: 'original request task',
           stage: 'ralplan',
-          latestPlanPath: join('.omx', 'plans', 'prd-issue-10.md'),
+          latestPlanPath: join('.rcs', 'plans', 'prd-issue-10.md'),
           drafts: [
-            { planPath: join('.omx', 'plans', 'prd-issue-9.md') },
-            { planPath: join('.omx', 'plans', 'prd-issue-10.md') },
+            { planPath: join('.rcs', 'plans', 'prd-issue-9.md') },
+            { planPath: join('.rcs', 'plans', 'prd-issue-10.md') },
           ],
         },
       },
@@ -428,17 +428,17 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
   });
 
   it('fails closed when latestPlanPath is not the selected latest approved PRD', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     const stalePrdPath = join(plansDir, 'prd-alpha.md');
     await writeFile(
       stalePrdPath,
-      '# Alpha plan\n\nLaunch via omx team 2:executor "Execute alpha handoff"\n',
+      '# Alpha plan\n\nLaunch via rcs team 2:executor "Execute alpha handoff"\n',
     );
     await writeFile(join(plansDir, 'test-spec-alpha.md'), '# Alpha test spec\n');
     await writeFile(
       join(plansDir, 'prd-zeta.md'),
-      '# Zeta plan\n\nLaunch via omx team 5:debugger "Execute zeta handoff"\n',
+      '# Zeta plan\n\nLaunch via rcs team 5:debugger "Execute zeta handoff"\n',
     );
     await writeFile(join(plansDir, 'test-spec-zeta.md'), '# Zeta test spec\n');
 
@@ -469,8 +469,8 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
           task: 'structural pipeline task',
           data: 'plan-content',
           stage: 'ralplan',
-          plansDir: join(tempDir, '.omx', 'plans'),
-          specsDir: join(tempDir, '.omx', 'specs'),
+          plansDir: join(tempDir, '.rcs', 'plans'),
+          specsDir: join(tempDir, '.rcs', 'specs'),
           prdPaths: [],
           testSpecPaths: [],
           deepInterviewSpecPaths: [],
@@ -488,11 +488,11 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
   });
 
   it('does not adopt a pre-existing approved plan when latestPlanPath is absent', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-zeta.md'),
-      '# Zeta plan\n\nLaunch via omx team 5:debugger "Execute zeta handoff"\n',
+      '# Zeta plan\n\nLaunch via rcs team 5:debugger "Execute zeta handoff"\n',
     );
     await writeFile(join(plansDir, 'test-spec-zeta.md'), '# Zeta test spec\n');
 
@@ -519,7 +519,7 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
   });
 
   it('fails closed when latestPlanPath has no team launch hint', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     const prdPath = join(plansDir, 'prd-no-team-hint.md');
     await writeFile(prdPath, '# PRD\n\nNo team launch hint here.\n');
@@ -541,7 +541,7 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
   });
 
   it('fails closed when latestPlanPath has ambiguous team launch hints', async () => {
-    const plansDir = join(tempDir, '.omx', 'plans');
+    const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     const prdPath = join(plansDir, 'prd-ambiguous-team-hint.md');
     await writeFile(
@@ -549,8 +549,8 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
       [
         '# PRD',
         '',
-        'Launch via omx team 2:executor "Execute first handoff"',
-        'Launch via omx team 2:executor "Execute second handoff"',
+        'Launch via rcs team 2:executor "Execute first handoff"',
+        'Launch via rcs team 2:executor "Execute second handoff"',
       ].join('\n'),
     );
     await writeFile(join(plansDir, 'test-spec-ambiguous-team-hint.md'), '# Test spec\n');
@@ -676,11 +676,11 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     });
 
     it('preserves approved DAG handoff tasks and metadata in the runtime-cli payload', async () => {
-      const plansDir = join(tempDir, '.omx', 'plans');
+      const plansDir = join(tempDir, '.rcs', 'plans');
       await mkdir(plansDir, { recursive: true });
       await writeFile(
         join(plansDir, 'prd-demo.md'),
-        '# Demo\n\nLaunch via omx team 2:executor "Execute approved demo plan"\n',
+        '# Demo\n\nLaunch via rcs team 2:executor "Execute approved demo plan"\n',
       );
       await writeFile(join(plansDir, 'test-spec-demo.md'), '# Demo Test Spec\n');
       await writeFile(join(plansDir, 'team-dag-demo.json'), JSON.stringify({
@@ -811,7 +811,7 @@ describe('Ralph Verify Stage', () => {
       });
 
       assert.match(instruction, /max_iterations=15/);
-      assert.match(instruction, /^omx ralph /);
+      assert.match(instruction, /^rcs ralph /);
       assert.match(instruction, /verify feature/);
       assert.match(instruction, /staffing=/);
       assert.match(instruction, /verify=/);
@@ -829,7 +829,7 @@ describe('Ralph Verify Stage', () => {
         executionArtifacts: {},
       });
 
-      assert.match(instruction, /^omx ralph /);
+      assert.match(instruction, /^rcs ralph /);
       assert.match(instruction, /staffing=/);
     });
   });

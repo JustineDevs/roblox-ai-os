@@ -70,11 +70,11 @@ describe('CI Rust gates', () => {
   });
 
 
-  it('uses the current crates/omx-sparkshell manifest for Rust coverage', () => {
+  it('uses the current crates/rcs-sparkshell manifest for Rust coverage', () => {
     const workflow = readCiWorkflow();
 
-    assert.match(workflow, /crates\/omx-sparkshell\/Cargo\.toml/);
-    assert.doesNotMatch(workflow, /native\/omx-sparkshell\/Cargo\.toml/);
+    assert.match(workflow, /crates\/rcs-sparkshell\/Cargo\.toml/);
+    assert.doesNotMatch(workflow, /native\/rcs-sparkshell\/Cargo\.toml/);
   });
 
   it('marks rustfmt and clippy as required in the CI status gate', () => {
@@ -115,8 +115,8 @@ describe('CI Rust gates', () => {
   it('uses the current sparkshell crate manifest in the Rust coverage lane', () => {
     const workflow = readCiWorkflow();
 
-    assert.match(workflow, /cargo llvm-cov --manifest-path crates\/omx-sparkshell\/Cargo\.toml --summary-only/);
-    assert.match(workflow, /cargo llvm-cov --manifest-path crates\/omx-sparkshell\/Cargo\.toml --lcov --output-path coverage\/rust\/omx-sparkshell\.lcov/);
-    assert.doesNotMatch(workflow, /native\/omx-sparkshell\/Cargo\.toml/);
+    assert.match(workflow, /cargo llvm-cov --manifest-path crates\/rcs-sparkshell\/Cargo\.toml --summary-only/);
+    assert.match(workflow, /cargo llvm-cov --manifest-path crates\/rcs-sparkshell\/Cargo\.toml --lcov --output-path coverage\/rust\/rcs-sparkshell\.lcov/);
+    assert.doesNotMatch(workflow, /native\/rcs-sparkshell\/Cargo\.toml/);
   });
 });

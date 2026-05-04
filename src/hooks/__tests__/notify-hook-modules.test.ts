@@ -152,7 +152,7 @@ describe('notify-hook/operational-events – parseCommandResult', () => {
 describe('notify-hook/operational-events – buildOperationalContext', () => {
   it('resolves a stable session_name from cwd + session id', async () => {
     const { buildOperationalContext } = await loadModule('notify-hook/operational-events.js');
-    const sessionId = 'omx-issue-663-session';
+    const sessionId = 'rcs-issue-663-session';
     const originalTmux = process.env.TMUX;
     delete process.env.TMUX;
     try {
@@ -165,7 +165,7 @@ describe('notify-hook/operational-events – buildOperationalContext', () => {
 
       assert.equal(typeof context.session_name, 'string');
       assert.notEqual(context.session_name, sessionId);
-      assert.match(context.session_name || '', /^omx-/);
+      assert.match(context.session_name || '', /^rcs-/);
       assert.match(context.session_name || '', /issue-663-session/);
     } finally {
       if (originalTmux === undefined) delete process.env.TMUX;
@@ -180,7 +180,7 @@ describe('notify-hook/operational-events – buildOperationalContext', () => {
     const { join } = await import('node:path');
     const { execFileSync } = await import('node:child_process');
 
-    const repo = await mkdtemp(join(tmpdir(), 'omx-opctx-baseline-'));
+    const repo = await mkdtemp(join(tmpdir(), 'rcs-opctx-baseline-'));
     try {
       execFileSync('git', ['init'], { cwd: repo, stdio: 'ignore' });
       execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: repo, stdio: 'ignore' });
@@ -194,11 +194,11 @@ describe('notify-hook/operational-events – buildOperationalContext', () => {
         cwd: repo,
         normalizedEvent: 'pr-merged',
         text: 'Merged issue #1407 via PR #1416',
-        prUrl: 'https://github.com/Yeachan-Heo/oh-my-codex/pull/1416',
+        prUrl: 'https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/pull/1416',
       });
 
       assert.equal(context.branch, 'feature/opctx-pr');
-      const baseline = JSON.parse(await readFile(join(repo, '.omx', 'state', 'current-task-baseline.json'), 'utf-8'));
+      const baseline = JSON.parse(await readFile(join(repo, '.rcs', 'state', 'current-task-baseline.json'), 'utf-8'));
       const entry = baseline.tasks.find((item: { branch_name: string }) => item.branch_name === 'feature/opctx-pr');
       assert.equal(entry.issue_number, 1407);
       assert.equal(entry.pr_number, 1416);
@@ -276,16 +276,16 @@ describe('notify-hook/auto-nudge – detectStallPattern', () => {
     assert.equal(detectNativeStopStallPattern(text, DEFAULT_STALL_PATTERNS), true);
   });
 
-  it('ignores prior OMX injection lines so injected text cannot self-trigger detection', async () => {
+  it('ignores prior RCS injection lines so injected text cannot self-trigger detection', async () => {
     const { detectStallPattern, DEFAULT_STALL_PATTERNS } = await loadModule('notify-hook/auto-nudge.js');
-    const text = 'Completed the change.\nyes, proceed [OMX_TMUX_INJECT]\nkeep going [OMX_TMUX_INJECT]';
+    const text = 'Completed the change.\nyes, proceed [RCS_TMUX_INJECT]\nkeep going [RCS_TMUX_INJECT]';
     assert.equal(detectStallPattern(text, DEFAULT_STALL_PATTERNS), false);
   });
 
   it('ignores orchestration intent tags when normalizing stall text', async () => {
     const { normalizeAutoNudgeSignatureText } = await loadModule('notify-hook/auto-nudge.js');
     assert.equal(
-      normalizeAutoNudgeSignatureText('Team alpha: 1 msg(s) for leader. [OMX_INTENT:pending-mailbox-review]'),
+      normalizeAutoNudgeSignatureText('Team alpha: 1 msg(s) for leader. [RCS_INTENT:pending-mailbox-review]'),
       'team alpha 1 msg s for leader',
     );
   });
@@ -417,7 +417,7 @@ describe('notify-hook/auto-nudge – inferSkillPhaseFromText', () => {
 describe('notify-hook/auto-nudge – blocked deep-interview auto approvals', () => {
   it('normalizes injected approval text before matching blocked inputs', async () => {
     const { normalizeBlockedAutoApprovalInput } = await loadModule('notify-hook/auto-nudge.js');
-    assert.equal(normalizeBlockedAutoApprovalInput(' yes, proceed [OMX_TMUX_INJECT] '), 'yes proceed');
+    assert.equal(normalizeBlockedAutoApprovalInput(' yes, proceed [RCS_TMUX_INJECT] '), 'yes proceed');
   });
 
   it('matches each blocked approval keyword or phrase', async () => {
@@ -483,7 +483,7 @@ describe('notify-hook/orchestration-intent – taxonomy helpers', () => {
   it('appends and strips orchestration intent tags', async () => {
     const { appendOrchestrationIntentTag, stripOrchestrationIntentTags } = await loadModule('notify-hook/orchestration-intent.js');
     const tagged = appendOrchestrationIntentTag('Team alpha: 1 msg(s) for leader.', 'pending-mailbox-review');
-    assert.equal(tagged, 'Team alpha: 1 msg(s) for leader. [OMX_INTENT:pending-mailbox-review]');
+    assert.equal(tagged, 'Team alpha: 1 msg(s) for leader. [RCS_INTENT:pending-mailbox-review]');
     assert.equal(stripOrchestrationIntentTags(tagged).trim(), 'Team alpha: 1 msg(s) for leader.');
   });
 
@@ -593,15 +593,15 @@ describe('notify-hook/payload-parser – language reminder injection', () => {
 
   it('injects language reminder for non-Latin input', async () => {
     const { injectLanguageReminder, LANGUAGE_REMINDER_MARKER } = await loadModule('notify-hook/payload-parser.js');
-    const prompt = injectLanguageReminder('Continue from current mode state. [OMX_TMUX_INJECT]', '帮我修复这个问题');
-    assert.match(prompt, /\[OMX_LANG_REMINDER\]/);
+    const prompt = injectLanguageReminder('Continue from current mode state. [RCS_TMUX_INJECT]', '帮我修复这个问题');
+    assert.match(prompt, /\[RCS_LANG_REMINDER\]/);
     assert.match(prompt, /Continue in the user's language\./);
     assert.match(prompt, new RegExp(LANGUAGE_REMINDER_MARKER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   });
 
   it('does not inject reminder for Latin-only text', async () => {
     const { injectLanguageReminder } = await loadModule('notify-hook/payload-parser.js');
-    const prompt = injectLanguageReminder('Continue [OMX_TMUX_INJECT]', 'Please fix issue 253');
-    assert.equal(prompt, 'Continue [OMX_TMUX_INJECT]');
+    const prompt = injectLanguageReminder('Continue [RCS_TMUX_INJECT]', 'Please fix issue 253');
+    assert.equal(prompt, 'Continue [RCS_TMUX_INJECT]');
   });
 });

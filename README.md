@@ -1,94 +1,66 @@
-# oh-my-codex (OMX)
+# RCS - Roblox Creator Skills
 
-<p align="center">
-  <img src="https://yeachan-heo.github.io/oh-my-codex-website/omx-character-nobg.png" alt="oh-my-codex character" width="280">
-  <br>
-  <em>Start Codex stronger, then let OMX add better prompts, workflows, and runtime help when the work grows.</em>
-</p>
-
-[![npm version](https://img.shields.io/npm/v/oh-my-codex)](https://www.npmjs.com/package/oh-my-codex)
+[![npm version](https://img.shields.io/npm/v/%40jstn-sdk%2Frcs)](https://www.npmjs.com/package/@jstn-sdk/rcs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
-[![Discord](https://img.shields.io/discord/1452487457085063218?color=5865F2&logo=discord&logoColor=white&label=Discord)](https://discord.gg/PUwSMR9XNk)
 
-**Website:** https://yeachan-heo.github.io/oh-my-codex-website/
+RCS is the Roblox Creator Skills runtime and workflow layer for [OpenAI Codex CLI](https://github.com/openai/codex). It is owned by **JustineDevs** and ships creator-oriented briefing, blueprinting, forging, crew orchestration, and psychology-aware design workflows on top of Codex.
 
-**Docs:** [Getting Started](./docs/getting-started.html) · [Agents](./docs/agents.html) · [Skills](./docs/skills.html) · [Integrations](./docs/integrations.html) · [Demo](./DEMO.md) · [OpenClaw guide](./docs/openclaw-integration.md)
-
-**Community:** [Discord](https://discord.gg/PUwSMR9XNk) — shared OMX/community server for oh-my-codex and related tooling.
-
-OMX is a workflow layer for [OpenAI Codex CLI](https://github.com/openai/codex).
+**Package:** `@jstn-sdk/rcs`  
+**Repo:** `https://github.com/JustineDevs/roblox-ai-os`  
+**Docs:** [Getting Started](./docs/getting-started.html) · [Skills](./docs/skills.html) · [Agents](./docs/agents.html) · [Integrations](./docs/integrations.html) · [OpenClaw guide](./docs/openclaw-integration.md)
 
 <table>
 <tr>
-<td><strong>🚨 CAUTION — RECOMMENDED DEFAULT ONLY: macOS or Linux with Codex CLI.</strong><br><br><strong>OMX is primarily designed and actively tuned for that path.</strong><br><strong>Native Windows and Codex App are not the default experience, may break or behave inconsistently, and currently receive less support.</strong></td>
+<td><strong>🚨 CAUTION — RECOMMENDED DEFAULT ONLY: macOS or Linux with Codex CLI.</strong><br><br><strong>RCS is primarily designed and actively tuned for that path.</strong><br><strong>Native Windows and Codex App are not the default experience, may break or behave inconsistently, and currently receive less support.</strong></td>
 </tr>
 </table>
 
 It keeps Codex as the execution engine and makes it easier to:
 - start a stronger Codex session by default
-- run one consistent workflow from clarification to completion
-- invoke the canonical skills with `$deep-interview`, `$ralplan`, `$team`, and `$ralph`
-- keep project guidance, plans, logs, and state in `.omx/`
-
-## Core Maintainers
-
-| Role | Name | GitHub |
-| --- | --- | --- |
-| Creator & Lead | Yeachan Heo | [@Yeachan-Heo](https://github.com/Yeachan-Heo) |
-| Maintainer | HaD0Yun | [@HaD0Yun](https://github.com/HaD0Yun) |
-
-## Ambassadors
-
-| Name | GitHub |
-| --- | --- |
-| Sigrid Jin | [@sigridjineth](https://github.com/sigridjineth) |
-
-## Top Collaborators
-
-| Name | GitHub |
-| --- | --- |
-| HaD0Yun | [@HaD0Yun](https://github.com/HaD0Yun) |
-| Junho Yeo | [@junhoyeo](https://github.com/junhoyeo) |
-| JiHongKim98 | [@JiHongKim98](https://github.com/JiHongKim98) |
-| Lor | [@gobylor](https://github.com/gobylor) |
-| HyunjunJeon | [@HyunjunJeon](https://github.com/HyunjunJeon) |
+- run one consistent workflow from briefing to execution handoff
+- invoke creator-facing workflows with `$brief`, `$blueprint`, `$crew`, `$forge`, and `$autoforge`
+- design Roblox loops from player desire backward with psychology-aware commands for audience, motivation, progression, status, FOMO, mastery, community, retention, and LiveOps
+- force Roblox work through a mandatory pre-action gate before any code generation or refactor
+- keep project guidance, plans, logs, and state in `.rcs/`
 
 ## Recommended default flow
 
-If you want the default OMX experience, start here:
+If you want the default RCS experience, start here:
 
 ```bash
-npm install -g @openai/codex oh-my-codex
-omx --madmax --high
+npm install -g @openai/codex @jstn-sdk/rcs
+rcs --madmax --high
 ```
 
-On a real `oh-my-codex` version bump, the global npm install now prints an explicit reminder instead of launching `omx setup` automatically. When you're ready, run `omx setup` manually or use `omx update` to check npm and then run the same setup refresh path.
+On a real RCS version bump, the global npm install prints an explicit reminder instead of auto-running setup. When you're ready, run `rcs setup` manually or use `rcs update` to refresh the install and setup path together.
 
-**Codex plugin install note:** this repo also ships an official Codex plugin layout at `plugins/oh-my-codex` with marketplace metadata in `.agents/plugins/marketplace.json`. That plugin bundles the mirrored skill surface plus plugin-scoped companion metadata for MCP servers and apps. Native/runtime hooks still stay on the setup/runtime side rather than the installable plugin manifest. It is still **not** a replacement for `npm install -g oh-my-codex` plus `omx setup`: legacy setup mode installs native agents and prompts, while plugin setup mode relies on plugin discovery for bundled skills and archives/removes legacy OMX-managed prompts/native-agent TOMLs so stale role files cannot shadow plugin behavior.
+**Codex plugin install note:** this repo also ships an official Codex plugin layout at `plugins/roblox-ai-os-creator-skills` with marketplace metadata in `.agents/plugins/marketplace.json`. That plugin bundles the mirrored skill surface plus plugin-scoped companion metadata for MCP servers and apps. Native/runtime hooks still stay on the setup/runtime side rather than the installable plugin manifest. It is still **not** a replacement for `npm install -g @jstn-sdk/rcs` plus `rcs setup`: setup/runtime wiring remains a first-class part of the product surface. Legacy setup mode installs native agents/prompts, while plugin setup mode archives stale legacy prompt/native-agent files and keeps runtime wiring current.
 
 Then work normally inside Codex:
 
 ```text
-$deep-interview "clarify the authentication change"
-$ralplan "approve the auth plan and review tradeoffs"
-$ralph "carry the approved plan to completion"
-$team 3:executor "execute the approved plan in parallel"
+$brief "clarify the creator workflow change"
+$blueprint "approve the plan and review tradeoffs"
+$forge "carry the approved plan to completion"
+$crew "execute the approved plan in parallel"
+$autoforge "take a scoped creator workflow from brief to ship-ready outputs"
 ```
 
 That is the main path.
-Before you treat the runtime as ready, run the quick-start smoke test below: `omx doctor` verifies the install shape, while `omx exec` proves the active Codex runtime can actually authenticate and complete a model call from the current environment.
-Start OMX strongly, clarify first when needed, approve the plan, then choose `$team` for coordinated parallel execution or `$ralph` for the persistent completion loop.
+Before you treat the runtime as ready, run the quick-start smoke test below: `rcs doctor` verifies the install shape, while `rcs exec` proves the active Codex runtime can actually authenticate and complete a model call from the current environment.
+Start RCS strongly, clarify first when needed, approve the plan, then choose `$crew` for coordinated parallel execution or `$forge` for the persistent completion loop.
 
-## What OMX is for
+## What RCS is for
 
-Use OMX if you already like Codex and want a better day-to-day runtime around it:
-- a standard workflow built around `$deep-interview`, `$ralplan`, `$team`, and `$ralph`
+Use RCS if you already like Codex and want a better day-to-day runtime around it:
+- a standard workflow built around `$brief`, `$blueprint`, `$crew`, and `$forge`
+- a structured player-psychology design layer for retention, motivation, social stickiness, and monetization fit
 - specialist roles and supporting skills when the task needs them
 - project guidance through scoped `AGENTS.md`
-- durable state under `.omx/` for plans, logs, memory, and mode tracking
+- durable state under `.rcs/` for plans, logs, memory, and mode tracking
 
-If you want plain Codex with no extra workflow layer, you probably do not need OMX.
+If you want plain Codex with no extra workflow layer, you probably do not need RCS.
 
 ## Quick start
 
@@ -96,7 +68,7 @@ If you want plain Codex with no extra workflow layer, you probably do not need O
 
 - Node.js 20+
 - Codex CLI installed: `npm install -g @openai/codex`
-- Codex auth configured and visible in the same shell/profile that will run OMX
+- Codex auth configured and visible in the same shell/profile that will run RCS
 - `tmux` on macOS/Linux if you want the recommended durable team runtime
 - `psmux` on native Windows only if you intentionally want the less-supported Windows team path
 
@@ -105,195 +77,269 @@ If you want plain Codex with no extra workflow layer, you probably do not need O
 After install, check both boundaries:
 
 ```bash
-omx doctor
+rcs doctor
 codex login status
-omx exec --skip-git-repo-check -C . "Reply with exactly OMX-EXEC-OK"
+rcs exec --skip-git-repo-check -C . "Reply with exactly RCS-EXEC-OK"
 ```
 
-`omx doctor` catches missing OMX files, hooks, and runtime prerequisites. The real smoke test catches auth, profile, and provider/base-URL problems that only appear when Codex performs an actual request.
+`rcs doctor` catches missing RCS files, hooks, and runtime prerequisites. The real smoke test catches auth, profile, and provider/base-URL problems that only appear when Codex performs an actual request.
 
-Launch OMX the recommended way:
+Launch RCS the recommended way:
 
 ```bash
-omx --madmax --high
+rcs --madmax --high
 ```
 
 On macOS/Linux interactive terminals with `tmux` available, this starts the
-leader in OMX-managed detached tmux by default so the HUD/runtime panes can be
+leader in RCS-managed detached tmux by default so the HUD/runtime panes can be
 created and recovered.
 
-If you want a one-off launch with no OMX tmux/HUD management, use `--direct`:
+If you want a one-off launch with no RCS tmux/HUD management, use `--direct`:
 
 ```bash
-omx --direct --yolo
+rcs --direct --yolo
 ```
 
 For a persistent shell/profile preference, set an environment policy:
 
 ```bash
-OMX_LAUNCH_POLICY=direct omx --yolo
+RCS_LAUNCH_POLICY=direct rcs --yolo
 ```
 
 Return to the auto/default behavior with:
 
 ```bash
-unset OMX_LAUNCH_POLICY
+unset RCS_LAUNCH_POLICY
 ```
 
 CLI policy flags win over the environment, and the last CLI policy flag before
 `--` wins:
 
 ```bash
-OMX_LAUNCH_POLICY=direct omx --tmux --yolo
+RCS_LAUNCH_POLICY=direct rcs --tmux --yolo
 ```
 
-Use `OMX_LAUNCH_POLICY=direct|tmux|detached-tmux|auto`. This iteration only
+Use `RCS_LAUNCH_POLICY=direct|tmux|detached-tmux|auto`. This iteration only
 adds CLI and environment controls; it intentionally does not add a config-file
-setting. If you run `--direct` from inside an existing tmux pane, OMX will not
+setting. If you run `--direct` from inside an existing tmux pane, RCS will not
 create HUD splits, enable mouse mode, or wrap extended-key handling, but the
 process still runs inside that already-open terminal pane.
 
-Then try the canonical workflow:
+Then try the canonical creator workflow:
 
 ```text
-$deep-interview "clarify the authentication change"
-$ralplan "approve the safest implementation path"
-$ralph "carry the approved plan to completion"
-$team 3:executor "execute the approved plan in parallel"
+$brief "clarify the creator workflow change"
+$blueprint "approve the safest implementation path"
+$forge "carry the approved plan to completion"
+$crew "execute the approved plan in parallel"
 ```
 
-Use `$team` when the approved plan needs coordinated parallel work, or `$ralph` when one persistent owner should keep pushing to completion.
+Use `$crew` when the approved plan needs coordinated parallel work, `$forge` when one persistent owner should keep pushing to completion, and `$autoforge` when you want the end-to-end creator workflow with minimal supervision.
 
 ## A simple mental model
 
-OMX does **not** replace Codex.
+RCS does **not** replace Codex.
 
 It adds a better working layer around it:
 - **Codex** does the actual agent work
-- **OMX role keywords** make useful roles reusable
-- **OMX skills** make common workflows reusable
-- **`.omx/`** stores plans, logs, memory, and runtime state
+- **RCS role keywords** make useful roles reusable
+- **RCS skills** make common workflows reusable
+- **`.rcs/`** stores plans, logs, memory, and runtime state
 
-Most users should think of OMX as **better task routing + better workflow + better runtime**, not as a command surface to operate manually all day.
+Most users should think of RCS as **better task routing + better workflow + better runtime**, not as a command surface to operate manually all day.
 
 ## Start here if you are new
 
-1. Install or update OMX with `npm install -g @openai/codex oh-my-codex`
-2. After install or real OMX version bumps, run `omx setup` yourself when you're ready, or use `omx update` when you also want npm to check for and install the latest build before refreshing setup
-3. Run `omx doctor`
-4. Run a real execution smoke test: `codex login status` and `omx exec --skip-git-repo-check -C . "Reply with exactly OMX-EXEC-OK"`
-5. Launch with `omx --madmax --high`
-6. Use `$deep-interview "..."` when the request or boundaries are still unclear
-7. Use `$ralplan "..."` to approve the plan and review tradeoffs
-8. Choose `$team` for coordinated parallel execution or `$ralph` for persistent completion loops
+1. Install or update RCS with `npm install -g @openai/codex @jstn-sdk/rcs`
+2. After install or real RCS version bumps, run `rcs setup` yourself when you're ready, or use `rcs update` when you also want npm to check for and install the latest build before refreshing setup
+3. Run `rcs doctor`
+4. Run a real execution smoke test: `codex login status` and `rcs exec --skip-git-repo-check -C . "Reply with exactly RCS-EXEC-OK"`
+5. Launch with `rcs --madmax --high`
+6. Use `$brief "..."` when the request or boundaries are still unclear
+7. Use `$blueprint "..."` to approve the plan and review tradeoffs
+8. Choose `$crew` for coordinated parallel execution or `$forge` for persistent completion loops
 
 ## Recommended workflow
 
-1. `$deep-interview` — clarify scope when the request or boundaries are still vague.
-2. `$ralplan` — turn that clarified scope into an approved architecture and implementation plan.
-3. `$team` or `$ralph` — use `$team` for coordinated parallel execution, or `$ralph` when you want a persistent completion loop with one owner.
+1. `$brief` — clarify scope when the request or boundaries are still vague.
+2. `$blueprint` — turn that clarified scope into an approved architecture and implementation plan.
+3. `$crew` or `$forge` — use `$crew` for coordinated parallel execution, or `$forge` when you want a persistent completion loop with one owner.
+
+## Roblox Pre-Action Gate
+
+RCS does not allow Roblox implementation to begin from memory or improvisation. Before any Roblox code generation, asset logic, UI system, monetization design, plugin work, or refactor, the workflow must first:
+
+1. gather Roblox references
+2. synthesize understanding
+3. standardize official terms
+4. design modular architecture and file tree
+5. then implement
+
+The required planning shape is documented in:
+- [Roblox Pre-Action Protocol](./docs/reference/roblox-pre-action-protocol.md)
+- [Roblox Pre-Action Plan Template](./templates/roblox/pre-action-plan.md)
+
+`PRE_ACTION_COMPLETE` must be `true` before Roblox code generation is allowed.
+
+## Psychology-aware workflow
+
+RCS v0.1.0 adds a formal player-psychology layer for Roblox experience design. The system is behavior-first: define player desire, loop tension, social fit, progression pressure, and monetization guardrails before building feature count.
+
+### Briefing surfaces
+
+```text
+$brief:audience "farming simulator for short mobile sessions"
+$brief:motivation "anime battler with collection, flex, and co-op raid goals"
+```
+
+### Blueprint surfaces
+
+```text
+$blueprint:psych "social roleplay town with repeat visits and identity expression"
+$blueprint:loop "define session, daily, weekly, and comeback loops for a tycoon"
+$blueprint:retention "plan D1/D7/D30 assumptions for a pet collection simulator"
+$blueprint:social "turn a hangout game into a social machine"
+```
+
+### Forge surfaces
+
+```text
+$forge:reward-loop "reward spec for a farming loop with escalation and fail states"
+$forge:daily-loop "daily return plan for a creature collector"
+$forge:event-loop "limited-time summer event with urgency and re-entry logic"
+$forge:progression "progression ladder for a rebirth-heavy simulator"
+$forge:status "prestige and flex systems for a social roleplay game"
+$forge:fomo "fair urgency mechanics for a seasonal shop"
+$forge:mastery "skill-expression systems for a combat tactics game"
+$forge:community "social retention systems for guild, co-op, and party play"
+```
+
+The canonical framework covers five drivers:
+
+1. Progression
+2. Status
+3. FOMO
+4. Mastery
+5. Community
+
+Each driver is evaluated through player desire, mechanic patterns, UI feedback, economy effects, retention effects, monetization fit, abuse risk, and Roblox fit.
 
 ## Common in-session surfaces
 
 | Surface | Use it for |
 | --- | --- |
-| `$deep-interview "..."` | clarifying intent, boundaries, and non-goals |
-| `$ralplan "..."` | approving the implementation plan and tradeoffs |
-| `$ralph "..."` | persistent completion and verification loops |
-| `$team "..."` | coordinated parallel execution when the work is big enough |
+| `$brief "..."` | clarifying intent, boundaries, and non-goals |
+| `$brief:audience "..."` | target fantasy, session habits, pain/desire language, and return motive |
+| `$brief:motivation "..."` | dominant psychology drivers and anti-pattern risks |
+| `$blueprint "..."` | approving the implementation plan and tradeoffs |
+| `$blueprint:psych "..."` | player psychology blueprint from desire backward |
+| `$blueprint:loop "..."` | session/daily/weekly/comeback loop design |
+| `$blueprint:retention "..."` | D1/D7/D30 assumptions, cadence, and comeback hooks |
+| `$blueprint:social "..."` | party/trade/guild/co-op/social-presence design |
+| `$forge "..."` | persistent completion and verification loops |
+| `$forge:reward-loop "..."` | concrete reward-loop specs |
+| `$forge:daily-loop "..."` | return motivator specs |
+| `$forge:event-loop "..."` | event and urgency structures |
+| `$forge:progression "..."` | XP/level/prestige/rebirth ladders |
+| `$forge:status "..."` | visible prestige/flex systems |
+| `$forge:fomo "..."` | fair urgency mechanics with anti-frustration guardrails |
+| `$forge:mastery "..."` | skill-expression and optimization systems |
+| `$forge:community "..."` | social stickiness systems |
+| `$crew "..."` | coordinated parallel execution when the work is big enough |
+| `$autoforge "..."` | end-to-end creator workflow with minimal supervision |
 | `/skills` | browsing installed skills and supporting helpers |
 
 ## Advanced / operator surfaces
 
 These are useful, but they are not the main onboarding path.
 
-### Team runtime
+### Lower-level team runtime
 
-Use the team runtime when you specifically need durable tmux/worktree coordination, not as the default way to begin using OMX. In Codex App or plain outside-tmux sessions, treat `omx team` as a tmux-runtime shell surface rather than a directly available in-app workflow; launch OMX CLI from shell first if you actually want team execution.
+Use the team runtime when you specifically need durable tmux/worktree coordination, not as the default way to begin using RCS. The public creator workflow remains `$brief -> $blueprint -> $forge / $crew -> $autoforge`. In Codex App or plain outside-tmux sessions, treat `rcs team` as a lower-level tmux-runtime shell surface rather than a directly available in-app workflow; launch RCS CLI from shell first if you actually want team execution.
 
 ```bash
-omx team 3:executor "fix the failing tests with verification"
-omx team status <team-name>
-omx team resume <team-name>
-omx team shutdown <team-name>
+rcs team 3:executor "fix the failing tests with verification"
+rcs team status <team-name>
+rcs team resume <team-name>
+rcs team shutdown <team-name>
 ```
 
 ### Setup, doctor, and HUD
 
 These are operator/support surfaces:
-- Codex plugin marketplace install/discovery can cache the plugin under `${CODEX_HOME:-~/.codex}/plugins/cache/$MARKETPLACE_NAME/oh-my-codex/$VERSION/` (local installs may use `local` as the version identifier); that packaged plugin now includes plugin-scoped companion metadata for MCP servers and apps, while native/runtime hooks remain setup-owned, so it is still not the full OMX runtime setup
-- `omx setup` installs prompts, skills, AGENTS scaffolding, `.codex/config.toml`, and OMX-managed native Codex hooks in `.codex/hooks.json`
-  - setup refresh preserves non-OMX hook entries in `.codex/hooks.json` and only rewrites OMX-managed wrappers
-  - `omx setup --merge-agents` preserves existing `AGENTS.md` guidance while inserting or refreshing generated OMX sections between `<!-- OMX:AGENTS:START -->` / `<!-- OMX:AGENTS:END -->`; without `--merge-agents` or `--force`, non-interactive setup keeps skipping existing `AGENTS.md` files
-  - `omx uninstall` removes OMX-managed wrappers from `.codex/hooks.json` but keeps the file when user hooks remain
-- `omx update` checks npm immediately, installs the newest global OMX build, then reruns the same interactive setup refresh path
-- fresh OMX-managed `gpt-5.5` config seeding now recommends `model_context_window = 250000` and `model_auto_compact_token_limit = 200000`, but only when those keys are missing
-- `.omx-config.json` model/env routing is documented in [the model/env routing reference](./docs/reference/omx-config-schema-routing.md); only edit keys supported by your installed OMX version
-- `omx doctor` verifies the install when something seems wrong; it does not prove that the active Codex profile can make an authenticated model call
-- `omx hud --watch` is a monitoring/status surface, not the primary user workflow
+- Codex plugin marketplace install/discovery can cache the plugin under `${CODEX_HOME:-~/.codex}/plugins/cache/$MARKETPLACE_NAME/roblox-ai-os-creator-skills/$VERSION/` (local installs may use `local` as the version identifier); that packaged plugin includes plugin-scoped companion metadata for MCP servers and apps, while native/runtime hooks remain setup-owned, so it is still not the full RCS runtime setup
+- `rcs setup` installs prompts, skills, AGENTS scaffolding, `.codex/config.toml`, and RCS-managed native Codex hooks in `.codex/hooks.json`
+  - setup refresh preserves non-RCS hook entries in `.codex/hooks.json` and only rewrites RCS-managed wrappers
+  - `rcs setup --merge-agents` preserves existing `AGENTS.md` guidance while inserting or refreshing generated RCS sections between `<!-- RCS:AGENTS:START -->` / `<!-- RCS:AGENTS:END -->`; without `--merge-agents` or `--force`, non-interactive setup keeps skipping existing `AGENTS.md` files
+  - `rcs uninstall` removes RCS-managed wrappers from `.codex/hooks.json` but keeps the file when user hooks remain
+- `rcs update` checks npm immediately, installs the newest global RCS build, then reruns the same interactive setup refresh path
+- fresh RCS-managed `gpt-5.5` config seeding now recommends `model_context_window = 250000` and `model_auto_compact_token_limit = 200000`, but only when those keys are missing
+- `.rcs-config.json` model/env routing is documented in [the model/env routing reference](./docs/reference/rcs-config-schema-routing.md); only edit keys supported by your installed RCS version
+- `rcs doctor` verifies the install when something seems wrong; it does not prove that the active Codex profile can make an authenticated model call
+- `rcs hud --watch` is a monitoring/status surface, not the primary user workflow
 
 For non-team sessions, native Codex hooks are now the canonical lifecycle surface:
 - `.codex/hooks.json` = native Codex hook registrations
-- `.omx/hooks/*.mjs` = OMX plugin hooks
-- `omx tmux-hook` / notify-hook / derived watcher = tmux + runtime fallback paths
+- `.rcs/hooks/*.mjs` = RCS plugin hooks
+- `rcs tmux-hook` / notify-hook / derived watcher = tmux + runtime fallback paths
 
 See [Codex native hook mapping](./docs/codex-native-hooks.md) for the current native / fallback matrix.
 
 
 ### Troubleshooting false-green readiness
 
-A green `omx doctor` means the install and local runtime wiring look sane. If real execution still fails, check the environment Codex actually uses:
+A green `rcs doctor` means the install and local runtime wiring look sane. If real execution still fails, check the environment Codex actually uses:
 
-- Run `codex login status` and `omx exec --skip-git-repo-check -C . "Reply with exactly OMX-EXEC-OK"` from the same shell/profile that will launch OMX.
+- Run `codex login status` and `rcs exec --skip-git-repo-check -C . "Reply with exactly RCS-EXEC-OK"` from the same shell/profile that will launch RCS.
 - In custom HOME, profile, container, or service shells, confirm the active `~/.codex` (or `CODEX_HOME`) is the one with the expected auth and config. Do not assume your normal user `~/.codex` is visible there.
 - If you depend on a local OpenAI-compatible proxy, confirm the active `~/.codex/config.toml` includes the expected `openai_base_url`; otherwise a proxy-issued key can be sent to the default endpoint and fail with `401 Unauthorized`, `Missing bearer or basic authentication in header`, or `Incorrect API key provided`.
-- If `omx doctor --team` or resume reports a stale team such as `resume_blocker` or a missing tmux session, clean the dead runtime state before retrying:
+- If `rcs doctor --team` or resume reports a stale team such as `resume_blocker` or a missing tmux session, clean the dead runtime state before retrying:
 
 ```bash
-omx team shutdown <team-name> --force --confirm-issues
-omx cancel
-omx doctor --team
+rcs team shutdown <team-name> --force --confirm-issues
+rcs cancel
+rcs doctor --team
 ```
 
 Only use the forced team shutdown for a team you have confirmed is dead or intentionally abandoned.
 
-If `Shift+Enter` still submits instead of inserting a newline inside an OMX-managed tmux session, see [Troubleshooting execution readiness](./docs/troubleshooting.md#shiftenter-submits-instead-of-inserting-a-newline-in-tmux-backed-omx-sessions). Current OMX already enables tmux extended-key forwarding around its own Codex launch paths, so a persistent failure is usually a tmux terminal-capability/discoverability problem rather than a net-new OMX feature gap.
+If `Shift+Enter` still submits instead of inserting a newline inside an RCS-managed tmux session, see [Troubleshooting execution readiness](./docs/troubleshooting.md#shiftenter-submits-instead-of-inserting-a-newline-in-tmux-backed-rcs-sessions). Current RCS already enables tmux extended-key forwarding around its own Codex launch paths, so a persistent failure is usually a tmux terminal-capability/discoverability problem rather than a net-new RCS feature gap.
 
 ### Explore and sparkshell
 
-- `omx explore --prompt "..."` is for read-only repository lookup
-- `omx sparkshell <command>` is for shell-native inspection and bounded verification
-- when `.omx/wiki/` exists, `omx explore` can inject wiki-first context before falling back to broader repository search
-- fallback boundaries are explicit: sparkshell-backend fallback is reported on stderr, and spark-model fallback emits stderr metadata plus an `## OMX Explore fallback` notice in stdout so users can see when cost/behavior may differ from the low-cost path
+- `rcs explore --prompt "..."` is for read-only repository lookup
+- `rcs sparkshell <command>` is for shell-native inspection and bounded verification
+- when `.rcs/wiki/` exists, `rcs explore` can inject wiki-first context before falling back to broader repository search
+- fallback boundaries are explicit: sparkshell-backend fallback is reported on stderr, and spark-model fallback emits stderr metadata plus an `## RCS Explore fallback` notice in stdout so users can see when cost/behavior may differ from the low-cost path
 
 Examples:
 
 ```bash
-omx explore --prompt "find where team state is written"
-omx sparkshell git status
-omx sparkshell --tmux-pane %12 --tail-lines 400
+rcs explore --prompt "find where team state is written"
+rcs sparkshell git status
+rcs sparkshell --tmux-pane %12 --tail-lines 400
 ```
 
 ### Wiki
 
-- `omx wiki` is the CLI parity surface for the OMX wiki MCP server
-- wiki data lives locally under `.omx/wiki/`
+- `rcs wiki` is the CLI parity surface for the RCS wiki MCP server
+- wiki data lives locally under `.rcs/wiki/`
 - the wiki is markdown-first and search-first, not vector-first
 
 Examples:
 
 ```bash
-omx wiki list --json
-omx wiki query --input '{"query":"session-start lifecycle"}' --json
-omx wiki lint --json
-omx wiki refresh --json
+rcs wiki list --json
+rcs wiki query --input '{"query":"session-start lifecycle"}' --json
+rcs wiki lint --json
+rcs wiki refresh --json
 ```
 
-### Platform notes for team mode
+### Platform notes for the lower-level team runtime
 
-`omx team` works best on macOS/Linux with `tmux`.
+`rcs team` works best on macOS/Linux with `tmux`.
 Native Windows remains a secondary path, and WSL2 is generally the better choice if you want a Windows-hosted setup.
-On native Windows, OMX accepts `psmux` as the tmux-compatible binary for the existing tmux-backed paths it already uses.
+On native Windows, RCS accepts `psmux` as the tmux-compatible binary for the existing tmux-backed paths it already uses.
 
 | Platform | Install |
 | --- | --- |
@@ -308,10 +354,10 @@ On native Windows, OMX accepts `psmux` as the tmux-compatible binary for the exi
 
 ### Intel Mac: high `syspolicyd` / `trustd` CPU during startup
 
-On some Intel Macs, OMX startup — especially with `--madmax --high` — can spike `syspolicyd` / `trustd` CPU usage while macOS Gatekeeper validates many concurrent process launches.
+On some Intel Macs, RCS startup — especially with `--madmax --high` — can spike `syspolicyd` / `trustd` CPU usage while macOS Gatekeeper validates many concurrent process launches.
 
 If this happens, try:
-- `xattr -dr com.apple.quarantine $(which omx)`
+- `xattr -dr com.apple.quarantine $(which rcs)`
 - adding your terminal app to the Developer Tools allowlist in macOS Security settings
 - using lower concurrency (for example, avoid `--madmax --high`)
 
@@ -348,16 +394,9 @@ If this happens, try:
 - [Polski](./docs/readme/README.pl.md)
 - [Українська](./docs/readme/README.uk.md)
 
-## Contributors
+## Ownership
 
-| Role | Name | GitHub |
-| --- | --- | --- |
-| Creator & Lead | Yeachan Heo | [@Yeachan-Heo](https://github.com/Yeachan-Heo) |
-| Maintainer | HaD0Yun | [@HaD0Yun](https://github.com/HaD0Yun) |
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Yeachan-Heo/oh-my-codex&type=date&legend=top-left)](https://www.star-history.com/#Yeachan-Heo/oh-my-codex&type=date&legend=top-left)
+RCS is owned and maintained by **JustineDevs** for Roblox creator workflows.
 
 ## License
 

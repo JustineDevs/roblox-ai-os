@@ -6,20 +6,20 @@ import { join } from 'node:path';
 import { RuntimeBridge, RuntimeBridgeError, resolveRuntimeBinaryPath } from '../bridge.js';
 
 describe('resolveRuntimeBinaryPath', () => {
-  it('prefers explicit OMX_RUNTIME_BINARY override', () => {
-    const previous = process.env.OMX_RUNTIME_BINARY;
+  it('prefers explicit RCS_RUNTIME_BINARY override', () => {
+    const previous = process.env.RCS_RUNTIME_BINARY;
     try {
-      process.env.OMX_RUNTIME_BINARY = '/custom/runtime';
+      process.env.RCS_RUNTIME_BINARY = '/custom/runtime';
       const actual = resolveRuntimeBinaryPath({
         debugPath: '/debug/runtime',
         releasePath: '/release/runtime',
-        fallbackBinary: 'omx-runtime',
+        fallbackBinary: 'rcs-runtime',
         exists: () => false,
       });
       assert.equal(actual, '/custom/runtime');
     } finally {
-      if (typeof previous === 'string') process.env.OMX_RUNTIME_BINARY = previous;
-      else delete process.env.OMX_RUNTIME_BINARY;
+      if (typeof previous === 'string') process.env.RCS_RUNTIME_BINARY = previous;
+      else delete process.env.RCS_RUNTIME_BINARY;
     }
   });
 
@@ -27,7 +27,7 @@ describe('resolveRuntimeBinaryPath', () => {
     const actual = resolveRuntimeBinaryPath({
       debugPath: '/debug/runtime',
       releasePath: '/release/runtime',
-      fallbackBinary: 'omx-runtime',
+      fallbackBinary: 'rcs-runtime',
       exists: (candidate) => candidate === '/debug/runtime' || candidate === '/release/runtime',
     });
     assert.equal(actual, '/debug/runtime');
@@ -37,7 +37,7 @@ describe('resolveRuntimeBinaryPath', () => {
     const actual = resolveRuntimeBinaryPath({
       debugPath: '/debug/runtime',
       releasePath: '/release/runtime',
-      fallbackBinary: 'omx-runtime',
+      fallbackBinary: 'rcs-runtime',
       exists: (candidate) => candidate === '/release/runtime',
     });
     assert.equal(actual, '/release/runtime');
@@ -47,10 +47,10 @@ describe('resolveRuntimeBinaryPath', () => {
     const actual = resolveRuntimeBinaryPath({
       debugPath: '/debug/runtime',
       releasePath: '/release/runtime',
-      fallbackBinary: 'omx-runtime',
+      fallbackBinary: 'rcs-runtime',
       exists: () => false,
     });
-    assert.equal(actual, 'omx-runtime');
+    assert.equal(actual, 'rcs-runtime');
   });
 });
 
@@ -79,7 +79,7 @@ describe('RuntimeBridgeError', () => {
 
 describe('RuntimeBridge.readCompatFile (parse guard)', () => {
   function withBridge(run: (stateDir: string, bridge: RuntimeBridge) => void): void {
-    const stateDir = mkdtempSync(join(tmpdir(), 'omx-bridge-compat-'));
+    const stateDir = mkdtempSync(join(tmpdir(), 'rcs-bridge-compat-'));
     try {
       run(stateDir, new RuntimeBridge({ stateDir, binaryPath: '/nonexistent-binary' }));
     } finally {
@@ -137,7 +137,7 @@ describe('RuntimeBridge.execCommand / readSnapshot (parse guard)', () => {
   });
 
   function withFakeBinary(stdout: string, run: (bridge: RuntimeBridge) => void): void {
-    const stateDir = mkdtempSync(join(tmpdir(), 'omx-bridge-exec-'));
+    const stateDir = mkdtempSync(join(tmpdir(), 'rcs-bridge-exec-'));
     const binaryPath = join(stateDir, 'fake-runtime.sh');
     const script = `#!/bin/sh
 case "$1" in

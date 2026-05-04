@@ -1,5 +1,5 @@
 /**
- * Codebase Map Generator for oh-my-codex
+ * Codebase Map Generator for roblox-ai-os-creator-skills
  *
  * Generates a lightweight snapshot of the project's source structure and
  * key exported symbols, injected into agent context at session start.
@@ -43,7 +43,7 @@ interface CodebaseMapCacheFile {
 }
 
 function cachePathForWorktree(worktreeRoot: string): string {
-  return join(worktreeRoot, '.omx', 'cache', 'codebase-map.json');
+  return join(worktreeRoot, '.rcs', 'cache', 'codebase-map.json');
 }
 
 function readGitIndexSignature(gitDir: string): { mtimeMs: number; size: number } | null {
@@ -82,7 +82,7 @@ async function writeCachedCodebaseMap(
   const targetPath = cachePathForWorktree(worktreeRoot);
   const tempPath = `${targetPath}.${process.pid}.${Date.now()}.tmp`;
   try {
-    await mkdir(join(worktreeRoot, '.omx', 'cache'), { recursive: true });
+    await mkdir(join(worktreeRoot, '.rcs', 'cache'), { recursive: true });
     const payload: CodebaseMapCacheFile = {
       version: CACHE_VERSION,
       worktreeRoot,
@@ -115,7 +115,7 @@ function getTrackedSourceFiles(cwd: string): string[] {
     return out
       .trim()
       .split('\n')
-      .filter((f) => f && !f.split('/').includes('.omx') && SOURCE_EXTS.has(extname(f)));
+      .filter((f) => f && !f.split('/').includes('.rcs') && SOURCE_EXTS.has(extname(f)));
   } catch {
     return [];
   }

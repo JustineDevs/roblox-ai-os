@@ -26,8 +26,8 @@ describe('explicit terminal stop model docs contract', () => {
     const doc = loadSurface('docs/contracts/explicit-terminal-stop-model.md');
 
     assert.match(doc, /`userinterlude` \| The user intentionally interrupted or paused the run\./i);
-    assert.match(doc, /`askuserQuestion` \| OMX must ask the user a blocking question before safe progress can continue\./i);
-    assert.match(doc, /should normally be backed by `omx question`/i);
+    assert.match(doc, /`askuserQuestion` \| RCS must ask the user a blocking question before safe progress can continue\./i);
+    assert.match(doc, /should normally be backed by `rcs question`/i);
   });
 
   it('forbids optional terminal handoff softeners in active workflow outputs', () => {

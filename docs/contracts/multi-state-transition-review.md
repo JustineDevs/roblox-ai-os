@@ -7,8 +7,8 @@ Reviewer lane: worker-3
 
 Compared the branch state against:
 
-- `.omx/plans/prd-multi-state-compat.md`
-- `.omx/plans/test-spec-multi-state-compat.md`
+- `.rcs/plans/prd-multi-state-compat.md`
+- `.rcs/plans/test-spec-multi-state-compat.md`
 
 Reviewed brownfield surfaces:
 
@@ -50,7 +50,7 @@ Primary gaps relative to the PRD/test-spec:
 3. **Invalid-transition guidance is not standardized.**
    - `src/modes/base.ts` still throws `Run cancel first.` for exclusivity
      failures, which does not meet the new requirement to mention explicit
-     clearing paths via `omx state` and `omx_state.*`.
+     clearing paths via `rcs state` and `rcs_state.*`.
 4. **The contract is not documented in one operator-facing place.**
    - The PRD and test spec define the rollout, but the repo lacked a dedicated
      contract doc describing the allowed set, the denied set, and the required
@@ -121,8 +121,8 @@ Added concrete recovery examples to the compatibility contract so denial
 messages can point operators at exact parity surfaces instead of vague
 placeholders:
 
-- `omx state clear --input '{"mode":"team"}' --json`
-- `omx_state.state_clear({ mode: "team" })`
+- `rcs state clear --input '{"mode":"team"}' --json`
+- `rcs_state.state_clear({ mode: "team" })`
 
 ## Reviewer conclusion
 

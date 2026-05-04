@@ -1,3 +1,5 @@
+> Archive context: retained release and migration collateral from the pre-v0.1.0 fork-to-RCS transition. Links are normalized to the canonical JustineDevs repository, but historical chronology and contributor references may still describe pre-fork development.
+
 # Open PR readiness matrix for `dev` — 2026-04-09 UTC
 
 Current `dev` head reviewed: `8656d21149a0772369f697df002f7bf85002db8d`.

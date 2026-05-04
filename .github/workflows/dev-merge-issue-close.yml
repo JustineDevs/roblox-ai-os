@@ -1,4 +1,4 @@
-name: Dev Merge Issue Close
+name: RCS Dev Merge Issue Close
 
 on:
   pull_request_target:

@@ -9,12 +9,12 @@ import {
   resolveAvailableAgentTypes,
 } from '../team/followup-planner.js';
 
-export const RALPH_HELP = `omx ralph - Launch Codex with ralph persistence mode active
+export const RALPH_HELP = `rcs ralph - Launch Codex with ralph persistence mode active
 
 Usage:
-  omx ralph [task text...]
-  omx ralph --prd "<task text>"
-  omx ralph [ralph-options] [codex-args...] [task text...]
+  rcs ralph [task text...]
+  rcs ralph --prd "<task text>"
+  rcs ralph [ralph-options] [codex-args...] [task text...]
 
 Options:
   --help, -h           Show this help message
@@ -23,23 +23,23 @@ Options:
   --no-deslop         Skip the final ai-slop-cleaner pass
 
 PRD mode:
-  Ralph initializes persistence artifacts in .omx/ so PRD and progress
+  Ralph initializes persistence artifacts in .rcs/ so PRD and progress
   state can survive across Codex sessions. Provide task text either as
   positional words or with --prd.
   Prompt-side \`$ralph\` activation is separate from this CLI entrypoint and
   does not imply \`--prd\` or the PRD.json startup gate.
 
 Common patterns:
-  omx ralph "Fix flaky notify-hook tests"
-  omx ralph --prd "Ship release checklist automation"
-  omx ralph --model gpt-5 "Refactor state hydration"
-  omx ralph -- --task-with-leading-dash
+  rcs ralph "Fix flaky notify-hook tests"
+  rcs ralph --prd "Ship release checklist automation"
+  rcs ralph --model gpt-5 "Refactor state hydration"
+  rcs ralph -- --task-with-leading-dash
 `;
 
 const VALUE_TAKING_FLAGS = new Set(['--model', '--provider', '--config', '-c', '-i', '--images-dir']);
-const RALPH_OMX_FLAGS = new Set(['--prd', '--no-deslop']);
-const RALPH_APPEND_ENV = 'OMX_RALPH_APPEND_INSTRUCTIONS_FILE';
-const REQUIRED_RALPH_PRD_JSON_PATH = '.omx/prd.json';
+const RALPH_RCS_FLAGS = new Set(['--prd', '--no-deslop']);
+const RALPH_APPEND_ENV = 'RCS_RALPH_APPEND_INSTRUCTIONS_FILE';
+const REQUIRED_RALPH_PRD_JSON_PATH = '.rcs/prd.json';
 const COMPLETED_RALPH_STORY_STATUSES = new Set(['passed', 'complete', 'completed']);
 const APPROVED_RALPH_ARCHITECT_VERDICTS = new Set(['approve', 'approved']);
 
@@ -112,7 +112,7 @@ export function assertRequiredRalphPrdJson(cwd: string, args: readonly string[])
 
   const requiredPath = join(cwd, REQUIRED_RALPH_PRD_JSON_PATH);
   if (!existsSync(requiredPath)) {
-    throw new Error(`[ralph] Missing required PRD.json at ${REQUIRED_RALPH_PRD_JSON_PATH}. Create the file before running \`omx ralph --prd ...\`.`);
+    throw new Error(`[ralph] Missing required PRD.json at ${REQUIRED_RALPH_PRD_JSON_PATH}. Create the file before running \`rcs ralph --prd ...\`.`);
   }
 
   readAndValidateRequiredRalphPrdJson(cwd);
@@ -212,7 +212,7 @@ export function normalizeRalphCliArgs(args: readonly string[]): string[] {
 export function filterRalphCodexArgs(args: readonly string[]): string[] {
   const filtered: string[] = [];
   for (const token of args) {
-    if (RALPH_OMX_FLAGS.has(token.toLowerCase())) continue;
+    if (RALPH_RCS_FLAGS.has(token.toLowerCase())) continue;
     filtered.push(token);
   }
   return filtered;
@@ -237,18 +237,18 @@ export function buildRalphAppendInstructions(
 ): string {
   return [
     '<ralph_native_subagents>',
-    'You are in OMX Ralph persistence mode.',
+    'You are in RCS Ralph persistence mode.',
     `Primary task: ${task}`,
     'Parallelism guidance:',
     '- Prefer Codex native subagents for independent parallel subtasks.',
-    '- Treat `.omx/state/subagent-tracking.json` as the native subagent activity ledger for this session.',
+    '- Treat `.rcs/state/subagent-tracking.json` as the native subagent activity ledger for this session.',
     '- Do not declare the task complete, and do not transition into final verification/completion, while active native subagent threads are still running.',
     '- Before closing a verification wave, confirm that active native subagent threads have drained.',
     ...buildRalphApprovedContextLines(options.approvedHint ?? null),
     'Final deslop guidance:',
     options.noDeslop
       ? '- `--no-deslop` is active for this Ralph run, so skip the mandatory ai-slop-cleaner final pass and use the latest successful pre-deslop verification evidence.'
-      : `- Step 7.5 must run oh-my-codex:ai-slop-cleaner in standard mode on changed files only, using the repo-relative paths listed in \`${options.changedFilesPath}\`.`,
+      : `- Step 7.5 must run roblox-ai-os-creator-skills:ai-slop-cleaner in standard mode on changed files only, using the repo-relative paths listed in \`${options.changedFilesPath}\`.`,
     options.noDeslop
       ? '- Do not run ai-slop-cleaner unless the user explicitly re-enables the deslop pass.'
       : '- Keep the cleaner scope bounded to that file list; do not widen the pass to the full codebase or unrelated files.',
@@ -264,16 +264,16 @@ async function writeRalphSessionFiles(
   task: string,
   options: { noDeslop: boolean; approvedHint?: ApprovedExecutionLaunchHint | null },
 ): Promise<RalphSessionFiles> {
-  const dir = join(cwd, '.omx', 'ralph');
+  const dir = join(cwd, '.rcs', 'ralph');
   await mkdir(dir, { recursive: true });
   const instructionsPath = join(dir, 'session-instructions.md');
   const changedFilesPath = join(dir, 'changed-files.txt');
   await writeFile(changedFilesPath, `${buildRalphChangedFilesSeedContents()}\n`);
   await writeFile(
     instructionsPath,
-    `${buildRalphAppendInstructions(task, { changedFilesPath: '.omx/ralph/changed-files.txt', noDeslop: options.noDeslop, approvedHint: options.approvedHint ?? null })}\n`,
+    `${buildRalphAppendInstructions(task, { changedFilesPath: '.rcs/ralph/changed-files.txt', noDeslop: options.noDeslop, approvedHint: options.approvedHint ?? null })}\n`,
   );
-  return { instructionsPath, changedFilesPath: '.omx/ralph/changed-files.txt' };
+  return { instructionsPath, changedFilesPath: '.rcs/ralph/changed-files.txt' };
 }
 
 export async function ralphCommand(args: string[]): Promise<void> {
@@ -300,7 +300,7 @@ export async function ralphCommand(args: string[]): Promise<void> {
     staffing_summary: staffingPlan.staffingSummary,
     staffing_allocations: staffingPlan.allocations,
     native_subagents_enabled: true,
-    native_subagent_tracking_path: '.omx/state/subagent-tracking.json',
+    native_subagent_tracking_path: '.rcs/state/subagent-tracking.json',
     native_subagent_policy: 'Parallel Codex subagents are allowed for independent work, but phase completion must wait for active native subagent threads to finish.',
     deslop_enabled: !noDeslop,
     deslop_opt_out: noDeslop,

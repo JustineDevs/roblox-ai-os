@@ -1,4 +1,4 @@
-import { execFileSync, spawn, type ChildProcess, type SpawnOptions } from 'node:child_process';
+import { spawn, spawnSync, type ChildProcess, type SpawnOptions } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { stdin as processStdin, stdout as processStdout } from 'node:process';
@@ -10,7 +10,7 @@ import { getCurrentTmuxPaneId } from '../notifications/tmux.js';
 import { getStatePath } from '../mcp/state-paths.js';
 import { TRACKED_WORKFLOW_MODES } from '../state/workflow-transition.js';
 import { resolveTmuxBinaryForPlatform } from '../utils/platform-command.js';
-import { resolveOmxCliEntryPath } from '../utils/paths.js';
+import { resolveRcsCliEntryPath } from '../utils/paths.js';
 import type { QuestionAnswer, QuestionRecord, QuestionRendererState } from './types.js';
 
 export type QuestionRendererStrategy = 'inside-tmux' | 'detached-tmux' | 'inline-tty' | 'windows-console' | 'test-noop' | 'unsupported';
@@ -44,7 +44,7 @@ function isPaneId(value: string | null | undefined): value is string {
 }
 
 function hasExplicitQuestionPaneTarget(env: NodeJS.ProcessEnv): boolean {
-  return isPaneId(safeString(env.OMX_QUESTION_RETURN_PANE || env.OMX_LEADER_PANE_ID).trim());
+  return isPaneId(safeString(env.RCS_QUESTION_RETURN_PANE || env.RCS_LEADER_PANE_ID).trim());
 }
 
 function hasInteractiveQuestionTty(options?: {
@@ -81,7 +81,7 @@ export function resolveQuestionRendererStrategy(
   },
 ): QuestionRendererStrategy {
   const platform = options?.platform ?? process.platform;
-  if (safeString(env.OMX_QUESTION_TEST_RENDERER).trim() === 'noop') return 'test-noop';
+  if (safeString(env.RCS_QUESTION_TEST_RENDERER).trim() === 'noop') return 'test-noop';
   if (hasWindowsPsmuxReturnBridge(env, platform)) return 'windows-console';
   if (safeString(env.TMUX).trim() !== '') return 'inside-tmux';
   if (hasExplicitQuestionPaneTarget(env)) return 'inside-tmux';
@@ -163,13 +163,13 @@ function resolveQuestionUiProcessArgs(
     env?: NodeJS.ProcessEnv;
   },
 ): string[] {
-  const omxBin = resolveOmxCliEntryPath({
+  const rcsBin = resolveRcsCliEntryPath({
     argv1: process.argv[1],
     cwd: options.cwd,
     env: options.env,
   }) || process.argv[1];
-  if (!omxBin) throw new Error('Unable to resolve OMX CLI entry path for question UI launch.');
-  return [omxBin, 'question', '--ui', '--state-path', recordPath];
+  if (!rcsBin) throw new Error('Unable to resolve RCS CLI entry path for question UI launch.');
+  return [rcsBin, 'question', '--ui', '--state-path', recordPath];
 }
 
 function buildQuestionUiTmuxArgs(
@@ -182,12 +182,12 @@ function buildQuestionUiTmuxArgs(
   },
 ): string[] {
   return [
-    ...(options.sessionId ? ['-e', `OMX_SESSION_ID=${options.sessionId}`] : []),
+    ...(options.sessionId ? ['-e', `RCS_SESSION_ID=${options.sessionId}`] : []),
     ...(options.returnTarget ? [
       '-e',
-      `OMX_QUESTION_RETURN_TARGET=${options.returnTarget}`,
+      `RCS_QUESTION_RETURN_TARGET=${options.returnTarget}`,
       '-e',
-      'OMX_QUESTION_RETURN_TRANSPORT=tmux-send-keys',
+      'RCS_QUESTION_RETURN_TRANSPORT=tmux-send-keys',
     ] : []),
     process.execPath,
     ...resolveQuestionUiProcessArgs(recordPath, options),
@@ -203,10 +203,10 @@ function buildQuestionUiProcessEnv(
 ): NodeJS.ProcessEnv {
   return {
     ...baseEnv,
-    ...(options.sessionId ? { OMX_SESSION_ID: options.sessionId } : {}),
+    ...(options.sessionId ? { RCS_SESSION_ID: options.sessionId } : {}),
     ...(options.returnTarget ? {
-      OMX_QUESTION_RETURN_TARGET: options.returnTarget,
-      OMX_QUESTION_RETURN_TRANSPORT: 'tmux-send-keys',
+      RCS_QUESTION_RETURN_TARGET: options.returnTarget,
+      RCS_QUESTION_RETURN_TRANSPORT: 'tmux-send-keys',
     } : {}),
   };
 }
@@ -218,7 +218,7 @@ function quoteCmdArg(value: string): string {
 function buildWindowsConsoleStartCommand(command: string, args: string[]): string {
   return [
     'start',
-    '"OMX Question"',
+    '"RCS Question"',
     '/wait',
     quoteCmdArg(command),
     ...args.map(quoteCmdArg),
@@ -231,11 +231,16 @@ function defaultSpawnDetachedRenderer(command: string, args: string[], options: 
 
 function defaultExecTmux(args: string[]): string {
   const tmux = resolveTmuxBinaryForPlatform();
-  if (!tmux) throw new Error('tmux is unavailable; omx question requires tmux for OMX-owned question UI rendering.');
-  return execFileSync(tmux, args, {
+  if (!tmux) throw new Error('tmux is unavailable; rcs question requires tmux for RCS-owned question UI rendering.');
+  const result = spawnSync(tmux, args, {
     encoding: 'utf-8',
     ...(process.platform === 'win32' ? { windowsHide: true } : {}),
   });
+  if (typeof result.stdout === 'string' && result.status === 0) {
+    return result.stdout;
+  }
+  if (result.error) throw result.error;
+  throw new Error((result.stderr || '').trim() || `tmux ${args.join(' ')} failed`);
 }
 
 function readJsonFileIfExists(path: string): Record<string, unknown> | null {
@@ -291,7 +296,7 @@ function resolveReturnTarget(options: {
   sessionId?: string;
 }): string | undefined {
   const env = options.env ?? process.env;
-  const explicitPane = safeString(env.OMX_QUESTION_RETURN_PANE || env.OMX_LEADER_PANE_ID).trim();
+  const explicitPane = safeString(env.RCS_QUESTION_RETURN_PANE || env.RCS_LEADER_PANE_ID).trim();
   if (isPaneId(explicitPane)) return explicitPane;
 
   const envPane = safeString(env.TMUX_PANE).trim();
@@ -313,7 +318,9 @@ function isCurrentTmuxSessionAttached(
   const targetArgs = isPaneId(paneTarget) ? ['-t', paneTarget] : [];
   try {
     const attached = execTmux(['display-message', '-p', ...targetArgs, '#{session_attached}']).trim();
-    return Number.parseInt(attached, 10) > 0;
+    const parsed = Number.parseInt(attached, 10);
+    if (Number.isFinite(parsed)) return parsed > 0;
+    return attached.length > 0;
   } catch {
     return false;
   }
@@ -377,7 +384,7 @@ export function isQuestionRendererAlive(
 }
 
 export function formatQuestionAnswerForInjection(answer: QuestionAnswer): string {
-  const prefix = '[omx question answered]';
+  const prefix = '[rcs question answered]';
   if (answer.kind === 'other') {
     return sanitizeReplyInput(`${prefix} ${answer.other_text ?? String(answer.value)}`);
   }
@@ -389,7 +396,7 @@ export function formatQuestionAnswerForInjection(answer: QuestionAnswer): string
 }
 
 export function formatQuestionAnswersForInjection(answers: Array<{ question_id: string; answer: QuestionAnswer }>): string {
-  const prefix = '[omx question answered]';
+  const prefix = '[rcs question answered]';
   const body = answers
     .map((entry) => {
       const value = Array.isArray(entry.answer.value) ? entry.answer.value.join(', ') : String(entry.answer.value);
@@ -464,7 +471,7 @@ export function launchQuestionRenderer(
 
   if (strategy === 'unsupported') {
     throw new Error(
-      'omx question cannot open a visible renderer because this process is outside an attached tmux pane and has no explicit tmux return bridge. Codex App/outside-tmux sessions need an attached tmux OMX CLI session or OMX_QUESTION_RETURN_PANE bridge. Run omx question from inside tmux.',
+      'rcs question cannot open a visible renderer because this process is outside an attached tmux pane and has no explicit tmux return bridge. Codex App/outside-tmux sessions need an attached tmux RCS CLI session or RCS_QUESTION_RETURN_PANE bridge. Run rcs question from inside tmux.',
     );
   }
 
@@ -482,12 +489,13 @@ export function launchQuestionRenderer(
 
   if (strategy === 'inside-tmux') {
     const splitTarget = returnTarget ? ['-t', returnTarget] : [];
+    const launchedFromExplicitBridge = safeString(env.TMUX).trim() === '' && Boolean(returnTarget);
     const attachedCheckTarget = safeString(env.TMUX).trim()
       ? returnTarget || safeString(env.TMUX_PANE).trim() || undefined
       : undefined;
     if (safeString(env.TMUX).trim() && !isCurrentTmuxSessionAttached(execTmux, env, attachedCheckTarget)) {
       throw new Error(
-        'omx question cannot open a visible renderer because this tmux session has no attached client. Run omx question from an attached tmux pane.',
+        'rcs question cannot open a visible renderer because this tmux session has no attached client. Run rcs question from an attached tmux pane.',
       );
     }
 
@@ -511,9 +519,9 @@ export function launchQuestionRenderer(
       ...commandArgs,
     ]);
     const paneId = parsePaneIdFromTmuxOutput(rawPane);
-    if (!paneId) throw new Error('Failed to create tmux split pane for omx question UI.');
+    if (!paneId) throw new Error('Failed to create tmux split pane for rcs question UI.');
     sleepImpl(QUESTION_RENDERER_PANE_SETTLE_MS);
-    if (!isLaunchedQuestionPaneAlive(paneId, execTmux)) {
+    if (!launchedFromExplicitBridge && !isLaunchedQuestionPaneAlive(paneId, execTmux)) {
       throw new Error(`Question UI pane ${paneId} disappeared immediately after launch.`);
     }
     return {
@@ -557,7 +565,7 @@ export function launchQuestionRenderer(
 
   if (strategy === 'detached-tmux') {
     const baseName = basename(options.recordPath, '.json').replace(/[^A-Za-z0-9_-]+/g, '-').slice(0, 32) || 'question';
-    const sessionName = `omx-question-${baseName}`;
+    const sessionName = `rcs-question-${baseName}`;
     const output = execTmux([
       'new-session',
       '-d',
@@ -591,5 +599,5 @@ export function launchQuestionRenderer(
   }
 
   const exhaustiveStrategy: never = strategy;
-  throw new Error(`Unsupported omx question renderer strategy: ${exhaustiveStrategy}`);
+  throw new Error(`Unsupported rcs question renderer strategy: ${exhaustiveStrategy}`);
 }

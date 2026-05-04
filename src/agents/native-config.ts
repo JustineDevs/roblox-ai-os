@@ -201,7 +201,7 @@ export function composeRoleInstructions(
   const metadataLines = [];
   if (metadata) {
     metadataLines.push(
-      "## OMX Agent Metadata",
+      "## RCS Agent Metadata",
       `- role: ${metadata.name}`,
       `- posture: ${metadata.posture}`,
       `- model_class: ${metadata.modelClass}`,
@@ -210,7 +210,7 @@ export function composeRoleInstructions(
   }
   if (resolvedModel) {
     if (metadataLines.length === 0) {
-      metadataLines.push("## OMX Agent Metadata");
+      metadataLines.push("## RCS Agent Metadata");
     }
     metadataLines.push(`- resolved_model: ${resolvedModel}`);
   }
@@ -268,7 +268,7 @@ export function generateStandaloneAgentToml(
   config: GeneratedNativeAgentConfig,
 ): string {
   const lines = [
-    `# oh-my-codex agent: ${config.name}`,
+    `# roblox-ai-os-creator-skills agent: ${config.name}`,
     `name = "${escapeTomlBasicString(config.name)}"`,
     `description = "${escapeTomlBasicString(config.description)}"`,
   ];
@@ -297,7 +297,7 @@ export function generateStandaloneAgentToml(
 }
 
 /**
- * Generate TOML content for a prompt-backed OMX role agent.
+ * Generate TOML content for a prompt-backed RCS role agent.
  */
 export function generateAgentToml(
   agent: AgentDefinition,

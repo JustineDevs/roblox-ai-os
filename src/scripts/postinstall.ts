@@ -89,7 +89,7 @@ export async function runPostinstall(
   });
 
   resolved.log(
-    `[omx] Installed oh-my-codex v${currentStampVersion}. OMX setup is explicit opt-in; run \`omx setup\` or \`omx update\` when you're ready.`,
+    `[rcs] Installed RCS v${currentStampVersion}. RCS setup is explicit opt-in; run \`rcs setup\` or \`rcs update\` when you're ready.`,
   );
   return { status: "hinted", version: currentStampVersion };
 }
@@ -101,7 +101,7 @@ export async function main(): Promise<void> {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => {
     console.warn(
-      `[omx] Postinstall setup skipped after a non-fatal error: ${error instanceof Error ? error.message : String(error)}`,
+      `[rcs] Postinstall setup skipped after a non-fatal error: ${error instanceof Error ? error.message : String(error)}`,
     );
   });
 }

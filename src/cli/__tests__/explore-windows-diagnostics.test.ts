@@ -12,7 +12,7 @@ describe('explore Windows built-in harness diagnostics', () => {
       /not ready on Windows/i,
     );
     assert.equal(
-      getBuiltinExploreHarnessUnsupportedReason('win32', { OMX_EXPLORE_BIN: 'custom-harness.exe' } as NodeJS.ProcessEnv),
+      getBuiltinExploreHarnessUnsupportedReason('win32', { RCS_EXPLORE_BIN: 'custom-harness.exe' } as NodeJS.ProcessEnv),
       undefined,
     );
     assert.equal(getBuiltinExploreHarnessUnsupportedReason('linux', {} as NodeJS.ProcessEnv), undefined);
@@ -24,7 +24,7 @@ describe('explore Windows built-in harness diagnostics', () => {
       /built-in explore harness is not ready on Windows/i,
     );
     assert.doesNotThrow(() => assertBuiltinExploreHarnessSupported('win32', {
-      OMX_EXPLORE_BIN: 'custom-harness.exe',
+      RCS_EXPLORE_BIN: 'custom-harness.exe',
     } as NodeJS.ProcessEnv));
   });
 });

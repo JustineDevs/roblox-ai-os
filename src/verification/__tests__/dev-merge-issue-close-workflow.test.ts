@@ -40,9 +40,9 @@ describe('dev merge issue close workflow', () => {
     assert.deepEqual(
       collectLinkedLocalIssueNumbers({
         title: 'Fixes #1540, #1541',
-        body: 'Resolves Yeachan-Heo/oh-my-codex#1542 and closes https://github.com/Yeachan-Heo/oh-my-codex/issues/1543',
+        body: 'Resolves Yeachan-Heo/roblox-ai-os-creator-skills#1542 and closes https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/1543',
         owner: 'Yeachan-Heo',
-        repo: 'oh-my-codex',
+        repo: 'roblox-ai-os-creator-skills',
       }),
       [1540, 1541, 1542, 1543],
     );
@@ -58,7 +58,7 @@ describe('dev merge issue close workflow', () => {
           'Discussion says maybe close #1543 later.',
         ].join('\n'),
         owner: 'Yeachan-Heo',
-        repo: 'oh-my-codex',
+        repo: 'roblox-ai-os-creator-skills',
       }),
       [],
     );
@@ -68,9 +68,9 @@ describe('dev merge issue close workflow', () => {
     assert.deepEqual(
       collectLinkedLocalIssueNumbers({
         title: 'Fixes #1540',
-        body: 'Closes #1540 and resolves Yeachan-Heo/oh-my-codex#1540',
+        body: 'Closes #1540 and resolves Yeachan-Heo/roblox-ai-os-creator-skills#1540',
         owner: 'Yeachan-Heo',
-        repo: 'oh-my-codex',
+        repo: 'roblox-ai-os-creator-skills',
       }),
       [1540],
     );

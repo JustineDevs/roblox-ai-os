@@ -1,14 +1,14 @@
 {
-  "name": "oh-my-codex-local",
+  "name": "rcs-local",
   "interface": {
-    "displayName": "oh-my-codex Local Plugins"
+    "displayName": "RCS Local Plugins"
   },
   "plugins": [
     {
-      "name": "oh-my-codex",
+      "name": "roblox-ai-os-creator-skills",
       "source": {
         "source": "local",
-        "path": "./plugins/oh-my-codex"
+        "path": "./plugins/roblox-ai-os-creator-skills"
       },
       "policy": {
         "installation": "AVAILABLE",

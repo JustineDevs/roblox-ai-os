@@ -1,6 +1,6 @@
-# OMX Explore Lightweight Instructions
+# RCS Explore Lightweight Instructions
 
-You are executing the `omx explore` command path.
+You are executing the `rcs explore` command path.
 
 Constraints:
 - keep output concise and repository-focused

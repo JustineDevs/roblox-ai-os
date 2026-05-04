@@ -51,43 +51,43 @@ describe('resolveApprovedRalphExecutionHint', () => {
 
 describe('readMatchedApprovedRalphExecutionHint', () => {
   it('selects the matching approved Ralph hint when a PRD lists multiple launch hints', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-approved-context-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-approved-context-'));
     try {
-      await mkdir(join(cwd, '.omx', 'plans'), { recursive: true });
+      await mkdir(join(cwd, '.rcs', 'plans'), { recursive: true });
       await writeFile(
-        join(cwd, '.omx', 'plans', 'prd-issue-909.md'),
+        join(cwd, '.rcs', 'plans', 'prd-issue-909.md'),
         [
           '# PRD',
           '',
-          'Launch via omx ralph "Execute alpha"',
-          'Launch via omx ralph "Execute beta"',
+          'Launch via rcs ralph "Execute alpha"',
+          'Launch via rcs ralph "Execute beta"',
         ].join('\n'),
       );
-      await writeFile(join(cwd, '.omx', 'plans', 'test-spec-issue-909.md'), '# Test Spec\n');
+      await writeFile(join(cwd, '.rcs', 'plans', 'test-spec-issue-909.md'), '# Test Spec\n');
 
       const hint = readMatchedApprovedRalphExecutionHint(cwd, 'Execute alpha');
       assert.ok(hint);
       assert.equal(hint?.task, 'Execute alpha');
-      assert.equal(hint?.command, 'omx ralph "Execute alpha"');
+      assert.equal(hint?.command, 'rcs ralph "Execute alpha"');
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
   it('fails closed for bare Ralph follow-up reuse when a PRD lists multiple Ralph launch hints', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-approved-context-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-approved-context-'));
     try {
-      await mkdir(join(cwd, '.omx', 'plans'), { recursive: true });
+      await mkdir(join(cwd, '.rcs', 'plans'), { recursive: true });
       await writeFile(
-        join(cwd, '.omx', 'plans', 'prd-issue-909-bare.md'),
+        join(cwd, '.rcs', 'plans', 'prd-issue-909-bare.md'),
         [
           '# PRD',
           '',
-          'Launch via omx ralph "Execute alpha"',
-          'Launch via omx ralph "Execute beta"',
+          'Launch via rcs ralph "Execute alpha"',
+          'Launch via rcs ralph "Execute beta"',
         ].join('\n'),
       );
-      await writeFile(join(cwd, '.omx', 'plans', 'test-spec-issue-909-bare.md'), '# Test Spec\n');
+      await writeFile(join(cwd, '.rcs', 'plans', 'test-spec-issue-909-bare.md'), '# Test Spec\n');
 
       const hint = readMatchedApprovedRalphExecutionHint(cwd, 'ralph-cli-launch');
       assert.equal(hint, null);
@@ -137,7 +137,7 @@ describe('filterRalphCodexArgs', () => {
   it('consumes --PRD case-insensitively', () => {
     assert.deepEqual(filterRalphCodexArgs(['--PRD', '--model', 'gpt-5']), ['--model', 'gpt-5']);
   });
-  it('preserves non-omx flags', () => {
+  it('preserves non-rcs flags', () => {
     assert.deepEqual(filterRalphCodexArgs(['--model', 'gpt-5', '--yolo', 'fix', 'it']), ['--model', 'gpt-5', '--yolo', 'fix', 'it']);
   });
 });
@@ -145,40 +145,40 @@ describe('filterRalphCodexArgs', () => {
 
 const approvedHint: ApprovedExecutionLaunchHint = {
   mode: 'ralph',
-  command: 'omx ralph "Execute approved issue 1072 plan"',
+  command: 'rcs ralph "Execute approved issue 1072 plan"',
   task: 'Execute approved issue 1072 plan',
-  sourcePath: '.omx/plans/prd-issue-1072.md',
-  testSpecPaths: ['.omx/plans/test-spec-issue-1072.md'],
-  deepInterviewSpecPaths: ['.omx/specs/deep-interview-issue-1072.md'],
+  sourcePath: '.rcs/plans/prd-issue-1072.md',
+  testSpecPaths: ['.rcs/plans/test-spec-issue-1072.md'],
+  deepInterviewSpecPaths: ['.rcs/specs/deep-interview-issue-1072.md'],
   repositoryContextSummary: {
-    sourcePath: '.omx/plans/repo-context-issue-1072.md',
+    sourcePath: '.rcs/plans/repo-context-issue-1072.md',
     content: 'Key files: src/cli/ralph.ts and src/planning/artifacts.ts',
     truncated: false,
   },
 };
 
 describe('assertRequiredRalphPrdJson', () => {
-  it('throws when --prd mode starts without .omx/prd.json', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-prd-gate-'));
+  it('throws when --prd mode starts without .rcs/prd.json', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-prd-gate-'));
     try {
       assert.throws(
         () => assertRequiredRalphPrdJson(cwd, ['--prd', 'ship release checklist']),
-        /Missing required PRD\.json at \.omx\/prd\.json/,
+        /Missing required PRD\.json at \.rcs\/prd\.json/,
       );
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it('still requires legacy .omx/prd.json even when canonical PRD markdown exists', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-prd-gate-'));
+  it('still requires legacy .rcs/prd.json even when canonical PRD markdown exists', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-prd-gate-'));
     try {
-      await mkdir(join(cwd, '.omx', 'plans'), { recursive: true });
-      await writeFile(join(cwd, '.omx', 'plans', 'prd-existing.md'), '# Existing canonical PRD\n');
+      await mkdir(join(cwd, '.rcs', 'plans'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'plans', 'prd-existing.md'), '# Existing canonical PRD\n');
 
       assert.throws(
         () => assertRequiredRalphPrdJson(cwd, ['--prd', 'ship release checklist']),
-        /Missing required PRD\.json at \.omx\/prd\.json/,
+        /Missing required PRD\.json at \.rcs\/prd\.json/,
       );
     } finally {
       await rm(cwd, { recursive: true, force: true });
@@ -186,10 +186,10 @@ describe('assertRequiredRalphPrdJson', () => {
   });
 
   it('rejects completed stories without architect approval', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-prd-gate-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-prd-gate-'));
     try {
-      await mkdir(join(cwd, '.omx'), { recursive: true });
-      await writeFile(join(cwd, '.omx', 'prd.json'), JSON.stringify({
+      await mkdir(join(cwd, '.rcs'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'prd.json'), JSON.stringify({
         project: 'Issue 1555',
         userStories: [{
           id: 'US-001',
@@ -208,10 +208,10 @@ describe('assertRequiredRalphPrdJson', () => {
   });
 
   it('allows completed stories with architect approval recorded', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-prd-gate-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-prd-gate-'));
     try {
-      await mkdir(join(cwd, '.omx'), { recursive: true });
-      await writeFile(join(cwd, '.omx', 'prd.json'), JSON.stringify({
+      await mkdir(join(cwd, '.rcs'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'prd.json'), JSON.stringify({
         project: 'Issue 1555',
         userStories: [{
           id: 'US-001',
@@ -227,11 +227,11 @@ describe('assertRequiredRalphPrdJson', () => {
     }
   });
 
-  it('allows --prd mode when .omx/prd.json exists', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-prd-gate-'));
+  it('allows --prd mode when .rcs/prd.json exists', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-prd-gate-'));
     try {
-      await mkdir(join(cwd, '.omx'), { recursive: true });
-      await writeFile(join(cwd, '.omx', 'prd.json'), JSON.stringify({
+      await mkdir(join(cwd, '.rcs'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'prd.json'), JSON.stringify({
         project: 'Issue 1555',
         userStories: [],
       }, null, 2));
@@ -243,7 +243,7 @@ describe('assertRequiredRalphPrdJson', () => {
   });
 
   it('does not gate non-prd Ralph runs', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralph-prd-gate-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralph-prd-gate-'));
     try {
       assert.doesNotThrow(() => assertRequiredRalphPrdJson(cwd, ['fix', 'the', 'bug']));
     } finally {
@@ -259,20 +259,20 @@ describe('ralph deslop launch wiring', () => {
 
   it('documents changed-files-only deslop guidance by default', () => {
     const instructions = buildRalphAppendInstructions('fix issue 920', {
-      changedFilesPath: '.omx/ralph/changed-files.txt',
+      changedFilesPath: '.rcs/ralph/changed-files.txt',
       noDeslop: false,
       approvedHint: null,
     });
     assert.match(instructions, /ai-slop-cleaner/i);
     assert.match(instructions, /changed files only/i);
-    assert.match(instructions, /\.omx\/ralph\/changed-files\.txt/);
+    assert.match(instructions, /\.rcs\/ralph\/changed-files\.txt/);
     assert.match(instructions, /standard mode/i);
     assert.match(instructions, /rerun the current tests\/build\/lint verification/i);
   });
 
   it('documents the --no-deslop opt-out when enabled', () => {
     const instructions = buildRalphAppendInstructions('fix issue 920', {
-      changedFilesPath: '.omx/ralph/changed-files.txt',
+      changedFilesPath: '.rcs/ralph/changed-files.txt',
       noDeslop: true,
       approvedHint: null,
     });
@@ -285,16 +285,16 @@ describe('ralph deslop launch wiring', () => {
 
   it('includes approved plan and deep-interview handoff context when available', () => {
     const instructions = buildRalphAppendInstructions('Execute approved issue 1072 plan', {
-      changedFilesPath: '.omx/ralph/changed-files.txt',
+      changedFilesPath: '.rcs/ralph/changed-files.txt',
       noDeslop: false,
       approvedHint,
     });
     assert.match(instructions, /Approved planning handoff context/i);
-    assert.match(instructions, /approved plan: \.omx\/plans\/prd-issue-1072\.md/i);
-    assert.match(instructions, /test specs: \.omx\/plans\/test-spec-issue-1072\.md/i);
-    assert.match(instructions, /deep-interview specs: \.omx\/specs\/deep-interview-issue-1072\.md/i);
+    assert.match(instructions, /approved plan: \.rcs\/plans\/prd-issue-1072\.md/i);
+    assert.match(instructions, /test specs: \.rcs\/plans\/test-spec-issue-1072\.md/i);
+    assert.match(instructions, /deep-interview specs: \.rcs\/specs\/deep-interview-issue-1072\.md/i);
     assert.match(instructions, /Carry forward the approved deep-interview requirements/i);
-    assert.match(instructions, /approved repository context summary: \.omx\/plans\/repo-context-issue-1072\.md/i);
+    assert.match(instructions, /approved repository context summary: \.rcs\/plans\/repo-context-issue-1072\.md/i);
     assert.match(instructions, /Key files: src\/cli\/ralph\.ts and src\/planning\/artifacts\.ts/i);
   });
 

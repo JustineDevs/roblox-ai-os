@@ -1,4 +1,4 @@
-name: Release
+name: RCS Release
 
 on:
   push:
@@ -41,18 +41,18 @@ jobs:
           const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8'));
           const workspace = TOML.parse(fs.readFileSync(path.join(root, 'Cargo.toml'), 'utf-8'));
           const expectedMembers = [
-            'crates/omx-explore',
-            'crates/omx-mux',
-            'crates/omx-runtime-core',
-            'crates/omx-runtime',
-            'crates/omx-sparkshell',
+            'crates/rcs-explore',
+            'crates/rcs-mux',
+            'crates/rcs-runtime-core',
+            'crates/rcs-runtime',
+            'crates/rcs-sparkshell',
           ];
           const manifests = [
-            'crates/omx-explore/Cargo.toml',
-            'crates/omx-runtime-core/Cargo.toml',
-            'crates/omx-mux/Cargo.toml',
-            'crates/omx-runtime/Cargo.toml',
-            'crates/omx-sparkshell/Cargo.toml',
+            'crates/rcs-explore/Cargo.toml',
+            'crates/rcs-runtime-core/Cargo.toml',
+            'crates/rcs-mux/Cargo.toml',
+            'crates/rcs-runtime/Cargo.toml',
+            'crates/rcs-sparkshell/Cargo.toml',
           ];
           const problems = [];
 
@@ -181,7 +181,7 @@ jobs:
             --artifacts-dir release-assets \
             --out release-assets/native-release-manifest.json \
             --release-base-url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}" \
-            --require-products "omx-explore-harness,omx-sparkshell"
+            --require-products "rcs-explore-harness,rcs-sparkshell"
       - name: Upload release asset bundle for follow-up jobs
         uses: actions/upload-artifact@v4
         with:
@@ -204,7 +204,7 @@ jobs:
         shell: bash
         run: |
           {
-            echo '## Native Release Assets'
+            echo '## RCS Native Release Assets'
             echo ''
             echo 'Published release assets:'
             ls -1 release-assets | sed 's/^/- /'
@@ -268,18 +268,18 @@ jobs:
           const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8'));
           const workspace = TOML.parse(fs.readFileSync(path.join(root, 'Cargo.toml'), 'utf-8'));
           const expectedMembers = [
-            'crates/omx-explore',
-            'crates/omx-mux',
-            'crates/omx-runtime-core',
-            'crates/omx-runtime',
-            'crates/omx-sparkshell',
+            'crates/rcs-explore',
+            'crates/rcs-mux',
+            'crates/rcs-runtime-core',
+            'crates/rcs-runtime',
+            'crates/rcs-sparkshell',
           ];
           const manifests = [
-            'crates/omx-explore/Cargo.toml',
-            'crates/omx-runtime-core/Cargo.toml',
-            'crates/omx-mux/Cargo.toml',
-            'crates/omx-runtime/Cargo.toml',
-            'crates/omx-sparkshell/Cargo.toml',
+            'crates/rcs-explore/Cargo.toml',
+            'crates/rcs-runtime-core/Cargo.toml',
+            'crates/rcs-mux/Cargo.toml',
+            'crates/rcs-runtime/Cargo.toml',
+            'crates/rcs-sparkshell/Cargo.toml',
           ];
           const problems = [];
 

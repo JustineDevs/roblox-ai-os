@@ -4,7 +4,7 @@
  * Maps platform message IDs to tmux pane IDs for reply correlation.
  * Uses JSONL append format for atomic writes with cross-process locking.
  *
- * Registry location: ~/.omx/state/reply-session-registry.jsonl (global, not worktree-local)
+ * Registry location: ~/.rcs/state/reply-session-registry.jsonl (global, not worktree-local)
  * File permissions: 0600 (owner read/write only)
  */
 
@@ -25,8 +25,8 @@ import { homedir } from 'os';
 import { randomUUID } from 'crypto';
 import { sleepSync } from '../utils/sleep.js';
 
-const REGISTRY_PATH = join(homedir(), '.omx', 'state', 'reply-session-registry.jsonl');
-const REGISTRY_LOCK_PATH = join(homedir(), '.omx', 'state', 'reply-session-registry.lock');
+const REGISTRY_PATH = join(homedir(), '.rcs', 'state', 'reply-session-registry.jsonl');
+const REGISTRY_LOCK_PATH = join(homedir(), '.rcs', 'state', 'reply-session-registry.lock');
 const SECURE_FILE_MODE = 0o600;
 const MAX_AGE_MS = 24 * 60 * 60 * 1000;
 const LOCK_TIMEOUT_MS = 2000;

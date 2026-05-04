@@ -31,7 +31,7 @@ describe('normalizeTmuxHookConfig', () => {
   it('normalizes valid config', () => {
     const config = normalizeTmuxHookConfig({
       enabled: true,
-      target: { type: 'session', value: 'omx-work' },
+      target: { type: 'session', value: 'rcs-work' },
       allowed_modes: ['team'],
       cooldown_ms: 2000,
       max_injections_per_session: 4,
@@ -42,7 +42,7 @@ describe('normalizeTmuxHookConfig', () => {
     });
     assert.equal(config.enabled, true);
     assert.equal(config.valid, true);
-    assert.deepEqual(config.target, { type: 'session', value: 'omx-work' });
+    assert.deepEqual(config.target, { type: 'session', value: 'rcs-work' });
     assert.deepEqual(config.allowed_modes, ['team']);
     assert.equal(config.cooldown_ms, 2000);
     assert.equal(config.max_injections_per_session, 4);
@@ -87,12 +87,12 @@ describe('pickActiveMode', () => {
 describe('evaluateInjectionGuards', () => {
   const validConfig = normalizeTmuxHookConfig({
     enabled: true,
-    target: { type: 'session', value: 'omx' },
+    target: { type: 'session', value: 'rcs' },
     allowed_modes: ['ralph'],
     cooldown_ms: 1000,
     max_injections_per_session: 2,
-    prompt_template: 'Continue [OMX_TMUX_INJECT]',
-    marker: '[OMX_TMUX_INJECT]',
+    prompt_template: 'Continue [RCS_TMUX_INJECT]',
+    marker: '[RCS_TMUX_INJECT]',
     dry_run: false,
     log_level: 'info',
   });
@@ -399,7 +399,7 @@ describe('resolveCodexPane', () => {
     const { tmpdir } = await import('node:os');
     const { join } = await import('node:path');
 
-    const fakeBinDir = await mkdtemp(join(tmpdir(), 'omx-resolve-codex-pane-'));
+    const fakeBinDir = await mkdtemp(join(tmpdir(), 'rcs-resolve-codex-pane-'));
     const fakeTmuxPath = join(fakeBinDir, 'tmux');
     const previousPath = process.env.PATH;
     const previousTmuxPane = process.env.TMUX_PANE;
@@ -424,7 +424,7 @@ if [[ "$cmd" == "display-message" ]]; then
     exit 0
   fi
   if [[ "$format" == "#{pane_start_command}" && "$target" == "%2" ]]; then
-    echo "node /pkg/dist/cli/omx.js hud --watch"
+    echo "node /pkg/dist/cli/rcs.js hud --watch"
     exit 0
   fi
   if [[ "$format" == "#S" && "$target" == "%2" ]]; then
@@ -435,7 +435,7 @@ if [[ "$cmd" == "display-message" ]]; then
   exit 1
 fi
 if [[ "$cmd" == "list-panes" ]]; then
-  printf "%%2\tnode\tnode /pkg/dist/cli/omx.js hud --watch\n%%42\tnode\tcodex --model gpt-5\n"
+  printf "%%2\tnode\tnode /pkg/dist/cli/rcs.js hud --watch\n%%42\tnode\tcodex --model gpt-5\n"
   exit 0
 fi
 echo "unsupported" >&2

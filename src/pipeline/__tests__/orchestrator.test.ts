@@ -64,7 +64,7 @@ function makeThrowingStage(name: string, message: string): PipelineStage {
 let tempDir: string;
 
 async function setup(): Promise<string> {
-  tempDir = await mkdtemp(join(tmpdir(), 'omx-pipeline-test-'));
+  tempDir = await mkdtemp(join(tmpdir(), 'rcs-pipeline-test-'));
   return tempDir;
 }
 
@@ -408,7 +408,7 @@ describe('Pipeline Orchestrator', () => {
         cwd: tempDir,
       });
 
-      const statePath = join(tempDir, '.omx', 'state', 'autopilot-state.json');
+      const statePath = join(tempDir, '.rcs', 'state', 'autopilot-state.json');
       assert.ok(existsSync(statePath), 'pipeline state file should exist');
 
       const raw = await readFile(statePath, 'utf-8');
@@ -426,7 +426,7 @@ describe('Pipeline Orchestrator', () => {
         cwd: tempDir,
       });
 
-      const statePath = join(tempDir, '.omx', 'state', 'autopilot-state.json');
+      const statePath = join(tempDir, '.rcs', 'state', 'autopilot-state.json');
       const raw = await readFile(statePath, 'utf-8');
       const state = JSON.parse(raw);
       assert.equal(state.active, false);
@@ -524,7 +524,7 @@ describe('Pipeline Orchestrator', () => {
     it('returns true when pipeline state is active and in-progress', async () => {
       // Manually write an in-progress pipeline state
       const { mkdir: mkdirFs, writeFile: writeFileFs } = await import('fs/promises');
-      const stateDir = join(tempDir, '.omx', 'state');
+      const stateDir = join(tempDir, '.rcs', 'state');
       await mkdirFs(stateDir, { recursive: true });
       await writeFileFs(
         join(stateDir, 'autopilot-state.json'),

@@ -7,8 +7,8 @@ import { isHookPluginFeatureEnabled, dispatchHookEvent } from '../dispatcher.js'
 import { buildHookEvent } from '../events.js';
 
 describe('isHookPluginFeatureEnabled', () => {
-  it('returns true when OMX_HOOK_PLUGINS=1', () => {
-    assert.equal(isHookPluginFeatureEnabled({ OMX_HOOK_PLUGINS: '1' }), true);
+  it('returns true when RCS_HOOK_PLUGINS=1', () => {
+    assert.equal(isHookPluginFeatureEnabled({ RCS_HOOK_PLUGINS: '1' }), true);
   });
 
   it('returns true when env var is missing', () => {
@@ -16,13 +16,13 @@ describe('isHookPluginFeatureEnabled', () => {
   });
 
   it('returns false for "0"', () => {
-    assert.equal(isHookPluginFeatureEnabled({ OMX_HOOK_PLUGINS: '0' }), false);
+    assert.equal(isHookPluginFeatureEnabled({ RCS_HOOK_PLUGINS: '0' }), false);
   });
 });
 
 describe('dispatchHookEvent', () => {
   it('returns disabled summary when plugins are disabled', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-'));
     try {
       const event = buildHookEvent('session-start');
       const result = await dispatchHookEvent(event, {
@@ -42,7 +42,7 @@ describe('dispatchHookEvent', () => {
   });
 
   it('returns enabled summary with zero plugins for native events even when env is unset', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-'));
     try {
       const event = buildHookEvent('session-start');
       const result = await dispatchHookEvent(event, {
@@ -60,16 +60,16 @@ describe('dispatchHookEvent', () => {
   });
 
   it('reports invalid_export for plugins without onHookEvent', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(join(dir, 'bad.mjs'), 'export const x = 1;');
 
       const event = buildHookEvent('session-start');
       const result = await dispatchHookEvent(event, {
         cwd,
-        env: { OMX_HOOK_PLUGINS: '1' },
+        env: { RCS_HOOK_PLUGINS: '1' },
       });
 
       assert.equal(result.enabled, true);
@@ -83,9 +83,9 @@ describe('dispatchHookEvent', () => {
   });
 
   it('dispatches valid plugins successfully', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(
         join(dir, 'good.mjs'),
@@ -95,7 +95,7 @@ describe('dispatchHookEvent', () => {
       const event = buildHookEvent('session-start');
       const result = await dispatchHookEvent(event, {
         cwd,
-        env: { ...process.env, OMX_HOOK_PLUGINS: '1' },
+        env: { ...process.env, RCS_HOOK_PLUGINS: '1' },
       });
 
       assert.equal(result.enabled, true);
@@ -109,15 +109,15 @@ describe('dispatchHookEvent', () => {
   });
 
   it('does not execute plugin top-level code in the parent process', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(
         join(dir, 'top-level-side-effect.mjs'),
         `import { appendFileSync } from 'node:fs';
 import { join } from 'node:path';
-appendFileSync(join(process.cwd(), '.omx', 'top-level-pids.log'), String(process.pid) + '\\n');
+appendFileSync(join(process.cwd(), '.rcs', 'top-level-pids.log'), String(process.pid) + '\\n');
 export async function onHookEvent() {}
 `,
       );
@@ -125,14 +125,14 @@ export async function onHookEvent() {}
       const event = buildHookEvent('session-start');
       const result = await dispatchHookEvent(event, {
         cwd,
-        env: { ...process.env, OMX_HOOK_PLUGINS: '1' },
+        env: { ...process.env, RCS_HOOK_PLUGINS: '1' },
       });
 
       assert.equal(result.enabled, true);
       assert.equal(result.results.length, 1);
       assert.equal(result.results[0].ok, true);
 
-      const pids = (await readFile(join(cwd, '.omx', 'top-level-pids.log'), 'utf-8'))
+      const pids = (await readFile(join(cwd, '.rcs', 'top-level-pids.log'), 'utf-8'))
         .trim()
         .split('\n')
         .filter(Boolean);
@@ -144,7 +144,7 @@ export async function onHookEvent() {}
   });
 
   it('respects explicit enabled=true option', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-'));
     try {
       const event = buildHookEvent('session-start');
       const result = await dispatchHookEvent(event, {
@@ -161,7 +161,7 @@ export async function onHookEvent() {}
   });
 
   it('includes source from event in summary', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-'));
     try {
       const event = buildHookEvent('needs-input');
       const result = await dispatchHookEvent(event, {
@@ -177,9 +177,9 @@ export async function onHookEvent() {}
   });
 
   it('disables side effects for team workers by default', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(
         join(dir, 'se-test.mjs'),
@@ -192,7 +192,7 @@ export async function onHookEvent() {}
       const event = buildHookEvent('session-start');
       const result = await dispatchHookEvent(event, {
         cwd,
-        env: { ...process.env, OMX_HOOK_PLUGINS: '1', OMX_TEAM_WORKER: 'worker-1' },
+        env: { ...process.env, RCS_HOOK_PLUGINS: '1', RCS_TEAM_WORKER: 'worker-1' },
       });
 
       assert.equal(result.enabled, true);
@@ -204,9 +204,9 @@ export async function onHookEvent() {}
   });
 
   it('returns timeout promptly when plugin ignores SIGTERM', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(
         join(dir, 'ignore-sigterm.mjs'),
@@ -222,7 +222,7 @@ export async function onHookEvent() {}
       const result = await dispatchHookEvent(event, {
         cwd,
         timeoutMs: 50,
-        env: { ...process.env, OMX_HOOK_PLUGINS: '1' },
+        env: { ...process.env, RCS_HOOK_PLUGINS: '1' },
       });
       const elapsedMs = Date.now() - startedAt;
 
@@ -238,9 +238,9 @@ export async function onHookEvent() {}
   });
 
   it('dedupes repeated native lifecycle hook dispatches for the same session/turn fingerprint', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-dispatch-dedupe-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-dispatch-dedupe-'));
     try {
-      const dir = join(cwd, '.omx', 'hooks');
+      const dir = join(cwd, '.rcs', 'hooks');
       await mkdir(dir, { recursive: true });
       await writeFile(
         join(dir, 'good.mjs'),
@@ -257,11 +257,11 @@ export async function onHookEvent() {}
 
       const first = await dispatchHookEvent(event, {
         cwd,
-        env: { ...process.env, OMX_HOOK_PLUGINS: '1' },
+        env: { ...process.env, RCS_HOOK_PLUGINS: '1' },
       });
       const second = await dispatchHookEvent(event, {
         cwd,
-        env: { ...process.env, OMX_HOOK_PLUGINS: '1' },
+        env: { ...process.env, RCS_HOOK_PLUGINS: '1' },
       });
 
       assert.equal(first.enabled, true);

@@ -14,8 +14,11 @@ import {
 const root = process.cwd();
 
 async function copyBundleFixture(): Promise<string> {
-	const fixtureRoot = await mkdtemp(join(tmpdir(), "omx-plugin-bundle-ssot-"));
+	const fixtureRoot = await mkdtemp(join(tmpdir(), "rcs-plugin-bundle-ssot-"));
 	await Promise.all([
+		cp(join(root, "docs", "reference"), join(fixtureRoot, "docs", "reference"), {
+			recursive: true,
+		}),
 		cp(join(root, "templates"), join(fixtureRoot, "templates"), {
 			recursive: true,
 		}),
@@ -67,7 +70,7 @@ describe("plugin bundle SSOT contract", () => {
 		const fixtureRoot = await copyBundleFixture();
 		try {
 			await writeFile(
-				join(fixtureRoot, "plugins", "oh-my-codex", ".mcp.json"),
+				join(fixtureRoot, "plugins", "roblox-ai-os-creator-skills", ".mcp.json"),
 				`${JSON.stringify({ mcpServers: {} }, null, 2)}\n`,
 			);
 
@@ -84,7 +87,7 @@ describe("plugin bundle SSOT contract", () => {
 		const fixtureRoot = await copyBundleFixture();
 		try {
 			await writeFile(
-				join(fixtureRoot, "plugins", "oh-my-codex", ".mcp.json"),
+				join(fixtureRoot, "plugins", "roblox-ai-os-creator-skills", ".mcp.json"),
 				`${JSON.stringify({ mcpServers: {} }, null, 2)}\n`,
 			);
 

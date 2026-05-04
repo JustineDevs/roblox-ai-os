@@ -26,13 +26,13 @@ Rust-authored compatibility views.
 
 | Reader | Compatibility files | Compatibility guarantee |
 |---|---|---|
-| `omx team status` | `.omx/state/team/<team>/config.json`, `manifest.v2.json`, `tasks/*.json`, `approvals/*.json`, `workers/*` | Manifest-backed team config is authoritative when both config and manifest exist. |
-| `omx doctor --team` | `.omx/state/team/<team>/config.json`, `manifest.v2.json`, `workers/*/status.json`, `workers/*/heartbeat.json`, `.omx/state/hud-state.json` | Manifest-backed tmux/session identity is authoritative when both config and manifest exist. |
-| HUD readers | `.omx/state/session.json`, `.omx/state/sessions/<session>/team-state.json`, `.omx/state/team-state.json`, `.omx/state/ralph-state.json` | Session-scoped files are authoritative when a session is active; root files are compatibility fallback only. |
+| `rcs team status` | `.rcs/state/team/<team>/config.json`, `manifest.v2.json`, `tasks/*.json`, `approvals/*.json`, `workers/*` | Manifest-backed team config is authoritative when both config and manifest exist. |
+| `rcs doctor --team` | `.rcs/state/team/<team>/config.json`, `manifest.v2.json`, `workers/*/status.json`, `workers/*/heartbeat.json`, `.rcs/state/hud-state.json` | Manifest-backed tmux/session identity is authoritative when both config and manifest exist. |
+| HUD readers | `.rcs/state/session.json`, `.rcs/state/sessions/<session>/team-state.json`, `.rcs/state/team-state.json`, `.rcs/state/ralph-state.json` | Session-scoped files are authoritative when a session is active; root files are compatibility fallback only. |
 
 ## Rust-authored runtime files
 
-The `RuntimeEngine` (in `crates/omx-runtime-core/src/engine.rs`) writes the following files via `persist()` and `write_compatibility_view()`:
+The `RuntimeEngine` (in `crates/rcs-runtime-core/src/engine.rs`) writes the following files via `persist()` and `write_compatibility_view()`:
 
 | File | Written by | Content |
 |---|---|---|

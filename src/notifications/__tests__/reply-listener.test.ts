@@ -60,7 +60,7 @@ function createMapping(platform: SessionMapping['platform']): SessionMapping {
     messageId: platform === 'discord-bot' ? 'orig-discord-msg' : '222',
     sessionId: 'session-1',
     tmuxPaneId: '%9',
-    tmuxSessionName: 'omx-session',
+    tmuxSessionName: 'rcs-session',
     event: 'session-idle',
     createdAt: '2026-03-20T00:00:00.000Z',
     projectPath: '/tmp/project',
@@ -472,7 +472,7 @@ describe('pollDiscordOnce', () => {
         lookupByMessageIdImpl: () => createMapping('discord-bot'),
         buildSessionStatusReplyImpl: async (mapping) => {
           assert.equal(mapping.sessionId, 'session-1');
-          return 'Tracked OMX session status';
+          return 'Tracked RCS session status';
         },
         injectReplyImpl: () => {
           injectCalled = true;
@@ -488,7 +488,7 @@ describe('pollDiscordOnce', () => {
     assert.equal(fetchCalls.length, 2);
 
     const replyBody = JSON.parse(String(fetchCalls[1].init?.body));
-    assert.equal(replyBody.content, 'Tracked OMX session status');
+    assert.equal(replyBody.content, 'Tracked RCS session status');
     assert.deepEqual(replyBody.message_reference, { message_id: 'discord-status-1' });
     assert.deepEqual(replyBody.allowed_mentions, { parse: [] });
   });
@@ -530,7 +530,7 @@ describe('pollDiscordOnce', () => {
         }),
         buildSessionStatusReplyImpl: async (mapping) => {
           statusSessionIds.push(mapping.sessionId);
-          return `Tracked OMX session status\nSession: ${mapping.sessionId}`;
+          return `Tracked RCS session status\nSession: ${mapping.sessionId}`;
         },
         injectReplyImpl: () => {
           throw new Error('injectReply should not run for exact-match status probes');

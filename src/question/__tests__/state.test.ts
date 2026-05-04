@@ -16,7 +16,7 @@ import {
 const tempDirs: string[] = [];
 
 async function makeRepo(): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), 'omx-question-state-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'rcs-question-state-'));
   tempDirs.push(cwd);
   return cwd;
 }

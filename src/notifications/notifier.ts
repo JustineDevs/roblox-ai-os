@@ -1,5 +1,5 @@
 /**
- * Notification system for oh-my-codex
+ * Notification system for Roblox Creator Skills
  * Supports desktop notifications, Discord webhooks, and Telegram bots
  */
 
@@ -40,10 +40,10 @@ interface JsonHttpsRequestOptions {
 }
 
 /**
- * Load notification config from .omx/notifications.json
+ * Load notification config from .rcs/notifications.json
  */
 export async function loadNotificationConfig(projectRoot?: string): Promise<NotificationConfig | null> {
-  const configPath = join(projectRoot || process.cwd(), '.omx', 'notifications.json');
+  const configPath = join(projectRoot || process.cwd(), '.rcs', 'notifications.json');
   if (!existsSync(configPath)) return null;
   try {
     return JSON.parse(await readFile(configPath, 'utf-8'));
@@ -105,7 +105,7 @@ export function _buildDesktopArgs(
       `$text = $xml.GetElementsByTagName('text'); ` +
       `$text[0].AppendChild($xml.CreateTextNode('${safeTitle}')) > $null; ` +
       `$text[1].AppendChild($xml.CreateTextNode('${safeMessage}')) > $null; ` +
-      `[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('oh-my-codex').Show($xml)`;
+      `[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Roblox Creator Skills').Show($xml)`;
     return ['powershell', ['-Command', ps]];
   }
   return null;
@@ -152,10 +152,10 @@ async function sendDiscordNotification(payload: NotificationPayload, webhookUrl:
   const colorMap = { info: 3447003, success: 3066993, warning: 15105570, error: 15158332 };
   const body = JSON.stringify({
     embeds: [{
-      title: `[OMX] ${payload.title}`,
+      title: `[RCS] ${payload.title}`,
       description: payload.message,
       color: colorMap[payload.type],
-      footer: { text: `oh-my-codex | ${payload.mode || 'general'}` },
+      footer: { text: `Roblox Creator Skills | ${payload.mode || 'general'}` },
       timestamp: new Date().toISOString(),
     }],
   });
@@ -178,7 +178,7 @@ async function sendTelegramNotification(
   botToken: string,
   chatId: string
 ): Promise<void> {
-  const text = `*[OMX] ${payload.title}*\n${payload.message}`;
+  const text = `*[RCS] ${payload.title}*\n${payload.message}`;
 
   try {
     const body = JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' });

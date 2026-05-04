@@ -8,15 +8,15 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseAskArgs } from '../ask.js';
 
-function runOmx(
+function runRcsCli(
   cwd: string,
   argv: string[],
   envOverrides: Record<string, string> = {},
 ): { status: number | null; stdout: string; stderr: string; error?: string } {
   const testDir = dirname(fileURLToPath(import.meta.url));
   const repoRoot = join(testDir, '..', '..', '..');
-  const omxBin = join(repoRoot, 'dist', 'cli', 'omx.js');
-  const r = spawnSync(process.execPath, [omxBin, ...argv], {
+  const rcsBin = join(repoRoot, 'dist', 'cli', 'rcs.js');
+  const r = spawnSync(process.execPath, [rcsBin, ...argv], {
     cwd,
     encoding: 'utf-8',
     env: { ...process.env, ...envOverrides },
@@ -106,9 +106,9 @@ describe('parseAskArgs', () => {
   });
 });
 
-describe('omx ask', () => {
+describe('rcs ask', () => {
   it('script usage documents provider-specific long flags from CLI help', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-ask-usage-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-ask-usage-'));
     try {
       const res = runProviderAdvisorScript(wd, []);
       if (shouldSkipForSpawnPermissions(res.error)) return;
@@ -122,13 +122,13 @@ describe('omx ask', () => {
   });
 
   it('preserves child stdout/stderr and exact non-zero exit code', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-ask-contract-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-ask-contract-'));
     try {
-      const res = runOmx(wd, ['ask', 'claude', 'pass-through'], {
-        OMX_ASK_ADVISOR_SCRIPT: 'dist/scripts/fixtures/ask-advisor-stub.js',
-        OMX_ASK_STUB_STDOUT: 'artifact-path-from-stub.md\n',
-        OMX_ASK_STUB_STDERR: 'stub-warning-line\n',
-        OMX_ASK_STUB_EXIT_CODE: '7',
+      const res = runRcsCli(wd, ['ask', 'claude', 'pass-through'], {
+        RCS_ASK_ADVISOR_SCRIPT: 'dist/scripts/fixtures/ask-advisor-stub.js',
+        RCS_ASK_STUB_STDOUT: 'artifact-path-from-stub.md\n',
+        RCS_ASK_STUB_STDERR: 'stub-warning-line\n',
+        RCS_ASK_STUB_EXIT_CODE: '7',
       });
       if (shouldSkipForSpawnPermissions(res.error)) return;
 
@@ -141,12 +141,12 @@ describe('omx ask', () => {
   });
 
   it('resolves relative advisor override path from package root even on non-root cwd', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-ask-relative-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-ask-relative-'));
     try {
-      const res = runOmx(wd, ['ask', 'gemini', 'relative-check'], {
-        OMX_ASK_ADVISOR_SCRIPT: 'dist/scripts/fixtures/ask-advisor-stub.js',
-        OMX_ASK_STUB_STDOUT: 'relative-override-ok\n',
-        OMX_ASK_STUB_EXIT_CODE: '0',
+      const res = runRcsCli(wd, ['ask', 'gemini', 'relative-check'], {
+        RCS_ASK_ADVISOR_SCRIPT: 'dist/scripts/fixtures/ask-advisor-stub.js',
+        RCS_ASK_STUB_STDOUT: 'relative-override-ok\n',
+        RCS_ASK_STUB_EXIT_CODE: '0',
       });
       if (shouldSkipForSpawnPermissions(res.error)) return;
 
@@ -158,7 +158,7 @@ describe('omx ask', () => {
   });
 
   it('uses package-root advisor script path from non-package cwd and still writes artifact', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-ask-nonroot-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-ask-nonroot-'));
     try {
       const fakeBin = join(wd, 'bin');
       await mkdir(fakeBin, { recursive: true });
@@ -168,14 +168,14 @@ describe('omx ask', () => {
       );
       await chmod(join(fakeBin, 'claude'), 0o755);
 
-      const res = runOmx(wd, ['ask', 'claude', 'non-root-default'], {
+      const res = runRcsCli(wd, ['ask', 'claude', 'non-root-default'], {
         PATH: `${fakeBin}:${process.env.PATH || ''}`,
       });
       if (shouldSkipForSpawnPermissions(res.error)) return;
 
       assert.equal(res.status, 0, res.stderr || res.stdout);
       const artifactPath = res.stdout.trim();
-      assert.ok(normalizeDarwinTmpPath(artifactPath).startsWith(normalizeDarwinTmpPath(join(wd, '.omx', 'artifacts', 'claude-'))));
+      assert.ok(normalizeDarwinTmpPath(artifactPath).startsWith(normalizeDarwinTmpPath(join(wd, '.rcs', 'artifacts', 'claude-'))));
       assert.equal(existsSync(artifactPath), true);
       const artifact = await readFile(artifactPath, 'utf-8');
       assert.match(artifact, /NONROOT_DEFAULT_OK/);
@@ -184,8 +184,8 @@ describe('omx ask', () => {
     }
   });
 
-  it('supports claude --print and gemini --prompt end-to-end through omx ask', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-ask-provider-flags-'));
+  it('supports claude --print and gemini --prompt end-to-end through rcs ask', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-ask-provider-flags-'));
     try {
       const fakeBin = join(wd, 'bin');
       await mkdir(fakeBin, { recursive: true });
@@ -206,14 +206,14 @@ describe('omx ask', () => {
         PATH: `${fakeBin}:${process.env.PATH || ''}`,
       };
 
-      const claudeRes = runOmx(wd, ['ask', 'claude', '--print', 'claude-long-flag'], env);
+      const claudeRes = runRcsCli(wd, ['ask', 'claude', '--print', 'claude-long-flag'], env);
       if (shouldSkipForSpawnPermissions(claudeRes.error)) return;
       assert.equal(claudeRes.status, 0, claudeRes.stderr || claudeRes.stdout);
       const claudeArtifactPath = claudeRes.stdout.trim();
       const claudeArtifact = await readFile(claudeArtifactPath, 'utf-8');
       assert.match(claudeArtifact, /CLAUDE_PRINT_OK:claude-long-flag/);
 
-      const geminiRes = runOmx(wd, ['ask', 'gemini', '--prompt', 'gemini-long-flag'], env);
+      const geminiRes = runRcsCli(wd, ['ask', 'gemini', '--prompt', 'gemini-long-flag'], env);
       assert.equal(geminiRes.status, 0, geminiRes.stderr || geminiRes.stdout);
       const geminiArtifactPath = geminiRes.stdout.trim();
       const geminiArtifact = await readFile(geminiArtifactPath, 'utf-8');
@@ -224,7 +224,7 @@ describe('omx ask', () => {
   });
 
   it('adds Claude skip-permissions for issue-work prompts only', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-ask-issue-permissions-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-ask-issue-permissions-'));
     try {
       const fakeBin = join(wd, 'bin');
       await mkdir(fakeBin, { recursive: true });
@@ -237,14 +237,14 @@ describe('omx ask', () => {
 
       const env = { PATH: `${fakeBin}:${process.env.PATH || ''}` };
 
-      const issueRes = runOmx(wd, ['ask', 'claude', 'Investigate issue #1536 and summarize it'], env);
+      const issueRes = runRcsCli(wd, ['ask', 'claude', 'Investigate issue #1536 and summarize it'], env);
       if (shouldSkipForSpawnPermissions(issueRes.error)) return;
       assert.equal(issueRes.status, 0, issueRes.stderr || issueRes.stdout);
       const issueArtifactPath = issueRes.stdout.trim();
       const issueArtifact = await readFile(issueArtifactPath, 'utf-8');
       assert.match(issueArtifact, /CLAUDE_ARGS:--dangerously-skip-permissions -p Investigate issue #1536 and summarize it/);
 
-      const genericRes = runOmx(wd, ['ask', 'claude', 'Summarize the README'], env);
+      const genericRes = runRcsCli(wd, ['ask', 'claude', 'Summarize the README'], env);
       assert.equal(genericRes.status, 0, genericRes.stderr || genericRes.stdout);
       const genericArtifactPath = genericRes.stdout.trim();
       const genericArtifact = await readFile(genericArtifactPath, 'utf-8');
@@ -256,7 +256,7 @@ describe('omx ask', () => {
   });
 
   it('injects --agent-prompt content into final prompt while keeping Original task raw', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-ask-agent-prompt-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-ask-agent-prompt-'));
     try {
       const fakeBin = join(wd, 'bin');
       const codexHome = join(wd, '.codex-home');
@@ -275,7 +275,7 @@ describe('omx ask', () => {
       );
       await chmod(join(fakeBin, 'claude'), 0o755);
 
-      const res = runOmx(
+      const res = runRcsCli(
         wd,
         ['ask', 'claude', '--agent-prompt', 'executor', 'ship', 'feature'],
         { PATH: `${fakeBin}:${process.env.PATH || ''}`, CODEX_HOME: codexHome },
@@ -296,7 +296,7 @@ describe('omx ask', () => {
   });
 
   it('fails clearly when --agent-prompt role is missing from prompts directory', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-ask-agent-prompt-missing-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-ask-agent-prompt-missing-'));
     try {
       const fakeBin = join(wd, 'bin');
       const codexHome = join(wd, '.codex-home');
@@ -310,7 +310,7 @@ describe('omx ask', () => {
       );
       await chmod(join(fakeBin, 'gemini'), 0o755);
 
-      const res = runOmx(
+      const res = runRcsCli(
         wd,
         ['ask', 'gemini', '--agent-prompt=planner', '--prompt', 'do', 'planning'],
         { PATH: `${fakeBin}:${process.env.PATH || ''}`, CODEX_HOME: codexHome },

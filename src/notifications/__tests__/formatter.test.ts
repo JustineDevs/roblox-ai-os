@@ -170,15 +170,15 @@ describe('parseTmuxTail', () => {
   it('keeps wrapped Korean continuation lines in the same block', () => {
     const raw = [
       'block 9: previous context',
-      'block 10: 2. 아예 ~/.codex/.omx-config.json에서 조절 가능하',
+      'block 10: 2. 아예 ~/.codex/.rcs-config.json에서 조절 가능하',
       '  게 로컬 패치하기',
     ].join('\n');
 
     const result = parseTmuxTail(raw);
-    assert.ok(result.includes('block 10: 2. 아예 ~/.codex/.omx-config.json에서 조절 가능하'));
+    assert.ok(result.includes('block 10: 2. 아예 ~/.codex/.rcs-config.json에서 조절 가능하'));
     assert.ok(result.includes('  게 로컬 패치하기'));
     assert.ok(
-      result.indexOf('block 10: 2. 아예 ~/.codex/.omx-config.json에서 조절 가능하') <
+      result.indexOf('block 10: 2. 아예 ~/.codex/.rcs-config.json에서 조절 가능하') <
         result.indexOf('  게 로컬 패치하기'),
     );
   });
@@ -241,14 +241,14 @@ describe('parseTmuxTail', () => {
     assert.ok(result.includes('Actual output'));
   });
 
-  it('removes OMX HUD status lines', () => {
+  it('removes RCS HUD status lines', () => {
     const raw = [
-      '[OMX#3] ultrawork active',
-      '[OMX] idle',
+      '[RCS#3] ultrawork active',
+      '[RCS] idle',
       'Normal output line',
     ].join('\n');
     const result = parseTmuxTail(raw);
-    assert.ok(!result.includes('[OMX'));
+    assert.ok(!result.includes('[RCS'));
     assert.ok(result.includes('Normal output line'));
   });
 

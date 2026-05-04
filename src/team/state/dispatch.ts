@@ -54,7 +54,9 @@ interface DispatchDeps {
   validateWorkerName: (name: string) => void;
   withDispatchLock: <T>(teamName: string, cwd: string, fn: () => Promise<T>) => Promise<T>;
   readDispatchRequests: (teamName: string, cwd: string) => Promise<TeamDispatchRequest[]>;
+  readBridgeDispatchRequestsOnly?: (teamName: string, cwd: string) => Promise<TeamDispatchRequest[]>;
   writeDispatchRequests: (teamName: string, requests: TeamDispatchRequest[], cwd: string) => Promise<void>;
+  writeBridgeCompatOnly?: (request: TeamDispatchRequest) => Promise<void>;
 }
 
 function isDispatchKind(value: unknown): value is TeamDispatchRequestKind {
@@ -244,7 +246,9 @@ export async function enqueueDispatchRequest(
   deps.validateWorkerName(requestInput.to_worker);
 
   const queued = await deps.withDispatchLock(deps.teamName, deps.cwd, async () => {
-    const requests = await deps.readDispatchRequests(deps.teamName, deps.cwd);
+    const requests = deps.readBridgeDispatchRequestsOnly
+      ? await deps.readBridgeDispatchRequestsOnly(deps.teamName, deps.cwd)
+      : await deps.readDispatchRequests(deps.teamName, deps.cwd);
     const existing = requests.find((req) => equivalentPendingDispatch(req, requestInput));
     if (existing) return { request: existing, deduped: true };
 
@@ -273,6 +277,10 @@ export async function enqueueDispatchRequest(
       if (bridgeRequest) {
         return { request: bridgeRequest, deduped: false, queuedTransport: 'bridge' as const };
       }
+      if (deps.writeBridgeCompatOnly) {
+        await deps.writeBridgeCompatOnly(request);
+      }
+      return { request, deduped: false, queuedTransport: 'bridge' as const };
     }
 
     requests.push(request);

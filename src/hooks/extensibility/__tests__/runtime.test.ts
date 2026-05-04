@@ -9,11 +9,11 @@ import { initTeamState, readTeamLeaderAttention, readTeamManifestV2, writeTeamLe
 
 describe('dispatchHookEventRuntime', () => {
   it('dispatches native events even when plugins env var is not set', async () => {
-    const originalEnv = process.env.OMX_HOOK_PLUGINS;
+    const originalEnv = process.env.RCS_HOOK_PLUGINS;
     try {
-      delete process.env.OMX_HOOK_PLUGINS;
+      delete process.env.RCS_HOOK_PLUGINS;
 
-      const cwd = await mkdtemp(join(tmpdir(), 'omx-runtime-'));
+      const cwd = await mkdtemp(join(tmpdir(), 'rcs-runtime-'));
       try {
         const event = buildHookEvent('session-start');
         const result = await dispatchHookEventRuntime({ cwd, event });
@@ -27,21 +27,21 @@ describe('dispatchHookEventRuntime', () => {
       }
     } finally {
       if (originalEnv !== undefined) {
-        process.env.OMX_HOOK_PLUGINS = originalEnv;
+        process.env.RCS_HOOK_PLUGINS = originalEnv;
       } else {
-        delete process.env.OMX_HOOK_PLUGINS;
+        delete process.env.RCS_HOOK_PLUGINS;
       }
     }
   });
 
   it('dispatches when plugins are enabled', async () => {
-    const originalEnv = process.env.OMX_HOOK_PLUGINS;
+    const originalEnv = process.env.RCS_HOOK_PLUGINS;
     try {
-      process.env.OMX_HOOK_PLUGINS = '1';
+      process.env.RCS_HOOK_PLUGINS = '1';
 
-      const cwd = await mkdtemp(join(tmpdir(), 'omx-runtime-'));
+      const cwd = await mkdtemp(join(tmpdir(), 'rcs-runtime-'));
       try {
-        const dir = join(cwd, '.omx', 'hooks');
+        const dir = join(cwd, '.rcs', 'hooks');
         await mkdir(dir, { recursive: true });
         await writeFile(
           join(dir, 'rt-test.mjs'),
@@ -60,19 +60,19 @@ describe('dispatchHookEventRuntime', () => {
       }
     } finally {
       if (originalEnv !== undefined) {
-        process.env.OMX_HOOK_PLUGINS = originalEnv;
+        process.env.RCS_HOOK_PLUGINS = originalEnv;
       } else {
-        delete process.env.OMX_HOOK_PLUGINS;
+        delete process.env.RCS_HOOK_PLUGINS;
       }
     }
   });
 
   it('passes allowTeamWorkerSideEffects through to dispatcher', async () => {
-    const originalEnv = process.env.OMX_HOOK_PLUGINS;
+    const originalEnv = process.env.RCS_HOOK_PLUGINS;
     try {
-      process.env.OMX_HOOK_PLUGINS = '1';
+      process.env.RCS_HOOK_PLUGINS = '1';
 
-      const cwd = await mkdtemp(join(tmpdir(), 'omx-runtime-'));
+      const cwd = await mkdtemp(join(tmpdir(), 'rcs-runtime-'));
       try {
         const event = buildHookEvent('turn-complete');
         const result = await dispatchHookEventRuntime({
@@ -88,19 +88,19 @@ describe('dispatchHookEventRuntime', () => {
       }
     } finally {
       if (originalEnv !== undefined) {
-        process.env.OMX_HOOK_PLUGINS = originalEnv;
+        process.env.RCS_HOOK_PLUGINS = originalEnv;
       } else {
-        delete process.env.OMX_HOOK_PLUGINS;
+        delete process.env.RCS_HOOK_PLUGINS;
       }
     }
   });
 
   it('returns event name and source in result', async () => {
-    const originalEnv = process.env.OMX_HOOK_PLUGINS;
+    const originalEnv = process.env.RCS_HOOK_PLUGINS;
     try {
-      delete process.env.OMX_HOOK_PLUGINS;
+      delete process.env.RCS_HOOK_PLUGINS;
 
-      const cwd = await mkdtemp(join(tmpdir(), 'omx-runtime-'));
+      const cwd = await mkdtemp(join(tmpdir(), 'rcs-runtime-'));
       try {
         const event = buildHookEvent('needs-input');
         const result = await dispatchHookEventRuntime({ cwd, event });
@@ -113,15 +113,15 @@ describe('dispatchHookEventRuntime', () => {
       }
     } finally {
       if (originalEnv !== undefined) {
-        process.env.OMX_HOOK_PLUGINS = originalEnv;
+        process.env.RCS_HOOK_PLUGINS = originalEnv;
       } else {
-        delete process.env.OMX_HOOK_PLUGINS;
+        delete process.env.RCS_HOOK_PLUGINS;
       }
     }
   });
 
   it('marks active leader-owned teams when a native stop event is dispatched without inventing leader attention', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-runtime-stop-team-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-runtime-stop-team-'));
     try {
       await initTeamState('stop-owned-team', 'stop test', 'executor', 1, cwd);
       const manifest = await readTeamManifestV2('stop-owned-team', cwd);
@@ -170,8 +170,8 @@ describe('dispatchHookEventRuntime', () => {
     }
   });
 
-  it('routes native stop leader attention by canonical OMX session id while preserving native metadata in context', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-runtime-stop-team-native-meta-'));
+  it('routes native stop leader attention by canonical RCS session id while preserving native metadata in context', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-runtime-stop-team-native-meta-'));
     try {
       await initTeamState('stop-owned-team-meta', 'stop test', 'executor', 1, cwd);
       const manifest = await readTeamManifestV2('stop-owned-team-meta', cwd);
@@ -180,13 +180,13 @@ describe('dispatchHookEventRuntime', () => {
         ...manifest!,
         leader: {
           ...manifest!.leader,
-          session_id: 'omx-canonical-session',
+          session_id: 'rcs-canonical-session',
         },
       }, cwd);
 
       const event = buildHookEvent('stop', {
         source: 'native',
-        session_id: 'omx-canonical-session',
+        session_id: 'rcs-canonical-session',
         context: {
           native_session_id: 'codex-native-session',
         },
@@ -196,7 +196,7 @@ describe('dispatchHookEventRuntime', () => {
 
       assert.equal(result.dispatched, true);
       assert.equal(attention?.source, 'native_stop');
-      assert.equal(attention?.leader_session_id, 'omx-canonical-session');
+      assert.equal(attention?.leader_session_id, 'rcs-canonical-session');
       assert.equal(attention?.leader_session_active, false);
     } finally {
       await rm(cwd, { recursive: true, force: true });

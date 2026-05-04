@@ -6,7 +6,7 @@ afterEach(() => {
   process.exitCode = undefined;
 });
 
-describe('omx sidecar CLI', () => {
+describe('rcs sidecar CLI', () => {
   it('resolves sidecar as a first-class CLI command', () => {
     assert.deepEqual(resolveCliInvocation(['sidecar', 'demo']), { command: 'sidecar', launchArgs: [] });
   });
@@ -20,6 +20,6 @@ describe('omx sidecar CLI', () => {
     } finally {
       console.log = originalLog;
     }
-    assert.ok(logs.some((line) => line.includes('omx sidecar <team-name> --tmux')));
+    assert.ok(logs.some((line) => line.includes('rcs sidecar <team-name> --tmux')));
   });
 });

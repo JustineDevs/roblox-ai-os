@@ -18,7 +18,7 @@ describe('role-router', () => {
 
   describe('loadRolePrompt', () => {
     it('returns prompt content for an existing role', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         await writeFile(join(dir, 'executor.md'), '# Executor\n\nYou are an executor agent.');
         const content = await loadRolePrompt('executor', dir);
@@ -30,7 +30,7 @@ describe('role-router', () => {
     });
 
     it('returns null for a missing role', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         const content = await loadRolePrompt('nonexistent', dir);
         assert.equal(content, null);
@@ -40,7 +40,7 @@ describe('role-router', () => {
     });
 
     it('returns null for an empty prompt file', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         await writeFile(join(dir, 'empty.md'), '   \n  ');
         const content = await loadRolePrompt('empty', dir);
@@ -53,7 +53,7 @@ describe('role-router', () => {
 
   describe('isKnownRole', () => {
     it('returns true when prompt file exists', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         await writeFile(join(dir, 'designer.md'), '# Designer');
         assert.equal(isKnownRole('designer', dir), true);
@@ -63,7 +63,7 @@ describe('role-router', () => {
     });
 
     it('returns false when prompt file does not exist', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         assert.equal(isKnownRole('missing-role', dir), false);
       } finally {
@@ -74,7 +74,7 @@ describe('role-router', () => {
 
   describe('listAvailableRoles', () => {
     it('lists all roles from prompt files', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         await writeFile(join(dir, 'executor.md'), '# Executor');
         await writeFile(join(dir, 'designer.md'), '# Designer');
@@ -280,7 +280,7 @@ describe('role-router', () => {
 
   describe('path traversal protection', () => {
     it('loadRolePrompt rejects path traversal attempts', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         const content = await loadRolePrompt('../../../etc/passwd', dir);
         assert.equal(content, null);
@@ -290,7 +290,7 @@ describe('role-router', () => {
     });
 
     it('isKnownRole rejects path traversal attempts', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         assert.equal(isKnownRole('../../../etc/passwd', dir), false);
       } finally {
@@ -299,7 +299,7 @@ describe('role-router', () => {
     });
 
     it('loadRolePrompt rejects uppercase role names', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         await writeFile(join(dir, 'Executor.md'), '# Executor');
         const content = await loadRolePrompt('Executor', dir);
@@ -310,7 +310,7 @@ describe('role-router', () => {
     });
 
     it('loadRolePrompt rejects role names with dots', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         const content = await loadRolePrompt('foo.bar', dir);
         assert.equal(content, null);
@@ -320,7 +320,7 @@ describe('role-router', () => {
     });
 
     it('loadRolePrompt accepts valid hyphenated role names', async () => {
-      const dir = await mkdtemp(join(tmpdir(), 'omx-role-router-'));
+      const dir = await mkdtemp(join(tmpdir(), 'rcs-role-router-'));
       try {
         await writeFile(join(dir, 'test-engineer.md'), '# Test Engineer');
         const content = await loadRolePrompt('test-engineer', dir);

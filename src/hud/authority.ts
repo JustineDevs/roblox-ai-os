@@ -57,10 +57,10 @@ export async function runHudAuthorityTick(
   const timeoutMs = Math.max(100, options.timeoutMs ?? 5_000);
   const watcherScript = join(packageRoot, 'dist', 'scripts', 'notify-fallback-watcher.js');
   const notifyScript = join(packageRoot, 'dist', 'scripts', 'notify-hook.js');
-  const authorityOwnerPath = join(cwd, '.omx', 'state', 'notify-fallback-authority-owner.json');
+  const authorityOwnerPath = join(cwd, '.rcs', 'state', 'notify-fallback-authority-owner.json');
   const runProcess = deps.runProcess ?? defaultRunProcess;
 
-  await mkdir(join(cwd, '.omx', 'state'), { recursive: true }).catch(() => {});
+  await mkdir(join(cwd, '.rcs', 'state'), { recursive: true }).catch(() => {});
   await writeFile(authorityOwnerPath, JSON.stringify({
     owner: 'hud',
     pid: process.pid,
@@ -86,7 +86,7 @@ export async function runHudAuthorityTick(
       env: {
         ...process.env,
         ...(options.env ?? {}),
-        OMX_HUD_AUTHORITY: '1',
+        RCS_HUD_AUTHORITY: '1',
       },
       timeoutMs,
     },

@@ -2,7 +2,7 @@
  * RALPLAN stage adapter for pipeline orchestrator.
  *
  * Wraps the consensus planning workflow (planner + architect + critic)
- * into a PipelineStage. Produces a plan artifact at `.omx/plans/`.
+ * into a PipelineStage. Produces a plan artifact at `.rcs/plans/`.
  */
 
 import type { PipelineStage, StageContext, StageResult } from '../types.js';

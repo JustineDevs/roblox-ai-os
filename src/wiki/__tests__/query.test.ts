@@ -155,7 +155,7 @@ describe('Wiki Query', () => {
 
     queryWiki(tempDir, 'authentication');
 
-    const logPath = path.join(tempDir, '.omx', 'wiki', 'log.md');
+    const logPath = path.join(tempDir, '.rcs', 'wiki', 'log.md');
     expect(fs.existsSync(logPath)).toBe(true);
     const logContent = await fsp.readFile(logPath, 'utf8');
     expect(logContent).toContain('Query "authentication"');
@@ -169,6 +169,6 @@ describe('Wiki Query', () => {
 
     const results = queryWiki(tempDir, 'sessionstart', { logQuery: false });
     expect(results.length).toBe(1);
-    expect(fs.existsSync(path.join(tempDir, '.omx', 'wiki', 'log.md'))).toBe(false);
+    expect(fs.existsSync(path.join(tempDir, '.rcs', 'wiki', 'log.md'))).toBe(false);
   });
 });

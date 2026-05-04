@@ -1,11 +1,11 @@
-# oh-my-codex Feature Coverage Matrix
+# roblox-ai-os-creator-skills Feature Coverage Matrix
 
 **Target: >=90% parity with oh-my-claudecode (excluding MCP tools)**
 **Last Updated:** 2026-02-22
 
 ## Coverage Summary
 
-| Category | OMC Features | OMX Implemented | Coverage |
+| Category | OMC Features | RCS Implemented | Coverage |
 |----------|-------------|-----------------|----------|
 | Agent Definitions | 29 | 29 | 100% |
 | Skills/Commands | 30 | 30 | 100% |
@@ -31,7 +31,7 @@
 
 ### Agent Definitions / Role Catalog (29/29 = 100%)
 
-| OMC Agent | OMX Status | Mechanism |
+| OMC Agent | RCS Status | Mechanism |
 |-----------|-----------|-----------|
 | analyst | DONE | prompts/analyst.md |
 | api-reviewer | DONE | prompts/api-reviewer.md |
@@ -67,7 +67,7 @@
 
 ### Skills (30/30 = 100%)
 
-| OMC Skill | OMX Status | Mechanism |
+| OMC Skill | RCS Status | Mechanism |
 |-----------|-----------|-----------|
 | autopilot | DONE | ~/.codex/skills/autopilot/SKILL.md |
 | ralph | DONE | ~/.codex/skills/ralph/SKILL.md |
@@ -83,7 +83,7 @@
 | code-review | DONE | ~/.codex/skills/code-review/SKILL.md |
 | security-review | DONE | ~/.codex/skills/security-review/SKILL.md |
 | tdd | DONE | ~/.codex/skills/tdd/SKILL.md |
-| deepinit | DONE (lightweight CLI successor) | `omx agents-init [path]` (`omx deepinit [path]` alias) |
+| deepinit | DONE (lightweight CLI successor) | `rcs agents-init [path]` (`rcs deepinit [path]` alias) |
 | deepsearch | DONE | ~/.codex/skills/deepsearch/SKILL.md |
 | analyze | DONE | ~/.codex/skills/analyze/SKILL.md |
 | build-fix | DONE | ~/.codex/skills/build-fix/SKILL.md |
@@ -100,7 +100,7 @@
 | review | DONE | ~/.codex/skills/review/SKILL.md |
 | ralph-init | DONE | ~/.codex/skills/ralph-init/SKILL.md |
 | ~~release~~ | REMOVED (v0.5.0) | — |
-| omx-setup | DONE | ~/.codex/skills/omx-setup/SKILL.md |
+| rcs-setup | DONE | ~/.codex/skills/rcs-setup/SKILL.md |
 | configure-notifications | DONE | ~/.codex/skills/configure-notifications/SKILL.md |
 | ~~configure-telegram~~ | MERGED -> configure-notifications | — |
 | ~~configure-discord~~ | MERGED -> configure-notifications | — |
@@ -110,12 +110,12 @@
 | ~~project-session-manager~~ | REMOVED (v0.5.0) | — |
 | ~~psm~~ | REMOVED (v0.5.0) | — |
 | swarm | DONE | ~/.codex/skills/swarm/SKILL.md |
-| ~~learn-about-omx~~ | REMOVED (v0.5.0) | — |
+| ~~learn-about-rcs~~ | REMOVED (v0.5.0) | — |
 | worker | DONE | ~/.codex/skills/worker/SKILL.md |
 
 ### Hook Pipeline (6 full + 3 partial out of 9 = ~89%)
 
-| OMC Hook Event | OMX Equivalent | Capability |
+| OMC Hook Event | RCS Equivalent | Capability |
 |---------------|---------------|------------|
 | SessionStart | AGENTS.md native + runtime overlay (preLaunch) | FULL+ |
 | PreToolUse | AGENTS.md inline guidance | PARTIAL (no interception) |
@@ -125,13 +125,13 @@
 | SubagentStop | Codex CLI multi_agent native | FULL |
 | PreCompact | AGENTS.md overlay compaction protocol | PARTIAL (instructions only) |
 | Stop | notify config + postLaunch cleanup | FULL |
-| SessionEnd | omx postLaunch lifecycle phase | PARTIAL (post-exit cleanup) |
+| SessionEnd | rcs postLaunch lifecycle phase | PARTIAL (post-exit cleanup) |
 
-`*` FULL via terminal automation workaround (default-enabled in `v0.2.3` generated `.omx/tmux-hook.json`), not native hook context injection.
+`*` FULL via terminal automation workaround (default-enabled in `v0.2.3` generated `.rcs/tmux-hook.json`), not native hook context injection.
 
 ### Infrastructure
 
-| Component | OMC | OMX Status |
+| Component | OMC | RCS Status |
 |-----------|-----|-----------|
 | CLI (setup) | DONE | DONE |
 | CLI (doctor) | DONE | DONE |
@@ -153,9 +153,9 @@
 ## Known Gaps
 
 1. **Pre-tool interception** - Cannot intercept tool calls before execution. Workaround: AGENTS.md instructs model to self-moderate.
-2. **Native context injection from hooks** - Not available in Codex hooks API. Workaround: tmux prompt injection (`omx tmux-hook`) plus state files + AGENTS.md instructions (default-enabled in `v0.2.3` generated config).
+2. **Native context injection from hooks** - Not available in Codex hooks API. Workaround: tmux prompt injection (`rcs tmux-hook`) plus state files + AGENTS.md instructions (default-enabled in `v0.2.3` generated config).
 3. **PreCompact hook** - No event interception. Workaround: AGENTS.md overlay includes compaction survival instructions that tell the model to checkpoint state before compaction.
-4. **Session end** - No real-time event. Workaround: `omx` wrapper detects Codex exit via blocking execSync and runs postLaunch cleanup (overlay strip, session archive, mode cancellation).
+4. **Session end** - No real-time event. Workaround: `rcs` wrapper detects Codex exit via blocking execSync and runs postLaunch cleanup (overlay strip, session archive, mode cancellation).
 5. **Full LSP protocol** - LSP tools use pragmatic wrappers (tsc, grep, regex) rather than full LSP protocol. Missing: lsp_goto_definition, lsp_prepare_rename, lsp_rename, lsp_code_actions, lsp_code_action_resolve (5 tools need real LSP).
 6. **Python REPL** - Not yet ported. Needed only by scientist agent. Low priority for v0.1.0.
 

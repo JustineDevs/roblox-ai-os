@@ -15,33 +15,33 @@ import {
 } from '../dispatch-cooldown.js';
 
 function makeTmpStateDir(): string {
-  const dir = join(tmpdir(), `omx-dispatch-cooldown-test-${Math.random().toString(36).slice(2)}`);
+  const dir = join(tmpdir(), `rcs-dispatch-cooldown-test-${Math.random().toString(36).slice(2)}`);
   mkdirSync(dir, { recursive: true });
   return dir;
 }
 
 describe('getDispatchNotificationCooldownSeconds', () => {
   afterEach(() => {
-    delete process.env.OMX_DISPATCH_COOLDOWN_SECONDS;
+    delete process.env.RCS_DISPATCH_COOLDOWN_SECONDS;
   });
 
   it('returns default 60 when no env or config', () => {
-    delete process.env.OMX_DISPATCH_COOLDOWN_SECONDS;
+    delete process.env.RCS_DISPATCH_COOLDOWN_SECONDS;
     assert.equal(getDispatchNotificationCooldownSeconds(), 60);
   });
 
-  it('uses OMX_DISPATCH_COOLDOWN_SECONDS env var', () => {
-    process.env.OMX_DISPATCH_COOLDOWN_SECONDS = '120';
+  it('uses RCS_DISPATCH_COOLDOWN_SECONDS env var', () => {
+    process.env.RCS_DISPATCH_COOLDOWN_SECONDS = '120';
     assert.equal(getDispatchNotificationCooldownSeconds(), 120);
   });
 
   it('returns 0 when cooldown is disabled via env', () => {
-    process.env.OMX_DISPATCH_COOLDOWN_SECONDS = '0';
+    process.env.RCS_DISPATCH_COOLDOWN_SECONDS = '0';
     assert.equal(getDispatchNotificationCooldownSeconds(), 0);
   });
 
   it('ignores invalid env values and falls back to default', () => {
-    process.env.OMX_DISPATCH_COOLDOWN_SECONDS = 'not-a-number';
+    process.env.RCS_DISPATCH_COOLDOWN_SECONDS = 'not-a-number';
     assert.equal(getDispatchNotificationCooldownSeconds(), 60);
   });
 });
@@ -51,12 +51,12 @@ describe('shouldSendDispatchNotification', () => {
 
   beforeEach(() => {
     stateDir = makeTmpStateDir();
-    delete process.env.OMX_DISPATCH_COOLDOWN_SECONDS;
+    delete process.env.RCS_DISPATCH_COOLDOWN_SECONDS;
   });
 
   afterEach(() => {
     rmSync(stateDir, { recursive: true, force: true });
-    delete process.env.OMX_DISPATCH_COOLDOWN_SECONDS;
+    delete process.env.RCS_DISPATCH_COOLDOWN_SECONDS;
   });
 
   it('returns true when no cooldown file exists', () => {
@@ -64,19 +64,19 @@ describe('shouldSendDispatchNotification', () => {
   });
 
   it('returns true when cooldown is 0 (disabled)', () => {
-    process.env.OMX_DISPATCH_COOLDOWN_SECONDS = '0';
+    process.env.RCS_DISPATCH_COOLDOWN_SECONDS = '0';
     recordDispatchNotificationSent(stateDir, 'sess1');
     assert.equal(shouldSendDispatchNotification(stateDir, 'sess1'), true);
   });
 
   it('returns false when cooldown has NOT elapsed', () => {
-    process.env.OMX_DISPATCH_COOLDOWN_SECONDS = '60';
+    process.env.RCS_DISPATCH_COOLDOWN_SECONDS = '60';
     recordDispatchNotificationSent(stateDir, 'sess2');
     assert.equal(shouldSendDispatchNotification(stateDir, 'sess2'), false);
   });
 
   it('returns true when cooldown HAS elapsed (stale timestamp)', () => {
-    process.env.OMX_DISPATCH_COOLDOWN_SECONDS = '1';
+    process.env.RCS_DISPATCH_COOLDOWN_SECONDS = '1';
     const oldTs = new Date(Date.now() - 5000).toISOString();
     const cooldownPath = join(stateDir, 'dispatch-notif-cooldown.json');
     writeFileSync(cooldownPath, JSON.stringify({ lastSentAt: oldTs }));
@@ -84,7 +84,7 @@ describe('shouldSendDispatchNotification', () => {
   });
 
   it('uses session-scoped path, global path unaffected', () => {
-    process.env.OMX_DISPATCH_COOLDOWN_SECONDS = '60';
+    process.env.RCS_DISPATCH_COOLDOWN_SECONDS = '60';
     const sessionId = 'test-session-abc123';
     recordDispatchNotificationSent(stateDir, sessionId);
     assert.equal(shouldSendDispatchNotification(stateDir, sessionId), false);

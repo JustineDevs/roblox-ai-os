@@ -8,20 +8,20 @@ import { readModeState, startMode, updateModeState } from '../base.js';
 
 describe('modes/base ralph contract integration', () => {
   it('startMode rejects invalid Ralph max_iterations values', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-ralph-contract-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-ralph-contract-'));
     try {
       await assert.rejects(
         () => startMode('ralph', 'demo', 0, wd),
         /ralph\.max_iterations must be a finite (number|integer) > 0/,
       );
-      assert.equal(existsSync(join(wd, '.omx', 'state', 'ralph-state.json')), false);
+      assert.equal(existsSync(join(wd, '.rcs', 'state', 'ralph-state.json')), false);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
   it('updateModeState rejects invalid Ralph phase and keeps previous persisted state', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-ralph-contract-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-ralph-contract-'));
     try {
       await startMode('ralph', 'demo', 5, wd);
       const before = await readModeState('ralph', wd);
@@ -47,7 +47,7 @@ describe('modes/base ralph contract integration', () => {
   });
 
   it('updateModeState normalizes legacy Ralph phase aliases via shared contract', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-ralph-contract-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-ralph-contract-'));
     try {
       await startMode('ralph', 'demo', 5, wd);
       const updated = await updateModeState('ralph', { current_phase: 'verification' }, wd);
@@ -60,7 +60,7 @@ describe('modes/base ralph contract integration', () => {
   });
 
   it('updateModeState persists terminal run outcomes on blocked_on_user', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-ralph-contract-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-ralph-contract-'));
     try {
       await startMode('ralph', 'demo', 5, wd);
       const updated = await updateModeState('ralph', { active: false, current_phase: 'blocked_on_user' }, wd);

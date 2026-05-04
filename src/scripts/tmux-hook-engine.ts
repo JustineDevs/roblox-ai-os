@@ -3,7 +3,7 @@ import { execFileSync } from 'child_process';
 import { resolveTmuxBinaryForPlatform } from '../utils/platform-command.js';
 
 export const DEFAULT_ALLOWED_MODES = ['ralph', 'ultrawork', 'team'];
-export const DEFAULT_MARKER = '[OMX_TMUX_INJECT]';
+export const DEFAULT_MARKER = '[RCS_TMUX_INJECT]';
 const PLACEHOLDER_TARGET_VALUES = new Set([
   'replace-with-tmux-pane-id',
   'replace-with-tmux-session-name',
@@ -188,7 +188,7 @@ export function isPaneRunningShell(paneCurrentCommand: any): boolean {
 const AGENT_COMMANDS = new Set(['node', 'codex', 'npx']);
 
 function isHudStartCommand(startCommand: string): boolean {
-  return /\bomx\b.*\bhud\b.*--watch/i.test(startCommand);
+  return /\brcs\b.*\bhud\b.*--watch/i.test(startCommand);
 }
 
 /**

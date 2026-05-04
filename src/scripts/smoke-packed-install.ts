@@ -4,7 +4,7 @@ import {
 } from 'node:fs';
 import { mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import {
@@ -26,7 +26,7 @@ function usage(): string {
   return [
     'Usage: node scripts/smoke-packed-install.mjs',
     '',
-    'Creates an npm tarball, installs it into an isolated prefix, and smoke tests the installed omx CLI.',
+    'Creates an npm tarball, installs it into an isolated prefix, and smoke tests the installed rcs CLI.',
     'Release smoke stays intentionally minimal: install + boot + 1-2 core commands only.',
   ].join('\n');
 }
@@ -49,6 +49,10 @@ function formatCommandFailure(cmd: string, args: string[], result: { stdout?: st
     result.stdout?.trim() ? `stdout:\n${result.stdout.trim()}` : '',
     result.stderr?.trim() ? `stderr:\n${result.stderr.trim()}` : '',
   ].filter(Boolean).join('\n\n');
+}
+
+function quoteShellArg(value: string): string {
+  return `'${value.replace(/'/g, `'\"'\"'`)}'`;
 }
 
 export function ensureRepoDependencies(repoRoot: string, options: EnsureRepoDepsOptions = {}): EnsureRepoDepsResult {
@@ -95,11 +99,32 @@ function parseArgs(argv: string[]): void {
 }
 
 function run(cmd: string, args: readonly string[], options: Record<string, unknown> = {}): ReturnType<typeof spawnSync> {
-  const result = spawnSync(cmd, [...args], {
-    encoding: 'utf-8',
-    stdio: 'pipe',
-    ...options,
-  });
+  let result;
+  if (cmd === 'npm' && process.platform !== 'win32') {
+    result = spawnSync('/bin/bash', ['-lc', ['npm', ...args].map(quoteShellArg).join(' ')], {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      ...options,
+    });
+  } else {
+    result = spawnSync(cmd, [...args], {
+      encoding: 'utf-8',
+      stdio: 'pipe',
+      ...options,
+    });
+    if (
+      cmd === 'npm'
+      && result.error
+      && /(EPERM|EACCES)/i.test(result.error.message || '')
+    ) {
+      const npmCli = join(dirname(process.execPath), '..', 'lib', 'node_modules', 'npm', 'bin', 'npm-cli.js');
+      result = spawnSync(process.execPath, [npmCli, ...args], {
+        encoding: 'utf-8',
+        stdio: 'pipe',
+        ...options,
+      });
+    }
+  }
   if (result.status !== 0) {
     throw new Error(formatCommandFailure(cmd, [...args], result));
   }
@@ -123,7 +148,7 @@ async function main(): Promise<void> {
   parseArgs(process.argv.slice(2));
 
   const repoRoot = process.cwd();
-  const tempRoot = mkdtempSync(join(tmpdir(), 'omx-packed-install-'));
+  const tempRoot = mkdtempSync(join(tmpdir(), 'rcs-packed-install-'));
   const prefixDir = join(tempRoot, 'prefix');
   mkdirSync(prefixDir, { recursive: true });
 
@@ -141,9 +166,9 @@ async function main(): Promise<void> {
 
     run('npm', ['install', '-g', tarballPath, '--prefix', prefixDir], { cwd: repoRoot });
 
-    const omxPath = join(prefixDir, process.platform === 'win32' ? '' : 'bin', npmBinName('omx'));
+    const rcsPath = join(prefixDir, process.platform === 'win32' ? '' : 'bin', npmBinName('rcs'));
     for (const argv of PACKED_INSTALL_SMOKE_CORE_COMMANDS) {
-      run(omxPath, argv, { cwd: repoRoot });
+      run(rcsPath, argv, { cwd: repoRoot });
     }
 
     console.log('packed install smoke: PASS');

@@ -1,5 +1,5 @@
 # Mission
-Optimize OMX autoresearch itself by removing the unnecessary shell-out to `cat` inside `runAutoresearchLoop()`.
+Optimize RCS autoresearch itself by removing the unnecessary shell-out to `cat` inside `runAutoresearchLoop()`.
 
 Primary target:
 - `src/cli/autoresearch.ts`

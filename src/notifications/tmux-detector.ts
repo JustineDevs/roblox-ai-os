@@ -48,8 +48,11 @@ export function analyzePaneContent(content: string): PaneAnalysis {
 
   const hasCodex =
     lower.includes('codex') ||
-    lower.includes('omx') ||
-    lower.includes('oh-my-codex') ||
+    lower.includes('rcs') ||
+    // Retain the legacy package-name token as a compatibility alias while
+    // older panes and packed installs are still observable during migration.
+    lower.includes('roblox-ai-os-creator-skills') ||
+    lower.includes('roblox creator skills') ||
     lower.includes('openai');
 
   const hasRateLimitMessage =
@@ -121,7 +124,7 @@ const TMUX_SUBMIT_REPEAT_DELAY_MS = 100;
  * Mirrors the Rust logic inline to avoid shelling out for a trivial mapping.
  */
 export function getSubmitPresses(workerCli: string): number {
-  if (process.env.OMX_RUNTIME_BRIDGE === '0') {
+  if (process.env.RCS_RUNTIME_BRIDGE === '0') {
     return workerCli.toLowerCase() === 'claude' ? 1 : 2;
   }
   // Rust-owned mapping: Claude=1, Codex/Other=2

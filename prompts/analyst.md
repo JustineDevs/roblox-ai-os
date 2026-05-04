@@ -102,7 +102,7 @@ Format each entry as:
 ```
 
 Do NOT attempt to write these to a file (Write and Edit tools are blocked for this agent).
-The orchestrator or planner will persist open questions to `.omx/plans/open-questions.md` on your behalf.
+The orchestrator or planner will persist open questions to `.rcs/plans/open-questions.md` on your behalf.
 </output_contract>
 
 <anti_patterns>

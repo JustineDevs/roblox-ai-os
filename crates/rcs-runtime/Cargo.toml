@@ -1,0 +1,17 @@
+[package]
+name = "rcs-runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "rcs-runtime"
+path = "src/main.rs"
+
+[dependencies]
+rcs-mux = { path = "../rcs-mux" }
+rcs-runtime-core = { path = "../rcs-runtime-core" }
+serde_json = "1"
+

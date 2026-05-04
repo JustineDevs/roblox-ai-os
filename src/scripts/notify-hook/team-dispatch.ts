@@ -5,7 +5,7 @@ import { execFileSync } from 'child_process';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'node:url';
 import { safeString } from './utils.js';
-import { resolveBridgeStateDir, resolveRuntimeBinaryPath } from '../../runtime/bridge.js';
+import { isBridgeEnabled, resolveBridgeStateDir, resolveRuntimeBinaryPath } from '../../runtime/bridge.js';
 import { appendTeamDeliveryLog } from '../../team/delivery-log.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,10 +25,10 @@ import {
  * Non-fatal: if the binary is missing or fails, the legacy JSON fallback lane
  * remains available when the caller is already operating outside the bridge-
  * owned path.
- * Disable entirely with OMX_RUNTIME_BRIDGE=0.
+ * Disable entirely with RCS_RUNTIME_BRIDGE=0.
  */
 function runtimeExec(command, stateDir, team) {
-  if (process.env.OMX_RUNTIME_BRIDGE === '0') return;
+  if (!isBridgeEnabled()) return;
   try {
     const binaryPath = resolveRuntimeBinaryPath();
     execFileSync(binaryPath, ['exec', JSON.stringify(command), `--state-dir=${stateDir}`], {
@@ -104,8 +104,8 @@ function recordBridgeFallback({
     // best effort observability only
   }
   try {
-    process.emitWarning(`[omx] team-dispatch bridge fallback: ${event.bridge_operation} -> ${event.fallback_target}: ${event.reason}`, {
-      code: 'OMX_TEAM_DISPATCH_BRIDGE_FALLBACK',
+    process.emitWarning(`[rcs] team-dispatch bridge fallback: ${event.bridge_operation} -> ${event.fallback_target}: ${event.reason}`, {
+      code: 'RCS_TEAM_DISPATCH_BRIDGE_FALLBACK',
     });
   } catch {
     // best effort observability only
@@ -119,6 +119,7 @@ function readJson(path, fallback) {
 }
 
 async function readBridgeDispatchRequests(stateDir, teamName) {
+  if (!isBridgeEnabled()) return null;
   const candidate = join(stateDir, 'dispatch.json');
   if (!existsSync(candidate)) return null;
   let parsed;
@@ -191,9 +192,9 @@ async function writeJsonAtomic(path, value) {
 const DISPATCH_LOCK_STALE_MS = 5 * 60 * 1000;
 const DISPATCH_REQUEST_LEASE_STALE_MS = 30 * 1000;
 const DEFAULT_ISSUE_DISPATCH_COOLDOWN_MS = 15 * 60 * 1000;
-const ISSUE_DISPATCH_COOLDOWN_ENV = 'OMX_TEAM_DISPATCH_ISSUE_COOLDOWN_MS';
+const ISSUE_DISPATCH_COOLDOWN_ENV = 'RCS_TEAM_DISPATCH_ISSUE_COOLDOWN_MS';
 const DEFAULT_DISPATCH_TRIGGER_COOLDOWN_MS = 30 * 1000;
-const DISPATCH_TRIGGER_COOLDOWN_ENV = 'OMX_TEAM_DISPATCH_TRIGGER_COOLDOWN_MS';
+const DISPATCH_TRIGGER_COOLDOWN_ENV = 'RCS_TEAM_DISPATCH_TRIGGER_COOLDOWN_MS';
 const LEADER_PANE_MISSING_DEFERRED_REASON = 'leader_pane_missing_deferred';
 const LEADER_NOTIFICATION_DEFERRED_TYPE = 'leader_notification_deferred';
 
@@ -949,7 +950,7 @@ function buildDispatchAttemptEvidence(result, fallback = {}) {
 export async function drainPendingTeamDispatch({
   cwd,
   stateDir = resolveBridgeStateDir(cwd),
-  logsDir = join(cwd, '.omx', 'logs'),
+  logsDir = join(cwd, '.rcs', 'logs'),
   maxPerTick = 5,
   injector = injectDispatchRequest,
 }: {
@@ -959,7 +960,7 @@ export async function drainPendingTeamDispatch({
   maxPerTick?: number;
   injector?: typeof injectDispatchRequest;
 } = {}) {
-  if (safeString(process.env.OMX_TEAM_WORKER)) {
+  if (safeString(process.env.RCS_TEAM_WORKER)) {
     return { processed: 0, skipped: 0, failed: 0, reason: 'worker_context' };
   }
   const teamRoot = join(stateDir, 'team');
@@ -983,7 +984,9 @@ export async function drainPendingTeamDispatch({
     const claims = [];
     await withDispatchLock(teamDirPath, async () => {
       const bridgeRequests = await readBridgeDispatchRequests(stateDir, teamName);
-      const usingLegacyRequests = bridgeRequests === null;
+      const usingLegacyRequests =
+        bridgeRequests === null
+        || (!isBridgeEnabled() && Array.isArray(bridgeRequests) && bridgeRequests.length === 0);
       const requests = usingLegacyRequests ? await readJson(requestsPath, []) : bridgeRequests;
       if (!Array.isArray(requests)) return;
       const issueCooldownState = await readIssueCooldownState(teamDirPath);

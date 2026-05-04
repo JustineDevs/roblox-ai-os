@@ -6,21 +6,21 @@ import { describe, it } from 'node:test';
 import { hookLogPath, appendHookPluginLog } from '../logging.js';
 
 describe('hookLogPath', () => {
-  it('returns .omx/logs/hooks-<date>.jsonl path', () => {
+  it('returns .rcs/logs/hooks-<date>.jsonl path', () => {
     const result = hookLogPath('/project', new Date('2026-03-15T12:00:00Z'));
-    assert.equal(result, join('/project', '.omx', 'logs', 'hooks-2026-03-15.jsonl'));
+    assert.equal(result, join('/project', '.rcs', 'logs', 'hooks-2026-03-15.jsonl'));
   });
 
   it('uses current date when no timestamp provided', () => {
     const result = hookLogPath('/project');
     const today = new Date().toISOString().slice(0, 10);
-    assert.equal(result, join('/project', '.omx', 'logs', `hooks-${today}.jsonl`));
+    assert.equal(result, join('/project', '.rcs', 'logs', `hooks-${today}.jsonl`));
   });
 });
 
 describe('appendHookPluginLog', () => {
   it('creates log directory and appends JSONL entry', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-log-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-log-'));
     try {
       const entry = {
         timestamp: '2026-01-15T10:00:00.000Z',
@@ -44,7 +44,7 @@ describe('appendHookPluginLog', () => {
   });
 
   it('appends multiple entries as separate lines', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-log-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-log-'));
     try {
       const ts = '2026-02-01T00:00:00.000Z';
       await appendHookPluginLog(cwd, { timestamp: ts, event: 'e1' });
@@ -61,13 +61,13 @@ describe('appendHookPluginLog', () => {
   });
 
   it('uses current timestamp when entry has no timestamp', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-log-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-log-'));
     try {
       const before = new Date().toISOString();
       await appendHookPluginLog(cwd, { event: 'test-event' });
 
       const today = new Date().toISOString().slice(0, 10);
-      const logFile = join(cwd, '.omx', 'logs', `hooks-${today}.jsonl`);
+      const logFile = join(cwd, '.rcs', 'logs', `hooks-${today}.jsonl`);
       const content = await readFile(logFile, 'utf-8');
       const parsed = JSON.parse(content.trim());
       assert.ok(parsed.timestamp >= before);

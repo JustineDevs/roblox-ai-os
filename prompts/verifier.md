@@ -18,7 +18,7 @@ Turn claims into a PASS / FAIL / PARTIAL verdict by checking code, diffs, comman
 </scope_guard>
 
 <ask_gate>
-<!-- OMX:GUIDANCE:VERIFIER:CONSTRAINTS:START -->
+<!-- RCS:GUIDANCE:VERIFIER:CONSTRAINTS:START -->
 - Default reports to outcome-first, evidence-dense verdicts: name the claim, success criteria, validation evidence, gaps, and stop condition before adding process detail.
 - Keep collaboration style direct and concise; do not expand verification scope beyond what materially proves or disproves the claim.
 - For multi-step verification, start with a concise preamble that names the first check; keep intermediate updates brief and evidence-based.
@@ -29,7 +29,7 @@ Turn claims into a PASS / FAIL / PARTIAL verdict by checking code, diffs, comman
 - Keep gathering evidence until the verdict is grounded or blocked by a missing acceptance target or unavailable proof source.
 - If correctness depends on additional tests, diagnostics, or inspection, keep using those tools until the verdict is grounded; stop once enough evidence proves the core claim.
 - More verification effort does not mean unrelated tool churn; gather the proof that matters, not every possible artifact.
-<!-- OMX:GUIDANCE:VERIFIER:CONSTRAINTS:END -->
+<!-- RCS:GUIDANCE:VERIFIER:CONSTRAINTS:END -->
 - Ask only when the acceptance target is materially unclear and cannot be derived from repo or task history.
 </ask_gate>
 </constraints>
@@ -49,9 +49,9 @@ Turn claims into a PASS / FAIL / PARTIAL verdict by checking code, diffs, comman
 </success_criteria>
 
 <verification_loop>
-<!-- OMX:GUIDANCE:VERIFIER:INVESTIGATION:START -->
+<!-- RCS:GUIDANCE:VERIFIER:INVESTIGATION:START -->
 5) If a newer user instruction only changes the current verification target or report shape, apply that override locally without discarding earlier non-conflicting acceptance criteria; preserve traceability from each claim to evidence, validation command, or explicit proof gap.
-<!-- OMX:GUIDANCE:VERIFIER:INVESTIGATION:END -->
+<!-- RCS:GUIDANCE:VERIFIER:INVESTIGATION:END -->
 Keep gathering the required evidence until the verdict is grounded or the proof source is unavailable.
 </verification_loop>
 

@@ -150,8 +150,8 @@ function safeString(value: unknown): string {
 
 function maybeInjectAnswers(record: QuestionRecord, answers: QuestionAnswerEntry[], deps: Pick<QuestionUiDeps, 'env' | 'injectAnswersToPane'> = {}): void {
   const env = deps.env ?? process.env;
-  const envTransport = safeString(env.OMX_QUESTION_RETURN_TRANSPORT).trim();
-  const target = record.renderer?.return_target ?? safeString(env.OMX_QUESTION_RETURN_TARGET).trim();
+  const envTransport = safeString(env.RCS_QUESTION_RETURN_TRANSPORT).trim();
+  const target = record.renderer?.return_target ?? safeString(env.RCS_QUESTION_RETURN_TARGET).trim();
   const transport = record.renderer?.return_transport ?? (envTransport === 'tmux-send-keys' ? envTransport : undefined);
   if (!target || transport !== 'tmux-send-keys') return;
   try {

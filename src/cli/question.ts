@@ -1,3 +1,4 @@
+import { writeSync } from 'node:fs';
 import { evaluateQuestionPolicy } from '../question/policy.js';
 import {
   createQuestionRecord,
@@ -12,32 +13,32 @@ import { runQuestionUi } from '../question/ui.js';
 const DEFAULT_QUESTION_WAIT_TIMEOUT_MS = 30 * 60 * 1000;
 
 function parseQuestionWaitTimeoutMs(env: NodeJS.ProcessEnv = process.env): number {
-  const raw = String(env.OMX_QUESTION_WAIT_TIMEOUT_MS ?? '').trim();
+  const raw = String(env.RCS_QUESTION_WAIT_TIMEOUT_MS ?? '').trim();
   if (!raw) return DEFAULT_QUESTION_WAIT_TIMEOUT_MS;
   const parsed = Number.parseInt(raw, 10);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_QUESTION_WAIT_TIMEOUT_MS;
 }
 
-export const QUESTION_HELP = `omx question - OMX-owned blocking user question entrypoint
+export const QUESTION_HELP = `rcs question - RCS-owned blocking user question entrypoint
 
 Usage:
-  omx question --input '<json>' [--json]
-  omx question --ui --state-path <absolute-or-relative-record-path>
+  rcs question --input '<json>' [--json]
+  rcs question --ui --state-path <absolute-or-relative-record-path>
 
 Options:
   --help, -h           Show this help message
   --input <json>       JSON object with question/options schema; blocks until answered
   --input=<json>       Same as --input
   --json               Emit compact JSON on stdout for machine callers
-  --ui                 Internal renderer mode; renders the OMX question UI for an existing state record
+  --ui                 Internal renderer mode; renders the RCS question UI for an existing state record
   --state-path <path>  Question record path used by --ui mode
 
 Input schema:
   {
     "header": "Optional short heading",
-    "question": "What should OMX do next?",
+    "question": "What should RCS do next?",
     "questions": [
-      {"id":"next-step","question":"What should OMX do next?","options":[{"label":"Proceed","value":"proceed"}],"allow_other":false}
+      {"id":"next-step","question":"What should RCS do next?","options":[{"label":"Proceed","value":"proceed"}],"allow_other":false}
     ],
     "options": [
       {"label": "Proceed", "value": "proceed", "description": "Continue"},
@@ -112,7 +113,12 @@ function parseQuestionArgs(args: string[]): ParsedQuestionArgs {
 }
 
 function printJson(payload: unknown, compact: boolean): void {
-  console.log(JSON.stringify(payload, null, compact ? 0 : 2));
+  const rendered = `${JSON.stringify(payload, null, compact ? 0 : 2)}\n`;
+  if (process.stdout.isTTY) {
+    process.stdout.write(rendered);
+    return;
+  }
+  writeSync(1, rendered);
 }
 
 function extractErrorMessage(error: unknown): string {
@@ -143,7 +149,7 @@ export async function questionCommand(args: string[]): Promise<void> {
     return;
   }
 
-  if (!parsed.input) throw new Error('omx question requires --input in normal mode');
+  if (!parsed.input) throw new Error('rcs question requires --input in normal mode');
 
   let rawInput: unknown;
   try {

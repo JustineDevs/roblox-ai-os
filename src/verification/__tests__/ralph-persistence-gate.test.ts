@@ -47,7 +47,7 @@ describe('ralph persistence release gate artifacts', () => {
     for (const id of ['V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10']) {
       assert.match(gate, new RegExp(`\\|\\s*${id}\\s*\\|`));
     }
-    assert.match(gate, /OMX_RALPH_PERSISTENCE_PORT=1/);
+    assert.match(gate, /RCS_RALPH_PERSISTENCE_PORT=1/);
     assert.match(gate, /compatibility window/i);
   });
 

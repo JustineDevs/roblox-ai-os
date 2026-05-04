@@ -2,7 +2,7 @@ import type { HookEventEnvelope, HookPluginSdk } from './types.js';
 import { createHookPluginLogger } from './sdk/logging.js';
 import { clearHookPluginStateFiles, createHookPluginStateApi } from './sdk/plugin-state.js';
 import { sanitizeHookPluginName } from './sdk/paths.js';
-import { createHookPluginOmxApi } from './sdk/runtime-state.js';
+import { createHookPluginRcsStateApi } from './sdk/runtime-state.js';
 import { createHookPluginTmuxApi } from './sdk/tmux.js';
 
 interface HookPluginSdkOptions {
@@ -22,7 +22,7 @@ export function createHookPluginSdk(options: HookPluginSdkOptions): HookPluginSd
     }),
     log: createHookPluginLogger(options.cwd, pluginName, options.event),
     state: createHookPluginStateApi(options.cwd, pluginName),
-    omx: createHookPluginOmxApi(options.cwd),
+    rcs: createHookPluginRcsStateApi(options.cwd),
   };
 }
 

@@ -57,7 +57,7 @@ function buildDescriptorHelp(descriptor: McpCliDescriptor): string {
     .join("\n");
 
   return [
-    `Usage: omx ${descriptor.commandName} <tool-name> [--input <json>] [--json]`,
+    `Usage: rcs ${descriptor.commandName} <tool-name> [--input <json>] [--json]`,
     "",
     descriptor.title,
     "",
@@ -65,7 +65,7 @@ function buildDescriptorHelp(descriptor: McpCliDescriptor): string {
     toolLines,
     "",
     "Examples:",
-    `  omx ${descriptor.commandName} ${descriptor.tools[0]?.name ?? "<tool>"} --input '{}' --json`,
+    `  rcs ${descriptor.commandName} ${descriptor.tools[0]?.name ?? "<tool>"} --input '{}' --json`,
   ].join("\n");
 }
 
@@ -183,12 +183,12 @@ async function runDescriptorCommand(
 
 async function loadStateDescriptor(): Promise<McpCliDescriptor> {
   const { buildStateServerTools, handleStateToolCall } = await importWithAutoStartDisabled(
-    "OMX_STATE_SERVER_DISABLE_AUTO_START",
+    "RCS_STATE_SERVER_DISABLE_AUTO_START",
     async () => await import("../mcp/state-server.js"),
   );
   return {
     commandName: "state",
-    title: "CLI parity surface for OMX state MCP tools.",
+    title: "CLI parity surface for RCS state MCP tools.",
     tools: buildStateServerTools().map(({ name, description }) => ({ name, description })),
     aliases: {
       read: "state_read",
@@ -207,7 +207,7 @@ async function loadMemoryDescriptor(
   title: string,
 ): Promise<McpCliDescriptor> {
   const { buildMemoryServerTools, handleMemoryToolCall } = await importWithAutoStartDisabled(
-    "OMX_MEMORY_SERVER_DISABLE_AUTO_START",
+    "RCS_MEMORY_SERVER_DISABLE_AUTO_START",
     async () => await import("../mcp/memory-server.js"),
   );
   return {
@@ -237,12 +237,12 @@ async function loadMemoryDescriptor(
 
 async function loadTraceDescriptor(): Promise<McpCliDescriptor> {
   const { buildTraceServerTools, handleTraceToolCall } = await importWithAutoStartDisabled(
-    "OMX_TRACE_SERVER_DISABLE_AUTO_START",
+    "RCS_TRACE_SERVER_DISABLE_AUTO_START",
     async () => await import("../mcp/trace-server.js"),
   );
   return {
     commandName: "trace",
-    title: "CLI parity surface for OMX trace MCP tools.",
+    title: "CLI parity surface for RCS trace MCP tools.",
     tools: buildTraceServerTools().map(({ name, description }) => ({ name, description })),
     aliases: {
       timeline: "trace_timeline",
@@ -254,12 +254,12 @@ async function loadTraceDescriptor(): Promise<McpCliDescriptor> {
 
 async function loadCodeIntelDescriptor(): Promise<McpCliDescriptor> {
   const { buildCodeIntelServerTools, handleCodeIntelToolCall } = await importWithAutoStartDisabled(
-    "OMX_CODE_INTEL_SERVER_DISABLE_AUTO_START",
+    "RCS_CODE_INTEL_SERVER_DISABLE_AUTO_START",
     async () => await import("../mcp/code-intel-server.js"),
   );
   return {
     commandName: "code-intel",
-    title: "CLI parity surface for OMX code-intel MCP tools.",
+    title: "CLI parity surface for RCS code-intel MCP tools.",
     tools: buildCodeIntelServerTools().map(({ name, description }) => ({ name, description })),
     handle: handleCodeIntelToolCall,
   };
@@ -267,12 +267,12 @@ async function loadCodeIntelDescriptor(): Promise<McpCliDescriptor> {
 
 async function loadWikiDescriptor(): Promise<McpCliDescriptor> {
   const { buildWikiServerTools, handleWikiToolCall } = await importWithAutoStartDisabled(
-    "OMX_WIKI_SERVER_DISABLE_AUTO_START",
+    "RCS_WIKI_SERVER_DISABLE_AUTO_START",
     async () => await import("../mcp/wiki-server.js"),
   );
   return {
     commandName: "wiki",
-    title: "CLI parity surface for OMX wiki MCP tools.",
+    title: "CLI parity surface for RCS wiki MCP tools.",
     tools: buildWikiServerTools().map(({ name, description }) => ({ name, description })),
     aliases: {
       ingest: "wiki_ingest",
@@ -299,7 +299,7 @@ export async function mcpParityCommand(
     case "notepad":
       await runDescriptorCommand(
         args,
-        async () => await loadMemoryDescriptor("notepad", "notepad_", "CLI parity surface for OMX notepad MCP tools."),
+        async () => await loadMemoryDescriptor("notepad", "notepad_", "CLI parity surface for RCS notepad MCP tools."),
       );
       return;
     case "project-memory":
@@ -308,7 +308,7 @@ export async function mcpParityCommand(
         async () => await loadMemoryDescriptor(
           "project-memory",
           "project_memory_",
-          "CLI parity surface for OMX project-memory MCP tools.",
+          "CLI parity surface for RCS project-memory MCP tools.",
         ),
       );
       return;
@@ -334,7 +334,7 @@ export async function executeMcpParityCommand(
     case "notepad":
       return await executeDescriptorCommand(
         args,
-        async () => await loadMemoryDescriptor("notepad", "notepad_", "CLI parity surface for OMX notepad MCP tools."),
+        async () => await loadMemoryDescriptor("notepad", "notepad_", "CLI parity surface for RCS notepad MCP tools."),
       );
     case "project-memory":
       return await executeDescriptorCommand(
@@ -342,7 +342,7 @@ export async function executeMcpParityCommand(
         async () => await loadMemoryDescriptor(
           "project-memory",
           "project_memory_",
-          "CLI parity surface for OMX project-memory MCP tools.",
+          "CLI parity surface for RCS project-memory MCP tools.",
         ),
       );
     case "trace":

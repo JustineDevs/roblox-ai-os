@@ -20,7 +20,7 @@ test('resolveGitCommonDir resolves relative git common dir output against cwd', 
 });
 
 test('hasUsableNodeModules requires core dependency markers', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'omx-repo-deps-'));
+  const root = await mkdtemp(join(tmpdir(), 'rcs-repo-deps-'));
   try {
     const nodeModules = join(root, 'node_modules');
     await mkdir(join(nodeModules, 'typescript'), { recursive: true });
@@ -38,7 +38,7 @@ test('hasUsableNodeModules requires core dependency markers', async () => {
 });
 
 test('resolveReusableNodeModulesSource returns parent repo node_modules for worktrees', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'omx-reuse-node-modules-'));
+  const root = await mkdtemp(join(tmpdir(), 'rcs-reuse-node-modules-'));
   try {
     const primaryRepo = join(root, 'primary');
     const worktreeRepo = join(root, 'worktree');
@@ -65,7 +65,7 @@ test('resolveReusableNodeModulesSource returns parent repo node_modules for work
 });
 
 test('ensureReusableNodeModules returns warning when no reusable parent dependencies exist', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'omx-missing-node-modules-'));
+  const root = await mkdtemp(join(tmpdir(), 'rcs-missing-node-modules-'));
   try {
     const result = ensureReusableNodeModules(root, {
       gitRunner: () => ({ status: 1, stdout: '', stderr: 'not a worktree' }) as any,

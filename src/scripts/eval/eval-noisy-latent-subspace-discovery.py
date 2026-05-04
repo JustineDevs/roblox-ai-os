@@ -12,7 +12,7 @@ SEEDS = (23, 41, 59)
 def run_for_seed(seed: int) -> dict:
     config = json.loads(CONFIG_PATH.read_text())
     config['seed'] = seed
-    tmp_path = Path('.omx') / 'tmp' / f'latent-discovery-seed-{seed}.json'
+    tmp_path = Path('.rcs') / 'tmp' / f'latent-discovery-seed-{seed}.json'
     tmp_path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path.write_text(json.dumps(config))
 

@@ -7,15 +7,15 @@ import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-function runOmx(
+function runRcsCli(
   cwd: string,
   argv: string[],
   envOverrides: Record<string, string> = {},
 ): { status: number | null; stdout: string; stderr: string; error?: string } {
   const testDir = dirname(fileURLToPath(import.meta.url));
   const repoRoot = join(testDir, '..', '..', '..');
-  const omxBin = join(repoRoot, 'dist', 'cli', 'omx.js');
-  const result = spawnSync(process.execPath, [omxBin, ...argv], {
+  const rcsBin = join(repoRoot, 'dist', 'cli', 'rcs.js');
+  const result = spawnSync(process.execPath, [rcsBin, ...argv], {
     cwd,
     encoding: 'utf-8',
     env: { ...process.env, ...envOverrides },
@@ -32,9 +32,9 @@ function shouldSkipForSpawnPermissions(err?: string): boolean {
   return typeof err === 'string' && /(EPERM|EACCES)/i.test(err);
 }
 
-describe('omx agents', () => {
+describe('rcs agents', () => {
   it('lists project and user native agents with name, description, and model', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-agents-cli-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-agents-cli-'));
     const home = join(wd, 'home');
     try {
       const projectAgentsDir = join(wd, '.codex', 'agents');
@@ -51,7 +51,7 @@ describe('omx agents', () => {
         'name = "reviewer"\ndescription = "User reviewer"\ndeveloper_instructions = """review"""\n',
       );
 
-      const result = runOmx(wd, ['agents', 'list'], {
+      const result = runRcsCli(wd, ['agents', 'list'], {
         HOME: home,
         CODEX_HOME: join(home, '.codex'),
       });
@@ -67,12 +67,12 @@ describe('omx agents', () => {
   });
 
   it('adds a scaffolded agent TOML file with required fields and commented optional fields', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-agents-cli-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-agents-cli-'));
     const home = join(wd, 'home');
     try {
       await mkdir(home, { recursive: true });
 
-      const result = runOmx(wd, ['agents', 'add', 'my-helper', '--scope', 'project'], {
+      const result = runRcsCli(wd, ['agents', 'add', 'my-helper', '--scope', 'project'], {
         HOME: home,
         CODEX_HOME: join(home, '.codex'),
       });
@@ -94,7 +94,7 @@ describe('omx agents', () => {
   });
 
   it('edits an existing agent via $EDITOR and removes it with --force', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-agents-cli-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-agents-cli-'));
     const home = join(wd, 'home');
     try {
       const projectAgentsDir = join(wd, '.codex', 'agents');
@@ -113,7 +113,7 @@ describe('omx agents', () => {
       );
       await chmod(editorScript, 0o755);
 
-      const editResult = runOmx(wd, ['agents', 'edit', 'editor-test', '--scope', 'project'], {
+      const editResult = runRcsCli(wd, ['agents', 'edit', 'editor-test', '--scope', 'project'], {
         HOME: home,
         CODEX_HOME: join(home, '.codex'),
         EDITOR: editorScript,
@@ -123,7 +123,7 @@ describe('omx agents', () => {
       assert.equal(editResult.status, 0, editResult.stderr || editResult.stdout);
       assert.match(await readFile(agentPath, 'utf-8'), /^model = "gpt-5\.5"$/m);
 
-      const removeResult = runOmx(wd, ['agents', 'remove', 'editor-test', '--scope', 'project', '--force'], {
+      const removeResult = runRcsCli(wd, ['agents', 'remove', 'editor-test', '--scope', 'project', '--force'], {
         HOME: home,
         CODEX_HOME: join(home, '.codex'),
       });
@@ -137,7 +137,7 @@ describe('omx agents', () => {
   });
 
   it('fails with clear guidance when remove runs in non-interactive mode without --force', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-agents-cli-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-agents-cli-'));
     const home = join(wd, 'home');
     try {
       const projectAgentsDir = join(wd, '.codex', 'agents');
@@ -149,7 +149,7 @@ describe('omx agents', () => {
         'name = "non-interactive"\ndescription = "Remove me"\ndeveloper_instructions = """noop"""\n',
       );
 
-      const result = runOmx(wd, ['agents', 'remove', 'non-interactive', '--scope', 'project'], {
+      const result = runRcsCli(wd, ['agents', 'remove', 'non-interactive', '--scope', 'project'], {
         HOME: home,
         CODEX_HOME: join(home, '.codex'),
       });

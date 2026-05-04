@@ -6,8 +6,8 @@ import { runProcess } from './process-runner.js';
 import { safeString } from './utils.js';
 import { sameFilePath } from '../../utils/paths.js';
 
-const OMX_INSTANCE_OPTION = '@omx_instance_id';
-const OMX_PANE_INSTANCE_OPTION = '@omx_pane_instance_id';
+const RCS_INSTANCE_OPTION = '@rcs_instance_id';
+const RCS_PANE_INSTANCE_OPTION = '@rcs_pane_instance_id';
 
 function sanitizeTmuxToken(value: string): string {
   const cleaned = safeString(value)
@@ -23,9 +23,9 @@ export function buildExpectedManagedTmuxSessionName(cwd: string, sessionId: stri
   const dirName = basename(cwd);
   const grandparentPath = dirname(parentPath);
   const grandparentDir = basename(grandparentPath);
-  const repoDir = parentDir.endsWith('.omx-worktrees')
-    ? parentDir.slice(0, -'.omx-worktrees'.length)
-    : parentDir === 'worktrees' && grandparentDir === '.omx'
+  const repoDir = parentDir.endsWith('.rcs-worktrees')
+    ? parentDir.slice(0, -'.rcs-worktrees'.length)
+    : parentDir === 'worktrees' && grandparentDir === '.rcs'
       ? basename(dirname(grandparentPath))
       : null;
   const dirToken = repoDir
@@ -44,8 +44,8 @@ export function buildExpectedManagedTmuxSessionName(cwd: string, sessionId: stri
   } catch {
     // best effort only
   }
-  const sessionToken = sanitizeTmuxToken(sessionId.replace(/^omx-/, ''));
-  const name = `omx-${dirToken}-${branchToken}-${sessionToken}`;
+  const sessionToken = sanitizeTmuxToken(sessionId.replace(/^rcs-/, ''));
+  const name = `rcs-${dirToken}-${branchToken}-${sessionToken}`;
   return name.length > 120 ? name.slice(0, 120) : name;
 }
 
@@ -53,7 +53,7 @@ export function resolveInvocationSessionId(payload: any): string {
   return safeString(
     payload?.session_id
     || payload?.['session-id']
-    || process.env.OMX_SESSION_ID
+    || process.env.RCS_SESSION_ID
     || process.env.CODEX_SESSION_ID
     || process.env.SESSION_ID
     || '',
@@ -96,18 +96,18 @@ async function readTmuxOption(targetValue: string, optionName: string, { pane = 
 }
 
 async function readTmuxSessionInstanceId(sessionTarget: string): Promise<string> {
-  return readTmuxOption(sessionTarget, OMX_INSTANCE_OPTION);
+  return readTmuxOption(sessionTarget, RCS_INSTANCE_OPTION);
 }
 
 async function readTmuxPaneInstanceId(paneTarget: string): Promise<string> {
-  return readTmuxOption(paneTarget, OMX_PANE_INSTANCE_OPTION, { pane: true });
+  return readTmuxOption(paneTarget, RCS_PANE_INSTANCE_OPTION, { pane: true });
 }
 
 function warnPaneInstanceFallback(paneTarget: string): void {
   const target = safeString(paneTarget).trim();
   if (!target) return;
   try {
-    console.warn(`[omx] missing ${OMX_PANE_INSTANCE_OPTION} on ${target}; falling back to ${OMX_INSTANCE_OPTION}`);
+    console.warn(`[rcs] missing ${RCS_PANE_INSTANCE_OPTION} on ${target}; falling back to ${RCS_INSTANCE_OPTION}`);
   } catch {
     // warning is best effort only
   }
@@ -117,7 +117,7 @@ export async function resolveTmuxSessionForInstance(instanceId: string): Promise
   const expected = safeString(instanceId).trim();
   if (!expected) return '';
   try {
-    const result = await runProcess('tmux', ['list-sessions', '-F', `#{session_name}\t#{${OMX_INSTANCE_OPTION}}`], 2000);
+    const result = await runProcess('tmux', ['list-sessions', '-F', `#{session_name}\t#{${RCS_INSTANCE_OPTION}}`], 2000);
     const rows = safeString(result.stdout).split('\n').map(line => line.trim()).filter(Boolean);
     for (const row of rows) {
       const [sessionName = '', taggedInstanceId = ''] = row.split('\t');
@@ -132,7 +132,21 @@ export async function resolveTmuxSessionForInstance(instanceId: string): Promise
 function readParentPid(pid: number): number | null {
   if (!Number.isInteger(pid) || pid <= 1) return null;
   try {
-    if (process.platform === 'win32') return null;
+    if (process.platform === 'win32') {
+      const raw = execFileSync(
+        'powershell.exe',
+        [
+          '-NoLogo',
+          '-NoProfile',
+          '-NonInteractive',
+          '-Command',
+          `(Get-CimInstance Win32_Process -Filter "ProcessId=${pid}").ParentProcessId`,
+        ],
+        { encoding: 'utf-8', timeout: 2000, windowsHide: true },
+      ).trim();
+      const ppid = Number(raw);
+      return Number.isFinite(ppid) && ppid > 0 ? ppid : null;
+    }
     if (process.platform === 'linux') {
       const stat = readFileSync(`/proc/${pid}/stat`, 'utf-8');
       const commandEnd = stat.lastIndexOf(')');
@@ -171,7 +185,7 @@ export async function resolveManagedSessionContext(
   payload: any,
   { allowTeamWorker = true, paneTarget = '' }: { allowTeamWorker?: boolean; paneTarget?: string } = {},
 ): Promise<any> {
-  if (allowTeamWorker && safeString(process.env.OMX_TEAM_WORKER || '').trim() !== '') {
+  if (allowTeamWorker && safeString(process.env.RCS_TEAM_WORKER || '').trim() !== '') {
     return {
       managed: true,
       reason: 'team_worker',
@@ -355,7 +369,7 @@ export async function resolveManagedSessionContext(
   }
 }
 
-export async function isManagedOmxSession(cwd: string, payload: any, options: { allowTeamWorker?: boolean } = {}): Promise<boolean> {
+export async function isManagedRcsSession(cwd: string, payload: any, options: { allowTeamWorker?: boolean } = {}): Promise<boolean> {
   const context = await resolveManagedSessionContext(cwd, payload, options);
   return context.managed === true;
 }
@@ -452,20 +466,20 @@ async function readManagedPaneCommandState(paneTarget: string): Promise<{ curren
 }
 
 function paneLooksLikeManagedAgent({ currentCommand, startCommand }: { currentCommand: string; startCommand: string }): boolean {
-  if (/\bomx\b.*\bhud\b.*--watch/i.test(startCommand)) return false;
+  if (/\brcs\b.*\bhud\b.*--watch/i.test(startCommand)) return false;
   if (startCommand.includes('codex')) return true;
   return currentCommand === 'codex' || currentCommand === 'node' || currentCommand === 'npx';
 }
 
 function paneLooksLikeRetainableManagedAnchor({ currentCommand, startCommand }: { currentCommand: string; startCommand: string }): boolean {
-  if (/\bomx\b.*\bhud\b.*--watch/i.test(startCommand)) return false;
+  if (/\brcs\b.*\bhud\b.*--watch/i.test(startCommand)) return false;
   if (currentCommand === 'codex') return true;
   if ((currentCommand === 'node' || currentCommand === 'npx') && startCommand.includes('codex')) return true;
   return false;
 }
 
 function paneLooksLikeDetachedManagedWrapperFallback({ currentCommand, startCommand }: { currentCommand: string; startCommand: string }): boolean {
-  if (/\bomx\b.*\bhud\b.*--watch/i.test(startCommand)) return false;
+  if (/\brcs\b.*\bhud\b.*--watch/i.test(startCommand)) return false;
   return currentCommand === 'node' || currentCommand === 'npx';
 }
 
@@ -477,9 +491,12 @@ interface ManagedSessionPaneRow {
 }
 
 function parseManagedSessionPaneRows(stdout: string): ManagedSessionPaneRow[] {
-  return safeString(stdout)
-    .trim()
+  const cleaned = safeString(stdout)
+    .replace(/^\uFEFF/, '')
+    .trim();
+  return cleaned
     .split('\n')
+    .map((line) => line.replace(/\r$/, '').trim())
     .filter(Boolean)
     .map((line) => {
       const [paneId = '', activeRaw = '0', rawCurrentCommand = '', rawStartCommand = ''] = line.split('\t');
@@ -497,7 +514,7 @@ function selectManagedSessionPane(
   rows: ManagedSessionPaneRow[],
   { allowWrapperFallback = false }: { allowWrapperFallback?: boolean } = {},
 ): string {
-  const nonHudRows = rows.filter((row) => !/\bomx\b.*\bhud\b.*--watch/i.test(row.startCommand));
+  const nonHudRows = rows.filter((row) => !/\brcs\b.*\bhud\b.*--watch/i.test(row.startCommand));
   const canonicalRows = nonHudRows.filter((row) => paneLooksLikeRetainableManagedAnchor(row));
   const activeCanonical = canonicalRows.find((row) => row.active);
   if (activeCanonical) return activeCanonical.paneId;

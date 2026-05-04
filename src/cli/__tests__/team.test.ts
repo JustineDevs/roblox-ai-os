@@ -23,36 +23,36 @@ import {
 } from '../../team/state.js';
 import { isRealTmuxAvailable, withTempTmuxSession, type TempTmuxSessionFixture } from '../../team/__tests__/tmux-test-fixture.js';
 
-const OMX_CLI_PATH = fileURLToPath(new URL('../omx.js', import.meta.url));
-const ORIGINAL_OMX_TEAM_WORKER = process.env.OMX_TEAM_WORKER;
-const ORIGINAL_OMX_TEAM_STATE_ROOT = process.env.OMX_TEAM_STATE_ROOT;
+const RCS_CLI_PATH = fileURLToPath(new URL('../rcs.js', import.meta.url));
+const ORIGINAL_RCS_TEAM_WORKER = process.env.RCS_TEAM_WORKER;
+const ORIGINAL_RCS_TEAM_STATE_ROOT = process.env.RCS_TEAM_STATE_ROOT;
 
 beforeEach(() => {
-  delete process.env.OMX_TEAM_WORKER;
-  delete process.env.OMX_TEAM_STATE_ROOT;
+  delete process.env.RCS_TEAM_WORKER;
+  delete process.env.RCS_TEAM_STATE_ROOT;
 });
 
 afterEach(() => {
-  if (typeof ORIGINAL_OMX_TEAM_WORKER === 'string') process.env.OMX_TEAM_WORKER = ORIGINAL_OMX_TEAM_WORKER;
-  else delete process.env.OMX_TEAM_WORKER;
+  if (typeof ORIGINAL_RCS_TEAM_WORKER === 'string') process.env.RCS_TEAM_WORKER = ORIGINAL_RCS_TEAM_WORKER;
+  else delete process.env.RCS_TEAM_WORKER;
 
-  if (typeof ORIGINAL_OMX_TEAM_STATE_ROOT === 'string') process.env.OMX_TEAM_STATE_ROOT = ORIGINAL_OMX_TEAM_STATE_ROOT;
-  else delete process.env.OMX_TEAM_STATE_ROOT;
+  if (typeof ORIGINAL_RCS_TEAM_STATE_ROOT === 'string') process.env.RCS_TEAM_STATE_ROOT = ORIGINAL_RCS_TEAM_STATE_ROOT;
+  else delete process.env.RCS_TEAM_STATE_ROOT;
 });
 
 function withoutTeamTestWorkerEnv<T>(fn: () => T): T {
-  const previousTeamWorker = process.env.OMX_TEAM_WORKER;
-  const previousTeamStateRoot = process.env.OMX_TEAM_STATE_ROOT;
-  delete process.env.OMX_TEAM_WORKER;
-  delete process.env.OMX_TEAM_STATE_ROOT;
+  const previousTeamWorker = process.env.RCS_TEAM_WORKER;
+  const previousTeamStateRoot = process.env.RCS_TEAM_STATE_ROOT;
+  delete process.env.RCS_TEAM_WORKER;
+  delete process.env.RCS_TEAM_STATE_ROOT;
 
   let restoreImmediately = true;
   const restore = () => {
-    if (typeof previousTeamWorker === 'string') process.env.OMX_TEAM_WORKER = previousTeamWorker;
-    else delete process.env.OMX_TEAM_WORKER;
+    if (typeof previousTeamWorker === 'string') process.env.RCS_TEAM_WORKER = previousTeamWorker;
+    else delete process.env.RCS_TEAM_WORKER;
 
-    if (typeof previousTeamStateRoot === 'string') process.env.OMX_TEAM_STATE_ROOT = previousTeamStateRoot;
-    else delete process.env.OMX_TEAM_STATE_ROOT;
+    if (typeof previousTeamStateRoot === 'string') process.env.RCS_TEAM_STATE_ROOT = previousTeamStateRoot;
+    else delete process.env.RCS_TEAM_STATE_ROOT;
   };
 
   try {
@@ -68,12 +68,12 @@ function withoutTeamTestWorkerEnv<T>(fn: () => T): T {
 }
 
 function withMockPromptModeCodexAllowed<T>(fn: () => T): T {
-  const previous = process.env.OMX_TEST_ALLOW_NONTTY_CODEX_PROMPT;
-  process.env.OMX_TEST_ALLOW_NONTTY_CODEX_PROMPT = '1';
+  const previous = process.env.RCS_TEST_ALLOW_NONTTY_CODEX_PROMPT;
+  process.env.RCS_TEST_ALLOW_NONTTY_CODEX_PROMPT = '1';
   let restoreImmediately = true;
   const restore = () => {
-    if (typeof previous === 'string') process.env.OMX_TEST_ALLOW_NONTTY_CODEX_PROMPT = previous;
-    else delete process.env.OMX_TEST_ALLOW_NONTTY_CODEX_PROMPT;
+    if (typeof previous === 'string') process.env.RCS_TEST_ALLOW_NONTTY_CODEX_PROMPT = previous;
+    else delete process.env.RCS_TEST_ALLOW_NONTTY_CODEX_PROMPT;
   };
   try {
     const result = fn();
@@ -95,7 +95,7 @@ async function runNodeCli(
   },
 ): Promise<{ code: number | null; signal: NodeJS.Signals | null; stdout: string; stderr: string }> {
   return await new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [OMX_CLI_PATH, ...args], {
+    const child = spawn(process.execPath, [RCS_CLI_PATH, ...args], {
       cwd: options.cwd,
       env: options.env,
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -181,10 +181,10 @@ describe('parseTeamStartArgs', () => {
     assert.equal(result.parsed.agentType, 'debugger');
   });
 
-  it('rejects deprecated omx team ralph syntax', () => {
+  it('rejects deprecated rcs team ralph syntax', () => {
     assert.throws(
       () => parseTeamStartArgs(['ralph', '--worktree=feature/demo', '4:executor', 'ship', 'it']),
-      /Deprecated usage: `omx team ralph \.\.\.` has been removed/,
+      /Deprecated usage: `rcs team ralph \.\.\.` has been removed/,
     );
   });
 
@@ -201,16 +201,16 @@ describe('parseTeamStartArgs', () => {
   });
 
   it('reuses the approved team launch hint for a short English follow-up', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-followup-en-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-followup-en-'));
     const previousCwd = process.cwd();
     try {
       process.chdir(wd);
-      await mkdir(join(wd, '.omx', 'plans'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'plans'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'plans', 'prd-issue-831.md'),
-        '# Approved plan\n\nLaunch via omx team 3:executor "Execute approved issue 831 plan"\n',
+        join(wd, '.rcs', 'plans', 'prd-issue-831.md'),
+        '# Approved plan\n\nLaunch via rcs team 3:executor "Execute approved issue 831 plan"\n',
       );
-      await writeFile(join(wd, '.omx', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
+      await writeFile(join(wd, '.rcs', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
 
       const result = parseTeamStartArgs(['team']);
       assert.equal(result.parsed.task, 'Execute approved issue 831 plan');
@@ -225,16 +225,16 @@ describe('parseTeamStartArgs', () => {
   });
 
   it('reuses the approved team launch hint for a short Korean follow-up', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-followup-ko-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-followup-ko-'));
     const previousCwd = process.cwd();
     try {
       process.chdir(wd);
-      await mkdir(join(wd, '.omx', 'plans'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'plans'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'plans', 'prd-issue-831.md'),
-        '# Approved plan\n\nLaunch via omx team 3:executor "Execute approved issue 831 plan"\n',
+        join(wd, '.rcs', 'plans', 'prd-issue-831.md'),
+        '# Approved plan\n\nLaunch via rcs team 3:executor "Execute approved issue 831 plan"\n',
       );
-      await writeFile(join(wd, '.omx', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
+      await writeFile(join(wd, '.rcs', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
 
       const result = parseTeamStartArgs(['team으로', '해줘']);
       assert.equal(result.parsed.task, 'Execute approved issue 831 plan');
@@ -246,21 +246,21 @@ describe('parseTeamStartArgs', () => {
   });
 
   it('fails closed for a short team follow-up when the selected PRD lists multiple team launch hints', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-followup-ambiguous-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-followup-ambiguous-'));
     const previousCwd = process.cwd();
     try {
       process.chdir(wd);
-      await mkdir(join(wd, '.omx', 'plans'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'plans'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'plans', 'prd-issue-831-ambiguous.md'),
+        join(wd, '.rcs', 'plans', 'prd-issue-831-ambiguous.md'),
         [
           '# Approved plan',
           '',
-          'Launch via omx team 3:executor "Execute approved issue 831 plan"',
-          'Launch via omx team 5:debugger "Execute alternate issue 831 plan"',
+          'Launch via rcs team 3:executor "Execute approved issue 831 plan"',
+          'Launch via rcs team 5:debugger "Execute alternate issue 831 plan"',
         ].join('\n'),
       );
-      await writeFile(join(wd, '.omx', 'plans', 'test-spec-issue-831-ambiguous.md'), '# Test spec\n');
+      await writeFile(join(wd, '.rcs', 'plans', 'test-spec-issue-831-ambiguous.md'), '# Test spec\n');
 
       assert.throws(
         () => parseTeamStartArgs(['team']),
@@ -274,17 +274,17 @@ describe('parseTeamStartArgs', () => {
 
 
   it('does not opt normal team startup into repo-aware DAG handoff even when a stale sidecar exists', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-dag-normal-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-dag-normal-'));
     const previousCwd = process.cwd();
     try {
       process.chdir(wd);
-      await mkdir(join(wd, '.omx', 'plans'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'plans'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'plans', 'prd-issue-831.md'),
-        '# Approved plan\n\nLaunch via omx team 3:executor "Execute approved issue 831 plan"\n',
+        join(wd, '.rcs', 'plans', 'prd-issue-831.md'),
+        '# Approved plan\n\nLaunch via rcs team 3:executor "Execute approved issue 831 plan"\n',
       );
-      await writeFile(join(wd, '.omx', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
-      await writeFile(join(wd, '.omx', 'plans', 'team-dag-issue-831.json'), '{"schema_version":1,"nodes":[{"id":"impl","subject":"Impl","description":"Impl"}]}\n');
+      await writeFile(join(wd, '.rcs', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
+      await writeFile(join(wd, '.rcs', 'plans', 'team-dag-issue-831.json'), '{"schema_version":1,"nodes":[{"id":"impl","subject":"Impl","description":"Impl"}]}\n');
 
       const result = parseTeamStartArgs(['3:executor', 'fix', 'unrelated', 'bug']);
       assert.equal(result.parsed.task, 'fix unrelated bug');
@@ -296,16 +296,16 @@ describe('parseTeamStartArgs', () => {
   });
 
   it('opts into repo-aware DAG handoff when the invocation matches the approved launch hint', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-dag-approved-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-dag-approved-'));
     const previousCwd = process.cwd();
     try {
       process.chdir(wd);
-      await mkdir(join(wd, '.omx', 'plans'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'plans'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'plans', 'prd-issue-831.md'),
-        '# Approved plan\n\nLaunch via omx team 3:executor "Execute approved issue 831 plan"\n',
+        join(wd, '.rcs', 'plans', 'prd-issue-831.md'),
+        '# Approved plan\n\nLaunch via rcs team 3:executor "Execute approved issue 831 plan"\n',
       );
-      await writeFile(join(wd, '.omx', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
+      await writeFile(join(wd, '.rcs', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
 
       const result = parseTeamStartArgs(['3:executor', 'Execute', 'approved', 'issue', '831', 'plan']);
       assert.equal(result.parsed.allowRepoAwareDagHandoff, true);
@@ -316,17 +316,17 @@ describe('parseTeamStartArgs', () => {
   });
 
   it('attaches approved repository context summary only for matching team launches', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-context-approved-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-context-approved-'));
     const previousCwd = process.cwd();
     try {
       process.chdir(wd);
-      await mkdir(join(wd, '.omx', 'plans'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'plans'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'plans', 'prd-issue-2039.md'),
-        '# Approved plan\n\nLaunch via omx team 3:executor "Execute approved issue 2039 plan"\n',
+        join(wd, '.rcs', 'plans', 'prd-issue-2039.md'),
+        '# Approved plan\n\nLaunch via rcs team 3:executor "Execute approved issue 2039 plan"\n',
       );
-      await writeFile(join(wd, '.omx', 'plans', 'test-spec-issue-2039.md'), '# Test spec\n');
-      await writeFile(join(wd, '.omx', 'plans', 'repo-context-issue-2039.md'), 'Key boundary: latest approved handoff only.\n');
+      await writeFile(join(wd, '.rcs', 'plans', 'test-spec-issue-2039.md'), '# Test spec\n');
+      await writeFile(join(wd, '.rcs', 'plans', 'repo-context-issue-2039.md'), 'Key boundary: latest approved handoff only.\n');
 
       const approved = parseTeamStartArgs(['3:executor', 'Execute', 'approved', 'issue', '2039', 'plan']);
       assert.equal(approved.parsed.approvedRepositoryContextSummary?.content, 'Key boundary: latest approved handoff only.');
@@ -340,16 +340,16 @@ describe('parseTeamStartArgs', () => {
   });
 
   it('preserves explicit team staffing overrides while reusing the approved plan task', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-followup-override-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-followup-override-'));
     const previousCwd = process.cwd();
     try {
       process.chdir(wd);
-      await mkdir(join(wd, '.omx', 'plans'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'plans'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'plans', 'prd-issue-831.md'),
-        '# Approved plan\n\nLaunch via omx team 3:executor "Execute approved issue 831 plan"\n',
+        join(wd, '.rcs', 'plans', 'prd-issue-831.md'),
+        '# Approved plan\n\nLaunch via rcs team 3:executor "Execute approved issue 831 plan"\n',
       );
-      await writeFile(join(wd, '.omx', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
+      await writeFile(join(wd, '.rcs', 'plans', 'test-spec-issue-831.md'), '# Test spec\n');
 
       const result = parseTeamStartArgs(['2:debugger', 'team']);
       assert.equal(result.parsed.task, 'Execute approved issue 831 plan');
@@ -384,7 +384,7 @@ describe('teamCommand shutdown --force parsing', () => {
   });
 
   it('persists cancelled team mode state on shutdown even when no team mode state existed beforehand', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-shutdown-mode-state-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-shutdown-mode-state-'));
     const previousCwd = process.cwd();
     const originalLog = console.log;
     const originalWarn = console.warn;
@@ -393,9 +393,9 @@ describe('teamCommand shutdown --force parsing', () => {
 
     try {
       process.chdir(wd);
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'state', 'session.json'),
+        join(wd, '.rcs', 'state', 'session.json'),
         JSON.stringify({ session_id: 'sess-team-shutdown-state' }),
       );
       await initTeamState(
@@ -430,13 +430,13 @@ describe('teamCommand shutdown --force parsing', () => {
   });
 
   it('persists cancelled session-scoped team mode state on shutdown', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-shutdown-session-mode-state-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-shutdown-session-mode-state-'));
     const previousCwd = process.cwd();
     const teamName = 'team-shutdown-scoped';
 
     try {
       process.chdir(wd);
-      const stateDir = join(wd, '.omx', 'state');
+      const stateDir = join(wd, '.rcs', 'state');
       const sessionId = 'sess-team-shutdown-scoped';
       const scopedStateDir = join(stateDir, 'sessions', sessionId);
       await mkdir(scopedStateDir, { recursive: true });
@@ -477,14 +477,14 @@ describe('teamCommand shutdown --force parsing', () => {
   });
 
   it('does not create session-scoped team mode state on shutdown when only root team mode state exists', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-shutdown-root-mode-only-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-shutdown-root-mode-only-'));
     const previousCwd = process.cwd();
     const teamName = 'team-shutdown-root-only';
     const sessionId = 'sess-team-shutdown-root-only';
 
     try {
       process.chdir(wd);
-      const stateDir = join(wd, '.omx', 'state');
+      const stateDir = join(wd, '.rcs', 'state');
       const scopedStatePath = join(stateDir, 'sessions', sessionId, 'team-state.json');
       await mkdir(stateDir, { recursive: true });
       await writeFile(
@@ -524,14 +524,14 @@ describe('teamCommand shutdown --force parsing', () => {
   });
 
   it('does not create session-scoped team mode state on shutdown when a stale session.json remains', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-shutdown-stale-session-json-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-shutdown-stale-session-json-'));
     const previousCwd = process.cwd();
     const teamName = 'team-shutdown-stale-session';
     const staleSessionId = 'sess-team-shutdown-stale';
 
     try {
       process.chdir(wd);
-      const stateDir = join(wd, '.omx', 'state');
+      const stateDir = join(wd, '.rcs', 'state');
       const staleSessionDir = join(stateDir, 'sessions', staleSessionId);
       const scopedStatePath = join(staleSessionDir, 'team-state.json');
       await mkdir(staleSessionDir, { recursive: true });
@@ -582,7 +582,7 @@ describe('teamCommand shutdown --force parsing', () => {
   });
 
   it('keeps the shutdown CLI alive while tearing down a shared leader tmux session', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-shutdown-shared-cli-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-shutdown-shared-cli-'));
     const binDir = join(wd, 'bin');
     const tmuxLogPath = join(wd, 'tmux.log');
     const tmuxPath = join(binDir, 'tmux');
@@ -605,7 +605,7 @@ case "$1" in
         exit 1
         ;;
       *"-t leader:0 -F #{pane_id}"*"#{pane_current_command}"*)
-        printf "%%11\\tzsh\\tzsh\\n%%12\\tnode\\tnode /tmp/bin/omx.js hud --watch\\n%%13\\tcodex\\tcodex\\n%%14\\tcodex\\tcodex\\n"
+        printf "%%11\\tzsh\\tzsh\\n%%12\\tnode\\tnode /tmp/bin/rcs.js hud --watch\\n%%13\\tcodex\\tcodex\\n%%14\\tcodex\\tcodex\\n"
         exit 0
         ;;
       *"-t leader:0 -F #{pane_id}"*)
@@ -655,14 +655,14 @@ esac
         env: {
           ...process.env,
           PATH: `${binDir}:${previousPath ?? ''}`,
-          OMX_TEAM_STATE_ROOT: join(wd, '.omx', 'state'),
+          RCS_TEAM_STATE_ROOT: join(wd, '.rcs', 'state'),
         },
       });
 
       assert.equal(result.signal, null, `shutdown CLI received signal ${result.signal ?? 'none'}\n${result.stderr}`);
       assert.equal(result.code, 0, `shutdown CLI exit=${result.code}\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`);
       assert.match(result.stdout, /Team shutdown complete: shared-shutdown-cli/);
-      assert.equal(existsSync(join(wd, '.omx', 'state', 'team', 'shared-shutdown-cli')), false);
+      assert.equal(existsSync(join(wd, '.rcs', 'state', 'team', 'shared-shutdown-cli')), false);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf-8');
       assert.match(tmuxLog, /kill-pane -t %12/);
@@ -679,11 +679,11 @@ esac
   it('keeps the shutdown command alive when executed inside the leader pane PTY', { concurrency: false }, async (t) => {
     skipUnlessTmux(t);
 
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-shutdown-shared-in-pane-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-shutdown-shared-in-pane-'));
     try {
       await withTempTmuxSession(async (fixture) => {
         const teamName = 'shared-shutdown-in-pane';
-        const teamStateRoot = join(wd, '.omx', 'state');
+        const teamStateRoot = join(wd, '.rcs', 'state');
         const hudPaneId = runFixtureTmux(fixture, ['split-window', '-d', '-P', '-F', '#{pane_id}', '-t', fixture.windowTarget, 'sleep 300']);
         const workerPaneOne = runFixtureTmux(fixture, ['split-window', '-d', '-P', '-F', '#{pane_id}', '-t', fixture.windowTarget, 'sleep 300']);
         const workerPaneTwo = runFixtureTmux(fixture, ['split-window', '-d', '-P', '-F', '#{pane_id}', '-t', fixture.windowTarget, 'sleep 300']);
@@ -703,8 +703,8 @@ esac
           cwd: wd,
           env: {
             ...process.env,
-            OMX_AUTO_UPDATE: '0',
-            OMX_TEAM_STATE_ROOT: teamStateRoot,
+            RCS_AUTO_UPDATE: '0',
+            RCS_TEAM_STATE_ROOT: teamStateRoot,
             TMUX: fixture.env.TMUX,
             TMUX_PANE: fixture.leaderPaneId,
           },
@@ -730,20 +730,20 @@ esac
 describe('teamCommand api', () => {
   it('builds leader monitoring hints that keep team status visible while ON', () => {
     const hints = buildLeaderMonitoringHints('My Team');
-    assert.equal(hints[0], 'leader_check: omx team status my-team');
+    assert.equal(hints[0], 'leader_check: rcs team status my-team');
     assert.match(hints[1] ?? '', /while ON, keep checking state/);
-    assert.match(hints[1] ?? '', /sleep 30 && omx team status my-team/);
+    assert.match(hints[1] ?? '', /sleep 30 && rcs team status my-team/);
   });
 
-  it('prints team-specific help for omx team --help', async () => {
+  it('prints team-specific help for rcs team --help', async () => {
     const logs: string[] = [];
     const originalLog = console.log;
     try {
       console.log = (...args: unknown[]) => logs.push(args.map(String).join(' '));
       await teamCommand(['--help']);
       assert.equal(logs.length, 1);
-      assert.match(logs[0] ?? '', /Usage: omx team \[N:agent-type\]/);
-      assert.match(logs[0] ?? '', /omx team api <operation>/);
+      assert.match(logs[0] ?? '', /Usage: rcs team \[N:agent-type\]/);
+      assert.match(logs[0] ?? '', /rcs team api <operation>/);
       assert.match(logs[0] ?? '', /dedicated worktrees automatically by default/);
       assert.match(logs[0] ?? '', /--worktree is deprecated/);
       assert.match(logs[0] ?? '', /tmux-runtime surface by default/);
@@ -754,15 +754,15 @@ describe('teamCommand api', () => {
     }
   });
 
-  it('prints team-specific help for omx team help alias', async () => {
+  it('prints team-specific help for rcs team help alias', async () => {
     const logs: string[] = [];
     const originalLog = console.log;
     try {
       console.log = (...args: unknown[]) => logs.push(args.map(String).join(' '));
       await teamCommand(['help']);
       assert.equal(logs.length, 1);
-      assert.match(logs[0] ?? '', /Usage: omx team \[N:agent-type\]/);
-      assert.match(logs[0] ?? '', /omx team api <operation>/);
+      assert.match(logs[0] ?? '', /Usage: rcs team \[N:agent-type\]/);
+      assert.match(logs[0] ?? '', /rcs team api <operation>/);
       assert.match(logs[0] ?? '', /dedicated worktrees automatically by default/);
       assert.match(logs[0] ?? '', /--worktree is deprecated/);
       assert.match(logs[0] ?? '', /tmux-runtime surface by default/);
@@ -772,14 +772,14 @@ describe('teamCommand api', () => {
     }
   });
 
-  it('prints team-api-specific help for omx team api --help', async () => {
+  it('prints team-api-specific help for rcs team api --help', async () => {
     const logs: string[] = [];
     const originalLog = console.log;
     try {
       console.log = (...args: unknown[]) => logs.push(args.map(String).join(' '));
       await teamCommand(['api', '--help']);
       assert.equal(logs.length, 1);
-      assert.match(logs[0] ?? '', /Usage: omx team api <operation>/);
+      assert.match(logs[0] ?? '', /Usage: rcs team api <operation>/);
       assert.match(logs[0] ?? '', /send-message/);
       assert.match(logs[0] ?? '', /transition-task-status/);
       assert.match(logs[0] ?? '', /read-idle-state/);
@@ -789,14 +789,14 @@ describe('teamCommand api', () => {
     }
   });
 
-  it('prints team-api-specific help for omx team api help alias', async () => {
+  it('prints team-api-specific help for rcs team api help alias', async () => {
     const logs: string[] = [];
     const originalLog = console.log;
     try {
       console.log = (...args: unknown[]) => logs.push(args.map(String).join(' '));
       await teamCommand(['api', 'help']);
       assert.equal(logs.length, 1);
-      assert.match(logs[0] ?? '', /Usage: omx team api <operation>/);
+      assert.match(logs[0] ?? '', /Usage: rcs team api <operation>/);
       assert.match(logs[0] ?? '', /send-message/);
       assert.match(logs[0] ?? '', /transition-task-status/);
     } finally {
@@ -804,14 +804,14 @@ describe('teamCommand api', () => {
     }
   });
 
-  it('prints operation-specific help for omx team api <operation> --help', async () => {
+  it('prints operation-specific help for rcs team api <operation> --help', async () => {
     const logs: string[] = [];
     const originalLog = console.log;
     try {
       console.log = (...args: unknown[]) => logs.push(args.map(String).join(' '));
       await teamCommand(['api', 'send-message', '--help']);
       assert.equal(logs.length, 1);
-      assert.match(logs[0] ?? '', /Usage: omx team api send-message --input <json> \[--json\]/);
+      assert.match(logs[0] ?? '', /Usage: rcs team api send-message --input <json> \[--json\]/);
       assert.match(logs[0] ?? '', /Required input fields/);
       assert.match(logs[0] ?? '', /from_worker/);
       assert.match(logs[0] ?? '', /to_worker/);
@@ -821,28 +821,28 @@ describe('teamCommand api', () => {
     }
   });
 
-  it('prints operation-specific help for omx team api <operation> help alias', async () => {
+  it('prints operation-specific help for rcs team api <operation> help alias', async () => {
     const logs: string[] = [];
     const originalLog = console.log;
     try {
       console.log = (...args: unknown[]) => logs.push(args.map(String).join(' '));
       await teamCommand(['api', 'claim-task', 'help']);
       assert.equal(logs.length, 1);
-      assert.match(logs[0] ?? '', /Usage: omx team api claim-task --input <json> \[--json\]/);
+      assert.match(logs[0] ?? '', /Usage: rcs team api claim-task --input <json> \[--json\]/);
       assert.match(logs[0] ?? '', /expected_version/);
     } finally {
       console.log = originalLog;
     }
   });
 
-  it('prints event query help for omx team api read-events help alias', async () => {
+  it('prints event query help for rcs team api read-events help alias', async () => {
     const logs: string[] = [];
     const originalLog = console.log;
     try {
       console.log = (...args: unknown[]) => logs.push(args.map(String).join(' '));
       await teamCommand(['api', 'read-events', 'help']);
       assert.equal(logs.length, 1);
-      assert.match(logs[0] ?? '', /Usage: omx team api read-events --input <json> \[--json\]/);
+      assert.match(logs[0] ?? '', /Usage: rcs team api read-events --input <json> \[--json\]/);
       assert.match(logs[0] ?? '', /after_event_id/);
       assert.match(logs[0] ?? '', /wakeable_only/);
       assert.match(logs[0] ?? '', /worker_idle/);
@@ -852,7 +852,7 @@ describe('teamCommand api', () => {
   });
 
   it('executes read-events via CLI api with canonical JSON results', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-api-read-events-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-api-read-events-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -890,7 +890,7 @@ describe('teamCommand api', () => {
           events?: Array<{ type?: string; source_type?: string; worker?: string; task_id?: string }>;
         };
       };
-      assert.equal(envelope.command, 'omx team api read-events');
+      assert.equal(envelope.command, 'rcs team api read-events');
       assert.equal(envelope.ok, true);
       assert.equal(envelope.operation, 'read-events');
       assert.equal(envelope.data?.count, 1);
@@ -906,7 +906,7 @@ describe('teamCommand api', () => {
   });
 
   it('executes read-idle-state via CLI api with structured JSON results', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-api-read-idle-state-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-api-read-idle-state-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -951,7 +951,7 @@ describe('teamCommand api', () => {
           last_idle_transition_by_worker?: Record<string, { source_type?: string } | null>;
         };
       };
-      assert.equal(envelope.command, 'omx team api read-idle-state');
+      assert.equal(envelope.command, 'rcs team api read-idle-state');
       assert.equal(envelope.ok, true);
       assert.equal(envelope.operation, 'read-idle-state');
       assert.equal(envelope.data?.all_workers_idle, false);
@@ -967,13 +967,13 @@ describe('teamCommand api', () => {
   });
 
   it('executes read-stall-state via CLI api with structured JSON results', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-api-read-stall-state-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-api-read-stall-state-'));
     const previousCwd = process.cwd();
-    const previousTeamStateRoot = process.env.OMX_TEAM_STATE_ROOT;
+    const previousTeamStateRoot = process.env.RCS_TEAM_STATE_ROOT;
     const logs: string[] = [];
     const originalLog = console.log;
     try {
-      delete process.env.OMX_TEAM_STATE_ROOT;
+      delete process.env.RCS_TEAM_STATE_ROOT;
       process.chdir(wd);
       await initTeamState('api-read-stall', 'api stall state test', 'executor', 2, wd);
       const task = await createTask('api-read-stall', {
@@ -1027,8 +1027,8 @@ describe('teamCommand api', () => {
         mailboxNotifiedByMessageId: {},
         completedEventTaskIds: {},
       }, wd);
-      await mkdir(join(wd, '.omx', 'state', 'team', 'api-read-stall'), { recursive: true });
-      await writeFile(join(wd, '.omx', 'state', 'team', 'api-read-stall', 'leader-attention.json'), JSON.stringify({
+      await mkdir(join(wd, '.rcs', 'state', 'team', 'api-read-stall'), { recursive: true });
+      await writeFile(join(wd, '.rcs', 'state', 'team', 'api-read-stall', 'leader-attention.json'), JSON.stringify({
         team_name: 'api-read-stall',
         updated_at: '2026-03-10T10:05:00.000Z',
         source: 'native_stop',
@@ -1065,7 +1065,7 @@ describe('teamCommand api', () => {
           reasons?: string[];
         };
       };
-      assert.equal(envelope.command, 'omx team api read-stall-state');
+      assert.equal(envelope.command, 'rcs team api read-stall-state');
       assert.equal(envelope.ok, true);
       assert.equal(envelope.operation, 'read-stall-state');
       assert.equal(envelope.data?.team_stalled, true);
@@ -1073,8 +1073,8 @@ describe('teamCommand api', () => {
       assert.deepEqual(envelope.data?.stalled_workers, ['worker-1']);
       assert.match((envelope.data?.reasons ?? []).join(' '), /leader_attention_pending:leader_session_stopped/);
     } finally {
-      if (typeof previousTeamStateRoot === 'string') process.env.OMX_TEAM_STATE_ROOT = previousTeamStateRoot;
-      else delete process.env.OMX_TEAM_STATE_ROOT;
+      if (typeof previousTeamStateRoot === 'string') process.env.RCS_TEAM_STATE_ROOT = previousTeamStateRoot;
+      else delete process.env.RCS_TEAM_STATE_ROOT;
       console.log = originalLog;
       process.chdir(previousCwd);
       await rm(wd, { recursive: true, force: true });
@@ -1082,7 +1082,7 @@ describe('teamCommand api', () => {
   });
 
   it('executes CLI interop operation with stable JSON envelope', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-api-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-api-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -1115,7 +1115,7 @@ describe('teamCommand api', () => {
       };
       assert.equal(envelope.schema_version, '1.0');
       assert.equal(typeof envelope.timestamp, 'string');
-      assert.equal(envelope.command, 'omx team api send-message');
+      assert.equal(envelope.command, 'rcs team api send-message');
       assert.equal(envelope.ok, true);
       assert.equal(envelope.operation, 'send-message');
       assert.equal(envelope.data?.message?.body, 'ACK');
@@ -1144,11 +1144,11 @@ describe('teamCommand api', () => {
       };
       assert.equal(envelope.schema_version, '1.0');
       assert.equal(typeof envelope.timestamp, 'string');
-      assert.equal(envelope.command, 'omx team api');
+      assert.equal(envelope.command, 'rcs team api');
       assert.equal(envelope.ok, false);
       assert.equal(envelope.operation, 'unknown');
       assert.equal(envelope.error?.code, 'invalid_input');
-      assert.match(envelope.error?.message ?? '', /Usage: omx team api/);
+      assert.match(envelope.error?.message ?? '', /Usage: rcs team api/);
       assert.equal(process.exitCode, 1);
     } finally {
       console.log = originalLog;
@@ -1157,7 +1157,7 @@ describe('teamCommand api', () => {
   });
 
   it('supports claim-safe lifecycle via CLI api (create -> claim -> transition)', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-api-lifecycle-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-api-lifecycle-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -1234,7 +1234,7 @@ describe('teamCommand api', () => {
 
 
   it('accepts new canonical event types via CLI api append-event', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-api-event-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-api-event-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -1278,7 +1278,7 @@ describe('teamCommand api', () => {
 
 describe('teamCommand status', () => {
   it('prints pane ids and raw inspect hints when tmux panes are recorded', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-status-panes-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-status-panes-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -1308,9 +1308,9 @@ describe('teamCommand status', () => {
         error: 'blocked by dependency',
       }, wd));
       await writeFile(
-        join(wd, '.omx', 'state', 'team', 'pane-team', 'tasks', 'task-1.json'),
+        join(wd, '.rcs', 'state', 'team', 'pane-team', 'tasks', 'task-1.json'),
         `${JSON.stringify({
-          ...JSON.parse(await readFile(join(wd, '.omx', 'state', 'team', 'pane-team', 'tasks', 'task-1.json'), 'utf-8')) as Record<string, unknown>,
+          ...JSON.parse(await readFile(join(wd, '.rcs', 'state', 'team', 'pane-team', 'tasks', 'task-1.json'), 'utf-8')) as Record<string, unknown>,
           created_at: '2026-03-10T23:55:00.000Z',
           claim: {
             owner: 'worker-1',
@@ -1320,9 +1320,9 @@ describe('teamCommand status', () => {
         }, null, 2)}\n`,
       );
       await writeFile(
-        join(wd, '.omx', 'state', 'team', 'pane-team', 'tasks', 'task-2.json'),
+        join(wd, '.rcs', 'state', 'team', 'pane-team', 'tasks', 'task-2.json'),
         `${JSON.stringify({
-          ...JSON.parse(await readFile(join(wd, '.omx', 'state', 'team', 'pane-team', 'tasks', 'task-2.json'), 'utf-8')) as Record<string, unknown>,
+          ...JSON.parse(await readFile(join(wd, '.rcs', 'state', 'team', 'pane-team', 'tasks', 'task-2.json'), 'utf-8')) as Record<string, unknown>,
           created_at: '2026-03-10T23:56:00.000Z',
           completed_at: '2026-03-11T00:06:00.000Z',
         }, null, 2)}\n`,
@@ -1341,8 +1341,8 @@ describe('teamCommand status', () => {
       config.workers[1]!.working_dir = '/tmp/pane-team/worker-2';
       config.workers[0]!.worktree_repo_root = '/tmp/pane-team/repo';
       config.workers[1]!.worktree_repo_root = '/tmp/pane-team/repo';
-      config.workers[0]!.team_state_root = '/tmp/pane-team/.omx/state';
-      config.workers[1]!.team_state_root = '/tmp/pane-team/.omx/state';
+      config.workers[0]!.team_state_root = '/tmp/pane-team/.rcs/state';
+      config.workers[1]!.team_state_root = '/tmp/pane-team/.rcs/state';
       config.workers[0]!.worktree_path = '/tmp/pane-team/worktrees/worker-1';
       config.workers[1]!.worktree_path = '/tmp/pane-team/worktrees/worker-2';
       config.workers[0]!.worktree_branch = 'feat/pane-team-worker-1';
@@ -1383,7 +1383,7 @@ describe('teamCommand status', () => {
         decision_reason: 'Looks good',
         decided_at: '2026-03-11T00:05:00.000Z',
       }, wd);
-      const manifestPath = join(wd, '.omx', 'state', 'team', 'pane-team', 'manifest.v2.json');
+      const manifestPath = join(wd, '.rcs', 'state', 'team', 'pane-team', 'manifest.v2.json');
       const manifest = JSON.parse(await readFile(manifestPath, 'utf-8')) as {
         leader_pane_id?: string | null;
         hud_pane_id?: string | null;
@@ -1396,7 +1396,7 @@ describe('teamCommand status', () => {
         pane_id: worker.pane_id,
       }));
       await writeFile(
-        join(wd, '.omx', 'state', 'team', 'pane-team', 'config.json'),
+        join(wd, '.rcs', 'state', 'team', 'pane-team', 'config.json'),
         `${JSON.stringify(config, null, 2)}\n`,
       );
       await writeFile(
@@ -1419,12 +1419,12 @@ describe('teamCommand status', () => {
       assert.doesNotMatch(output
         .split('\n')
         .filter((line) => !line.includes('--model-inspect'))
-        .join('\n'), /omx sparkshell/);
+        .join('\n'), /rcs sparkshell/);
 
       logs.length = 0;
       await withoutTeamTestWorkerEnv(() => teamCommand(['status', 'pane-team', '--model-inspect']));
       const modelInspectOutput = logs.join('\n');
-      assert.match(modelInspectOutput, /inspect_summary: .*command=omx sparkshell --tmux-pane %21 --tail-lines 400/);
+      assert.match(modelInspectOutput, /inspect_summary: .*command=rcs sparkshell --tmux-pane %21 --tail-lines 400/);
     } finally {
       console.log = originalLog;
       process.chdir(previousCwd);
@@ -1433,13 +1433,13 @@ describe('teamCommand status', () => {
   });
 
   it('returns pane ids and sparkshell hint in JSON mode', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-status-json-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-status-json-'));
     const previousCwd = process.cwd();
-    const previousTeamStateRoot = process.env.OMX_TEAM_STATE_ROOT;
+    const previousTeamStateRoot = process.env.RCS_TEAM_STATE_ROOT;
     const logs: string[] = [];
     const originalLog = console.log;
     try {
-      delete process.env.OMX_TEAM_STATE_ROOT;
+      delete process.env.RCS_TEAM_STATE_ROOT;
       process.chdir(wd);
       const config = await withoutTeamTestWorkerEnv(() => initTeamState('pane-json-team', 'inspect worker panes', 'executor', 1, wd));
       await withoutTeamTestWorkerEnv(() => createTask('pane-json-team', {
@@ -1452,9 +1452,9 @@ describe('teamCommand status', () => {
         owner: 'worker-1',
       }, wd));
       await writeFile(
-        join(wd, '.omx', 'state', 'team', 'pane-json-team', 'tasks', 'task-1.json'),
+        join(wd, '.rcs', 'state', 'team', 'pane-json-team', 'tasks', 'task-1.json'),
         `${JSON.stringify({
-          ...JSON.parse(await readFile(join(wd, '.omx', 'state', 'team', 'pane-json-team', 'tasks', 'task-1.json'), 'utf-8')) as Record<string, unknown>,
+          ...JSON.parse(await readFile(join(wd, '.rcs', 'state', 'team', 'pane-json-team', 'tasks', 'task-1.json'), 'utf-8')) as Record<string, unknown>,
           created_at: '2026-03-10T23:57:00.000Z',
           claim: {
             owner: 'worker-1',
@@ -1471,7 +1471,7 @@ describe('teamCommand status', () => {
       config.workers[0]!.pane_id = '%41';
       config.workers[0]!.working_dir = '/tmp/pane-json-team/worker-1';
       config.workers[0]!.worktree_repo_root = '/tmp/pane-json-team/repo';
-      config.workers[0]!.team_state_root = '/tmp/pane-json-team/.omx/state';
+      config.workers[0]!.team_state_root = '/tmp/pane-json-team/.rcs/state';
       config.workers[0]!.worktree_path = '/tmp/pane-json-team/worktrees/worker-1';
       config.workers[0]!.worktree_branch = 'feat/pane-json-team-worker-1';
       config.workers[0]!.worktree_detached = false;
@@ -1496,7 +1496,7 @@ describe('teamCommand status', () => {
         decision_reason: 'Looks good',
         decided_at: '2026-03-11T00:05:00.000Z',
       }, wd);
-      const manifestPath = join(wd, '.omx', 'state', 'team', 'pane-json-team', 'manifest.v2.json');
+      const manifestPath = join(wd, '.rcs', 'state', 'team', 'pane-json-team', 'manifest.v2.json');
       const manifest = JSON.parse(await readFile(manifestPath, 'utf-8')) as {
         leader_pane_id?: string | null;
         hud_pane_id?: string | null;
@@ -1509,7 +1509,7 @@ describe('teamCommand status', () => {
         pane_id: worker.pane_id,
       }));
       await writeFile(
-        join(wd, '.omx', 'state', 'team', 'pane-json-team', 'config.json'),
+        join(wd, '.rcs', 'state', 'team', 'pane-json-team', 'config.json'),
         `${JSON.stringify(config, null, 2)}\n`,
       );
       await writeFile(
@@ -1675,7 +1675,7 @@ describe('teamCommand status', () => {
         : wd;
       assert.equal(payload.schema_version, '1.0');
       assert.equal(typeof payload.timestamp, 'string');
-      assert.equal(payload.command, 'omx team status');
+      assert.equal(payload.command, 'rcs team status');
       assert.equal(payload.team_name, 'pane-json-team');
       assert.equal(payload.status, 'ok');
       assert.deepEqual(payload.dead_workers, ['worker-1']);
@@ -1696,7 +1696,7 @@ describe('teamCommand status', () => {
       assert.deepEqual(payload.panes?.recommended_inspect_worktree_branches, { 'worker-1': 'feat/pane-json-team-worker-1' });
       assert.deepEqual(payload.panes?.recommended_inspect_worktree_detached, { 'worker-1': false });
       assert.deepEqual(payload.panes?.recommended_inspect_worktree_created, { 'worker-1': true });
-      assert.deepEqual(payload.panes?.recommended_inspect_team_state_roots, { 'worker-1': '/tmp/pane-json-team/.omx/state' });
+      assert.deepEqual(payload.panes?.recommended_inspect_team_state_roots, { 'worker-1': '/tmp/pane-json-team/.rcs/state' });
       assert.deepEqual(payload.panes?.recommended_inspect_workdirs, { 'worker-1': '/tmp/pane-json-team/worker-1' });
       assert.deepEqual(payload.panes?.recommended_inspect_assigned_tasks, { 'worker-1': ['1', 'extra-2'] });
       assert.deepEqual(payload.panes?.recommended_inspect_task_statuses, { 'worker-1': 'pending' });
@@ -1725,28 +1725,28 @@ describe('teamCommand status', () => {
       assert.deepEqual(payload.panes?.recommended_inspect_state_reasons, { 'worker-1': 'recovering progress' });
       assert.deepEqual(payload.panes?.recommended_inspect_tasks, { 'worker-1': '1' });
       assert.deepEqual(payload.panes?.recommended_inspect_subjects, { 'worker-1': 'Recover worker-1 progress' });
-      assert.deepEqual(payload.panes?.recommended_inspect_task_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/tasks/task-1.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_approval_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/approvals/task-1.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_worker_state_dirs, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1` });
-      assert.deepEqual(payload.panes?.recommended_inspect_worker_status_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/status.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_worker_heartbeat_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/heartbeat.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_worker_identity_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/identity.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_worker_inbox_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/inbox.md` });
-      assert.deepEqual(payload.panes?.recommended_inspect_worker_mailbox_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/mailbox/worker-1.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_worker_shutdown_request_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/shutdown-request.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_worker_shutdown_ack_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/shutdown-ack.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_team_dir_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team` });
-      assert.deepEqual(payload.panes?.recommended_inspect_team_config_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/config.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_team_manifest_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/manifest.v2.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_team_events_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/events/events.ndjson` });
-      assert.deepEqual(payload.panes?.recommended_inspect_team_dispatch_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/dispatch/requests.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_team_phase_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/phase.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_team_monitor_snapshot_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/monitor-snapshot.json` });
-      assert.deepEqual(payload.panes?.recommended_inspect_team_summary_snapshot_paths, { 'worker-1': `${expectedWd}/.omx/state/team/pane-json-team/summary-snapshot.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_task_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/tasks/task-1.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_approval_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/approvals/task-1.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_worker_state_dirs, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1` });
+      assert.deepEqual(payload.panes?.recommended_inspect_worker_status_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/status.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_worker_heartbeat_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/heartbeat.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_worker_identity_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/identity.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_worker_inbox_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/inbox.md` });
+      assert.deepEqual(payload.panes?.recommended_inspect_worker_mailbox_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/mailbox/worker-1.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_worker_shutdown_request_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/shutdown-request.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_worker_shutdown_ack_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/shutdown-ack.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_team_dir_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team` });
+      assert.deepEqual(payload.panes?.recommended_inspect_team_config_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/config.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_team_manifest_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/manifest.v2.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_team_events_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/events/events.ndjson` });
+      assert.deepEqual(payload.panes?.recommended_inspect_team_dispatch_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/dispatch/requests.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_team_phase_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/phase.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_team_monitor_snapshot_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/monitor-snapshot.json` });
+      assert.deepEqual(payload.panes?.recommended_inspect_team_summary_snapshot_paths, { 'worker-1': `${expectedWd}/.rcs/state/team/pane-json-team/summary-snapshot.json` });
       assert.deepEqual(payload.panes?.recommended_inspect_panes, { 'worker-1': '%41' });
-      assert.equal(payload.panes?.recommended_inspect_command, 'omx sparkshell --tmux-pane %41 --tail-lines 400');
-      assert.deepEqual(payload.panes?.recommended_inspect_commands, ['omx sparkshell --tmux-pane %41 --tail-lines 400']);
-      assert.equal(payload.panes?.recommended_inspect_summary, 'target=worker-1 pane=%41 cli=claude role=executor alive=false turn_count=5 turns_without_progress=0 reason=dead_worker state=working task=1 subject=Recover worker-1 progress command=omx sparkshell --tmux-pane %41 --tail-lines 400');
+      assert.equal(payload.panes?.recommended_inspect_command, 'rcs sparkshell --tmux-pane %41 --tail-lines 400');
+      assert.deepEqual(payload.panes?.recommended_inspect_commands, ['rcs sparkshell --tmux-pane %41 --tail-lines 400']);
+      assert.equal(payload.panes?.recommended_inspect_summary, 'target=worker-1 pane=%41 cli=claude role=executor alive=false turn_count=5 turns_without_progress=0 reason=dead_worker state=working task=1 subject=Recover worker-1 progress command=rcs sparkshell --tmux-pane %41 --tail-lines 400');
       assert.deepEqual(payload.panes?.recommended_inspect_items, [{
         target: 'worker-1',
         pane_id: '%41',
@@ -1764,7 +1764,7 @@ describe('teamCommand status', () => {
         worktree_branch: 'feat/pane-json-team-worker-1',
         worktree_detached: false,
         worktree_created: true,
-        team_state_root: '/tmp/pane-json-team/.omx/state',
+        team_state_root: '/tmp/pane-json-team/.rcs/state',
         working_dir: '/tmp/pane-json-team/worker-1',
         assigned_tasks: ['1', 'extra-2'],
         task_status: 'pending',
@@ -1778,7 +1778,7 @@ describe('teamCommand status', () => {
         task_claim_owner: 'worker-1',
         task_claim_token: 'claim-token-1',
         task_claim_leased_until: '2026-03-11T00:11:00.000Z',
-        task_claim_lock_path: `${expectedWd}/.omx/state/team/pane-json-team/claims/task-1.lock`,
+        task_claim_lock_path: `${expectedWd}/.rcs/state/team/pane-json-team/claims/task-1.lock`,
         approval_required: true,
         requires_code_change: true,
         task_description: 'Inspect worker-1 pane',
@@ -1795,38 +1795,38 @@ describe('teamCommand status', () => {
         state_reason: 'recovering progress',
         task_id: '1',
         task_subject: 'Recover worker-1 progress',
-        task_path: `${expectedWd}/.omx/state/team/pane-json-team/tasks/task-1.json`,
-        approval_path: `${expectedWd}/.omx/state/team/pane-json-team/approvals/task-1.json`,
-        worker_state_dir: `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1`,
-        worker_status_path: `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/status.json`,
-        worker_heartbeat_path: `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/heartbeat.json`,
-        worker_identity_path: `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/identity.json`,
-        worker_inbox_path: `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/inbox.md`,
-        worker_mailbox_path: `${expectedWd}/.omx/state/team/pane-json-team/mailbox/worker-1.json`,
-        worker_shutdown_request_path: `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/shutdown-request.json`,
-        worker_shutdown_ack_path: `${expectedWd}/.omx/state/team/pane-json-team/workers/worker-1/shutdown-ack.json`,
-        team_dir_path: `${expectedWd}/.omx/state/team/pane-json-team`,
-        team_config_path: `${expectedWd}/.omx/state/team/pane-json-team/config.json`,
-        team_manifest_path: `${expectedWd}/.omx/state/team/pane-json-team/manifest.v2.json`,
-        team_events_path: `${expectedWd}/.omx/state/team/pane-json-team/events/events.ndjson`,
-        team_dispatch_path: `${expectedWd}/.omx/state/team/pane-json-team/dispatch/requests.json`,
-        team_phase_path: `${expectedWd}/.omx/state/team/pane-json-team/phase.json`,
-        team_monitor_snapshot_path: `${expectedWd}/.omx/state/team/pane-json-team/monitor-snapshot.json`,
-        team_summary_snapshot_path: `${expectedWd}/.omx/state/team/pane-json-team/summary-snapshot.json`,
-        command: 'omx sparkshell --tmux-pane %41 --tail-lines 400',
+        task_path: `${expectedWd}/.rcs/state/team/pane-json-team/tasks/task-1.json`,
+        approval_path: `${expectedWd}/.rcs/state/team/pane-json-team/approvals/task-1.json`,
+        worker_state_dir: `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1`,
+        worker_status_path: `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/status.json`,
+        worker_heartbeat_path: `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/heartbeat.json`,
+        worker_identity_path: `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/identity.json`,
+        worker_inbox_path: `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/inbox.md`,
+        worker_mailbox_path: `${expectedWd}/.rcs/state/team/pane-json-team/mailbox/worker-1.json`,
+        worker_shutdown_request_path: `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/shutdown-request.json`,
+        worker_shutdown_ack_path: `${expectedWd}/.rcs/state/team/pane-json-team/workers/worker-1/shutdown-ack.json`,
+        team_dir_path: `${expectedWd}/.rcs/state/team/pane-json-team`,
+        team_config_path: `${expectedWd}/.rcs/state/team/pane-json-team/config.json`,
+        team_manifest_path: `${expectedWd}/.rcs/state/team/pane-json-team/manifest.v2.json`,
+        team_events_path: `${expectedWd}/.rcs/state/team/pane-json-team/events/events.ndjson`,
+        team_dispatch_path: `${expectedWd}/.rcs/state/team/pane-json-team/dispatch/requests.json`,
+        team_phase_path: `${expectedWd}/.rcs/state/team/pane-json-team/phase.json`,
+        team_monitor_snapshot_path: `${expectedWd}/.rcs/state/team/pane-json-team/monitor-snapshot.json`,
+        team_summary_snapshot_path: `${expectedWd}/.rcs/state/team/pane-json-team/summary-snapshot.json`,
+        command: 'rcs sparkshell --tmux-pane %41 --tail-lines 400',
       }]);
       assert.equal(payload.panes?.leader_pane_id, '%30');
       assert.equal(payload.panes?.hud_pane_id, '%31');
       assert.deepEqual(payload.panes?.worker_panes, { 'worker-1': '%41' });
-      assert.equal(payload.panes?.sparkshell_hint, 'omx sparkshell --tmux-pane <pane-id> --tail-lines 400');
+      assert.equal(payload.panes?.sparkshell_hint, 'rcs sparkshell --tmux-pane <pane-id> --tail-lines 400');
       assert.deepEqual(payload.panes?.sparkshell_commands, {
-        leader: 'omx sparkshell --tmux-pane %30 --tail-lines 400',
-        hud: 'omx sparkshell --tmux-pane %31 --tail-lines 400',
-        'worker-1': 'omx sparkshell --tmux-pane %41 --tail-lines 400',
+        leader: 'rcs sparkshell --tmux-pane %30 --tail-lines 400',
+        hud: 'rcs sparkshell --tmux-pane %31 --tail-lines 400',
+        'worker-1': 'rcs sparkshell --tmux-pane %41 --tail-lines 400',
       });
     } finally {
-      if (typeof previousTeamStateRoot === 'string') process.env.OMX_TEAM_STATE_ROOT = previousTeamStateRoot;
-      else delete process.env.OMX_TEAM_STATE_ROOT;
+      if (typeof previousTeamStateRoot === 'string') process.env.RCS_TEAM_STATE_ROOT = previousTeamStateRoot;
+      else delete process.env.RCS_TEAM_STATE_ROOT;
       console.log = originalLog;
       process.chdir(previousCwd);
       await rm(wd, { recursive: true, force: true });
@@ -1835,7 +1835,7 @@ describe('teamCommand status', () => {
 
 
   it('prints workspace_mode in text status output when present', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-status-workspace-mode-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-status-workspace-mode-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -1843,7 +1843,7 @@ describe('teamCommand status', () => {
       process.chdir(wd);
       const config = await withoutTeamTestWorkerEnv(() => initTeamState('workspace-mode-team', 'inspect workspace mode', 'executor', 1, wd));
       config.workspace_mode = 'worktree';
-      const teamDir = join(wd, '.omx', 'state', 'team', 'workspace-mode-team');
+      const teamDir = join(wd, '.rcs', 'state', 'team', 'workspace-mode-team');
       const configPath = join(teamDir, 'config.json');
       const manifestPath = join(teamDir, 'manifest.v2.json');
       await mkdir(teamDir, { recursive: true });
@@ -1864,7 +1864,7 @@ describe('teamCommand status', () => {
   });
 
   it('returns workspace_mode in JSON status output when present', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-status-json-workspace-mode-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-status-json-workspace-mode-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -1872,7 +1872,7 @@ describe('teamCommand status', () => {
       process.chdir(wd);
       const config = await withoutTeamTestWorkerEnv(() => initTeamState('workspace-mode-json-team', 'inspect workspace mode', 'executor', 1, wd));
       config.workspace_mode = 'worktree';
-      const teamDir = join(wd, '.omx', 'state', 'team', 'workspace-mode-json-team');
+      const teamDir = join(wd, '.rcs', 'state', 'team', 'workspace-mode-json-team');
       const configPath = join(teamDir, 'config.json');
       const manifestPath = join(teamDir, 'manifest.v2.json');
       await mkdir(teamDir, { recursive: true });
@@ -1895,7 +1895,7 @@ describe('teamCommand status', () => {
   });
 
   it('returns a missing envelope in JSON mode when team state is absent', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-status-missing-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-status-missing-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -1913,7 +1913,7 @@ describe('teamCommand status', () => {
       };
       assert.equal(payload.schema_version, '1.0');
       assert.equal(typeof payload.timestamp, 'string');
-      assert.equal(payload.command, 'omx team status');
+      assert.equal(payload.command, 'rcs team status');
       assert.equal(payload.team_name, 'missing-team');
       assert.equal(payload.status, 'missing');
     } finally {
@@ -1924,7 +1924,7 @@ describe('teamCommand status', () => {
   });
 
   it('records leader runtime activity when team status is read', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-status-activity-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-status-activity-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -1935,7 +1935,7 @@ describe('teamCommand status', () => {
 
       await withoutTeamTestWorkerEnv(() => teamCommand(['status', 'activity-team', '--json']));
 
-      const activity = JSON.parse(await readFile(join(wd, '.omx', 'state', 'leader-runtime-activity.json'), 'utf-8')) as {
+      const activity = JSON.parse(await readFile(join(wd, '.rcs', 'state', 'leader-runtime-activity.json'), 'utf-8')) as {
         last_activity_at?: string;
         last_team_status_at?: string;
         last_source?: string;
@@ -1953,7 +1953,7 @@ describe('teamCommand status', () => {
   });
 
   it('supports custom tail lines for generated raw inspect commands', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-status-tail-lines-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-status-tail-lines-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -1961,7 +1961,7 @@ describe('teamCommand status', () => {
       process.chdir(wd);
       const config = await withoutTeamTestWorkerEnv(() => initTeamState('pane-tail-team', 'inspect worker panes', 'executor', 1, wd));
       config.workers[0]!.pane_id = '%51';
-      const manifestPath = join(wd, '.omx', 'state', 'team', 'pane-tail-team', 'manifest.v2.json');
+      const manifestPath = join(wd, '.rcs', 'state', 'team', 'pane-tail-team', 'manifest.v2.json');
       const manifest = JSON.parse(await readFile(manifestPath, 'utf-8')) as {
         workers?: Array<{ pane_id?: string }>;
       };
@@ -1970,7 +1970,7 @@ describe('teamCommand status', () => {
         pane_id: worker.pane_id,
       }));
       await writeFile(
-        join(wd, '.omx', 'state', 'team', 'pane-tail-team', 'config.json'),
+        join(wd, '.rcs', 'state', 'team', 'pane-tail-team', 'config.json'),
         `${JSON.stringify(config, null, 2)}\n`,
       );
       await writeFile(
@@ -1984,7 +1984,7 @@ describe('teamCommand status', () => {
 
       logs.length = 0;
       await withoutTeamTestWorkerEnv(() => teamCommand(['status', 'pane-tail-team', '--model-inspect', '--tail-lines', '600']));
-      assert.match(logs.join('\n'), /inspect_worker-1: omx sparkshell --tmux-pane %51 --tail-lines 600/);
+      assert.match(logs.join('\n'), /inspect_worker-1: rcs sparkshell --tmux-pane %51 --tail-lines 600/);
 
       logs.length = 0;
       await withoutTeamTestWorkerEnv(() => teamCommand(['status', 'pane-tail-team', '--json', '--tail-lines=550']));
@@ -1993,7 +1993,7 @@ describe('teamCommand status', () => {
         panes?: { sparkshell_commands?: Record<string, string> };
       };
       assert.equal(payload.tail_lines, 550);
-      assert.equal(payload.panes?.sparkshell_commands?.['worker-1'], 'omx sparkshell --tmux-pane %51 --tail-lines 550');
+      assert.equal(payload.panes?.sparkshell_commands?.['worker-1'], 'rcs sparkshell --tmux-pane %51 --tail-lines 550');
     } finally {
       console.log = originalLog;
       process.chdir(previousCwd);
@@ -2004,7 +2004,7 @@ describe('teamCommand status', () => {
 
 describe('teamCommand await', () => {
   it('returns next canonical event for a team in JSON mode', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-await-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-await-'));
     const previousCwd = process.cwd();
     const logs: string[] = [];
     const originalLog = console.log;
@@ -2046,14 +2046,14 @@ describe('teamCommand await', () => {
   });
 
   it('returns a dead-worker event for the prompt-launch smoke path instead of timing out', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-await-prompt-dead-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-await-prompt-dead-'));
     const binDir = join(wd, 'bin');
     const fakeCodexPath = join(binDir, 'codex');
     const previousCwd = process.cwd();
     const previousPath = process.env.PATH;
     const previousTmux = process.env.TMUX;
-    const previousLaunchMode = process.env.OMX_TEAM_WORKER_LAUNCH_MODE;
-    const previousWorkerCli = process.env.OMX_TEAM_WORKER_CLI;
+    const previousLaunchMode = process.env.RCS_TEAM_WORKER_LAUNCH_MODE;
+    const previousWorkerCli = process.env.RCS_TEAM_WORKER_CLI;
     const logs: string[] = [];
     const stderr: string[] = [];
     const originalLog = console.log;
@@ -2076,8 +2076,8 @@ process.on('SIGTERM', () => process.exit(0));
       process.chdir(wd);
       process.env.PATH = `${binDir}:${previousPath ?? ''}`;
       delete process.env.TMUX;
-      process.env.OMX_TEAM_WORKER_LAUNCH_MODE = 'prompt';
-      process.env.OMX_TEAM_WORKER_CLI = 'codex';
+      process.env.RCS_TEAM_WORKER_LAUNCH_MODE = 'prompt';
+      process.env.RCS_TEAM_WORKER_CLI = 'codex';
       console.log = (...args: unknown[]) => logs.push(args.map(String).join(' '));
       process.stderr.write = ((chunk: string | Uint8Array) => {
         stderr.push(String(chunk));
@@ -2120,23 +2120,23 @@ process.on('SIGTERM', () => process.exit(0));
       else delete process.env.PATH;
       if (typeof previousTmux === 'string') process.env.TMUX = previousTmux;
       else delete process.env.TMUX;
-      if (typeof previousLaunchMode === 'string') process.env.OMX_TEAM_WORKER_LAUNCH_MODE = previousLaunchMode;
-      else delete process.env.OMX_TEAM_WORKER_LAUNCH_MODE;
-      if (typeof previousWorkerCli === 'string') process.env.OMX_TEAM_WORKER_CLI = previousWorkerCli;
-      else delete process.env.OMX_TEAM_WORKER_CLI;
+      if (typeof previousLaunchMode === 'string') process.env.RCS_TEAM_WORKER_LAUNCH_MODE = previousLaunchMode;
+      else delete process.env.RCS_TEAM_WORKER_LAUNCH_MODE;
+      if (typeof previousWorkerCli === 'string') process.env.RCS_TEAM_WORKER_CLI = previousWorkerCli;
+      else delete process.env.RCS_TEAM_WORKER_CLI;
       await rm(wd, { recursive: true, force: true });
     }
   });
 
   it('initializes and rehydrates active team mode state on start and resume', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-mode-state-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-mode-state-'));
     const binDir = join(wd, 'bin');
     const fakeCodexPath = join(binDir, 'codex');
     const previousCwd = process.cwd();
     const previousPath = process.env.PATH;
     const previousTmux = process.env.TMUX;
-    const previousLaunchMode = process.env.OMX_TEAM_WORKER_LAUNCH_MODE;
-    const previousWorkerCli = process.env.OMX_TEAM_WORKER_CLI;
+    const previousLaunchMode = process.env.RCS_TEAM_WORKER_LAUNCH_MODE;
+    const previousWorkerCli = process.env.RCS_TEAM_WORKER_CLI;
     const teamTask = 'issue 771 rehydrate team mode state';
     const teamName = parseTeamStartArgs(['1:executor', teamTask]).parsed.teamName;
 
@@ -2155,8 +2155,8 @@ process.on('SIGTERM', () => process.exit(0));
       process.chdir(wd);
       process.env.PATH = `${binDir}:${previousPath ?? ''}`;
       delete process.env.TMUX;
-      process.env.OMX_TEAM_WORKER_LAUNCH_MODE = 'prompt';
-      process.env.OMX_TEAM_WORKER_CLI = 'codex';
+      process.env.RCS_TEAM_WORKER_LAUNCH_MODE = 'prompt';
+      process.env.RCS_TEAM_WORKER_CLI = 'codex';
 
       await withMockPromptModeCodexAllowed(() =>
         withoutTeamTestWorkerEnv(() => teamCommand(['1:executor', teamTask])));
@@ -2168,7 +2168,7 @@ process.on('SIGTERM', () => process.exit(0));
       assert.equal(startedState?.display_name, teamName);
       assert.equal(startedState?.current_phase, 'team-exec');
 
-      await rm(join(wd, '.omx', 'state', 'team-state.json'), { force: true });
+      await rm(join(wd, '.rcs', 'state', 'team-state.json'), { force: true });
       assert.equal(await readModeState('team', wd), null);
 
       await withoutTeamTestWorkerEnv(() => teamCommand(['resume', runtimeTeamName]));
@@ -2183,23 +2183,23 @@ process.on('SIGTERM', () => process.exit(0));
       else delete process.env.PATH;
       if (typeof previousTmux === 'string') process.env.TMUX = previousTmux;
       else delete process.env.TMUX;
-      if (typeof previousLaunchMode === 'string') process.env.OMX_TEAM_WORKER_LAUNCH_MODE = previousLaunchMode;
-      else delete process.env.OMX_TEAM_WORKER_LAUNCH_MODE;
-      if (typeof previousWorkerCli === 'string') process.env.OMX_TEAM_WORKER_CLI = previousWorkerCli;
-      else delete process.env.OMX_TEAM_WORKER_CLI;
+      if (typeof previousLaunchMode === 'string') process.env.RCS_TEAM_WORKER_LAUNCH_MODE = previousLaunchMode;
+      else delete process.env.RCS_TEAM_WORKER_LAUNCH_MODE;
+      if (typeof previousWorkerCli === 'string') process.env.RCS_TEAM_WORKER_CLI = previousWorkerCli;
+      else delete process.env.RCS_TEAM_WORKER_CLI;
       await rm(wd, { recursive: true, force: true });
     }
   });
 
   it('does not resurrect active team mode state when canonical team phase is terminal on resume', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-team-mode-terminal-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-team-mode-terminal-'));
     const binDir = join(wd, 'bin');
     const fakeCodexPath = join(binDir, 'codex');
     const previousCwd = process.cwd();
     const previousPath = process.env.PATH;
     const previousTmux = process.env.TMUX;
-    const previousLaunchMode = process.env.OMX_TEAM_WORKER_LAUNCH_MODE;
-    const previousWorkerCli = process.env.OMX_TEAM_WORKER_CLI;
+    const previousLaunchMode = process.env.RCS_TEAM_WORKER_LAUNCH_MODE;
+    const previousWorkerCli = process.env.RCS_TEAM_WORKER_CLI;
     const teamTask = 'issue 772 terminal team mode state';
     const teamName = parseTeamStartArgs(['1:executor', teamTask]).parsed.teamName;
 
@@ -2218,15 +2218,15 @@ process.on('SIGTERM', () => process.exit(0));
       process.chdir(wd);
       process.env.PATH = `${binDir}:${previousPath ?? ''}`;
       delete process.env.TMUX;
-      process.env.OMX_TEAM_WORKER_LAUNCH_MODE = 'prompt';
-      process.env.OMX_TEAM_WORKER_CLI = 'codex';
+      process.env.RCS_TEAM_WORKER_LAUNCH_MODE = 'prompt';
+      process.env.RCS_TEAM_WORKER_CLI = 'codex';
 
       await withMockPromptModeCodexAllowed(() =>
         withoutTeamTestWorkerEnv(() => teamCommand(['1:executor', teamTask])));
       const startedState = await readModeState('team', wd);
       const runtimeTeamName = String(startedState?.team_name ?? teamName);
       await writeFile(
-        join(wd, '.omx', 'state', 'team', runtimeTeamName, 'phase.json'),
+        join(wd, '.rcs', 'state', 'team', runtimeTeamName, 'phase.json'),
         JSON.stringify({
           current_phase: 'complete',
           max_fix_attempts: 3,
@@ -2235,7 +2235,7 @@ process.on('SIGTERM', () => process.exit(0));
           updated_at: new Date().toISOString(),
         }, null, 2),
       );
-      await rm(join(wd, '.omx', 'state', 'team-state.json'), { force: true });
+      await rm(join(wd, '.rcs', 'state', 'team-state.json'), { force: true });
 
       await withoutTeamTestWorkerEnv(() => teamCommand(['resume', runtimeTeamName]));
 
@@ -2249,18 +2249,18 @@ process.on('SIGTERM', () => process.exit(0));
       else delete process.env.PATH;
       if (typeof previousTmux === 'string') process.env.TMUX = previousTmux;
       else delete process.env.TMUX;
-      if (typeof previousLaunchMode === 'string') process.env.OMX_TEAM_WORKER_LAUNCH_MODE = previousLaunchMode;
-      else delete process.env.OMX_TEAM_WORKER_LAUNCH_MODE;
-      if (typeof previousWorkerCli === 'string') process.env.OMX_TEAM_WORKER_CLI = previousWorkerCli;
-      else delete process.env.OMX_TEAM_WORKER_CLI;
+      if (typeof previousLaunchMode === 'string') process.env.RCS_TEAM_WORKER_LAUNCH_MODE = previousLaunchMode;
+      else delete process.env.RCS_TEAM_WORKER_LAUNCH_MODE;
+      if (typeof previousWorkerCli === 'string') process.env.RCS_TEAM_WORKER_CLI = previousWorkerCli;
+      else delete process.env.RCS_TEAM_WORKER_CLI;
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('rejects legacy omx team ralph launches at command entry', async () => {
+  it('rejects legacy rcs team ralph launches at command entry', async () => {
     await assert.rejects(
       () => withoutTeamTestWorkerEnv(() => teamCommand(['ralph', '1:executor', 'issue 742 linked ralph launch'])),
-      /Deprecated usage: `omx team ralph \.\.\.` has been removed/,
+      /Deprecated usage: `rcs team ralph \.\.\.` has been removed/,
     );
   });
 

@@ -13,19 +13,19 @@ import {
   legacyUserSkillsDir,
   listInstalledSkillDirectories,
   detectLegacySkillRootOverlap,
-  omxStateDir,
-  omxProjectMemoryPath,
-  omxNotepadPath,
-  omxPlansDir,
-  omxAdaptersDir,
-  omxLogsDir,
+  rcsStateDir,
+  rcsProjectMemoryPath,
+  rcsNotepadPath,
+  rcsPlansDir,
+  rcsAdaptersDir,
+  rcsLogsDir,
   packageRoot,
   canonicalizeComparablePath,
-  OMX_ENTRY_PATH_ENV,
-  OMX_STARTUP_CWD_ENV,
-  rememberOmxLaunchContext,
-  resolveOmxCliEntryPath,
-  resolveOmxEntryPath,
+  RCS_ENTRY_PATH_ENV,
+  RCS_STARTUP_CWD_ENV,
+  rememberRcsLaunchContext,
+  resolveRcsCliEntryPath,
+  resolveRcsEntryPath,
 } from "../paths.js";
 
 describe("codexHome", () => {
@@ -189,9 +189,9 @@ describe("legacyUserSkillsDir", () => {
   });
 });
 
-describe("omxAdaptersDir", () => {
-  it("returns .omx/adapters under the project root", () => {
-    assert.equal(omxAdaptersDir("/my/project"), join("/my/project", ".omx", "adapters"));
+describe("rcsAdaptersDir", () => {
+  it("returns .rcs/adapters under the project root", () => {
+    assert.equal(rcsAdaptersDir("/my/project"), join("/my/project", ".rcs", "adapters"));
   });
 });
 
@@ -227,8 +227,8 @@ describe("listInstalledSkillDirectories", () => {
   });
 
   it("deduplicates by skill name and prefers project skills over user skills", async () => {
-    const projectRoot = await mkdtemp(join(tmpdir(), "omx-paths-project-"));
-    const codexHomeRoot = await mkdtemp(join(tmpdir(), "omx-paths-codex-"));
+    const projectRoot = await mkdtemp(join(tmpdir(), "rcs-paths-project-"));
+    const codexHomeRoot = await mkdtemp(join(tmpdir(), "rcs-paths-codex-"));
     process.env.CODEX_HOME = codexHomeRoot;
 
     try {
@@ -272,7 +272,7 @@ describe("listInstalledSkillDirectories", () => {
     }
   });
   it("detects overlapping legacy and canonical user skill roots including content mismatches", async () => {
-    const homeRoot = await mkdtemp(join(tmpdir(), "omx-paths-home-"));
+    const homeRoot = await mkdtemp(join(tmpdir(), "rcs-paths-home-"));
     const codexHomeRoot = join(homeRoot, ".codex");
     const legacyRoot = join(homeRoot, ".agents", "skills");
     process.env.HOME = homeRoot;
@@ -310,7 +310,7 @@ describe("listInstalledSkillDirectories", () => {
   });
 
   it("treats a legacy link to canonical skills as the same resolved target", async () => {
-    const homeRoot = await mkdtemp(join(tmpdir(), "omx-paths-linked-home-"));
+    const homeRoot = await mkdtemp(join(tmpdir(), "rcs-paths-linked-home-"));
     const codexHomeRoot = join(homeRoot, ".codex");
     const canonicalSkillsRoot = join(codexHomeRoot, "skills");
     const legacyParent = join(homeRoot, ".agents");
@@ -345,59 +345,59 @@ describe("listInstalledSkillDirectories", () => {
   });
 });
 
-describe("omxStateDir", () => {
+describe("rcsStateDir", () => {
   it("uses provided projectRoot", () => {
-    assert.equal(omxStateDir("/my/project"), join("/my/project", ".omx", "state"));
+    assert.equal(rcsStateDir("/my/project"), join("/my/project", ".rcs", "state"));
   });
 
   it("defaults to cwd when no projectRoot given", () => {
-    assert.equal(omxStateDir(), join(process.cwd(), ".omx", "state"));
+    assert.equal(rcsStateDir(), join(process.cwd(), ".rcs", "state"));
   });
 });
 
-describe("omxProjectMemoryPath", () => {
+describe("rcsProjectMemoryPath", () => {
   it("uses provided projectRoot", () => {
     assert.equal(
-      omxProjectMemoryPath("/my/project"),
-      join("/my/project", ".omx", "project-memory.json"),
+      rcsProjectMemoryPath("/my/project"),
+      join("/my/project", ".rcs", "project-memory.json"),
     );
   });
 
   it("defaults to cwd when no projectRoot given", () => {
     assert.equal(
-      omxProjectMemoryPath(),
-      join(process.cwd(), ".omx", "project-memory.json"),
+      rcsProjectMemoryPath(),
+      join(process.cwd(), ".rcs", "project-memory.json"),
     );
   });
 });
 
-describe("omxNotepadPath", () => {
+describe("rcsNotepadPath", () => {
   it("uses provided projectRoot", () => {
-    assert.equal(omxNotepadPath("/my/project"), join("/my/project", ".omx", "notepad.md"));
+    assert.equal(rcsNotepadPath("/my/project"), join("/my/project", ".rcs", "notepad.md"));
   });
 
   it("defaults to cwd when no projectRoot given", () => {
-    assert.equal(omxNotepadPath(), join(process.cwd(), ".omx", "notepad.md"));
+    assert.equal(rcsNotepadPath(), join(process.cwd(), ".rcs", "notepad.md"));
   });
 });
 
-describe("omxPlansDir", () => {
+describe("rcsPlansDir", () => {
   it("uses provided projectRoot", () => {
-    assert.equal(omxPlansDir("/my/project"), join("/my/project", ".omx", "plans"));
+    assert.equal(rcsPlansDir("/my/project"), join("/my/project", ".rcs", "plans"));
   });
 
   it("defaults to cwd when no projectRoot given", () => {
-    assert.equal(omxPlansDir(), join(process.cwd(), ".omx", "plans"));
+    assert.equal(rcsPlansDir(), join(process.cwd(), ".rcs", "plans"));
   });
 });
 
-describe("omxLogsDir", () => {
+describe("rcsLogsDir", () => {
   it("uses provided projectRoot", () => {
-    assert.equal(omxLogsDir("/my/project"), join("/my/project", ".omx", "logs"));
+    assert.equal(rcsLogsDir("/my/project"), join("/my/project", ".rcs", "logs"));
   });
 
   it("defaults to cwd when no projectRoot given", () => {
-    assert.equal(omxLogsDir(), join(process.cwd(), ".omx", "logs"));
+    assert.equal(rcsLogsDir(), join(process.cwd(), ".rcs", "logs"));
   });
 });
 
@@ -408,42 +408,42 @@ describe("packageRoot", () => {
   });
 });
 
-describe("OMX launcher path resolution", () => {
+describe("RCS launcher path resolution", () => {
   // Existing launcher files are resolved through realpath before being stored or
   // compared. These assertions intentionally use canonicalized expected paths
   // so macOS /var -> /private/var temp roots and symlinked launch directories
   // exercise the same canonical-realpath contract as production launch context.
-  const originalEntryPath = process.env[OMX_ENTRY_PATH_ENV];
-  const originalStartupCwd = process.env[OMX_STARTUP_CWD_ENV];
+  const originalEntryPath = process.env[RCS_ENTRY_PATH_ENV];
+  const originalStartupCwd = process.env[RCS_STARTUP_CWD_ENV];
 
   afterEach(() => {
     if (typeof originalEntryPath === "string") {
-      process.env[OMX_ENTRY_PATH_ENV] = originalEntryPath;
+      process.env[RCS_ENTRY_PATH_ENV] = originalEntryPath;
     } else {
-      delete process.env[OMX_ENTRY_PATH_ENV];
+      delete process.env[RCS_ENTRY_PATH_ENV];
     }
     if (typeof originalStartupCwd === "string") {
-      process.env[OMX_STARTUP_CWD_ENV] = originalStartupCwd;
+      process.env[RCS_STARTUP_CWD_ENV] = originalStartupCwd;
     } else {
-      delete process.env[OMX_STARTUP_CWD_ENV];
+      delete process.env[RCS_STARTUP_CWD_ENV];
     }
   });
 
   it("resolves relative launcher paths against the recorded startup cwd", async () => {
-    const startupCwd = await mkdtemp(join(tmpdir(), "omx-launcher-start-"));
-    const laterCwd = await mkdtemp(join(tmpdir(), "omx-launcher-later-"));
+    const startupCwd = await mkdtemp(join(tmpdir(), "rcs-launcher-start-"));
+    const laterCwd = await mkdtemp(join(tmpdir(), "rcs-launcher-later-"));
     try {
       const launcherDir = join(startupCwd, "dist", "cli");
-      const launcherPath = join(launcherDir, "omx.js");
+      const launcherPath = join(launcherDir, "rcs.js");
       await mkdir(launcherDir, { recursive: true });
       await writeFile(launcherPath, "#!/usr/bin/env node\n", "utf-8");
 
-      const resolved = resolveOmxEntryPath({
-        argv1: "dist/cli/omx.js",
+      const resolved = resolveRcsEntryPath({
+        argv1: "dist/cli/rcs.js",
         cwd: laterCwd,
         env: {
           ...process.env,
-          [OMX_STARTUP_CWD_ENV]: startupCwd,
+          [RCS_STARTUP_CWD_ENV]: startupCwd,
         },
       });
 
@@ -455,14 +455,14 @@ describe("OMX launcher path resolution", () => {
   });
 
   it("canonicalizes symlinked startup cwd launcher paths to their real path", async () => {
-    const realRoot = await mkdtemp(join(tmpdir(), "omx-launcher-real-root-"));
-    const linkParent = await mkdtemp(join(tmpdir(), "omx-launcher-link-root-"));
-    const laterCwd = await mkdtemp(join(tmpdir(), "omx-launcher-symlink-later-"));
+    const realRoot = await mkdtemp(join(tmpdir(), "rcs-launcher-real-root-"));
+    const linkParent = await mkdtemp(join(tmpdir(), "rcs-launcher-link-root-"));
+    const laterCwd = await mkdtemp(join(tmpdir(), "rcs-launcher-symlink-later-"));
     const realStartupCwd = join(realRoot, "project");
     const linkedStartupCwd = join(linkParent, "project-link");
     try {
       const launcherDir = join(realStartupCwd, "dist", "cli");
-      const launcherPath = join(launcherDir, "omx.js");
+      const launcherPath = join(launcherDir, "rcs.js");
       await mkdir(launcherDir, { recursive: true });
       await writeFile(launcherPath, "#!/usr/bin/env node\n", "utf-8");
       await symlink(
@@ -471,17 +471,17 @@ describe("OMX launcher path resolution", () => {
         process.platform === "win32" ? "junction" : "dir",
       );
 
-      const resolved = resolveOmxEntryPath({
-        argv1: "dist/cli/omx.js",
+      const resolved = resolveRcsEntryPath({
+        argv1: "dist/cli/rcs.js",
         cwd: laterCwd,
         env: {
           ...process.env,
-          [OMX_STARTUP_CWD_ENV]: linkedStartupCwd,
+          [RCS_STARTUP_CWD_ENV]: linkedStartupCwd,
         },
       });
 
       assert.equal(resolved, await realpath(launcherPath));
-      assert.notEqual(resolved, join(linkedStartupCwd, "dist", "cli", "omx.js"));
+      assert.notEqual(resolved, join(linkedStartupCwd, "dist", "cli", "rcs.js"));
     } finally {
       await rm(realRoot, { recursive: true, force: true });
       await rm(linkParent, { recursive: true, force: true });
@@ -490,43 +490,43 @@ describe("OMX launcher path resolution", () => {
   });
 
   it("records launcher context once so later cwd changes keep the absolute entry path", async () => {
-    const startupCwd = await mkdtemp(join(tmpdir(), "omx-launcher-record-"));
+    const startupCwd = await mkdtemp(join(tmpdir(), "rcs-launcher-record-"));
     try {
       const launcherDir = join(startupCwd, "dist", "cli");
-      const launcherPath = join(launcherDir, "omx.js");
+      const launcherPath = join(launcherDir, "rcs.js");
       await mkdir(launcherDir, { recursive: true });
       await writeFile(launcherPath, "#!/usr/bin/env node\n", "utf-8");
 
-      delete process.env[OMX_ENTRY_PATH_ENV];
-      delete process.env[OMX_STARTUP_CWD_ENV];
-      rememberOmxLaunchContext({
-        argv1: "dist/cli/omx.js",
+      delete process.env[RCS_ENTRY_PATH_ENV];
+      delete process.env[RCS_STARTUP_CWD_ENV];
+      rememberRcsLaunchContext({
+        argv1: "dist/cli/rcs.js",
         cwd: startupCwd,
         env: process.env,
       });
 
-      assert.equal(process.env[OMX_STARTUP_CWD_ENV], startupCwd);
-      assert.equal(process.env[OMX_ENTRY_PATH_ENV], canonicalizeComparablePath(launcherPath));
+      assert.equal(process.env[RCS_STARTUP_CWD_ENV], startupCwd);
+      assert.equal(process.env[RCS_ENTRY_PATH_ENV], canonicalizeComparablePath(launcherPath));
     } finally {
       await rm(startupCwd, { recursive: true, force: true });
     }
   });
 
-  it("prefers explicit argv1 over an ambient OMX_ENTRY_PATH override", async () => {
-    const startupCwd = await mkdtemp(join(tmpdir(), "omx-launcher-explicit-start-"));
+  it("prefers explicit argv1 over an ambient RCS_ENTRY_PATH override", async () => {
+    const startupCwd = await mkdtemp(join(tmpdir(), "rcs-launcher-explicit-start-"));
     try {
       const launcherDir = join(startupCwd, "dist", "cli");
-      const launcherPath = join(launcherDir, "omx.js");
+      const launcherPath = join(launcherDir, "rcs.js");
       await mkdir(launcherDir, { recursive: true });
       await writeFile(launcherPath, "#!/usr/bin/env node\n", "utf-8");
 
-      const resolved = resolveOmxEntryPath({
-        argv1: "dist/cli/omx.js",
+      const resolved = resolveRcsEntryPath({
+        argv1: "dist/cli/rcs.js",
         cwd: startupCwd,
         env: {
           ...process.env,
-          [OMX_ENTRY_PATH_ENV]: "/tmp/ambient-omx.js",
-          [OMX_STARTUP_CWD_ENV]: startupCwd,
+          [RCS_ENTRY_PATH_ENV]: "/tmp/ambient-rcs.js",
+          [RCS_STARTUP_CWD_ENV]: startupCwd,
         },
       });
 
@@ -537,25 +537,25 @@ describe("OMX launcher path resolution", () => {
   });
 
   it("records the default launcher path when called without an explicit argv1", async () => {
-    const startupCwd = await mkdtemp(join(tmpdir(), "omx-launcher-default-record-"));
+    const startupCwd = await mkdtemp(join(tmpdir(), "rcs-launcher-default-record-"));
     const originalArgv1 = process.argv[1];
     try {
       const launcherDir = join(startupCwd, "dist", "cli");
-      const launcherPath = join(launcherDir, "omx.js");
+      const launcherPath = join(launcherDir, "rcs.js");
       await mkdir(launcherDir, { recursive: true });
       await writeFile(launcherPath, "#!/usr/bin/env node\n", "utf-8");
 
-      delete process.env[OMX_ENTRY_PATH_ENV];
-      delete process.env[OMX_STARTUP_CWD_ENV];
+      delete process.env[RCS_ENTRY_PATH_ENV];
+      delete process.env[RCS_STARTUP_CWD_ENV];
       process.argv[1] = launcherPath;
 
-      rememberOmxLaunchContext({
+      rememberRcsLaunchContext({
         cwd: startupCwd,
         env: process.env,
       });
 
-      assert.equal(process.env[OMX_STARTUP_CWD_ENV], startupCwd);
-      assert.equal(process.env[OMX_ENTRY_PATH_ENV], canonicalizeComparablePath(launcherPath));
+      assert.equal(process.env[RCS_STARTUP_CWD_ENV], startupCwd);
+      assert.equal(process.env[RCS_ENTRY_PATH_ENV], canonicalizeComparablePath(launcherPath));
     } finally {
       process.argv[1] = originalArgv1;
       await rm(startupCwd, { recursive: true, force: true });
@@ -563,24 +563,24 @@ describe("OMX launcher path resolution", () => {
   });
 
   it("falls back to the packaged CLI entry when argv1 points at a non-CLI script", async () => {
-    const startupCwd = await mkdtemp(join(tmpdir(), "omx-launcher-cli-fallback-start-"));
-    const packageRootDir = await mkdtemp(join(tmpdir(), "omx-launcher-cli-fallback-root-"));
+    const startupCwd = await mkdtemp(join(tmpdir(), "rcs-launcher-cli-fallback-start-"));
+    const packageRootDir = await mkdtemp(join(tmpdir(), "rcs-launcher-cli-fallback-root-"));
     try {
       const hookDir = join(startupCwd, "dist", "scripts");
       const hookPath = join(hookDir, "codex-native-hook.js");
       const cliDir = join(packageRootDir, "dist", "cli");
-      const cliPath = join(cliDir, "omx.js");
+      const cliPath = join(cliDir, "rcs.js");
       await mkdir(hookDir, { recursive: true });
       await mkdir(cliDir, { recursive: true });
       await writeFile(hookPath, "#!/usr/bin/env node\n", "utf-8");
       await writeFile(cliPath, "#!/usr/bin/env node\n", "utf-8");
 
-      const resolved = resolveOmxCliEntryPath({
+      const resolved = resolveRcsCliEntryPath({
         argv1: "dist/scripts/codex-native-hook.js",
         cwd: startupCwd,
         env: {
           ...process.env,
-          [OMX_STARTUP_CWD_ENV]: startupCwd,
+          [RCS_STARTUP_CWD_ENV]: startupCwd,
         },
         packageRootDir,
       });
@@ -593,19 +593,19 @@ describe("OMX launcher path resolution", () => {
   });
 
   it("keeps the resolved path when argv1 already points at the CLI entry", async () => {
-    const startupCwd = await mkdtemp(join(tmpdir(), "omx-launcher-cli-direct-start-"));
+    const startupCwd = await mkdtemp(join(tmpdir(), "rcs-launcher-cli-direct-start-"));
     try {
       const cliDir = join(startupCwd, "dist", "cli");
-      const cliPath = join(cliDir, "omx.js");
+      const cliPath = join(cliDir, "rcs.js");
       await mkdir(cliDir, { recursive: true });
       await writeFile(cliPath, "#!/usr/bin/env node\n", "utf-8");
 
-      const resolved = resolveOmxCliEntryPath({
-        argv1: "dist/cli/omx.js",
+      const resolved = resolveRcsCliEntryPath({
+        argv1: "dist/cli/rcs.js",
         cwd: startupCwd,
         env: {
           ...process.env,
-          [OMX_STARTUP_CWD_ENV]: startupCwd,
+          [RCS_STARTUP_CWD_ENV]: startupCwd,
         },
       });
 
@@ -615,23 +615,23 @@ describe("OMX launcher path resolution", () => {
     }
   });
 
-  it("falls back from a non-OMX host binary to the packaged CLI entry", async () => {
-    const startupCwd = await mkdtemp(join(tmpdir(), "omx-launcher-cli-host-start-"));
-    const packageRootDir = await mkdtemp(join(tmpdir(), "omx-launcher-cli-host-root-"));
+  it("falls back from a non-RCS host binary to the packaged CLI entry", async () => {
+    const startupCwd = await mkdtemp(join(tmpdir(), "rcs-launcher-cli-host-start-"));
+    const packageRootDir = await mkdtemp(join(tmpdir(), "rcs-launcher-cli-host-root-"));
     try {
       const hostPath = join(startupCwd, "codex-host");
       const cliDir = join(packageRootDir, "dist", "cli");
-      const cliPath = join(cliDir, "omx.js");
+      const cliPath = join(cliDir, "rcs.js");
       await writeFile(hostPath, "#!/usr/bin/env node\n", "utf-8");
       await mkdir(cliDir, { recursive: true });
       await writeFile(cliPath, "#!/usr/bin/env node\n", "utf-8");
 
-      const resolved = resolveOmxCliEntryPath({
+      const resolved = resolveRcsCliEntryPath({
         argv1: hostPath,
         cwd: startupCwd,
         env: {
           ...process.env,
-          [OMX_STARTUP_CWD_ENV]: startupCwd,
+          [RCS_STARTUP_CWD_ENV]: startupCwd,
         },
         packageRootDir,
       });

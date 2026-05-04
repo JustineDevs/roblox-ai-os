@@ -40,7 +40,7 @@ const QUEUE_LOCK_RETRY_MS = 10;
 const QUEUE_LOCK_MAX_WAIT_MS = 5_000;
 
 function stateDir(cwd: string): string {
-  return join(cwd, ".omx", "state");
+  return join(cwd, ".rcs", "state");
 }
 
 function sessionQueuePath(cwd: string, sessionId: string): string {
@@ -52,7 +52,7 @@ function sessionQueueLockPath(queuePath: string): string {
 }
 
 function auditLogPath(cwd: string, nowIso: string): string {
-  return join(cwd, ".omx", "logs", `exec-followups-${nowIso.slice(0, 10)}.jsonl`);
+  return join(cwd, ".rcs", "logs", `exec-followups-${nowIso.slice(0, 10)}.jsonl`);
 }
 
 function safeTimestampForPath(nowIso: string): string {
@@ -326,7 +326,7 @@ export async function buildExecFollowupStopOutput(
     `Follow-up ${index + 1} (${record.id}) from ${record.actor} at ${record.created_at}:\n${record.prompt}`
   )).join("\n\n");
   const systemMessage =
-    `OMX exec has ${pending.length} queued follow-up instruction${pending.length === 1 ? "" : "s"} for this non-interactive job. ` +
+    `RCS exec has ${pending.length} queued follow-up instruction${pending.length === 1 ? "" : "s"} for this non-interactive job. ` +
     "Treat them as the newest user instructions, continue the same run, and include the follow-up id(s) in your final audit summary.\n\n" +
     rendered;
 
@@ -353,7 +353,7 @@ export function parseExecInjectArgs(args: string[]): {
 } {
   const [, sessionIdRaw, ...rest] = args;
   const sessionId = sessionIdRaw?.trim();
-  if (!sessionId) throw new Error("Usage: omx exec inject <session-id> --prompt <text> [--actor <name>] [--json]");
+  if (!sessionId) throw new Error("Usage: rcs exec inject <session-id> --prompt <text> [--actor <name>] [--json]");
 
   let prompt = "";
   let actor: string | undefined;

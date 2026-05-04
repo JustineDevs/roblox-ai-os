@@ -1,7 +1,7 @@
 /**
  * Hook Notification Configuration Types
  *
- * Schema for the hookTemplates key in .omx-config.json — user-customizable
+ * Schema for the hookTemplates key in .rcs-config.json — user-customizable
  * message templates with per-event, per-platform overrides.
  */
 
@@ -45,7 +45,7 @@ export interface HookEventConfig {
   platforms?: Partial<Record<NotificationPlatform, PlatformTemplateOverride>>;
 }
 
-/** Top-level schema for the hookTemplates key in .omx-config.json */
+/** Top-level schema for the hookTemplates key in .rcs-config.json */
 export interface HookNotificationConfig {
   /** Schema version for future migration */
   version: 1;

@@ -7,7 +7,7 @@ import { buildPromptInventory, listPromptSurfacePaths, renderPromptInventoryMark
 
 describe('prompt inventory', () => {
   it('counts prompt surfaces, absolute directives, markers, and duplicate fragments', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'omx-prompt-inventory-'));
+    const root = await mkdtemp(join(tmpdir(), 'rcs-prompt-inventory-'));
     try {
       await mkdir(join(root, 'templates'), { recursive: true });
       await mkdir(join(root, 'prompts'), { recursive: true });
@@ -18,10 +18,10 @@ describe('prompt inventory', () => {
       await mkdir(join(root, 'src', 'cli'), { recursive: true });
 
       const repeated = 'AUTO-CONTINUE for clear, already-requested, low-risk, reversible local work with evidence.';
-      await writeFile(join(root, 'AGENTS.md'), `# Root\n${repeated}\n<!-- omx:generated:agents-md -->\n`);
+      await writeFile(join(root, 'AGENTS.md'), `# Root\n${repeated}\n<!-- rcs:generated:agents-md -->\n`);
       await writeFile(
         join(root, 'templates', 'AGENTS.md'),
-        `# Template\nMUST preserve markers.\n${repeated}\n<!-- OMX:RUNTIME:START -->\n<!-- OMX:RUNTIME:END -->\n`,
+        `# Template\nMUST preserve markers.\n${repeated}\n<!-- RCS:RUNTIME:START -->\n<!-- RCS:RUNTIME:END -->\n`,
       );
       await writeFile(join(root, 'prompts', 'executor.md'), `# Executor\nDO NOT stop early.\n${repeated}\n`);
       await writeFile(join(root, 'skills', 'worker', 'SKILL.md'), '# Worker\nALWAYS claim tasks.\n');
@@ -52,7 +52,7 @@ describe('prompt inventory', () => {
       assert.ok(report.totals.approximateTokens > 0);
       assert.equal(report.totals.absoluteDirectiveCount, 6);
       assert.equal(
-        report.surfaces.find((surface) => surface.path === 'templates/AGENTS.md')?.markers['<!-- OMX:RUNTIME:START -->'],
+        report.surfaces.find((surface) => surface.path === 'templates/AGENTS.md')?.markers['<!-- RCS:RUNTIME:START -->'],
         1,
       );
       assert.equal(report.duplicateFragmentFamilies[0]?.count, 3);

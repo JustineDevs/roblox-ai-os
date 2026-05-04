@@ -20,17 +20,17 @@ function withIsolatedDefaultModelEnv<T>(run: () => T): T {
   const savedEnv = new Map<string, string | undefined>();
   for (const key of [
     'CODEX_HOME',
-    'OMX_DEFAULT_FRONTIER_MODEL',
-    'OMX_DEFAULT_STANDARD_MODEL',
-    'OMX_DEFAULT_SPARK_MODEL',
-    'OMX_SPARK_MODEL',
+    'RCS_DEFAULT_FRONTIER_MODEL',
+    'RCS_DEFAULT_STANDARD_MODEL',
+    'RCS_DEFAULT_SPARK_MODEL',
+    'RCS_SPARK_MODEL',
   ] as const) {
     savedEnv.set(key, process.env[key]);
     delete process.env[key];
   }
   process.env.CODEX_HOME = join(
     tmpdir(),
-    `omx-model-contract-defaults-${process.pid}-${Date.now()}`,
+    `rcs-model-contract-defaults-${process.pid}-${Date.now()}`,
   );
 
   try {

@@ -40,7 +40,7 @@ describe("cli/list", () => {
 
   it("prints human-readable catalog output without --json", async () => {
     const lines = await captureStdout(() => listCommand([]));
-    assert.match(lines[0] ?? "", /^OMX catalog /);
+    assert.match(lines[0] ?? "", /^RCS catalog /);
     assert.ok(lines.some((line) => line.startsWith("Skills: ")));
     assert.ok(lines.some((line) => line.includes("team")));
     assert.ok(lines.some((line) => line.startsWith("Agents: ")));

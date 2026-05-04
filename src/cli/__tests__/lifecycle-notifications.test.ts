@@ -10,7 +10,7 @@ import type { FullNotificationPayload } from '../../notifications/types.js';
 describe('lifecycle notification payload formatting', () => {
   const basePayload: FullNotificationPayload = {
     event: 'session-start',
-    sessionId: 'omx-test-456',
+    sessionId: 'rcs-test-456',
     message: '',
     timestamp: '2026-02-16T12:00:00.000Z',
     projectPath: '/home/user/my-project',
@@ -20,7 +20,7 @@ describe('lifecycle notification payload formatting', () => {
   it('session-start includes session ID and project name', () => {
     const msg = formatSessionStart(basePayload);
     assert.ok(msg.includes('Session Started'));
-    assert.ok(msg.includes('omx-test-456'));
+    assert.ok(msg.includes('rcs-test-456'));
     assert.ok(msg.includes('my-project'));
   });
 

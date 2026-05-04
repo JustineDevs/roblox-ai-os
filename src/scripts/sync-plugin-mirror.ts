@@ -13,7 +13,7 @@ import {
 	assertSkillMirror,
 	compareSkillMirror,
 } from "../catalog/skill-mirror.js";
-import { buildOmxPluginMcpManifest } from "../config/omx-first-party-mcp.js";
+import { buildRcsPluginMcpManifest } from "../config/rcs-first-party-mcp.js";
 
 export interface SyncPluginMirrorOptions {
 	root?: string;
@@ -51,7 +51,7 @@ type PackageJson = {
 	version?: string;
 };
 
-const PLUGIN_NAME = "oh-my-codex";
+const PLUGIN_NAME = "roblox-ai-os-creator-skills";
 const SETUP_OWNED_PLUGIN_MANIFEST_FIELDS = [
 	"agents",
 	"prompts",
@@ -85,17 +85,23 @@ function assertDeepJsonEqual(
 	}
 }
 
-function getPluginPaths(root: string): {
-	pluginRoot: string;
-	pluginSkillsDir: string;
+	function getPluginPaths(root: string): {
+		pluginRoot: string;
+		pluginSkillsDir: string;
+		pluginDocsReferenceDir: string;
+		pluginTemplatesRobloxDir: string;
+		pluginTemplatesDir: string;
 	pluginMcpPath: string;
 	pluginAppsPath: string;
 	pluginManifestPath: string;
 } {
 	const pluginRoot = join(root, "plugins", PLUGIN_NAME);
-	return {
-		pluginRoot,
-		pluginSkillsDir: join(pluginRoot, "skills"),
+		return {
+			pluginRoot,
+			pluginSkillsDir: join(pluginRoot, "skills"),
+			pluginDocsReferenceDir: join(pluginRoot, "docs", "reference"),
+			pluginTemplatesRobloxDir: join(pluginRoot, "templates", "roblox"),
+			pluginTemplatesDir: join(pluginRoot, "templates", "psychology"),
 		pluginMcpPath: join(pluginRoot, ".mcp.json"),
 		pluginAppsPath: join(pluginRoot, ".app.json"),
 		pluginManifestPath: join(pluginRoot, ".codex-plugin", "plugin.json"),
@@ -245,7 +251,7 @@ async function assertPluginMetadata(root: string): Promise<void> {
 		readJsonFile<PluginManifest>(pluginManifestPath),
 	]);
 
-	assertDeepJsonEqual(actualMcp, buildOmxPluginMcpManifest(), "mcp-manifest");
+	assertDeepJsonEqual(actualMcp, buildRcsPluginMcpManifest(), "mcp-manifest");
 	assertDeepJsonEqual(actualApps, { apps: {} }, "apps-manifest");
 	await assertPluginManifestPolicy(root, actualManifest);
 }
@@ -256,7 +262,7 @@ async function writePluginMetadata(
 ): Promise<boolean> {
 	const { pluginMcpPath, pluginAppsPath, pluginManifestPath } =
 		getPluginPaths(root);
-	const expectedMcp = buildOmxPluginMcpManifest();
+	const expectedMcp = buildRcsPluginMcpManifest();
 	const expectedApps = { apps: {} };
 	const expectedManifest = await buildExpectedPluginManifest(root);
 	const writes = [
@@ -300,7 +306,7 @@ export async function syncPluginMirror(
 	const manifest = readCatalogManifest(root);
 	const skillNames = [...getSetupInstallableSkillNames(manifest)].sort();
 	const rootSkillsDir = join(root, "skills");
-	const { pluginSkillsDir } = getPluginPaths(root);
+	const { pluginSkillsDir, pluginDocsReferenceDir, pluginTemplatesRobloxDir, pluginTemplatesDir } = getPluginPaths(root);
 
 	await assertRootSkillCatalogConsistency(root, skillNames);
 
@@ -316,6 +322,12 @@ export async function syncPluginMirror(
 
 	await rm(pluginSkillsDir, { recursive: true, force: true });
 	await mkdir(pluginSkillsDir, { recursive: true });
+	await rm(pluginDocsReferenceDir, { recursive: true, force: true });
+	await rm(pluginTemplatesRobloxDir, { recursive: true, force: true });
+	await rm(pluginTemplatesDir, { recursive: true, force: true });
+	await mkdir(pluginDocsReferenceDir, { recursive: true });
+	await mkdir(pluginTemplatesRobloxDir, { recursive: true });
+	await mkdir(pluginTemplatesDir, { recursive: true });
 
 	for (const skillName of skillNames) {
 		await cp(join(rootSkillsDir, skillName), join(pluginSkillsDir, skillName), {
@@ -326,6 +338,37 @@ export async function syncPluginMirror(
 				`mirrored skills/${skillName} -> plugins/${PLUGIN_NAME}/skills/${skillName}`,
 			);
 		}
+	}
+
+	for (const file of [
+		'roblox-pre-action-protocol.md',
+		'player-psychology-framework.md',
+		'player-psychology-command-surfaces.md',
+		'psychology-rubric-healthy-retention.md',
+		'psychology-rubric-social-value-vs-spam.md',
+		'psychology-rubric-progression-clarity.md',
+		'psychology-rubric-mastery-depth.md',
+		'psychology-rubric-status-visibility.md',
+		'psychology-example-simulator-farming.md',
+		'psychology-example-social-roleplay.md',
+		'psychology-example-mastery-combat.md',
+	]) {
+		await cp(join(root, 'docs', 'reference', file), join(pluginDocsReferenceDir, file));
+	}
+
+	await cp(
+		join(root, 'templates', 'roblox', 'pre-action-plan.md'),
+		join(pluginTemplatesRobloxDir, 'pre-action-plan.md'),
+	);
+
+	for (const file of [
+		'player-motivation-profile.md',
+		'dopamine-loop-map.md',
+		'retention-design-sheet.md',
+		'social-mechanic-spec.md',
+		'event-fomo-design-sheet.md',
+	]) {
+		await cp(join(root, 'templates', 'psychology', file), join(pluginTemplatesDir, file));
 	}
 
 	const metadataChanged = await writePluginMetadata(root, options.verbose);

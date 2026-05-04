@@ -4,18 +4,18 @@ import type { HookPluginLogContext } from './types.js';
 
 export function hookLogPath(cwd: string, timestamp = new Date()): string {
   const date = timestamp.toISOString().slice(0, 10);
-  return join(cwd, '.omx', 'logs', `hooks-${date}.jsonl`);
+  return join(cwd, '.rcs', 'logs', `hooks-${date}.jsonl`);
 }
 
 export async function appendHookPluginLog(cwd: string, entry: HookPluginLogContext): Promise<void> {
   const path = hookLogPath(cwd, entry.timestamp ? new Date(entry.timestamp) : new Date());
-  await mkdir(join(cwd, '.omx', 'logs'), { recursive: true });
+  await mkdir(join(cwd, '.rcs', 'logs'), { recursive: true });
   const payload = {
     timestamp: entry.timestamp || new Date().toISOString(),
     ...entry,
   };
   await appendFile(path, JSON.stringify(payload) + '\n').catch((error: unknown) => {
-    console.warn('[omx] warning: failed to append hook plugin log entry', {
+    console.warn('[rcs] warning: failed to append hook plugin log entry', {
       path,
       error: error instanceof Error ? error.message : String(error),
     });

@@ -26,9 +26,9 @@ function removeTmp(dir: string): void {
 /** Absolute path where readTriageState / writeTriageState store the file. */
 function expectedPath(cwd: string, sessionId?: string): string {
   if (sessionId) {
-    return join(cwd, '.omx', 'state', 'sessions', sessionId, 'prompt-routing-state.json');
+    return join(cwd, '.rcs', 'state', 'sessions', sessionId, 'prompt-routing-state.json');
   }
-  return join(cwd, '.omx', 'state', 'prompt-routing-state.json');
+  return join(cwd, '.rcs', 'state', 'prompt-routing-state.json');
 }
 
 /** A fully-valid TriageStateFile for round-trip tests. */
@@ -72,7 +72,7 @@ describe('readTriageState — malformed JSON returns null', () => {
   before(() => {
     tmp = makeTmp();
     const path = expectedPath(tmp, 'sess-malformed');
-    mkdirSync(join(tmp, '.omx', 'state', 'sessions', 'sess-malformed'), { recursive: true });
+    mkdirSync(join(tmp, '.rcs', 'state', 'sessions', 'sess-malformed'), { recursive: true });
     writeFileSync(path, 'not json', 'utf-8');
   });
   after(() => removeTmp(tmp));
@@ -90,7 +90,7 @@ describe('readTriageState — wrong shape returns null', () => {
 
   it('returns null for {version:2} (wrong version)', () => {
     const path = expectedPath(tmp, 'v2');
-    mkdirSync(join(tmp, '.omx', 'state', 'sessions', 'v2'), { recursive: true });
+    mkdirSync(join(tmp, '.rcs', 'state', 'sessions', 'v2'), { recursive: true });
     writeFileSync(path, JSON.stringify({ version: 2 }), 'utf-8');
     const result = readTriageState({ cwd: tmp, sessionId: 'v2' });
     assert.equal(result, null);
@@ -98,7 +98,7 @@ describe('readTriageState — wrong shape returns null', () => {
 
   it('returns null for {} (empty object)', () => {
     const path = expectedPath(tmp, 'empty');
-    mkdirSync(join(tmp, '.omx', 'state', 'sessions', 'empty'), { recursive: true });
+    mkdirSync(join(tmp, '.rcs', 'state', 'sessions', 'empty'), { recursive: true });
     writeFileSync(path, JSON.stringify({}), 'utf-8');
     const result = readTriageState({ cwd: tmp, sessionId: 'empty' });
     assert.equal(result, null);
@@ -106,7 +106,7 @@ describe('readTriageState — wrong shape returns null', () => {
 
   it('returns null for missing suppress_followup field', () => {
     const path = expectedPath(tmp, 'missing-field');
-    mkdirSync(join(tmp, '.omx', 'state', 'sessions', 'missing-field'), { recursive: true });
+    mkdirSync(join(tmp, '.rcs', 'state', 'sessions', 'missing-field'), { recursive: true });
     writeFileSync(path, JSON.stringify({ version: 1, last_triage: null }), 'utf-8');
     const result = readTriageState({ cwd: tmp, sessionId: 'missing-field' });
     assert.equal(result, null);
@@ -121,7 +121,7 @@ describe('readTriageState — valid file returns parsed object', () => {
   before(() => {
     tmp = makeTmp();
     const path = expectedPath(tmp, sessionId);
-    mkdirSync(join(tmp, '.omx', 'state', 'sessions', sessionId), { recursive: true });
+    mkdirSync(join(tmp, '.rcs', 'state', 'sessions', sessionId), { recursive: true });
     writeFileSync(path, JSON.stringify(state, null, 2), 'utf-8');
   });
   after(() => removeTmp(tmp));
@@ -150,7 +150,7 @@ describe('readTriageState — valid file returns parsed object', () => {
   it('valid state with last_triage=null parses correctly', () => {
     const nullState: TriageStateFile = { version: 1, last_triage: null, suppress_followup: false };
     const path2 = expectedPath(tmp, 'null-triage');
-    mkdirSync(join(tmp, '.omx', 'state', 'sessions', 'null-triage'), { recursive: true });
+    mkdirSync(join(tmp, '.rcs', 'state', 'sessions', 'null-triage'), { recursive: true });
     writeFileSync(path2, JSON.stringify(nullState, null, 2), 'utf-8');
     const result = readTriageState({ cwd: tmp, sessionId: 'null-triage' });
     assert.ok(result !== null);
@@ -183,7 +183,7 @@ describe('path selection — session-scoped vs root', () => {
     assert.ok(existsSync(sessionPath));
   });
 
-  it('write without sessionId places file at root .omx/state/prompt-routing-state.json', () => {
+  it('write without sessionId places file at root .rcs/state/prompt-routing-state.json', () => {
     writeTriageState({ cwd: tmp, sessionId: undefined, state: validState() });
     const rootPath = expectedPath(tmp);
     assert.ok(existsSync(rootPath), `expected root file at ${rootPath}`);
@@ -207,7 +207,7 @@ describe('path selection — session-scoped vs root', () => {
       const sessionId = 'bad/session';
       writeTriageState({ cwd: isolated, sessionId, state: validState() });
       assert.equal(existsSync(expectedPath(isolated)), false);
-      assert.equal(existsSync(join(isolated, '.omx', 'state', 'sessions', 'bad', 'session')), false);
+      assert.equal(existsSync(join(isolated, '.rcs', 'state', 'sessions', 'bad', 'session')), false);
     } finally {
       removeTmp(isolated);
     }
@@ -232,7 +232,7 @@ describe('writeTriageState — directory creation', () => {
 
   it('creates parent directories if they do not exist', () => {
     const sessionId = 'brand-new-session';
-    const dirPath = join(tmp, '.omx', 'state', 'sessions', sessionId);
+    const dirPath = join(tmp, '.rcs', 'state', 'sessions', sessionId);
     assert.ok(!existsSync(dirPath), 'dir should not exist before write');
     writeTriageState({ cwd: tmp, sessionId, state: validState() });
     assert.ok(existsSync(dirPath), 'dir should exist after write');

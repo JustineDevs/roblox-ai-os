@@ -217,9 +217,9 @@ describe('MCP stdio lifecycle runtime regression (built entrypoints)', () => {
     const entrypoint = IDLE_ENTRYPOINTS[0];
     const sharedEnv = {
       ...process.env,
-      OMX_MCP_PARENT_WATCHDOG_INTERVAL_MS: '250',
-      OMX_MCP_DUPLICATE_SIBLING_WATCHDOG_INTERVAL_MS: '250',
-      OMX_MCP_DUPLICATE_SIBLING_PRE_TRAFFIC_GRACE_MS: '500',
+      RCS_MCP_PARENT_WATCHDOG_INTERVAL_MS: '250',
+      RCS_MCP_DUPLICATE_SIBLING_WATCHDOG_INTERVAL_MS: '250',
+      RCS_MCP_DUPLICATE_SIBLING_PRE_TRAFFIC_GRACE_MS: '500',
     };
     const older = spawn(process.execPath, [join(process.cwd(), 'dist', 'mcp', entrypoint.file)], {
       cwd: process.cwd(),
@@ -272,9 +272,9 @@ describe('MCP stdio lifecycle runtime regression (built entrypoints)', () => {
     const entrypoint = IDLE_ENTRYPOINTS[0];
     const sharedEnv = {
       ...process.env,
-      OMX_MCP_PARENT_WATCHDOG_INTERVAL_MS: '250',
-      OMX_MCP_DUPLICATE_SIBLING_WATCHDOG_INTERVAL_MS: '250',
-      OMX_MCP_DUPLICATE_SIBLING_PRE_TRAFFIC_GRACE_MS: '500',
+      RCS_MCP_PARENT_WATCHDOG_INTERVAL_MS: '250',
+      RCS_MCP_DUPLICATE_SIBLING_WATCHDOG_INTERVAL_MS: '250',
+      RCS_MCP_DUPLICATE_SIBLING_PRE_TRAFFIC_GRACE_MS: '500',
     };
     const older = spawn(process.execPath, [join(process.cwd(), 'dist', 'mcp', entrypoint.file)], {
       cwd: process.cwd(),

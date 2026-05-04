@@ -1,14 +1,14 @@
 import { execFileSync } from 'node:child_process';
 import { parsePaneIdFromTmuxOutput, shellEscapeSingle } from '../hud/tmux.js';
 import { resolveTmuxBinaryForPlatform } from '../utils/platform-command.js';
-import { resolveOmxCliEntryPath } from '../utils/paths.js';
+import { resolveRcsCliEntryPath } from '../utils/paths.js';
 
 export interface SidecarTmuxOptions {
   cwd: string;
   teamName: string;
   width?: number;
   sessionId?: string;
-  omxBin?: string;
+  rcsBin?: string;
 }
 
 type TmuxExecSync = (args: string[]) => string;
@@ -18,10 +18,10 @@ function sidecarWidth(width: number | undefined): number {
 }
 
 export function buildSidecarWatchCommand(options: SidecarTmuxOptions): string {
-  const omxBin = options.omxBin ?? resolveOmxCliEntryPath();
-  if (!omxBin) throw new Error('Failed to resolve OMX launcher path for sidecar startup.');
-  const prefix = options.sessionId ? `OMX_SESSION_ID=${shellEscapeSingle(options.sessionId)} ` : '';
-  return `${prefix}node ${shellEscapeSingle(omxBin)} sidecar ${shellEscapeSingle(options.teamName)} --watch --width ${sidecarWidth(options.width)}`;
+  const rcsBin = options.rcsBin ?? resolveRcsCliEntryPath();
+  if (!rcsBin) throw new Error('Failed to resolve RCS launcher path for sidecar startup.');
+  const prefix = options.sessionId ? `RCS_SESSION_ID=${shellEscapeSingle(options.sessionId)} ` : '';
+  return `${prefix}node ${shellEscapeSingle(rcsBin)} sidecar ${shellEscapeSingle(options.teamName)} --watch --width ${sidecarWidth(options.width)}`;
 }
 
 export function buildSidecarTmuxSplitArgs(options: SidecarTmuxOptions): string[] {

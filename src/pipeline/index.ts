@@ -1,5 +1,5 @@
 /**
- * Pipeline orchestrator for oh-my-codex
+ * Pipeline orchestrator for roblox-ai-os-creator-skills
  *
  * Configurable pipeline that sequences: ralplan -> ralph -> code-review.
  * This is the strict Autopilot loop; legacy team/ralph-verify adapters remain available.

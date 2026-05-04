@@ -25,8 +25,8 @@ describe("isGlobalInstallLifecycle", () => {
 
 describe("runPostinstall", () => {
   it("records the installed version and prints an explicit opt-in setup hint for bumped global installs", async () => {
-    const root = await mkdtemp(join(tmpdir(), "omx-postinstall-"));
-    const stampPath = join(root, ".codex", ".omx", "install-state.json");
+    const root = await mkdtemp(join(tmpdir(), "rcs-postinstall-"));
+    const stampPath = join(root, ".codex", ".rcs", "install-state.json");
     const logs: string[] = [];
 
     try {
@@ -43,7 +43,7 @@ describe("runPostinstall", () => {
       });
 
       assert.equal(result.status, "hinted");
-      assert.match(logs.join("\n"), /OMX setup is explicit opt-in; run `omx setup` or `omx update` when you're ready/);
+      assert.match(logs.join("\n"), /RCS setup is explicit opt-in; run `rcs setup` or `rcs update` when you're ready/);
 
       const stamp = JSON.parse(await readFile(stampPath, "utf-8")) as {
         installed_version: string;
@@ -57,8 +57,8 @@ describe("runPostinstall", () => {
   });
 
   it("records the installed version and preserves prior setup state when printing the postinstall hint", async () => {
-    const root = await mkdtemp(join(tmpdir(), "omx-postinstall-"));
-    const stampPath = join(root, ".codex", ".omx", "install-state.json");
+    const root = await mkdtemp(join(tmpdir(), "rcs-postinstall-"));
+    const stampPath = join(root, ".codex", ".rcs", "install-state.json");
     const logs: string[] = [];
 
     try {
@@ -75,7 +75,7 @@ describe("runPostinstall", () => {
       });
 
       assert.equal(result.status, "hinted");
-      assert.match(logs.join("\n"), /run `omx setup` or `omx update` when you're ready/i);
+      assert.match(logs.join("\n"), /run `rcs setup` or `rcs update` when you're ready/i);
 
       const stamp = JSON.parse(await readFile(stampPath, "utf-8")) as {
         installed_version: string;

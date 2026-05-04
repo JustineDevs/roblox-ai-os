@@ -24,11 +24,11 @@ const OPENCLAW_HOOK_EVENTS = [
 ] as const;
 
 const OPENCLAW_LIFECYCLE_BRIDGE = [
-	{ omxEvent: "session-start", openclawEvent: "session-start" },
-	{ omxEvent: "session-end", openclawEvent: "session-end" },
-	{ omxEvent: "session-idle", openclawEvent: "session-idle" },
-	{ omxEvent: "ask-user-question", openclawEvent: "ask-user-question" },
-	{ omxEvent: "session-stop", openclawEvent: "stop" },
+	{ rcsEvent: "session-start", openclawEvent: "session-start" },
+	{ rcsEvent: "session-end", openclawEvent: "session-end" },
+	{ rcsEvent: "session-idle", openclawEvent: "session-idle" },
+	{ rcsEvent: "ask-user-question", openclawEvent: "ask-user-question" },
+	{ rcsEvent: "session-stop", openclawEvent: "stop" },
 ] as const;
 
 function summarizeObservedState(
@@ -40,7 +40,7 @@ function summarizeObservedState(
 		case "degraded":
 			return "OpenClaw local adapter evidence is partial; config is present but at least one mapped hook is locally blocked.";
 		case "disabled":
-			return "OpenClaw is disabled locally because OMX_OPENCLAW=1 is not set.";
+			return "OpenClaw is disabled locally because RCS_OPENCLAW=1 is not set.";
 		case "missing-config":
 			return "OpenClaw is enabled, but no usable local config file was found.";
 		case "invalid-config":
@@ -110,7 +110,7 @@ function observeOpenClaw(
 					gatewayType,
 					status: "blocked",
 					detail:
-						"Mapped to a command gateway, but OMX_OPENCLAW_COMMAND=1 is not set.",
+						"Mapped to a command gateway, but RCS_OPENCLAW_COMMAND=1 is not set.",
 				});
 				continue;
 			}
@@ -182,14 +182,14 @@ export function buildOpenClawEnvelope(
 		target: "openclaw",
 		displayName: "OpenClaw",
 		summary:
-			"OMX-owned OpenClaw adapter metadata built from existing local config, gateway, and lifecycle seams.",
+			"RCS-owned OpenClaw adapter metadata built from existing local config, gateway, and lifecycle seams.",
 		adapterPaths: paths,
 		planning,
 		capabilities,
 		constraints: [
-			"Status reflects local OMX/OpenClaw adapter evidence only; it does not claim downstream OpenClaw acknowledgement.",
-			"Bootstrap output stays under .omx/adapters/openclaw/... and does not mutate .omx/state or upstream OpenClaw config.",
-			"Command gateways remain gated by OMX_OPENCLAW_COMMAND=1 even when OMX_OPENCLAW=1 is enabled.",
+			"Status reflects local RCS/OpenClaw adapter evidence only; it does not claim downstream OpenClaw acknowledgement.",
+			"Bootstrap output stays under .rcs/adapters/openclaw/... and does not mutate .rcs/state or upstream OpenClaw config.",
+			"Command gateways remain gated by RCS_OPENCLAW_COMMAND=1 even when RCS_OPENCLAW=1 is enabled.",
 		],
 		openclaw,
 	};
@@ -224,7 +224,7 @@ export function buildOpenClawProbeReport(
 			blockedHooks.length > 0
 				? blockedHooks.map((hook) => `${hook.event}: ${hook.detail}`)
 				: [
-						"Run omx adapt openclaw init --write to materialize adapter-owned OpenClaw artifacts.",
+						"Run rcs adapt openclaw init --write to materialize adapter-owned OpenClaw artifacts.",
 						"Confirm downstream OpenClaw behavior separately; this probe reports local wiring evidence only.",
 					],
 	};
@@ -245,12 +245,12 @@ export function buildOpenClawStatusReport(
 		target: "openclaw",
 		phase: "foundation",
 		summary: initialized
-			? `OpenClaw adapter artifacts exist under .omx/adapters/openclaw/... and local runtime evidence is ${openclaw.observedState}.`
+			? `OpenClaw adapter artifacts exist under .rcs/adapters/openclaw/... and local runtime evidence is ${openclaw.observedState}.`
 			: `OpenClaw adapter artifacts have not been written yet; local runtime evidence is ${openclaw.observedState}.`,
 		adapter: {
 			state: initialized ? "initialized" : "not-initialized",
 			detail: initialized
-				? "Adapter-owned OpenClaw artifacts are present under .omx/adapters/openclaw/..."
+				? "Adapter-owned OpenClaw artifacts are present under .rcs/adapters/openclaw/..."
 				: "Run init --write to create adapter-owned OpenClaw artifacts.",
 			configPath: paths.configPath,
 			envelopePath: paths.envelopePath,
@@ -278,7 +278,7 @@ export function buildOpenClawDoctorReport(
 		issues.push({
 			code: "adapter_not_initialized",
 			message:
-				"No OpenClaw adapter artifacts exist under .omx/adapters/openclaw.",
+				"No OpenClaw adapter artifacts exist under .rcs/adapters/openclaw.",
 		});
 	}
 
@@ -286,7 +286,7 @@ export function buildOpenClawDoctorReport(
 		issues.push({
 			code: "openclaw_disabled",
 			message:
-				"OMX_OPENCLAW=1 is required before OpenClaw local config can be observed.",
+				"RCS_OPENCLAW=1 is required before OpenClaw local config can be observed.",
 		});
 	} else if (
 		openclaw.observedState === "missing-config" ||
@@ -316,7 +316,7 @@ export function buildOpenClawDoctorReport(
 		issues.push({
 			code: "planning_artifacts_missing",
 			message:
-				"No canonical OMX PRD artifact is available to link into the OpenClaw adapter envelope.",
+				"No canonical RCS PRD artifact is available to link into the OpenClaw adapter envelope.",
 		});
 	}
 
@@ -329,9 +329,9 @@ export function buildOpenClawDoctorReport(
 			"OpenClaw doctor reports local adapter readiness and local gateway wiring evidence only.",
 		issues,
 		nextSteps: [
-			"Run omx adapt openclaw init --write.",
-			"Set OMX_OPENCLAW=1 and configure notifications.openclaw or compatible aliases in ~/.codex/.omx-config.json.",
-			"If command gateways are configured, also set OMX_OPENCLAW_COMMAND=1 before expecting command mappings to be locally ready.",
+			"Run rcs adapt openclaw init --write.",
+			"Set RCS_OPENCLAW=1 and configure notifications.openclaw or compatible aliases in ~/.codex/.rcs-config.json.",
+			"If command gateways are configured, also set RCS_OPENCLAW_COMMAND=1 before expecting command mappings to be locally ready.",
 		],
 	};
 }
@@ -365,7 +365,7 @@ export function initOpenClawFoundation(
 					createdAt: now.toISOString(),
 					phase: "openclaw-local-observation",
 					observedState: envelope.openclaw?.observedState ?? "not-configured",
-					summary: "OMX-owned OpenClaw adapter bootstrap metadata.",
+					summary: "RCS-owned OpenClaw adapter bootstrap metadata.",
 					lifecycleBridge: envelope.openclaw?.lifecycleBridge ?? [],
 					constraints: envelope.constraints,
 				},
@@ -388,7 +388,7 @@ export function initOpenClawFoundation(
 		target: "openclaw",
 		write,
 		summary: write
-			? "OpenClaw adapter metadata was written under .omx/adapters/openclaw/..."
+			? "OpenClaw adapter metadata was written under .rcs/adapters/openclaw/..."
 			: "OpenClaw adapter bootstrap preview is ready; rerun with --write to materialize it.",
 		previewPaths,
 		wrotePaths,

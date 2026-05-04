@@ -1,5 +1,5 @@
 # Mission
-Ensure `omx autoresearch --resume <run-id>` fails cleanly when the referenced worktree is dirty.
+Ensure `rcs autoresearch --resume <run-id>` fails cleanly when the referenced worktree is dirty.
 
 Primary target:
 - resume validation / guard behavior in autoresearch CLI/runtime

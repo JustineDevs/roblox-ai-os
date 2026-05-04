@@ -8,9 +8,9 @@ const __dirname = dirname(__filename);
 const root = join(__dirname, '..', '..');
 
 for (const path of [
-  join(root, 'bin', 'omx-explore-harness'),
-  join(root, 'bin', 'omx-explore-harness.exe'),
-  join(root, 'bin', 'omx-explore-harness.meta.json'),
+  join(root, 'bin', 'rcs-explore-harness'),
+  join(root, 'bin', 'rcs-explore-harness.exe'),
+  join(root, 'bin', 'rcs-explore-harness.meta.json'),
   join(root, 'bin', 'native'),
 ]) {
   await rm(path, { recursive: true, force: true });

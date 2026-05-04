@@ -1,8 +1,8 @@
 import { spawn } from 'node:child_process';
-import { resolveOmxCliEntryPath } from '../utils/paths.js';
+import { resolveRcsCliEntryPath } from '../utils/paths.js';
 import type { QuestionAnswer, QuestionAnswerEntry, QuestionInput, NormalizedQuestionItem } from './types.js';
 
-export interface OmxQuestionSuccessPayload {
+export interface RcsQuestionSuccessPayload {
   ok: true;
   question_id: string;
   session_id?: string;
@@ -13,7 +13,7 @@ export interface OmxQuestionSuccessPayload {
   answer?: QuestionAnswer;
 }
 
-export interface OmxQuestionErrorPayload {
+export interface RcsQuestionErrorPayload {
   ok: false;
   question_id?: string;
   session_id?: string;
@@ -23,30 +23,30 @@ export interface OmxQuestionErrorPayload {
   };
 }
 
-export type OmxQuestionPayload = OmxQuestionSuccessPayload | OmxQuestionErrorPayload;
+export type RcsQuestionPayload = RcsQuestionSuccessPayload | RcsQuestionErrorPayload;
 
-export interface OmxQuestionClientOptions {
+export interface RcsQuestionClientOptions {
   cwd?: string;
   env?: NodeJS.ProcessEnv;
   argv1?: string | null;
-  runner?: OmxQuestionProcessRunner;
+  runner?: RcsQuestionProcessRunner;
 }
 
-export interface OmxQuestionProcessResult {
+export interface RcsQuestionProcessResult {
   code: number | null;
   stdout: string;
   stderr: string;
 }
 
-export type OmxQuestionProcessRunner = (
+export type RcsQuestionProcessRunner = (
   command: string,
   args: string[],
   options: { cwd: string; env: NodeJS.ProcessEnv },
-) => Promise<OmxQuestionProcessResult>;
+) => Promise<RcsQuestionProcessResult>;
 
-export class OmxQuestionError extends Error {
+export class RcsQuestionError extends Error {
   readonly code: string;
-  readonly payload?: OmxQuestionErrorPayload;
+  readonly payload?: RcsQuestionErrorPayload;
   readonly stdout: string;
   readonly stderr: string;
   readonly exitCode: number | null;
@@ -55,14 +55,14 @@ export class OmxQuestionError extends Error {
     code: string,
     message: string,
     options: {
-      payload?: OmxQuestionErrorPayload;
+      payload?: RcsQuestionErrorPayload;
       stdout?: string;
       stderr?: string;
       exitCode?: number | null;
     } = {},
   ) {
     super(`${code}: ${message}`);
-    this.name = 'OmxQuestionError';
+    this.name = 'RcsQuestionError';
     this.code = code;
     this.payload = options.payload;
     this.stdout = options.stdout ?? '';
@@ -71,11 +71,11 @@ export class OmxQuestionError extends Error {
   }
 }
 
-export async function defaultOmxQuestionProcessRunner(
+export async function defaultRcsQuestionProcessRunner(
   command: string,
   args: string[],
   options: { cwd: string; env: NodeJS.ProcessEnv },
-): Promise<OmxQuestionProcessResult> {
+): Promise<RcsQuestionProcessResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd,
@@ -96,10 +96,10 @@ export async function defaultOmxQuestionProcessRunner(
   });
 }
 
-function parseQuestionStdout(stdout: string, stderr: string, exitCode: number | null): OmxQuestionPayload {
+function parseQuestionStdout(stdout: string, stderr: string, exitCode: number | null): RcsQuestionPayload {
   const trimmed = stdout.trim();
   if (!trimmed) {
-    throw new OmxQuestionError('question_no_stdout', 'omx question did not emit a JSON response on stdout.', {
+    throw new RcsQuestionError('question_no_stdout', 'rcs question did not emit a JSON response on stdout.', {
       stdout,
       stderr,
       exitCode,
@@ -107,37 +107,37 @@ function parseQuestionStdout(stdout: string, stderr: string, exitCode: number | 
   }
 
   try {
-    return JSON.parse(trimmed) as OmxQuestionPayload;
+    return JSON.parse(trimmed) as RcsQuestionPayload;
   } catch (error) {
-    throw new OmxQuestionError(
+    throw new RcsQuestionError(
       'question_invalid_stdout',
-      `omx question emitted invalid JSON on stdout: ${(error as Error).message}`,
+      `rcs question emitted invalid JSON on stdout: ${(error as Error).message}`,
       { stdout, stderr, exitCode },
     );
   }
 }
 
-export async function runOmxQuestion(
+export async function runRcsQuestion(
   input: (Partial<QuestionInput> & { question: string }) | { questions: Array<Partial<QuestionInput> & { question: string }>; header?: string; source?: string; session_id?: string },
-  options: OmxQuestionClientOptions = {},
-): Promise<OmxQuestionSuccessPayload> {
+  options: RcsQuestionClientOptions = {},
+): Promise<RcsQuestionSuccessPayload> {
   const cwd = options.cwd ?? process.cwd();
   const env = options.env ?? process.env;
-  const omxBin = resolveOmxCliEntryPath({ argv1: options.argv1, cwd, env });
-  if (!omxBin) {
-    throw new OmxQuestionError('question_cli_not_found', 'Could not resolve the omx CLI entrypoint for blocking question execution.');
+  const rcsBin = resolveRcsCliEntryPath({ argv1: options.argv1, cwd, env });
+  if (!rcsBin) {
+    throw new RcsQuestionError('question_cli_not_found', 'Could not resolve the rcs CLI entrypoint for blocking question execution.');
   }
 
-  const runner = options.runner ?? defaultOmxQuestionProcessRunner;
+  const runner = options.runner ?? defaultRcsQuestionProcessRunner;
   const result = await runner(
     process.execPath,
-    [omxBin, 'question', '--json', '--input', JSON.stringify(input)],
+    [rcsBin, 'question', '--json', '--input', JSON.stringify(input)],
     { cwd, env },
   );
   const payload = parseQuestionStdout(result.stdout, result.stderr, result.code);
 
   if (!payload.ok) {
-    throw new OmxQuestionError(payload.error.code, payload.error.message, {
+    throw new RcsQuestionError(payload.error.code, payload.error.message, {
       payload,
       stdout: result.stdout,
       stderr: result.stderr,
@@ -146,9 +146,9 @@ export async function runOmxQuestion(
   }
 
   if (result.code !== 0) {
-    throw new OmxQuestionError(
+    throw new RcsQuestionError(
       'question_nonzero_exit',
-      `omx question returned an answer but exited with code ${result.code}.`,
+      `rcs question returned an answer but exited with code ${result.code}.`,
       { stdout: result.stdout, stderr: result.stderr, exitCode: result.code },
     );
   }

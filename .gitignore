@@ -6,7 +6,11 @@ dist/
 .omc/logs/
 .omc/research/
 .omc/
+
+# Local runtime / editor state (never commit)
 .omx/
+.rcs/
+.cursor/
 
 # Local agent/worktree artifacts (never commit)
 .claude/
@@ -18,9 +22,9 @@ dist/
 coverage/
 target/
 bin/native/
-bin/omx-explore-harness
-bin/omx-explore-harness.exe
-bin/omx-explore-harness.meta.json
+bin/rcs-explore-harness
+bin/rcs-explore-harness.exe
+bin/rcs-explore-harness.meta.json
 
 # Local runtime bridge artifacts (generated)
 authority.json

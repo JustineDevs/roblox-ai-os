@@ -1,12 +1,12 @@
 /**
- * oh-my-codex - Multi-agent orchestration for OpenAI Codex CLI
+ * roblox-ai-os-creator-skills - Multi-agent orchestration for OpenAI Codex CLI
  *
  * This package provides:
  * - 30+ specialized agent prompts as Codex CLI slash commands
  * - 35+ workflow skills as SKILL.md files
  * - AGENTS.md orchestration brain
  * - MCP servers for state management, project memory, and notepad
- * - CLI tool (omx) for setup, diagnostics, and management
+ * - CLI tool (rcs) for setup, diagnostics, and management
  * - Notification hooks for workflow tracking
  */
 

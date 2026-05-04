@@ -40,7 +40,7 @@ export const DOCUMENT_REFRESH_EXEMPTION_PREFIX = "Document-refresh: not-needed |
 const RELEASE_COLLATERAL_GLOBS = [
   "CHANGELOG.md",
   "RELEASE_BODY.md",
-  "docs/release-notes-*.md",
+  "docs/release-notes-v0.1.0.md",
   "docs/release-body-*.md",
   "docs/qa/release-readiness-*.md",
 ];
@@ -247,7 +247,7 @@ export function buildDocumentRefreshAdvisoryOutput(
 export function formatDocumentRefreshWarning(warning: DocumentRefreshWarning): string {
   const seam = warning.scope === "commit"
     ? "Bash git commit uses the staged diff only"
-    : "final handoff uses staged + unstaged changes and fresh local .omx planning/spec files";
+    : "final handoff uses staged + unstaged changes and fresh local .rcs planning/spec files";
   const ruleLines = warning.rules.map((rule) => `- ${rule.ruleId}: ${rule.description}`).join("\n");
   const pathLines = warning.triggeringPaths.slice(0, 8).map((path) => `- ${path}`).join("\n");
   const targetLines = warning.expectedTargets.slice(0, 10).map((path) => `- ${path}`).join("\n");
@@ -334,8 +334,8 @@ export function findFreshLocalPlanningTargets(
   if (triggeringPathsByRule.size === 0) return [];
 
   const localPlanningFiles = [
-    ...collectFiles(join(cwd, ".omx", "plans")),
-    ...collectFiles(join(cwd, ".omx", "specs")),
+    ...collectFiles(join(cwd, ".rcs", "plans")),
+    ...collectFiles(join(cwd, ".rcs", "specs")),
   ].map((path) => repoRelative(cwd, path));
   if (localPlanningFiles.length === 0) return [];
 

@@ -40,7 +40,7 @@ export interface OpenClawCommandGatewayConfig {
   command: string;
   /**
    * Per-command timeout in ms.
-   * Precedence: gateway timeout > OMX_OPENCLAW_COMMAND_TIMEOUT_MS > default (5000ms).
+   * Precedence: gateway timeout > RCS_OPENCLAW_COMMAND_TIMEOUT_MS > default (5000ms).
    * Runtime clamps to safe bounds.
    */
   timeout?: number;
@@ -59,7 +59,7 @@ export interface OpenClawHookMapping {
   enabled: boolean;
 }
 
-/** Top-level config schema for notifications.openclaw key in .omx-config.json */
+/** Top-level config schema for notifications.openclaw key in .rcs-config.json */
 export interface OpenClawConfig {
   /** Global enable/disable */
   enabled: boolean;

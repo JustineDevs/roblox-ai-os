@@ -33,7 +33,7 @@ Per la guida completa di integrazione (gateway, hook, verifica), vedi [English g
 ## Comando rapido di aggiornamento (jq)
 
 ```bash
-CONFIG_FILE="$HOME/.codex/.omx-config.json"
+CONFIG_FILE="$HOME/.codex/.rcs-config.json"
 
 jq '.notifications.verbosity = "verbose" |
     .notifications.openclaw.hooks["session-start"].instruction = "[session-start|exec]\nproject={{projectName}} session={{sessionId}} tmux={{tmuxSession}}\n요약: 시작 맥락 1문장\n우선순위: 지금 할 일 1~2개\n주의사항: 리스크/의존성(없으면 없음)" |

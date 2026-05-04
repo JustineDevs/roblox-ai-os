@@ -5,7 +5,7 @@ Target version: **0.14.2**
 Comparison base: **`v0.14.1..dev`**
 Verdict: **GO** ✅
 
-`0.14.2` packages the post-`0.14.1` fast-follow patch train: Korean IME drift handling for the `ulw` ultrawork shorthand, shared tmux answer-submit semantics for `omx question`, fail-closed question rendering outside attached tmux panes, background-question guidance for deep-interview, duplicate MCP sibling idle self-cleanup, session-scoped clear tombstones that suppress stale root fallback state, TypeScript/Biome baseline refresh, and release collateral alignment.
+`0.14.2` packages the post-`0.14.1` fast-follow patch train: Korean IME drift handling for the `ulw` ultrawork shorthand, shared tmux answer-submit semantics for `rcs question`, fail-closed question rendering outside attached tmux panes, background-question guidance for deep-interview, duplicate MCP sibling idle self-cleanup, session-scoped clear tombstones that suppress stale root fallback state, TypeScript/Biome baseline refresh, and release collateral alignment.
 
 ## Scope reviewed
 
@@ -15,9 +15,9 @@ Verdict: **GO** ✅
 
 ### Question / deep-interview behavior
 - `src/question/renderer.ts` — question-answer injection now reuses `buildSendPaneArgvs` for literal text delivery, isolated `C-m` submit calls, and shared newline sanitization.
-- `src/question/renderer.ts`, `src/cli/__tests__/question.test.ts`, `src/question/__tests__/renderer.test.ts` — `omx question` now fails closed outside attached tmux and proves it does not create detached tmux sessions when no visible renderer exists.
+- `src/question/renderer.ts`, `src/cli/__tests__/question.test.ts`, `src/question/__tests__/renderer.test.ts` — `rcs question` now fails closed outside attached tmux and proves it does not create detached tmux sessions when no visible renderer exists.
 - `src/question/__tests__/renderer.test.ts` — regression coverage asserts question injection matches shared tmux argv construction.
-- `skills/deep-interview/SKILL.md`, `templates/AGENTS.md`, `src/scripts/codex-native-hook.ts` — deep-interview guidance now requires waiting for background `omx question` terminals to finish and reading the JSON answer before continuing.
+- `skills/deep-interview/SKILL.md`, `templates/AGENTS.md`, `src/scripts/codex-native-hook.ts` — deep-interview guidance now requires waiting for background `rcs question` terminals to finish and reading the JSON answer before continuing.
 - `src/question/__tests__/deep-interview.test.ts` — failed question-renderer launches now clear pending deep-interview question obligations instead of leaving stale enforcement state behind.
 - `src/hooks/__tests__/deep-interview-contract.test.ts`, `src/scripts/__tests__/codex-native-hook.test.ts` — contract coverage for the shipped guidance.
 
@@ -31,11 +31,11 @@ Verdict: **GO** ✅
 
 ### Tooling / release metadata
 - `package.json`, `package-lock.json`, `tsconfig.json` — TypeScript 6.0.3 baseline and explicit Node ambient types.
-- `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md`, `RELEASE_BODY.md`, `docs/release-notes-0.14.2.md` — release metadata and notes aligned to `0.14.2`.
+- `Cargo.toml`, `Cargo.lock`, `CHANGELOG.md`, `RELEASE_BODY.md`, `docs/release-notes-v0.1.0.md` — release metadata and retained archival notes aligned to the consolidated RCS release-note surface.
 
 ## Code review evidence
 
-`$code-review` was refreshed against `git diff v0.14.1..Yeachan-Heo/dev` after `dev` advanced during release prep:
+`$code-review` was refreshed against the historical `git diff v0.14.1..dev` release-prep range after `dev` advanced during release prep:
 
 | Lane | Result | Blocking? |
 |---|---|---|
@@ -50,7 +50,7 @@ Verdict: **GO** ✅
 |---|---|---|
 | Lint gate | `npm run lint` | PASS |
 | Full Node build/test/catalog gate | `npm test` | PASS |
-| Native crates | `cargo test -p omx-explore-harness -p omx-sparkshell` | PASS |
+| Native crates | `cargo test -p rcs-explore-harness -p rcs-sparkshell` | PASS |
 | Publish-path packaging | `npm pack --dry-run` | PASS |
 
 ## Risk assessment

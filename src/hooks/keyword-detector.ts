@@ -1,10 +1,10 @@
 /**
  * Keyword Detection Engine
  *
- * In OMC/legacy OMX flows, this logic detects workflow keywords and can inject
+ * In OMC/legacy RCS flows, this logic detects workflow keywords and can inject
  * prompt-side routing guidance.
  *
- * In current OMX, native `UserPromptSubmit` is the canonical execution surface:
+ * In current RCS, native `UserPromptSubmit` is the canonical execution surface:
  * this module owns the keyword registry, runtime gating, and hook-seeded
  * skill/workflow state. AGENTS.md now carries the behavioral fallback contract
  * rather than the full keyword/state table.
@@ -16,7 +16,7 @@ import { dirname, join } from 'node:path';
 import { classifyTaskSize, isHeavyMode, type TaskSizeResult, type TaskSizeThresholds } from './task-size-detector.js';
 import { isApprovedExecutionFollowupShortcut, type FollowupMode } from '../team/followup-planner.js';
 import { isPlanningComplete, readPlanningArtifacts } from '../planning/artifacts.js';
-import { KEYWORD_TRIGGER_DEFINITIONS, compareKeywordMatches } from './keyword-registry.js';
+import { KEYWORD_TRIGGER_DEFINITIONS, compareKeywordMatches, type KeywordTriggerDefinition } from './keyword-registry.js';
 import {
   SKILL_ACTIVE_STATE_FILE,
   listActiveSkills,
@@ -316,13 +316,13 @@ function resolveSeedStateFilePath(
   if (scope !== 'root' && sessionId?.trim()) {
     return {
       absolutePath: join(stateDir, 'sessions', sessionId, `${mode}-state.json`),
-      relativePath: `.omx/state/sessions/${sessionId}/${mode}-state.json`,
+      relativePath: `.rcs/state/sessions/${sessionId}/${mode}-state.json`,
     };
   }
 
   return {
     absolutePath: join(stateDir, `${mode}-state.json`),
-    relativePath: `.omx/state/${mode}-state.json`,
+    relativePath: `.rcs/state/${mode}-state.json`,
   };
 }
 
@@ -464,7 +464,7 @@ const DEEP_INTERVIEW_MANAGEMENT_MENTION_PATTERN = /\b(?:clear|cleanup|clean\s+up
  * "team" / "swarm" require explicit orchestration phrasing so a generic
  * reference in prose doesn't spin up the skill.
  *
- * "stop" / "abort" require a bare imperative or explicit OMX mode reference so
+ * "stop" / "abort" require a bare imperative or explicit RCS mode reference so
  * test-log lines like "stop retrying" or "request aborted" do not trigger cancel.
  *
  * "parallel" requires an explicit instruction to run in parallel mode so that
@@ -492,7 +492,7 @@ const KEYWORD_INTENT_PATTERNS: Record<IntentKeyword, RegExp[]> = {
   ],
   stop: [
     /^(?:please\s+)?stop(?:\s+now)?\s*[.!]?\s*$/i,
-    /\bcancelomx\b/i,
+    /\bcancelrcs\b/i,
     /(?:^|[^\w])\$(?:stop|cancel|abort)\b/i,
     /\/(?:cancel|stop|abort)\b/i,
     /\bstop\s+(?:the\s+)?(?:agent|ralph|autopilot|team|ultrawork|execution|current\s+(?:mode|task|run))\b/i,
@@ -500,7 +500,7 @@ const KEYWORD_INTENT_PATTERNS: Record<IntentKeyword, RegExp[]> = {
   ],
   abort: [
     /^(?:please\s+)?abort(?:\s+now)?\s*[.!]?\s*$/i,
-    /\bcancelomx\b/i,
+    /\bcancelrcs\b/i,
     /(?:^|[^\w])\$(?:stop|cancel|abort)\b/i,
     /\/(?:cancel|stop|abort)\b/i,
     /\babort\s+(?:the\s+)?(?:agent|ralph|autopilot|team|ultrawork|execution|current\s+(?:mode|task|run))\b/i,
@@ -546,19 +546,48 @@ function normalizeExplicitSkillToken(token: string): string {
   return token === 'swarm' ? 'team' : token === 'ulw' ? 'ultrawork' : token;
 }
 
+const EXPLICIT_KEYWORD_DEFINITIONS = KEYWORD_TRIGGER_DEFINITIONS
+  .filter((entry) => entry.keyword.startsWith('$'))
+  .map((entry) => ({ ...entry, keyword: entry.keyword.toLowerCase() }))
+  .sort((a, b) => b.keyword.length - a.keyword.length);
+
+const EXPLICIT_NAMESPACE_PREFIXES = new Set(['rcs', 'roblox-ai-os-creator-skills']);
+
+function findExplicitKeywordDefinition(rawKeyword: string): KeywordTriggerDefinition | undefined {
+  const normalized = rawKeyword.toLowerCase();
+  const direct = EXPLICIT_KEYWORD_DEFINITIONS.find((entry) => entry.keyword === normalized);
+  if (direct) return direct;
+
+  const withoutDollar = normalized.startsWith('$') ? normalized.slice(1) : normalized;
+  if (!withoutDollar.includes(':')) {
+    const skillName = normalizeExplicitSkillToken(withoutDollar);
+    return KEYWORD_TRIGGER_DEFINITIONS.find((entry) => entry.skill.toLowerCase() === skillName);
+  }
+
+  const [prefix, ...suffixParts] = withoutDollar.split(':');
+  if (!EXPLICIT_NAMESPACE_PREFIXES.has(prefix)) return undefined;
+  const suffix = suffixParts.join(':');
+  if (!suffix) return undefined;
+
+  const suffixKeyword = `$${suffix}`;
+  const exactSuffix = EXPLICIT_KEYWORD_DEFINITIONS.find((entry) => entry.keyword === suffixKeyword);
+  if (exactSuffix) return exactSuffix;
+
+  const skillName = normalizeExplicitSkillToken(suffix);
+  return KEYWORD_TRIGGER_DEFINITIONS.find((entry) => entry.skill.toLowerCase() === skillName);
+}
+
 function parseExplicitSkillInvocations(text: string): ExplicitSkillParseResult {
   const results: KeywordMatch[] = [];
-  const regex = /(?:^|[^\w])\$(?:(?:oh-my-codex:)?([a-z][a-z0-9-]*))\b/gi;
+  const regex = /(?:^|[^\w])(\$[a-z][a-z0-9-]*(?::[a-z][a-z0-9-]*)*)\b/gi;
   let match: RegExpExecArray | null;
   let captureStarted = false;
   let lastMatchEnd = -1;
 
   while ((match = regex.exec(text)) !== null) {
-    const token = (match[1] ?? '').toLowerCase();
-    if (!token) continue;
-    const rawKeyword = match[0].slice(match[0].lastIndexOf('$')).toLowerCase();
-    const normalizedSkill = normalizeExplicitSkillToken(token);
-    const registryEntry = KEYWORD_TRIGGER_DEFINITIONS.find((entry) => entry.skill.toLowerCase() === normalizedSkill);
+    const rawKeyword = (match[1] ?? '').toLowerCase();
+    if (!rawKeyword) continue;
+    const registryEntry = findExplicitKeywordDefinition(rawKeyword);
     const matchStart = match.index + match[0].lastIndexOf('$');
     if (captureStarted) {
       const between = text.slice(lastMatchEnd, matchStart);
@@ -569,6 +598,7 @@ function parseExplicitSkillInvocations(text: string): ExplicitSkillParseResult {
     lastMatchEnd = matchStart + rawKeyword.length;
     if (!registryEntry) continue;
 
+    const normalizedSkill = normalizeExplicitSkillToken(registryEntry.skill.toLowerCase());
     if (results.some((item) => item.skill === normalizedSkill)) continue;
 
     results.push({
@@ -785,7 +815,7 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
       );
       await persistDeepInterviewModeState(input.stateDir, state, nowIso, previous, input);
     } catch (error) {
-      console.warn('[omx] warning: failed to persist keyword activation state', error);
+      console.warn('[rcs] warning: failed to persist keyword activation state', error);
     }
 
     return state;
@@ -959,7 +989,7 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
       await persistDeepInterviewModeState(input.stateDir, nextState, nowIso, previous, input);
       return nextState;
     } catch (error) {
-      console.warn('[omx] warning: failed to persist keyword activation state', error);
+      console.warn('[rcs] warning: failed to persist keyword activation state', error);
     }
 
     return workflowState;
@@ -1002,7 +1032,7 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
     await persistDeepInterviewModeState(input.stateDir, nextState, nowIso, previous, input);
     return nextState;
   } catch (error) {
-    console.warn('[omx] warning: failed to persist keyword activation state', error);
+    console.warn('[rcs] warning: failed to persist keyword activation state', error);
   }
 
   return state;
@@ -1012,7 +1042,7 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
  * Pre-execution gate — ported from OMC src/hooks/keyword-detector/index.ts
  *
  * In OMC these functions run at prompt time in bridge.ts (mandatory enforcement).
- * In OMX they generate AGENTS.md instructions and serve as test infrastructure.
+ * In RCS they generate AGENTS.md instructions and serve as test infrastructure.
  * See task-size-detector.ts for full advisory-nature documentation.
  */
 

@@ -1,7 +1,7 @@
 /**
  * Triage Feature Gate Config Reader
  *
- * Reads promptRouting.triage.enabled from codexHome()/.omx-config.json.
+ * Reads promptRouting.triage.enabled from codexHome()/.rcs-config.json.
  * Defaults to enabled when the config file is absent or the triage flag is
  * omitted from an otherwise valid config object (rollout default).
  * Fails closed (enabled: false) when the file exists but is malformed.
@@ -26,7 +26,7 @@ let cachedTriageConfig: TriageConfig | undefined;
 /**
  * Read and cache the triage feature gate config.
  *
- * Source: promptRouting.triage.enabled in codexHome()/.omx-config.json
+ * Source: promptRouting.triage.enabled in codexHome()/.rcs-config.json
  *
  * - Missing file → enabled: true, status: "defaulted" (rollout default)
  * - Valid object that omits promptRouting.triage.enabled → enabled: true, status: "defaulted"
@@ -38,7 +38,7 @@ let cachedTriageConfig: TriageConfig | undefined;
 export function readTriageConfig(): TriageConfig {
   if (cachedTriageConfig !== undefined) return cachedTriageConfig;
 
-  const path = join(codexHome(), ".omx-config.json");
+  const path = join(codexHome(), ".rcs-config.json");
 
   if (!existsSync(path)) {
     cachedTriageConfig = { enabled: true, status: "defaulted", source: "default", path };

@@ -22,7 +22,7 @@ function createMapping(projectPath: string, sessionId = 'sess-1'): SessionMappin
     messageId: 'orig-discord-msg',
     sessionId,
     tmuxPaneId: '%9',
-    tmuxSessionName: 'omx-session',
+    tmuxSessionName: 'rcs-session',
     event: 'session-idle',
     createdAt: '2026-03-20T00:00:00.000Z',
     projectPath,
@@ -43,17 +43,17 @@ describe('session-status helper', () => {
   });
 
   it('renders a bounded running summary with active subagent details', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-session-status-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-session-status-'));
     try {
       await writeSessionStart(wd, 'sess-1', { nativeSessionId: 'native-1' });
-      await writeJson(join(wd, '.omx', 'state', 'sessions', 'sess-1', 'skill-active-state.json'), {
+      await writeJson(join(wd, '.rcs', 'state', 'sessions', 'sess-1', 'skill-active-state.json'), {
         active: true,
         skill: 'ralph',
         phase: 'executing',
         updated_at: '2026-03-20T00:04:30.000Z',
         session_id: 'sess-1',
       });
-      await writeJson(join(wd, '.omx', 'state', 'sessions', 'sess-1', 'run-state.json'), {
+      await writeJson(join(wd, '.rcs', 'state', 'sessions', 'sess-1', 'run-state.json'), {
         version: 1,
         mode: 'ralph',
         active: true,
@@ -84,11 +84,11 @@ describe('session-status helper', () => {
         now: '2026-03-20T00:05:00.000Z',
       });
 
-      assert.match(status, /^Tracked OMX session status/m);
+      assert.match(status, /^Tracked RCS session status/m);
       assert.match(status, /Session: sess-1/);
       assert.match(status, /Native: native-1/);
       assert.match(status, /State: running \(ralph\/executing\)/);
-      assert.match(status, /Tmux: omx-session \/ %9/);
+      assert.match(status, /Tmux: rcs-session \/ %9/);
       assert.match(status, /Updated: 2026-03-20T00:04:30.000Z/);
       assert.match(status, /Freshness: Fresh/);
       assert.match(status, /Subagents: 4 active \(a1b2c3, d4e5f6, g7h8i9, \+1 more\)/);
@@ -98,10 +98,10 @@ describe('session-status helper', () => {
   });
 
   it('does not report prompt-seeded ralph skill-active state as running without a live run-state', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-session-status-prompt-seeded-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-session-status-prompt-seeded-'));
     try {
       await writeSessionStart(wd, 'sess-seeded', { nativeSessionId: 'native-seeded' });
-      await writeJson(join(wd, '.omx', 'state', 'sessions', 'sess-seeded', 'skill-active-state.json'), {
+      await writeJson(join(wd, '.rcs', 'state', 'sessions', 'sess-seeded', 'skill-active-state.json'), {
         active: true,
         skill: 'ralph',
         phase: 'planning',
@@ -123,11 +123,11 @@ describe('session-status helper', () => {
   });
 
   it('renders stale partial summaries with explicit unknown fields', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-session-status-stale-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-session-status-stale-'));
     try {
-      await mkdir(join(wd, '.omx', 'logs'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'logs'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'logs', 'session-history.jsonl'),
+        join(wd, '.rcs', 'logs', 'session-history.jsonl'),
         `${JSON.stringify({
           session_id: 'sess-old',
           started_at: '2026-03-20T00:00:00.000Z',
@@ -154,20 +154,20 @@ describe('session-status helper', () => {
   });
 
   it('does not report a stale tracked session as running when only raw session.json remains', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-session-status-orphaned-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-session-status-orphaned-'));
     try {
-      await writeJson(join(wd, '.omx', 'state', 'session.json'), {
+      await writeJson(join(wd, '.rcs', 'state', 'session.json'), {
         session_id: 'sess-orphaned',
         native_session_id: 'native-orphaned',
         started_at: '2026-03-20T00:00:00.000Z',
         cwd: wd,
         pid: 4242,
         pid_start_ticks: 11,
-        pid_cmdline: 'node omx',
+        pid_cmdline: 'node rcs',
       });
-      await mkdir(join(wd, '.omx', 'logs'), { recursive: true });
+      await mkdir(join(wd, '.rcs', 'logs'), { recursive: true });
       await writeFile(
-        join(wd, '.omx', 'logs', 'session-history.jsonl'),
+        join(wd, '.rcs', 'logs', 'session-history.jsonl'),
         `${JSON.stringify({
           session_id: 'sess-orphaned',
           native_session_id: 'native-orphaned',
@@ -188,7 +188,7 @@ describe('session-status helper', () => {
             cwd: wd,
             pid: 4242,
             pid_start_ticks: 11,
-            pid_cmdline: 'node omx',
+            pid_cmdline: 'node rcs',
           };
         },
         readUsableSessionStateImpl: async (projectPath) => {
@@ -207,7 +207,7 @@ describe('session-status helper', () => {
   });
 
   it('returns a bounded failure message when correlated state cannot be resolved', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-session-status-empty-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-session-status-empty-'));
     try {
       const status = await buildDiscordSessionStatusReply(createMapping(wd));
       assert.equal(status, STATUS_DATA_UNAVAILABLE_MESSAGE);
@@ -217,9 +217,9 @@ describe('session-status helper', () => {
   });
 
   it('filters root skill-active fallback to entries visible to the requested session', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-session-status-foreign-root-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-session-status-foreign-root-'));
     try {
-      await writeJson(join(wd, '.omx', 'state', 'skill-active-state.json'), {
+      await writeJson(join(wd, '.rcs', 'state', 'skill-active-state.json'), {
         active: true,
         skill: 'team',
         phase: 'running',
@@ -253,9 +253,9 @@ describe('session-status helper', () => {
   });
 
   it('ignores root skill-active fallback when all active entries belong to another session', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-session-status-root-only-foreign-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-session-status-root-only-foreign-'));
     try {
-      await writeJson(join(wd, '.omx', 'state', 'skill-active-state.json'), {
+      await writeJson(join(wd, '.rcs', 'state', 'skill-active-state.json'), {
         active: true,
         skill: 'ralph',
         phase: 'executing',

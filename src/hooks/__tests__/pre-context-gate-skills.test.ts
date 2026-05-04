@@ -26,33 +26,33 @@ const ralphSkill = readFileSync(
 describe('pre-context gate guidance in planning/execution-heavy skills', () => {
   it('ralplan documents required context snapshot intake', () => {
     assert.match(ralplanSkill, /Pre-context Intake/i);
-    assert.match(ralplanSkill, /\.omx\/context\/\{slug\}-\{timestamp\}\.md/);
+    assert.match(ralplanSkill, /\.rcs\/context\/\{slug\}-\{timestamp\}\.md/);
     assert.match(ralplanSkill, /\$deep-interview\s+--quick/i);
   });
 
   it('team documents required context snapshot gate before launch', () => {
     assert.match(teamSkill, /Pre-context Intake Gate/i);
-    assert.match(teamSkill, /\.omx\/context\/\{slug\}-\{timestamp\}\.md/);
+    assert.match(teamSkill, /\.rcs\/context\/\{slug\}-\{timestamp\}\.md/);
     assert.match(teamSkill, /\$deep-interview\s+--quick/i);
     assert.match(teamSkill, /initialize\/sync it from canonical team runtime state before proceeding/i);
   });
 
   it('autopilot documents required pre-context intake before expansion', () => {
     assert.match(autopilotSkill, /Pre-context Intake/i);
-    assert.match(autopilotSkill, /\.omx\/context\/\{slug\}-\{timestamp\}\.md/);
+    assert.match(autopilotSkill, /\.rcs\/context\/\{slug\}-\{timestamp\}\.md/);
     assert.match(autopilotSkill, /run `explore` first/i);
     assert.match(autopilotSkill, /\$deep-interview\s+--quick/i);
   });
 
   it('ralph documents required pre-context intake before execution loop', () => {
     assert.match(ralphSkill, /Pre-context intake/i);
-    assert.match(ralphSkill, /\.omx\/context\/\{task-slug\}-\{timestamp\}\.md/);
+    assert.match(ralphSkill, /\.rcs\/context\/\{task-slug\}-\{timestamp\}\.md/);
     assert.match(ralphSkill, /\$deep-interview\s+--quick/i);
   });
 
   it('ralph documents state CLI retry guidance when the MCP channel is unavailable', () => {
     assert.match(ralphSkill, /do \*\*not\*\* retry the same MCP call/i);
-    assert.match(ralphSkill, /omx state write --input '<json>' --json/i);
+    assert.match(ralphSkill, /rcs state write --input '<json>' --json/i);
     assert.match(ralphSkill, /preserving `workingDirectory` and `session_id`/i);
   });
 });

@@ -1,9 +1,9 @@
 /**
  * Hook Notification Config Reader
  *
- * Reads hookTemplates from .omx-config.json for user-customizable message templates.
- * Config is stored under the notifications.hookTemplates key in codexHome()/.omx-config.json.
- * Env var OMX_HOOK_CONFIG overrides to a separate file path.
+ * Reads hookTemplates from .rcs-config.json for user-customizable message templates.
+ * Config is stored under the notifications.hookTemplates key in codexHome()/.rcs-config.json.
+ * Env var RCS_HOOK_CONFIG overrides to a separate file path.
  */
 
 import { readFileSync, existsSync } from "fs";
@@ -22,8 +22,8 @@ let cachedConfig: HookNotificationConfig | null | undefined;
 /**
  * Read and cache the hook notification config.
  *
- * Primary source: notifications.hookTemplates key in codexHome()/.omx-config.json
- * Env var override: OMX_HOOK_CONFIG points to a separate file containing the
+ * Primary source: notifications.hookTemplates key in codexHome()/.rcs-config.json
+ * Env var override: RCS_HOOK_CONFIG points to a separate file containing the
  *   HookNotificationConfig JSON directly (used for testing and advanced overrides).
  *
  * - Returns null when config does not exist (no error)
@@ -33,7 +33,7 @@ let cachedConfig: HookNotificationConfig | null | undefined;
 export function getHookConfig(): HookNotificationConfig | null {
   if (cachedConfig !== undefined) return cachedConfig;
 
-  const envOverridePath = process.env.OMX_HOOK_CONFIG;
+  const envOverridePath = process.env.RCS_HOOK_CONFIG;
 
   if (envOverridePath) {
     // Env var: read HookNotificationConfig directly from separate file
@@ -55,15 +55,15 @@ export function getHookConfig(): HookNotificationConfig | null {
     }
   }
 
-  // Primary: read from notifications.hookTemplates in .omx-config.json
-  const OMX_CONFIG_PATH = join(codexHome(), ".omx-config.json");
-  if (!existsSync(OMX_CONFIG_PATH)) {
+  // Primary: read from notifications.hookTemplates in .rcs-config.json
+  const RCS_CONFIG_PATH = join(codexHome(), ".rcs-config.json");
+  if (!existsSync(RCS_CONFIG_PATH)) {
     cachedConfig = null;
     return null;
   }
 
   try {
-    const raw = JSON.parse(readFileSync(OMX_CONFIG_PATH, "utf-8"));
+    const raw = JSON.parse(readFileSync(RCS_CONFIG_PATH, "utf-8"));
     if (!raw || typeof raw !== "object") {
       cachedConfig = null;
       return null;
@@ -122,8 +122,8 @@ export function resolveEventTemplate(
  * Merge hook config event enabled/disabled flags into a FullNotificationConfig.
  *
  * Hook config takes precedence for event gating:
- * - hook event `enabled: false` overrides .omx-config.json event `enabled: true`
- * - Platform credentials are NOT affected (they stay in .omx-config.json)
+ * - hook event `enabled: false` overrides .rcs-config.json event `enabled: true`
+ * - Platform credentials are NOT affected (they stay in .rcs-config.json)
  */
 export function mergeHookConfigIntoNotificationConfig(
   hookConfig: HookNotificationConfig,

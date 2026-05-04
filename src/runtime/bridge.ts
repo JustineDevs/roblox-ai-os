@@ -1,9 +1,9 @@
 /**
- * TS Runtime Bridge — thin wrapper over omx-runtime binary.
+ * TS Runtime Bridge — thin wrapper over rcs-runtime binary.
  *
  * All semantic state mutations route through `execCommand()`.
  * All state queries read Rust-authored compatibility JSON files.
- * Set OMX_RUNTIME_BRIDGE=0 to disable bridge (fallback to TS-direct).
+ * Set RCS_RUNTIME_BRIDGE=0 to disable bridge (fallback to TS-direct).
  */
 
 import { execFileSync } from 'node:child_process';
@@ -109,7 +109,7 @@ export interface MailboxRecord {
 // ---------------------------------------------------------------------------
 
 /**
- * Raised when the omx-runtime binary returns output that fails JSON decoding.
+ * Raised when the rcs-runtime binary returns output that fails JSON decoding.
  *
  * Distinguishing parse failure from spawn failure (which `run()` already wraps
  * in a generic `Error`) lets callers — e.g. dispatch loops in
@@ -141,16 +141,16 @@ export interface RuntimeBinaryDiscoveryOptions {
 
 export function resolveRuntimeBinaryPath(options: RuntimeBinaryDiscoveryOptions = {}): string {
   const exists = options.exists ?? existsSync;
-  const envOverride = process.env.OMX_RUNTIME_BINARY?.trim();
+  const envOverride = process.env.RCS_RUNTIME_BINARY?.trim();
   if (envOverride) return envOverride;
 
-  const workspaceDebug = options.debugPath ?? resolve(__bridge_dirname, '../../target/debug/omx-runtime');
+  const workspaceDebug = options.debugPath ?? resolve(__bridge_dirname, '../../target/debug/rcs-runtime');
   if (exists(workspaceDebug)) return workspaceDebug;
 
-  const workspaceRelease = options.releasePath ?? resolve(__bridge_dirname, '../../target/release/omx-runtime');
+  const workspaceRelease = options.releasePath ?? resolve(__bridge_dirname, '../../target/release/rcs-runtime');
   if (exists(workspaceRelease)) return workspaceRelease;
 
-  return options.fallbackBinary ?? 'omx-runtime';
+  return options.fallbackBinary ?? 'rcs-runtime';
 }
 
 export function resolveBridgeStateDir(cwd: string, env: NodeJS.ProcessEnv = process.env): string {
@@ -163,12 +163,12 @@ export class RuntimeBridge {
   private enabled: boolean;
 
   constructor(options: { stateDir?: string; binaryPath?: string } = {}) {
-    this.enabled = process.env.OMX_RUNTIME_BRIDGE !== '0';
+    this.enabled = String(process.env.RCS_RUNTIME_BRIDGE ?? '').trim() !== '0';
     this.stateDir = options.stateDir;
     this.binaryPath = options.binaryPath ?? resolveRuntimeBinaryPath();
   }
 
-  /** Whether the bridge is enabled (OMX_RUNTIME_BRIDGE != '0'). */
+  /** Whether the bridge is enabled (RCS_RUNTIME_BRIDGE != '0'). */
   isEnabled(): boolean {
     return this.enabled;
   }
@@ -189,7 +189,7 @@ export class RuntimeBridge {
       return JSON.parse(stdout) as RuntimeEvent;
     } catch (cause) {
       throw new RuntimeBridgeError(
-        `omx-runtime exec returned non-JSON output for ${cmd.command}`,
+        `rcs-runtime exec returned non-JSON output for ${cmd.command}`,
         { command: cmd.command, stdoutPreview: stdout.slice(0, 200), cause },
       );
     }
@@ -205,7 +205,7 @@ export class RuntimeBridge {
     try {
       return JSON.parse(stdout) as RuntimeSnapshot;
     } catch (cause) {
-      throw new RuntimeBridgeError('omx-runtime snapshot returned non-JSON output', {
+      throw new RuntimeBridgeError('rcs-runtime snapshot returned non-JSON output', {
         command: 'snapshot',
         stdoutPreview: stdout.slice(0, 200),
         cause,
@@ -291,7 +291,7 @@ export class RuntimeBridge {
       );
       if (missing.length > 0) {
         throw new Error(
-          `omx-runtime schema missing commands: ${missing.join(', ')}. ` +
+          `rcs-runtime schema missing commands: ${missing.join(', ')}. ` +
           `Bridge types may be out of sync with the Rust binary.`,
         );
       }
@@ -315,7 +315,7 @@ export class RuntimeBridge {
     } catch (err: unknown) {
       const execErr = err as { stderr?: string; message?: string };
       const stderr = execErr.stderr?.trim() ?? execErr.message ?? 'unknown error';
-      throw new Error(`omx-runtime ${args[0]} failed: ${stderr}`);
+      throw new Error(`rcs-runtime ${args[0]} failed: ${stderr}`);
     }
   }
 }
@@ -337,5 +337,5 @@ export function getDefaultBridge(stateDir?: string): RuntimeBridge {
 }
 
 export function isBridgeEnabled(): boolean {
-  return process.env.OMX_RUNTIME_BRIDGE !== '0';
+  return String(process.env.RCS_RUNTIME_BRIDGE ?? '').trim() !== '0';
 }

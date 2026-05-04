@@ -19,21 +19,21 @@ describe('synthesizeDelegationPlan', () => {
   let originalFrontierModel: string | undefined;
 
   beforeEach(() => {
-    originalChildModel = process.env.OMX_TEAM_CHILD_MODEL;
-    originalFrontierModel = process.env.OMX_DEFAULT_FRONTIER_MODEL;
-    delete process.env.OMX_TEAM_CHILD_MODEL;
-    delete process.env.OMX_DEFAULT_FRONTIER_MODEL;
+    originalChildModel = process.env.RCS_TEAM_CHILD_MODEL;
+    originalFrontierModel = process.env.RCS_DEFAULT_FRONTIER_MODEL;
+    delete process.env.RCS_TEAM_CHILD_MODEL;
+    delete process.env.RCS_DEFAULT_FRONTIER_MODEL;
   });
 
   afterEach(() => {
-    if (typeof originalChildModel === 'string') process.env.OMX_TEAM_CHILD_MODEL = originalChildModel;
-    else delete process.env.OMX_TEAM_CHILD_MODEL;
-    if (typeof originalFrontierModel === 'string') process.env.OMX_DEFAULT_FRONTIER_MODEL = originalFrontierModel;
-    else delete process.env.OMX_DEFAULT_FRONTIER_MODEL;
+    if (typeof originalChildModel === 'string') process.env.RCS_TEAM_CHILD_MODEL = originalChildModel;
+    else delete process.env.RCS_TEAM_CHILD_MODEL;
+    if (typeof originalFrontierModel === 'string') process.env.RCS_DEFAULT_FRONTIER_MODEL = originalFrontierModel;
+    else delete process.env.RCS_DEFAULT_FRONTIER_MODEL;
   });
 
   it('auto-delegates broad investigation tasks to gpt-5.4-mini child agents', () => {
-    process.env.OMX_DEFAULT_FRONTIER_MODEL = 'frontier-expensive';
+    process.env.RCS_DEFAULT_FRONTIER_MODEL = 'frontier-expensive';
     const plan = synthesizeDelegationPlan(task({
       subject: 'Investigate flaky runtime behavior',
       description: 'Search the repo, debug root cause, and propose tests across runtime modules',
@@ -61,7 +61,7 @@ describe('synthesizeDelegationPlan', () => {
   });
 
   it('falls back to optional delegation for ordinary implementation work and honors child override', () => {
-    process.env.OMX_TEAM_CHILD_MODEL = 'standard-child-override';
+    process.env.RCS_TEAM_CHILD_MODEL = 'standard-child-override';
     const plan = synthesizeDelegationPlan(task({
       subject: 'Add parser option',
       description: 'Implement parser option and update docs',

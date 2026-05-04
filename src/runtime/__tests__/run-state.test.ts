@@ -24,7 +24,7 @@ describe('run state sync', () => {
   });
 
   it('writes canonical askuserQuestion lifecycle to run-state.json during sync', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-run-state-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-run-state-'));
     try {
       const synced = await syncRunStateFromModeState(
         {
@@ -37,7 +37,7 @@ describe('run state sync', () => {
       );
 
       const persisted = JSON.parse(
-        await readFile(join(wd, '.omx', 'state', 'run-state.json'), 'utf-8'),
+        await readFile(join(wd, '.rcs', 'state', 'run-state.json'), 'utf-8'),
       ) as typeof synced;
 
       assert.equal(synced.outcome, 'blocked_on_user');

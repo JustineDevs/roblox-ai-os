@@ -49,7 +49,7 @@ describe('agents/definitions', () => {
     }
   });
 
-  it('keeps the installable agent model split aligned with the OMX subagent matrix', () => {
+  it('keeps the installable agent model split aligned with the RCS subagent matrix', () => {
     assert.equal(AGENT_DEFINITIONS.architect.modelClass, 'frontier');
     assert.equal(AGENT_DEFINITIONS['security-reviewer'].modelClass, 'frontier');
     assert.equal(AGENT_DEFINITIONS['test-engineer'].modelClass, 'frontier');

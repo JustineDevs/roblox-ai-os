@@ -1,4 +1,4 @@
-oh-my-codex doctor
+roblox-ai-os-creator-skills doctor
 ==================
 
 Resolved setup scope: user
@@ -7,15 +7,15 @@ Resolved setup scope: user
   [OK] Node.js: <NODE_VERSION>
   [EXPLORE_HARNESS_STATUS]
   [OK] Codex home: <CODEX_HOME>
-  [!!] Config: config.toml exists but no OMX entries yet (expected before first setup; run "omx setup --force" once)
+  [!!] Config: config.toml exists but no RCS entries yet (expected before first setup; run "rcs setup --force" once)
   [OK] Native hooks: hooks.json not found yet (expected before first setup)
   [OK] Explore routing: enabled by default
   [!!] Prompts: prompts directory not found
   [!!] Skills: skills directory not found
   [OK] Legacy skill roots: no ~/.agents/skills overlap detected
-  [!!] AGENTS.md: not found in <CODEX_HOME>/AGENTS.md (run omx setup --scope user)
+  [!!] AGENTS.md: not found in <CODEX_HOME>/AGENTS.md (run rcs setup --scope user)
   [!!] State dir: <REPO_STATE_DIR> (not created yet)
-  [!!] MCP Servers: 1 servers but no OMX servers yet (expected before first setup; run "omx setup --force" once)
+  [!!] MCP Servers: 1 servers but no RCS servers yet (expected before first setup; run "rcs setup --force" once)
   [OK] Prompt triage: config: enabled (default)
 
 Results: <RESULTS>

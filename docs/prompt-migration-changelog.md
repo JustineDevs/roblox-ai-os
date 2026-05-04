@@ -4,7 +4,7 @@
 
 - Migration window: `e21cb5e` -> `ff7ee14`
 - Surface: `prompts/*.md` (30 files)
-- Goal: document the prior XML-to-Markdown migration while reaffirming that prompt files remain the canonical XML-tagged subagent role surfaces for OMX.
+- Goal: document the prior XML-to-Markdown migration while reaffirming that prompt files remain the canonical XML-tagged subagent role surfaces for RCS.
 
 ## Global Changes (Applied to All Prompt Files)
 
@@ -12,7 +12,7 @@
 - Replaced wrapper tags such as `<Agent_Prompt>`, `<Role>`, `<Constraints>`, `<Output_Format>`, `<Final_Checklist>` with Markdown section headings.
 - Flattened nested XML-like sections into readable Markdown bullets/numbered steps.
 - Kept role semantics, tool usage intent, guardrails, and checklist expectations functionally equivalent.
-- Important current-state clarification: although the prompt text is now Markdown-first, each file in `prompts/*.md` is still the canonical XML-tagged subagent role surface consumed by OMX install/generation flows.
+- Important current-state clarification: although the prompt text is now Markdown-first, each file in `prompts/*.md` is still the canonical XML-tagged subagent role surface consumed by RCS install/generation flows.
 
 ## Behavior Notes
 
@@ -66,7 +66,7 @@
 
 ### Summary
 
-These files are the instruction root that OMX expects Codex to follow across a workspace.
+These files are the instruction root that RCS expects Codex to follow across a workspace.
 Changes here are primarily about aligning instructions with Codex CLI tool contracts.
 
 ### Key Deltas
@@ -94,8 +94,8 @@ Changes here are primarily about aligning instructions with Codex CLI tool contr
   - file path now uses `tasks/task-<id>.json`
   - API id rule now explicitly requires bare id `task_id: "<id>"` (never `"task-<id>"`).
 - Marker contracts remain unchanged:
-  - `<!-- OMX:RUNTIME:START --> ... <!-- OMX:RUNTIME:END -->`
-  - `<!-- OMX:TEAM:WORKER:START --> ... <!-- OMX:TEAM:WORKER:END -->`
+  - `<!-- RCS:RUNTIME:START --> ... <!-- RCS:RUNTIME:END -->`
+  - `<!-- RCS:TEAM:WORKER:START --> ... <!-- RCS:TEAM:WORKER:END -->`
 
 Behavior note: this follow-up is additive and wording-focused; no task-state model or MCP API contract changes were introduced.
 
@@ -113,7 +113,7 @@ Skill docs are operational runbooks. The migration focused on:
 ### Behavior Notes
 
 - These are documentation / instruction changes; they do not directly change runtime logic.
-- One meaningful correction was made: the "agent teams" enablement guidance in `skills/omx-setup/SKILL.md` was updated to enable Codex features via `~/.codex/config.toml` rather than legacy `settings.json` env vars.
+- One meaningful correction was made: the "agent teams" enablement guidance in `skills/rcs-setup/SKILL.md` was updated to enable Codex features via `~/.codex/config.toml` rather than legacy `settings.json` env vars.
 
 ### Per-File Matrix
 
@@ -128,7 +128,7 @@ Skill docs are operational runbooks. The migration focused on:
 | `skills/frontend-ui-ux/SKILL.md` | 2 | 2 | Codex path/terminology normalization; examples updated to Codex-first conventions. | No direct runtime behavior change; instruction correctness improved. |
 | `skills/help/SKILL.md` | 1 | 1 | Codex path/terminology normalization; examples updated to Codex-first conventions. | No direct runtime behavior change; instruction correctness improved. |
 | `skills/learner/SKILL.md` | 5 | 5 | Codex path/terminology normalization; examples updated to Codex-first conventions. | No direct runtime behavior change; instruction correctness improved. |
-| `skills/omx-setup/SKILL.md` | 144 | 156 | Codex path/terminology normalization; examples updated to Codex-first conventions. | No direct runtime behavior change; instruction correctness improved. |
+| `skills/rcs-setup/SKILL.md` | 144 | 156 | Codex path/terminology normalization; examples updated to Codex-first conventions. | No direct runtime behavior change; instruction correctness improved. |
 | `skills/plan/SKILL.md` | 1 | 1 | Codex path/terminology normalization; examples updated to Codex-first conventions. | No direct runtime behavior change; instruction correctness improved. |
 | `skills/project-session-manager/SKILL.md` | 5 | 5 | Codex path/terminology normalization; examples updated to Codex-first conventions. | No direct runtime behavior change; instruction correctness improved. |
 | `skills/release/SKILL.md` | 3 | 3 | Codex path/terminology normalization; examples updated to Codex-first conventions. | No direct runtime behavior change; instruction correctness improved. |
@@ -141,7 +141,7 @@ Skill docs are operational runbooks. The migration focused on:
 
 ### Hotspots Worth Reviewing
 
-- `skills/omx-setup/SKILL.md`: largest edit surface; includes team enablement guidance (`~/.codex/config.toml` `[features]` flags) and teammate display preference storage (`~/.codex/.omx-config.json`).
+- `skills/rcs-setup/SKILL.md`: largest edit surface; includes team enablement guidance (`~/.codex/config.toml` `[features]` flags) and teammate display preference storage (`~/.codex/.rcs-config.json`).
 - `skills/doctor/SKILL.md`: updated hook/config inspection language; still contains optional legacy remediation guidance.
 - `skills/autopilot/SKILL.md`, `skills/research/SKILL.md`, `skills/ultrapilot/SKILL.md`: config examples updated to TOML.
 

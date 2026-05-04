@@ -1,5 +1,5 @@
 /**
- * omx setup - Automated installation of oh-my-codex
+ * rcs setup - Automated installation of Roblox Creator Skills
  * Installs skills, prompts, MCP servers config, and AGENTS.md
  */
 
@@ -25,22 +25,22 @@ import {
 	codexPromptsDir,
 	codexAgentsDir,
 	userSkillsDir,
-	omxStateDir,
+	rcsStateDir,
 	detectLegacySkillRootOverlap,
-	omxPlansDir,
-	omxLogsDir,
+	rcsPlansDir,
+	rcsLogsDir,
 } from "../utils/paths.js";
 import {
 	buildMergedConfig,
 	getRootModelName,
-	hasLegacyOmxTeamRunTable,
-	stripExistingOmxBlocks,
+	hasLegacyRcsTeamRunTable,
+	stripExistingRcsSeededBlocks,
 	stripExistingSharedMcpRegistryBlock,
-	stripOmxEnvSettings,
-	stripOmxFeatureFlags,
-	stripOmxSeededBehavioralDefaults,
+	stripRcsSeededEnvSettings,
+	stripRcsSeededFeatureFlags,
+	stripRcsSeededBehavioralDefaults,
 	upsertCodexHooksFeatureFlag,
-	OMX_DEVELOPER_INSTRUCTIONS,
+	RCS_DEVELOPER_INSTRUCTIONS,
 } from "../config/generator.js";
 import { mergeManagedCodexHooksConfig } from "../config/codex-hooks.js";
 import {
@@ -65,8 +65,8 @@ import { tryReadCatalogManifest } from "../catalog/reader.js";
 import { DEFAULT_FRONTIER_MODEL } from "../config/models.js";
 import {
 	addGeneratedAgentsMarker,
-	hasOmxManagedAgentsSections,
-	isOmxGeneratedAgentsMd,
+	hasRcsManagedAgentsSections,
+	isRcsGeneratedAgentsMd,
 	upsertManagedAgentsBlock,
 } from "../utils/agents-md.js";
 import { DEFAULT_HUD_CONFIG, type HudPreset } from "../hud/types.js";
@@ -80,9 +80,9 @@ import {
 	type SetupScope,
 } from "./setup-preferences.js";
 import {
-	OMX_LOCAL_MARKETPLACE_NAME,
-	resolvePackagedOmxMarketplace,
-	upsertLocalOmxMarketplaceRegistration,
+	RCS_LOCAL_MARKETPLACE_NAME,
+	resolvePackagedRcsMarketplace,
+	upsertLocalRcsMarketplaceRegistration,
 } from "./plugin-marketplace.js";
 
 async function resolveStatusLinePresetForSetup(
@@ -92,7 +92,7 @@ async function resolveStatusLinePresetForSetup(
 	if (options.force) {
 		return DEFAULT_HUD_CONFIG.statusLine.preset;
 	}
-	const path = join(projectRoot, ".omx", "hud-config.json");
+	const path = join(projectRoot, ".rcs", "hud-config.json");
 	if (!existsSync(path)) return undefined;
 	try {
 		const raw = JSON.parse(await readFile(path, "utf-8")) as {
@@ -175,7 +175,7 @@ interface SetupBackupContext {
 
 interface ManagedConfigResult {
 	finalConfig: string;
-	omxManagesTui: boolean;
+	rcsManagesTui: boolean;
 	repairedLegacyTeamRunTable: boolean;
 }
 
@@ -190,7 +190,7 @@ export interface SkillFrontmatterMetadata {
 }
 
 const PROJECT_GITIGNORE_ENTRIES = [
-	".omx/",
+	".rcs/",
 	".codex/*",
 	"!.codex/agents/",
 	"!.codex/agents/**",
@@ -282,12 +282,12 @@ function getBackupContext(
 	const timestamp = new Date().toISOString().replace(/[:]/g, "-");
 	if (scope === "project") {
 		return {
-			backupRoot: join(projectRoot, ".omx", "backups", "setup", timestamp),
+			backupRoot: join(projectRoot, ".rcs", "backups", "setup", timestamp),
 			baseRoot: projectRoot,
 		};
 	}
 	return {
-		backupRoot: join(homedir(), ".omx", "backups", "setup", timestamp),
+		backupRoot: join(homedir(), ".rcs", "backups", "setup", timestamp),
 		baseRoot: homedir(),
 	};
 }
@@ -450,7 +450,7 @@ function rewriteInstalledSkillDescriptionBadge(
 	filePath = "SKILL.md",
 ): string {
 	const metadata = parseSkillFrontmatter(content, filePath);
-	const badgePrefix = "[OMX] ";
+	const badgePrefix = "[RCS] ";
 	const displayDescription = metadata.description.startsWith(badgePrefix)
 		? metadata.description
 		: `${badgePrefix}${metadata.description}`;
@@ -576,10 +576,10 @@ async function promptForSetupInstallMode(
 	try {
 		console.log("Select user-scope skill delivery mode:");
 		console.log(
-			`  1) legacy${defaultMode === "legacy" ? " (default)" : ""} — install/update OMX skills in the resolved user skill root`,
+			`  1) legacy${defaultMode === "legacy" ? " (default)" : ""} — install/update RCS skills in the resolved user skill root`,
 		);
 		console.log(
-			`  2) plugin${defaultMode === "plugin" ? " (default)" : ""} — rely on Codex plugin discovery and clean up matching legacy OMX-managed setup artifacts`,
+			`  2) plugin${defaultMode === "plugin" ? " (default)" : ""} — rely on Codex plugin discovery and clean up matching legacy RCS-managed setup artifacts`,
 		);
 		const defaultChoice = defaultMode === "plugin" ? "2" : "1";
 		const answer = (
@@ -621,7 +621,7 @@ async function promptForPersistedSetupReview(
 		output: process.stdout,
 	});
 	try {
-		console.log("Existing OMX setup preferences detected:");
+		console.log("Existing RCS setup preferences detected:");
 		console.log(`  ${formatPersistedSetupPreferenceSummary(preferences)}`);
 		console.log("  1) keep   — reuse these choices for this setup run");
 		console.log(
@@ -707,7 +707,7 @@ async function promptForPluginAgentsMdDefault(
 	try {
 		const answer = (
 			await rl.question(
-				`Plugin mode: install OMX AGENTS.md defaults at "${destinationPath}"? [y/N]: `,
+				`Plugin mode: install RCS AGENTS.md defaults at "${destinationPath}"? [y/N]: `,
 			)
 		)
 			.trim()
@@ -731,7 +731,7 @@ async function promptForPluginDeveloperInstructionsDefault(
 	try {
 		const answer = (
 			await rl.question(
-				`Plugin mode: add OMX developer_instructions defaults to "${configPath}"? [y/N]: `,
+				`Plugin mode: add RCS developer_instructions defaults to "${configPath}"? [y/N]: `,
 			)
 		)
 			.trim()
@@ -755,7 +755,7 @@ async function promptForPluginDeveloperInstructionsOverwrite(
 	try {
 		const answer = (
 			await rl.question(
-				`Plugin mode: overwrite existing developer_instructions in "${configPath}" with OMX defaults? [y/N]: `,
+				`Plugin mode: overwrite existing developer_instructions in "${configPath}" with RCS defaults? [y/N]: `,
 			)
 		)
 			.trim()
@@ -813,7 +813,7 @@ async function readPluginManifestName(
 	}
 }
 
-async function discoverOmxPluginCacheDir(
+async function discoverRcsPluginCacheDir(
 	cacheRoot = join(codexHome(), "plugins", "cache"),
 ): Promise<string | null> {
 	if (!existsSync(cacheRoot)) return null;
@@ -830,7 +830,7 @@ async function discoverOmxPluginCacheDir(
 		const manifestPath = join(current.path, ".codex-plugin", "plugin.json");
 		if (existsSync(manifestPath)) {
 			const name = await readPluginManifestName(manifestPath);
-			if (name === "oh-my-codex") {
+			if (name === "roblox-ai-os-creator-skills") {
 				return current.path;
 			}
 		}
@@ -883,7 +883,7 @@ async function resolveSetupInstallMode(
 
 	if (scope !== "user") return null;
 
-	const discoveredPluginCacheDir = await discoverOmxPluginCacheDir();
+	const discoveredPluginCacheDir = await discoverRcsPluginCacheDir();
 	const defaultMode =
 		persistedReviewDecision === "review" && persisted?.installMode
 			? persisted.installMode
@@ -897,7 +897,7 @@ async function resolveSetupInstallMode(
 	) {
 		if (discoveredPluginCacheDir) {
 			console.log(
-				`Detected installed oh-my-codex Codex plugin cache at ${discoveredPluginCacheDir}.`,
+				`Detected installed roblox-ai-os-creator-skills Codex plugin cache at ${discoveredPluginCacheDir}.`,
 			);
 		}
 		const installMode = installModePrompt
@@ -932,7 +932,7 @@ function shouldAddProjectGitignoreEntry(
 ): boolean {
 	if (hasGitignoreEntry(content, entry)) return false;
 
-	if (entry === ".omx/" && isProjectPathIgnoredByGit(projectRoot, entry)) {
+	if (entry === ".rcs/" && isProjectPathIgnoredByGit(projectRoot, entry)) {
 		return false;
 	}
 
@@ -1105,12 +1105,12 @@ async function cleanupPluginModeLegacyNativeAgents(
 		const installedToml = await readFile(dst, "utf-8");
 		if (
 			installedToml !== expectedToml &&
-			!isGeneratedOmxNativeAgentToml(installedToml, name)
+			!isGeneratedRcsNativeAgentToml(installedToml, name)
 		) {
 			summary.skipped += 1;
 			if (options.verbose) {
 				console.log(
-					`  skipped legacy native agent cleanup for ${name}.toml: installed content is not an OMX-generated native agent`,
+					`  skipped legacy native agent cleanup for ${name}.toml: installed content is not an RCS-generated native agent`,
 				);
 			}
 			continue;
@@ -1156,7 +1156,7 @@ function stripPluginModeLegacyRootDefaults(config: string): string {
 		if (
 			index < boundary &&
 			line.trim() ===
-				"# oh-my-codex top-level settings (must be before any [table])"
+				"# RCS top-level settings (must be before any [table])"
 		) {
 			continue;
 		}
@@ -1175,7 +1175,7 @@ function stripPluginModeLegacyRootDefaults(config: string): string {
 		if (
 			index < boundary &&
 			/^\s*developer_instructions\s*=/.test(line) &&
-			line.includes("You have oh-my-codex installed.")
+			line.includes("You have RCS installed")
 		) {
 			continue;
 		}
@@ -1230,7 +1230,7 @@ async function ensurePluginMarketplaceRegistration(
 	summary: SetupCategorySummary,
 	options: Pick<SetupOptions, "dryRun" | "verbose">,
 ): Promise<"updated" | "unchanged" | "unavailable"> {
-	const packagedMarketplace = await resolvePackagedOmxMarketplace(pkgRoot);
+	const packagedMarketplace = await resolvePackagedRcsMarketplace(pkgRoot);
 	if (!packagedMarketplace) {
 		summary.skipped += 1;
 		return "unavailable";
@@ -1239,7 +1239,7 @@ async function ensurePluginMarketplaceRegistration(
 	const existingConfig = existsSync(configPath)
 		? await readFile(configPath, "utf-8")
 		: "";
-	const nextConfig = upsertLocalOmxMarketplaceRegistration(
+	const nextConfig = upsertLocalRcsMarketplaceRegistration(
 		existingConfig,
 		pkgRoot,
 	);
@@ -1262,7 +1262,7 @@ async function ensurePluginMarketplaceRegistration(
 	summary.updated += 1;
 	if (options.verbose) {
 		console.log(
-			`  ${options.dryRun ? "would register" : "registered"} local Codex plugin marketplace ${OMX_LOCAL_MARKETPLACE_NAME} from ${pkgRoot}`,
+			`  ${options.dryRun ? "would register" : "registered"} local Codex plugin marketplace ${RCS_LOCAL_MARKETPLACE_NAME} from ${pkgRoot}`,
 		);
 	}
 	return "updated";
@@ -1336,7 +1336,7 @@ async function applyPluginDeveloperInstructionsDefault(
 	const existing = existsSync(configPath)
 		? await readFile(configPath, "utf-8")
 		: "";
-	const line = `developer_instructions = ${JSON.stringify(OMX_DEVELOPER_INSTRUCTIONS)}`;
+	const line = `developer_instructions = ${JSON.stringify(RCS_DEVELOPER_INSTRUCTIONS)}`;
 	const hasExistingDeveloperInstructions = rootHasTomlKey(
 		existing,
 		"developer_instructions",
@@ -1387,12 +1387,12 @@ async function cleanupPluginModeLegacyConfig(
 
 	const original = await readFile(configPath, "utf-8");
 	let config = original;
-	config = stripExistingOmxBlocks(config).cleaned;
+	config = stripExistingRcsSeededBlocks(config).cleaned;
 	config = stripExistingSharedMcpRegistryBlock(config).cleaned;
 	config = stripPluginModeLegacyRootDefaults(config);
-	config = stripOmxSeededBehavioralDefaults(config);
-	config = stripOmxFeatureFlags(config);
-	config = stripOmxEnvSettings(config);
+	config = stripRcsSeededBehavioralDefaults(config);
+	config = stripRcsSeededFeatureFlags(config);
+	config = stripRcsSeededEnvSettings(config);
 	config = config.trim();
 	const nextConfig = config.length > 0 ? `${config}\n` : "";
 
@@ -1410,7 +1410,7 @@ async function cleanupPluginModeLegacyConfig(
 	}
 	if (options.verbose) {
 		console.log(
-			`  ${options.dryRun ? "would clean" : nextConfig.length === 0 ? "removed" : "cleaned"} legacy OMX config ${basename(configPath)}`,
+			`  ${options.dryRun ? "would clean" : nextConfig.length === 0 ? "removed" : "cleaned"} legacy RCS config ${basename(configPath)}`,
 		);
 	}
 	return true;
@@ -1424,7 +1424,7 @@ async function cleanupPluginModeLegacyAgentsMd(
 	if (!existsSync(agentsMdPath)) return false;
 
 	const content = await readFile(agentsMdPath, "utf-8");
-	if (!isOmxGeneratedAgentsMd(content)) return false;
+	if (!isRcsGeneratedAgentsMd(content)) return false;
 
 	if (await ensureBackup(agentsMdPath, true, backupContext, options)) {
 		// backup created for pre-existing AGENTS.md
@@ -1434,7 +1434,7 @@ async function cleanupPluginModeLegacyAgentsMd(
 	}
 	if (options.verbose) {
 		console.log(
-			`  ${options.dryRun ? "would remove" : "removed"} legacy OMX-generated AGENTS.md`,
+			`  ${options.dryRun ? "would remove" : "removed"} legacy RCS-generated AGENTS.md`,
 		);
 	}
 	return true;
@@ -1501,7 +1501,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 	);
 	const scopeDirs = resolveScopeDirectories(resolvedScope.scope, projectRoot);
 	const scopeSourceMessage =
-		resolvedScope.source === "persisted" ? " (from .omx/setup-scope.json)" : "";
+		resolvedScope.source === "persisted" ? " (from .rcs/setup-scope.json)" : "";
 	const backupContext = getBackupContext(resolvedScope.scope, projectRoot);
 	const isPluginInstallMode = resolvedInstallMode?.installMode === "plugin";
 	const pluginAgentsMdDst =
@@ -1521,7 +1521,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 			: await promptForPluginAgentsMdDefault(pluginAgentsMdDst)
 		: false;
 
-	console.log("oh-my-codex setup");
+	console.log("RCS setup");
 	console.log("=================\n");
 	console.log(
 		`Using setup scope: ${resolvedScope.scope}${scopeSourceMessage}\n`,
@@ -1529,7 +1529,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 	if (resolvedInstallMode) {
 		const installModeSourceMessage =
 			resolvedInstallMode.source === "persisted"
-				? " (from .omx/setup-scope.json)"
+				? " (from .rcs/setup-scope.json)"
 				: "";
 		console.log(
 			`Using setup install mode: ${resolvedInstallMode.installMode}${installModeSourceMessage}\n`,
@@ -1541,18 +1541,18 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 	const dirs = isPluginInstallMode
 		? [
 				scopeDirs.codexHomeDir,
-				omxStateDir(projectRoot),
-				omxPlansDir(projectRoot),
-				omxLogsDir(projectRoot),
+				rcsStateDir(projectRoot),
+				rcsPlansDir(projectRoot),
+				rcsLogsDir(projectRoot),
 			]
 		: [
 				scopeDirs.codexHomeDir,
 				scopeDirs.promptsDir,
 				scopeDirs.skillsDir,
 				scopeDirs.nativeAgentsDir,
-				omxStateDir(projectRoot),
-				omxPlansDir(projectRoot),
-				omxLogsDir(projectRoot),
+				rcsStateDir(projectRoot),
+				rcsPlansDir(projectRoot),
+				rcsLogsDir(projectRoot),
 			];
 	for (const dir of dirs) {
 		if (!dryRun) {
@@ -1585,11 +1585,11 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 		);
 		if (gitignoreResult === "created") {
 			console.log(
-				"  Created .gitignore with OMX project ignore rules so local runtime state stays out of source control while .codex agents, skills, and prompts remain trackable.\n",
+				"  Created .gitignore with RCS project ignore rules so local runtime state stays out of source control while .codex agents, skills, and prompts remain trackable.\n",
 			);
 		} else if (gitignoreResult === "updated") {
 			console.log(
-				"  Updated .gitignore with OMX project ignore rules so local runtime state stays out of source control while .codex agents, skills, and prompts remain trackable.\n",
+				"  Updated .gitignore with RCS project ignore rules so local runtime state stays out of source control while .codex agents, skills, and prompts remain trackable.\n",
 			);
 		}
 	}
@@ -1611,8 +1611,8 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 			);
 			console.log(
 				summary.prompts.removed > 0
-					? `  ${dryRun ? "Would archive and remove" : "Archived and removed"} ${summary.prompts.removed} legacy OMX-managed prompt file(s).\n`
-					: "  Prompt refresh skipped; no legacy OMX-managed prompt files found.\n",
+					? `  ${dryRun ? "Would archive and remove" : "Archived and removed"} ${summary.prompts.removed} legacy RCS-managed prompt file(s).\n`
+					: "  Prompt refresh skipped; no legacy RCS-managed prompt files found.\n",
 			);
 		} else {
 			summary.prompts = await installPrompts(
@@ -1672,11 +1672,11 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 			}
 			if (cleanup.removedSkillNames.length > 0) {
 				console.log(
-					`  ${dryRun ? "Would remove" : "Removed"} ${cleanup.removedSkillNames.length} legacy OMX-managed skill director${cleanup.removedSkillNames.length === 1 ? "y" : "ies"}.`,
+					`  ${dryRun ? "Would remove" : "Removed"} ${cleanup.removedSkillNames.length} legacy RCS-managed skill director${cleanup.removedSkillNames.length === 1 ? "y" : "ies"}.`,
 				);
 			} else {
 				console.log(
-					"  Skill refresh skipped; no removable legacy OMX-managed skill directories found.",
+					"  Skill refresh skipped; no removable legacy RCS-managed skill directories found.",
 				);
 			}
 		} else {
@@ -1711,8 +1711,8 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 		);
 		console.log(
 			summary.nativeAgents.removed > 0
-				? `  ${dryRun ? "Would archive and remove" : "Archived and removed"} ${summary.nativeAgents.removed} legacy OMX-managed native agent config(s).\n`
-				: "  Native agent refresh skipped; no legacy OMX-managed native agent configs found.\n",
+				? `  ${dryRun ? "Would archive and remove" : "Archived and removed"} ${summary.nativeAgents.removed} legacy RCS-managed native agent config(s).\n`
+				: "  Native agent refresh skipped; no legacy RCS-managed native agent configs found.\n",
 		);
 	} else {
 		summary.nativeAgents = await refreshNativeAgentConfigs(
@@ -1733,7 +1733,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 	// Step 5: Update config.toml
 	console.log("[5/8] Updating config.toml...");
 	let resolvedConfig = "";
-	let omxManagesTui = false;
+	let rcsManagesTui = false;
 	if (isPluginInstallMode) {
 		const configCleaned = await cleanupPluginModeLegacyConfig(
 			scopeDirs.codexConfigFile,
@@ -1743,8 +1743,8 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 		if (configCleaned) summary.config.removed += 1;
 		console.log(
 			configCleaned
-				? `  ${dryRun ? "Would clean" : "Cleaned"} legacy OMX config entries for plugin mode.\n`
-				: "  Config refresh skipped; no legacy OMX config entries found.\n",
+				? `  ${dryRun ? "Would clean" : "Cleaned"} legacy RCS config entries for plugin mode.\n`
+				: "  Config refresh skipped; no legacy RCS config entries found.\n",
 		);
 
 		await applyPluginModeHooksConfig(
@@ -1764,15 +1764,15 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 		);
 		if (pluginMarketplaceResult === "unavailable") {
 			console.log(
-				`  warning: packaged ${OMX_LOCAL_MARKETPLACE_NAME} Codex plugin marketplace metadata not found; /skills plugin discovery was not registered.`,
+				`  warning: packaged ${RCS_LOCAL_MARKETPLACE_NAME} Codex plugin marketplace metadata not found; /skills plugin discovery was not registered.`,
 			);
 		} else if (pluginMarketplaceResult === "updated") {
 			console.log(
-				`  ${dryRun ? "Would register" : "Registered"} local Codex plugin marketplace ${OMX_LOCAL_MARKETPLACE_NAME} (${pkgRoot}).`,
+				`  ${dryRun ? "Would register" : "Registered"} local Codex plugin marketplace ${RCS_LOCAL_MARKETPLACE_NAME} (${pkgRoot}).`,
 			);
 		} else {
 			console.log(
-				`  Local Codex plugin marketplace ${OMX_LOCAL_MARKETPLACE_NAME} already registered (${pkgRoot}).`,
+				`  Local Codex plugin marketplace ${RCS_LOCAL_MARKETPLACE_NAME} already registered (${pkgRoot}).`,
 			);
 		}
 		resolvedConfig = existsSync(scopeDirs.codexConfigFile)
@@ -1855,10 +1855,10 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 			},
 		);
 		resolvedConfig = managedConfig.finalConfig;
-		omxManagesTui = managedConfig.omxManagesTui;
+		rcsManagesTui = managedConfig.rcsManagesTui;
 		if (managedConfig.repairedLegacyTeamRunTable) {
 			console.log(
-				"  Removed retired [mcp_servers.omx_team_run] config during refresh.",
+				"  Removed retired [mcp_servers.rcs_team_run] config during refresh.",
 			);
 		}
 		if (resolvedScope.scope === "user") {
@@ -1895,10 +1895,10 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 	console.log("[5.5/8] Verifying Team CLI API interop...");
 	const teamToolsCheck = await verifyTeamCliApiInterop(pkgRoot);
 	if (teamToolsCheck.ok) {
-		console.log("  omx team api command detected (CLI-first interop ready)");
+		console.log("  rcs team api command detected (CLI-first interop ready)");
 	} else {
 		console.log(`  WARNING: ${teamToolsCheck.message}`);
-		console.log("  Run `npm run build` and then re-run `omx setup`.");
+		console.log("  Run `npm run build` and then re-run `rcs setup`.");
 	}
 	console.log();
 
@@ -1913,7 +1913,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 		if (agentsMdRemoved) {
 			summary.agentsMd.removed += 1;
 			console.log(
-				`  ${dryRun ? "Would remove" : "Removed"} legacy OMX-generated AGENTS.md for plugin mode.\n`,
+				`  ${dryRun ? "Would remove" : "Removed"} legacy RCS-generated AGENTS.md for plugin mode.\n`,
 			);
 		}
 
@@ -1974,7 +1974,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 			console.log(
 				agentsMdRemoved
 					? "  Plugin-mode AGENTS.md defaults not selected.\n"
-					: "  AGENTS.md generation skipped; no legacy OMX-generated AGENTS.md found and defaults not selected.\n",
+					: "  AGENTS.md generation skipped; no legacy RCS-generated AGENTS.md found and defaults not selected.\n",
 			);
 		}
 	} else {
@@ -2015,7 +2015,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 					mergedAgentsContent = upsertManagedAgentsBlock(existing, rewritten);
 					canApplyManagedAgentsMerge = mergedAgentsContent !== existing;
 				} else {
-					if (hasOmxManagedAgentsSections(existing)) {
+					if (hasRcsManagedAgentsSections(existing)) {
 						managedRefreshContent = upsertAgentsModelTable(
 							existing,
 							modelTableContext,
@@ -2033,7 +2033,7 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 			) {
 				summary.agentsMd.skipped += 1;
 				console.log(
-					"  WARNING: Active omx session detected (pid " +
+					"  WARNING: Active rcs session detected (pid " +
 						activeSession?.pid +
 						").",
 				);
@@ -2063,8 +2063,8 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 				);
 				console.log(
 					resolvedScope.scope === "project"
-						? "  Merged OMX-managed AGENTS.md sections into project root."
-						: `  Merged OMX-managed AGENTS.md sections into ${scopeDirs.codexHomeDir}.`,
+						? "  Merged RCS-managed AGENTS.md sections into project root."
+						: `  Merged RCS-managed AGENTS.md sections into ${scopeDirs.codexHomeDir}.`,
 				);
 			} else if (canApplyManagedModelRefresh) {
 				await syncManagedContent(
@@ -2133,18 +2133,18 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 
 	// Step 8: Configure HUD
 	console.log("[8/8] Configuring HUD...");
-	const hudConfigPath = join(projectRoot, ".omx", "hud-config.json");
+	const hudConfigPath = join(projectRoot, ".rcs", "hud-config.json");
 	if (force || !existsSync(hudConfigPath)) {
 		if (!dryRun) {
 			const defaultHudConfig = { preset: "focused" };
 			await writeFile(hudConfigPath, JSON.stringify(defaultHudConfig, null, 2));
 		}
-		if (verbose) console.log("  Wrote .omx/hud-config.json");
+		if (verbose) console.log("  Wrote .rcs/hud-config.json");
 		console.log("  HUD config created (preset: focused).");
 	} else {
 		console.log("  HUD config already exists (use --force to overwrite).");
 	}
-	if (omxManagesTui) {
+	if (rcsManagesTui) {
 		console.log("  StatusLine configured in config.toml via [tui] section.");
 	}
 	console.log();
@@ -2172,12 +2172,12 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 		console.log();
 	}
 
-	console.log('Setup complete! Run "omx doctor" to verify installation.');
+	console.log('Setup complete! Run "rcs doctor" to verify installation.');
 	console.log("\nNext steps:");
 	console.log("  1. Start Codex CLI in your project directory");
 	if (isPluginInstallMode) {
 		console.log(
-			`  2. Registered Codex marketplace ${OMX_LOCAL_MARKETPLACE_NAME} supplies OMX skills and workflow surfaces`,
+			`  2. Registered Codex marketplace ${RCS_LOCAL_MARKETPLACE_NAME} supplies RCS skills and workflow surfaces`,
 		);
 		console.log("  3. Browse plugin-provided skills with /skills");
 		console.log(
@@ -2201,10 +2201,10 @@ export async function setup(options: SetupOptions = {}): Promise<void> {
 		);
 	}
 	console.log(
-		'  6. "omx explore" and "omx sparkshell" can hydrate native release binaries on first use; source installs still allow repo-local fallbacks and OMX_EXPLORE_BIN / OMX_SPARKSHELL_BIN overrides',
+		'  6. "rcs explore" and "rcs sparkshell" can hydrate native release binaries on first use; source installs still allow repo-local fallbacks and RCS_EXPLORE_BIN / RCS_SPARKSHELL_BIN overrides',
 	);
 	if (isGitHubCliConfigured()) {
-		console.log("\nSupport the project: gh repo star Yeachan-Heo/oh-my-codex");
+		console.log('\nSupport the project: https://github.com/JustineDevs/roblox-ai-os');
 	}
 }
 
@@ -2371,7 +2371,7 @@ async function syncManagedAgentsContent(
 		if (!shouldOverwrite) {
 			summary.skipped += 1;
 			if (options.verbose) {
-				const managedLabel = isOmxGeneratedAgentsMd(existing)
+				const managedLabel = isRcsGeneratedAgentsMd(existing)
 					? "managed"
 					: "unmanaged";
 				console.log(`  skipped ${managedLabel} AGENTS.md at ${dstPath}`);
@@ -2482,12 +2482,13 @@ async function installPrompts(
 	return summary;
 }
 
-function isGeneratedOmxNativeAgentToml(
+function isGeneratedRcsNativeAgentToml(
 	content: string,
 	agentName: string,
 ): boolean {
 	const firstLine = content.split(/\r?\n/, 1)[0]?.trim();
-	return firstLine === `# oh-my-codex agent: ${agentName}`;
+	return firstLine === `# RCS agent: ${agentName}`
+		|| firstLine === `# roblox-ai-os-creator-skills agent: ${agentName}`;
 }
 
 async function cleanupGeneratedNonInstallableNativeAgents(
@@ -2521,10 +2522,10 @@ async function cleanupGeneratedNonInstallableNativeAgents(
 			continue;
 		}
 
-		if (!isGeneratedOmxNativeAgentToml(content, agentName)) {
+		if (!isGeneratedRcsNativeAgentToml(content, agentName)) {
 			if (options.verbose) {
 				console.log(
-					`  skipped stale native agent ${file}: not an OMX-generated native agent`,
+					`  skipped stale native agent ${file}: not an RCS-generated native agent`,
 				);
 			}
 			continue;
@@ -2893,7 +2894,7 @@ async function cleanupLegacyManagedSkills(
 		);
 
 		if (installedSkillContent !== expectedInstalledContent) {
-			const warning = `Skipping legacy skill cleanup for ${skillName}: installed SKILL.md differs from OMX-managed content.`;
+			const warning = `Skipping legacy skill cleanup for ${skillName}: installed SKILL.md differs from RCS-managed content.`;
 			result.skippedSkillNames.push(skillName);
 			result.warnings.push(warning);
 			continue;
@@ -2927,10 +2928,10 @@ async function updateManagedConfig(
 	const existing = existsSync(configPath)
 		? await readFile(configPath, "utf-8")
 		: "";
-	const hadLegacyTeamRunTable = hasLegacyOmxTeamRunTable(existing);
+	const hadLegacyTeamRunTable = hasLegacyRcsTeamRunTable(existing);
 	const currentModel = getRootModelName(existing);
 	let modelOverride: string | undefined;
-	const omxManagesTui = true;
+	const rcsManagesTui = true;
 
 	if (currentModel === LEGACY_SETUP_MODEL) {
 		const shouldPrompt =
@@ -2947,7 +2948,7 @@ async function updateManagedConfig(
 	}
 
 	const finalConfig = buildMergedConfig(existing, pkgRoot, {
-		includeTui: omxManagesTui,
+		includeTui: rcsManagesTui,
 		modelOverride,
 		sharedMcpServers: sharedMcpRegistry.servers,
 		sharedMcpRegistrySource: sharedMcpRegistry.sourcePath,
@@ -2961,7 +2962,7 @@ async function updateManagedConfig(
 		summary.unchanged += 1;
 		return {
 			finalConfig,
-			omxManagesTui,
+			rcsManagesTui,
 			repairedLegacyTeamRunTable: false,
 		};
 	}
@@ -3000,9 +3001,9 @@ async function updateManagedConfig(
 	}
 	return {
 		finalConfig,
-		omxManagesTui,
+		rcsManagesTui,
 		repairedLegacyTeamRunTable:
-			hadLegacyTeamRunTable && !hasLegacyOmxTeamRunTable(finalConfig),
+			hadLegacyTeamRunTable && !hasLegacyRcsTeamRunTable(finalConfig),
 	};
 }
 

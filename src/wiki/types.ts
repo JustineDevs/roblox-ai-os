@@ -1,7 +1,7 @@
 /**
  * Wiki Types
  *
- * Type definitions for the OMX wiki knowledge layer.
+ * Type definitions for the RCS wiki knowledge layer.
  */
 
 export const WIKI_SCHEMA_VERSION = 1;

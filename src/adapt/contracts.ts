@@ -13,7 +13,7 @@ export const ADAPT_SUBCOMMANDS = [
 export type AdaptSubcommand = (typeof ADAPT_SUBCOMMANDS)[number];
 
 export type AdaptCapabilityOwnership =
-	| "omx-owned"
+	| "rcs-owned"
 	| "shared-contract"
 	| "target-observed";
 
@@ -92,7 +92,7 @@ export interface AdaptOpenClawMetadata {
 	gateways: AdaptOpenClawGatewayObservation[];
 	hooks: AdaptOpenClawHookObservation[];
 	lifecycleBridge: Array<{
-		omxEvent: string;
+		rcsEvent: string;
 		openclawEvent: string;
 	}>;
 	bootstrap?: {

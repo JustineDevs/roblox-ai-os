@@ -30,7 +30,7 @@ function ambientSessionExists(sessionName: string): boolean {
 }
 
 function uniqueAmbientSessionName(): string {
-  return `omx-ambient-test-${process.pid}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  return `rcs-ambient-test-${process.pid}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
 describe('withTempTmuxSession', () => {
@@ -44,9 +44,9 @@ describe('withTempTmuxSession', () => {
     await withTempTmuxSession(async (fixture) => {
       sessionName = fixture.sessionName;
       serverName = fixture.serverName;
-      assert.match(fixture.sessionName, /^omx-test-/);
+      assert.match(fixture.sessionName, /^rcs-test-/);
       assert.equal(fixture.serverKind, 'synthetic');
-      assert.match(fixture.serverName, /^omx-fixture-/);
+      assert.match(fixture.serverName, /^rcs-fixture-/);
       assert.equal(process.env.TMUX, fixture.env.TMUX);
       assert.equal(process.env.TMUX_PANE, fixture.leaderPaneId);
       assert.equal(fixture.sessionExists(), true);

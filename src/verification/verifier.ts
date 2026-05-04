@@ -1,5 +1,5 @@
 /**
- * Verification Protocol for oh-my-codex
+ * Verification Protocol for roblox-ai-os-creator-skills
  *
  * Evidence-backed verification of task completion.
  * Sizing: small (low), standard (medium), large (high)

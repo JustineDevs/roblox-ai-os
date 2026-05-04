@@ -1,18 +1,18 @@
 # Repo-aware Team DAG decomposition contract
 
-This contract documents the repo-aware Team decomposition gate planned by `.omx/plans/prd-repo-aware-team-decomposition.md`. It is intentionally a pre-runtime contract: Team may import or derive richer planning metadata before launch, but worker execution must continue to use the existing claim-safe task lifecycle.
+This contract documents the repo-aware Team decomposition gate planned by `.rcs/plans/prd-repo-aware-team-decomposition.md`. It is intentionally a pre-runtime contract: Team may import or derive richer planning metadata before launch, but worker execution must continue to use the existing claim-safe task lifecycle.
 
 ## Contract boundary
 
-- `omx team` may preflight the latest approved PRD/test-spec pair and a matching DAG handoff artifact before `startTeam()` launches workers only when the invocation is approved for that pair: either the CLI input matches the PRD's approved Team launch hint, or the user uses a short approved follow-up such as `omx team team` that resolves to that hint. Normal `omx team [N[:role]] "task"` startup must not consume ambient/stale `team-dag-*.json` files.
+- `rcs team` may preflight the latest approved PRD/test-spec pair and a matching DAG handoff artifact before `startTeam()` launches workers only when the invocation is approved for that pair: either the CLI input matches the PRD's approved Team launch hint, or the user uses a short approved follow-up such as `rcs team team` that resolves to that hint. Normal `rcs team [N[:role]] "task"` startup must not consume ambient/stale `team-dag-*.json` files.
 - The preflight output may change the startup task list, worker count, owner assignment, inbox text, and observability metadata.
 - Runtime task mutation remains owned by the Team state APIs. Preflight must not bypass `assignTask()`, `claimTask()`, `transitionTaskStatus()`, or `update-task` lifecycle constraints.
-- Existing `omx team [N[:role]] "task"` behavior remains the fallback when no valid approved DAG handoff exists.
+- Existing `rcs team [N[:role]] "task"` behavior remains the fallback when no valid approved DAG handoff exists.
 
 ## Artifact resolution
 
 1. Select the latest PRD using the same slug semantics as `selectLatestPlanningArtifacts()`, then require at least one matching `test-spec-<slug>.md`/`testspec-<slug>.md`; a PRD without its matching test spec is not an approved pair for DAG activation.
-2. Prefer `.omx/plans/team-dag-<slug>.json` over embedded markdown handoff JSON after the approved invocation gate passes.
+2. Prefer `.rcs/plans/team-dag-<slug>.json` over embedded markdown handoff JSON after the approved invocation gate passes.
 3. If multiple matching JSON candidates are possible, choose the lexicographically latest path and record a `multiple_matches` warning in preflight metadata.
 4. If the sidecar exists but is invalid, fall back to legacy text decomposition in v1 and persist the fallback reason. Do not silently ignore the invalid artifact.
 5. If no valid sidecar exists, parse an optional fenced `Team DAG Handoff` block from the selected PRD.
@@ -53,7 +53,7 @@ Preflight should keep rich planning data out of the claim lifecycle task payload
 | Data | Expected storage |
 | --- | --- |
 | `decomposition_source`, `dag_artifact_path`, `fallback_reason`, `worker_count_requested`, `worker_count_effective`, `worker_count_source`, `ready_lane_count` | team manifest/config metadata, via the top-level `team_decomposition` manifest block |
-| node-to-task mapping, allocation reasons, file/domain/lane hints, warnings | `.omx/state/team/<team>/decomposition-report.json` and optional markdown summary |
+| node-to-task mapping, allocation reasons, file/domain/lane hints, warnings | `.rcs/state/team/<team>/decomposition-report.json` and optional markdown summary |
 | runtime dependencies | `TeamTask.depends_on` / `blocked_by` with concrete task IDs |
 | `requires_code_change` | thread into `TeamTask` only through supported schema/API fields; otherwise reject or drop with an explicit validation warning |
 | worker-facing ownership hints | initial inbox text for the assigned worker |

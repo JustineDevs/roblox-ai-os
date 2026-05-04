@@ -106,12 +106,12 @@ function safePath(value: unknown): string | null {
   return typeof value === 'string' && value.trim() !== '' ? value.trim() : null
 }
 
-function projectRootFromOmxStateRoot(stateRoot: string | null, cwd: string): string | null {
+function projectRootFromRcsStateRoot(stateRoot: string | null, cwd: string): string | null {
   if (!stateRoot) return null
   const resolvedStateRoot = resolve(cwd, stateRoot)
-  const omxDir = dirname(resolvedStateRoot)
-  if (basename(resolvedStateRoot) !== 'state' || basename(omxDir) !== '.omx') return null
-  return dirname(omxDir)
+  const rcsDir = dirname(resolvedStateRoot)
+  if (basename(resolvedStateRoot) !== 'state' || basename(rcsDir) !== '.rcs') return null
+  return dirname(rcsDir)
 }
 
 /**
@@ -131,14 +131,14 @@ export function resolveTeamCommitHygieneArtifactCwd(
     .find((value): value is string => Boolean(value))
   if (repoRoot) return resolve(cwd, repoRoot)
 
-  const derivedFromStateRoot = projectRootFromOmxStateRoot(safePath(config?.team_state_root), cwd)
+  const derivedFromStateRoot = projectRootFromRcsStateRoot(safePath(config?.team_state_root), cwd)
   if (derivedFromStateRoot) return derivedFromStateRoot
 
   return resolve(cwd)
 }
 
 function commitHygieneReportsDir(cwd: string): string {
-  return join(resolve(cwd), '.omx', 'reports', 'team-commit-hygiene')
+  return join(resolve(cwd), '.rcs', 'reports', 'team-commit-hygiene')
 }
 
 function ledgerPathFor(teamName: string, cwd: string): string {
@@ -345,7 +345,7 @@ export function buildTeamCommitHygieneContext(params: {
   const taskSummary = summarizeTasks(params.tasks)
   const recommendedNextSteps = [
     'Inspect the current branch diff/log and identify which runtime-originated commits should be squashed or rewritten.',
-    'Derive semantic commit boundaries from completed task subjects, code diffs, and shutdown reports rather than from omx(team) operational commit subjects.',
+    'Derive semantic commit boundaries from completed task subjects, code diffs, and shutdown reports rather than from rcs(team) operational commit subjects.',
     'Create final commit messages in Lore format with intent-first subjects and only the trailers that add decision context.',
   ]
 
@@ -444,7 +444,7 @@ export function renderTeamCommitHygieneMarkdown(context: TeamCommitHygieneContex
     '',
     '## Finalization Guidance',
     '',
-    '1. Treat `omx(team): ...` runtime commits as temporary scaffolding, not as the final PR history.',
+    '1. Treat `rcs(team): ...` runtime commits as temporary scaffolding, not as the final PR history.',
     '2. Reconcile checkpoint, merge/cherry-pick, cross-rebase, and shutdown checkpoint activity into semantic Lore-format final commit(s).',
     '3. Use task outcomes, code diffs, and shutdown diff reports to name and scope the final commits.',
     '',

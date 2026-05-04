@@ -9,12 +9,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const root = join(__dirname, '..', '..');
 const binDir = join(root, 'bin');
-const binaryName = process.platform === 'win32' ? 'omx-explore-harness.exe' : 'omx-explore-harness';
+const binaryName = process.platform === 'win32' ? 'rcs-explore-harness.exe' : 'rcs-explore-harness';
 const sourcePath = join(root, 'target', 'release', binaryName);
 const outputPath = join(binDir, binaryName);
-const metadataPath = join(binDir, 'omx-explore-harness.meta.json');
+const metadataPath = join(binDir, 'rcs-explore-harness.meta.json');
 
-const build = spawnSync('cargo', ['build', '--release', '-p', 'omx-explore-harness'], {
+const build = spawnSync('cargo', ['build', '--release', '-p', 'rcs-explore-harness'], {
   cwd: root,
   encoding: 'utf-8',
   stdio: ['ignore', 'pipe', 'pipe'],

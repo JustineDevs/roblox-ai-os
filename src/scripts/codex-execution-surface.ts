@@ -29,7 +29,7 @@ function safeObject(value: unknown): Record<string, unknown> | null {
 }
 
 function readPersistedSessionStateSync(cwd: string): Record<string, unknown> | null {
-  const path = join(cwd, ".omx", "state", "session.json");
+  const path = join(cwd, ".rcs", "state", "session.json");
   if (!existsSync(path)) return null;
   try {
     return safeObject(JSON.parse(readFileSync(path, "utf-8")));

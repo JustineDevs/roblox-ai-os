@@ -1,14 +1,14 @@
 /**
  * Model Configuration
  *
- * Reads per-mode model overrides and default-env overrides from .omx-config.json.
+ * Reads per-mode model overrides and default-env overrides from .rcs-config.json.
  *
  * Config format:
  * {
  *   "env": {
- *     "OMX_DEFAULT_FRONTIER_MODEL": "your-frontier-model",
- *     "OMX_DEFAULT_STANDARD_MODEL": "your-standard-model",
- *     "OMX_DEFAULT_SPARK_MODEL": "your-spark-model"
+ *     "RCS_DEFAULT_FRONTIER_MODEL": "your-frontier-model",
+ *     "RCS_DEFAULT_STANDARD_MODEL": "your-standard-model",
+ *     "RCS_DEFAULT_SPARK_MODEL": "your-spark-model"
  *   },
  *   "models": {
  *     "default": "o4-mini",
@@ -16,7 +16,7 @@
  *   }
  * }
  *
- * Resolution: mode-specific > "default" key > OMX_DEFAULT_FRONTIER_MODEL > DEFAULT_FRONTIER_MODEL
+ * Resolution: mode-specific > "default" key > RCS_DEFAULT_FRONTIER_MODEL > DEFAULT_FRONTIER_MODEL
  */
 
 import { parse as parseToml } from '@iarna/toml';
@@ -28,12 +28,12 @@ export interface ModelsConfig {
   [mode: string]: string | undefined;
 }
 
-export interface OmxConfigEnv {
+export interface RcsConfigEnv {
   [key: string]: string | undefined;
 }
 
-interface OmxConfigFile {
-  env?: OmxConfigEnv;
+interface RcsConfigFile {
+  env?: RcsConfigEnv;
   models?: ModelsConfig;
 }
 
@@ -43,19 +43,19 @@ interface CodexConfigFile {
   model_providers?: Record<string, unknown>;
 }
 
-export const OMX_DEFAULT_FRONTIER_MODEL_ENV = 'OMX_DEFAULT_FRONTIER_MODEL';
-export const OMX_DEFAULT_STANDARD_MODEL_ENV = 'OMX_DEFAULT_STANDARD_MODEL';
-export const OMX_DEFAULT_SPARK_MODEL_ENV = 'OMX_DEFAULT_SPARK_MODEL';
-export const OMX_SPARK_MODEL_ENV = 'OMX_SPARK_MODEL';
-export const OMX_TEAM_CHILD_MODEL_ENV = 'OMX_TEAM_CHILD_MODEL';
+export const RCS_DEFAULT_FRONTIER_MODEL_ENV = 'RCS_DEFAULT_FRONTIER_MODEL';
+export const RCS_DEFAULT_STANDARD_MODEL_ENV = 'RCS_DEFAULT_STANDARD_MODEL';
+export const RCS_DEFAULT_SPARK_MODEL_ENV = 'RCS_DEFAULT_SPARK_MODEL';
+export const RCS_SPARK_MODEL_ENV = 'RCS_SPARK_MODEL';
+export const RCS_TEAM_CHILD_MODEL_ENV = 'RCS_TEAM_CHILD_MODEL';
 
-function readOmxConfigFile(codexHomeOverride?: string): OmxConfigFile | null {
-  const configPath = join(codexHomeOverride || codexHome(), '.omx-config.json');
+function readRcsConfigFile(codexHomeOverride?: string): RcsConfigFile | null {
+  const configPath = join(codexHomeOverride || codexHome(), '.rcs-config.json');
   if (!existsSync(configPath)) return null;
   try {
     const raw = JSON.parse(readFileSync(configPath, 'utf-8'));
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-    return raw as OmxConfigFile;
+    return raw as RcsConfigFile;
   } catch {
     return null;
   }
@@ -76,7 +76,7 @@ function readCodexConfigFile(codexHomeOverride?: string): CodexConfigFile | null
 }
 
 function readModelsBlock(codexHomeOverride?: string): ModelsConfig | null {
-  const config = readOmxConfigFile(codexHomeOverride);
+  const config = readRcsConfigFile(codexHomeOverride);
   if (!config) return null;
   if (config.models && typeof config.models === 'object' && !Array.isArray(config.models)) {
     return config.models;
@@ -96,7 +96,7 @@ function normalizeConfiguredValue(value: unknown): string | undefined {
 }
 
 function readConfigEnvValue(key: string, codexHomeOverride?: string): string | undefined {
-  const config = readOmxConfigFile(codexHomeOverride);
+  const config = readRcsConfigFile(codexHomeOverride);
   if (!config || !config.env || typeof config.env !== 'object' || Array.isArray(config.env)) {
     return undefined;
   }
@@ -114,7 +114,7 @@ function readTeamLowComplexityOverride(codexHomeOverride?: string): string | und
 }
 
 export function readConfiguredEnvOverrides(codexHomeOverride?: string): NodeJS.ProcessEnv {
-  const config = readOmxConfigFile(codexHomeOverride);
+  const config = readRcsConfigFile(codexHomeOverride);
   if (!config || !config.env || typeof config.env !== 'object' || Array.isArray(config.env)) {
     return {};
   }
@@ -159,8 +159,8 @@ export function getEnvConfiguredMainDefaultModel(
   env: NodeJS.ProcessEnv = process.env,
   codexHomeOverride?: string,
 ): string | undefined {
-  return normalizeConfiguredValue(env[OMX_DEFAULT_FRONTIER_MODEL_ENV])
-    ?? readConfigEnvValue(OMX_DEFAULT_FRONTIER_MODEL_ENV, codexHomeOverride);
+  return normalizeConfiguredValue(env[RCS_DEFAULT_FRONTIER_MODEL_ENV])
+    ?? readConfigEnvValue(RCS_DEFAULT_FRONTIER_MODEL_ENV, codexHomeOverride);
 }
 
 function getCodexConfigRootModel(codexHomeOverride?: string): string | undefined {
@@ -175,30 +175,30 @@ export function getEnvConfiguredStandardDefaultModel(
   env: NodeJS.ProcessEnv = process.env,
   codexHomeOverride?: string,
 ): string | undefined {
-  return normalizeConfiguredValue(env[OMX_DEFAULT_STANDARD_MODEL_ENV])
-    ?? readConfigEnvValue(OMX_DEFAULT_STANDARD_MODEL_ENV, codexHomeOverride);
+  return normalizeConfiguredValue(env[RCS_DEFAULT_STANDARD_MODEL_ENV])
+    ?? readConfigEnvValue(RCS_DEFAULT_STANDARD_MODEL_ENV, codexHomeOverride);
 }
 
 export function getEnvConfiguredSparkDefaultModel(
   env: NodeJS.ProcessEnv = process.env,
   codexHomeOverride?: string,
 ): string | undefined {
-  return normalizeConfiguredValue(env[OMX_DEFAULT_SPARK_MODEL_ENV])
-    ?? normalizeConfiguredValue(env[OMX_SPARK_MODEL_ENV])
-    ?? readConfigEnvValue(OMX_DEFAULT_SPARK_MODEL_ENV, codexHomeOverride)
-    ?? readConfigEnvValue(OMX_SPARK_MODEL_ENV, codexHomeOverride);
+  return normalizeConfiguredValue(env[RCS_DEFAULT_SPARK_MODEL_ENV])
+    ?? normalizeConfiguredValue(env[RCS_SPARK_MODEL_ENV])
+    ?? readConfigEnvValue(RCS_DEFAULT_SPARK_MODEL_ENV, codexHomeOverride)
+    ?? readConfigEnvValue(RCS_SPARK_MODEL_ENV, codexHomeOverride);
 }
 
 
 export function getTeamChildModel(codexHomeOverride?: string): string {
-  return normalizeConfiguredValue(process.env[OMX_TEAM_CHILD_MODEL_ENV])
-    ?? readConfigEnvValue(OMX_TEAM_CHILD_MODEL_ENV, codexHomeOverride)
+  return normalizeConfiguredValue(process.env[RCS_TEAM_CHILD_MODEL_ENV])
+    ?? readConfigEnvValue(RCS_TEAM_CHILD_MODEL_ENV, codexHomeOverride)
     ?? DEFAULT_TEAM_CHILD_MODEL;
 }
 
 /**
  * Get the envvar-backed main/default model.
- * Resolution: OMX_DEFAULT_FRONTIER_MODEL > config.toml model > DEFAULT_FRONTIER_MODEL
+ * Resolution: RCS_DEFAULT_FRONTIER_MODEL > config.toml model > DEFAULT_FRONTIER_MODEL
  */
 export function getMainDefaultModel(codexHomeOverride?: string): string {
   return getEnvConfiguredMainDefaultModel(process.env, codexHomeOverride)
@@ -211,10 +211,10 @@ export function getMainDefaultModel(codexHomeOverride?: string): string {
  *
  * Standard-role subagents inherit the configured main/default model unless an
  * explicit standard-lane override is configured. This keeps spawned agents in
- * sync with the leader model while preserving OMX_DEFAULT_STANDARD_MODEL as the
+ * sync with the leader model while preserving RCS_DEFAULT_STANDARD_MODEL as the
  * opt-in escape hatch for cheaper/specialized standard workers.
  *
- * Resolution: OMX_DEFAULT_STANDARD_MODEL > OMX_DEFAULT_FRONTIER_MODEL > config.toml model > DEFAULT_FRONTIER_MODEL
+ * Resolution: RCS_DEFAULT_STANDARD_MODEL > RCS_DEFAULT_FRONTIER_MODEL > config.toml model > DEFAULT_FRONTIER_MODEL
  */
 export function getStandardDefaultModel(codexHomeOverride?: string): string {
   return getEnvConfiguredStandardDefaultModel(process.env, codexHomeOverride)
@@ -223,7 +223,7 @@ export function getStandardDefaultModel(codexHomeOverride?: string): string {
 
 /**
  * Get the configured model for a specific mode.
- * Resolution: mode-specific override > "default" key > OMX_DEFAULT_FRONTIER_MODEL > DEFAULT_FRONTIER_MODEL
+ * Resolution: mode-specific override > "default" key > RCS_DEFAULT_FRONTIER_MODEL > DEFAULT_FRONTIER_MODEL
  */
 export function getModelForMode(mode: string, codexHomeOverride?: string): string {
   const models = readModelsBlock(codexHomeOverride);
@@ -244,7 +244,7 @@ const TEAM_LOW_COMPLEXITY_MODEL_KEYS = [
 
 /**
  * Get the envvar-backed spark/low-complexity default model.
- * Resolution: OMX_DEFAULT_SPARK_MODEL > OMX_SPARK_MODEL > explicit low-complexity key(s) > DEFAULT_SPARK_MODEL
+ * Resolution: RCS_DEFAULT_SPARK_MODEL > RCS_SPARK_MODEL > explicit low-complexity key(s) > DEFAULT_SPARK_MODEL
  */
 export function getSparkDefaultModel(codexHomeOverride?: string): string {
   return getEnvConfiguredSparkDefaultModel(process.env, codexHomeOverride)
@@ -254,7 +254,7 @@ export function getSparkDefaultModel(codexHomeOverride?: string): string {
 
 /**
  * Get the low-complexity team worker model.
- * Resolution: explicit low-complexity key(s) > OMX_DEFAULT_SPARK_MODEL > OMX_SPARK_MODEL > DEFAULT_SPARK_MODEL
+ * Resolution: explicit low-complexity key(s) > RCS_DEFAULT_SPARK_MODEL > RCS_SPARK_MODEL > DEFAULT_SPARK_MODEL
  */
 export function getTeamLowComplexityModel(codexHomeOverride?: string): string {
   return readTeamLowComplexityOverride(codexHomeOverride) ?? getSparkDefaultModel(codexHomeOverride);

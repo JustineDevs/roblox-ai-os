@@ -2,14 +2,14 @@
  * Task Size Detector — ported from OMC src/hooks/task-size-detector/index.ts
  *
  * IMPORTANT: In OMC, this module runs at prompt time via bridge.ts hook interception
- * (mandatory enforcement). In OMX, Codex CLI does not support pre-tool hooks, so this
+ * (mandatory enforcement). In RCS, Codex CLI does not support pre-tool hooks, so this
  * module serves as:
  *   1. Instruction generator — feeds generateKeywordDetectionSection() in emulator.ts
  *   2. Test infrastructure — verifies gate logic correctness
  *   3. Future hook readiness — will be promoted to runtime enforcement when Codex CLI
  *      adds pre-hook support
  *
- * The actual gate enforcement in OMX is advisory: AGENTS.md instructs the model to
+ * The actual gate enforcement in RCS is advisory: AGENTS.md instructs the model to
  * self-enforce gate behavior. The model may skip the gate under edge cases (long context,
  * prompt injection, model confusion).
  */

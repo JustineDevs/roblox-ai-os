@@ -4,7 +4,7 @@
 
 import { asNumber, safeString, clampPct } from './utils.js';
 
-export const LANGUAGE_REMINDER_MARKER = '[OMX_LANG_REMINDER]';
+export const LANGUAGE_REMINDER_MARKER = '[RCS_LANG_REMINDER]';
 export const LANGUAGE_REMINDER_TEXT = `${LANGUAGE_REMINDER_MARKER} User input includes non-Latin script. Continue in the user's language.`;
 
 export function extractLimitPct(limit: any): number | null {

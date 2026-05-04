@@ -63,7 +63,7 @@ export async function isPaneIdle(paneId: string): Promise<boolean> {
 // ---------------------------------------------------------------------------
 
 /**
- * Thin wrapper to call OMX's sendToWorker by pane ID only (for NudgeTracker).
+ * Thin wrapper to call RCS's sendToWorker by pane ID only (for NudgeTracker).
  * workerIndex=0 is a dummy — paneTarget() prefers workerPaneId when provided.
  */
 async function sendToWorkerByPaneId(

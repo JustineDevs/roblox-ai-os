@@ -1,3 +1,5 @@
+> Archive context: retained release and migration collateral from the pre-v0.1.0 fork-to-RCS transition. Links are normalized to the canonical JustineDevs repository, but historical chronology and contributor references may still describe pre-fork development.
+
 # PR Draft: Preserve verified Ralph pane anchors and avoid tmux-hook target drift
 
 ## Target branch

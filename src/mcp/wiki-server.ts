@@ -1,5 +1,5 @@
 /**
- * OMX Wiki MCP Server
+ * RCS Wiki MCP Server
  */
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -23,7 +23,7 @@ import {
 import type { WikiCategory } from '../wiki/types.js';
 
 const server = new Server(
-  { name: 'omx-wiki', version: '0.1.0' },
+  { name: 'rcs-wiki', version: '0.1.0' },
   { capabilities: { tools: {} } },
 );
 

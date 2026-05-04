@@ -11,9 +11,9 @@ import { join } from 'path';
 // that accept explicit paths, exercising the same logic they use internally.
 
 async function writeStateFile(dir: string, content: object): Promise<void> {
-  await mkdir(join(dir, '.omx', 'state'), { recursive: true });
+  await mkdir(join(dir, '.rcs', 'state'), { recursive: true });
   await writeFile(
-    join(dir, '.omx', 'state', 'star-prompt.json'),
+    join(dir, '.rcs', 'state', 'star-prompt.json'),
     JSON.stringify(content, null, 2),
   );
 }
@@ -22,7 +22,7 @@ describe('star-prompt state helpers (integration via filesystem)', () => {
   let tmpDir: string;
 
   before(async () => {
-    tmpDir = await mkdtemp(join(tmpdir(), 'omx-star-test-'));
+    tmpDir = await mkdtemp(join(tmpdir(), 'rcs-star-test-'));
   });
 
   after(async () => {
@@ -30,12 +30,12 @@ describe('star-prompt state helpers (integration via filesystem)', () => {
   });
 
   it('state file does not exist initially', () => {
-    const stateFile = join(tmpDir, '.omx', 'state', 'star-prompt.json');
+    const stateFile = join(tmpDir, '.rcs', 'state', 'star-prompt.json');
     assert.equal(existsSync(stateFile), false);
   });
 
   it('state file is written with prompted_at timestamp', async () => {
-    const stateDir = join(tmpDir, '.omx', 'state');
+    const stateDir = join(tmpDir, '.rcs', 'state');
     await mkdir(stateDir, { recursive: true });
     const statePath = join(stateDir, 'star-prompt.json');
     const promptedAt = new Date().toISOString();
@@ -48,7 +48,7 @@ describe('star-prompt state helpers (integration via filesystem)', () => {
   });
 
   it('detects already-prompted state from valid JSON', async () => {
-    const stateDir = join(tmpDir, '.omx', 'state2');
+    const stateDir = join(tmpDir, '.rcs', 'state2');
     await writeStateFile(tmpDir.replace(tmpDir, tmpDir + '2'), { prompted_at: '2026-01-01T00:00:00.000Z' }).catch(() => {});
     // Verify a valid state object has the expected shape
     const state = { prompted_at: '2026-01-01T00:00:00.000Z' };
@@ -56,7 +56,7 @@ describe('star-prompt state helpers (integration via filesystem)', () => {
   });
 
   it('handles corrupted state file gracefully', async () => {
-    const stateDir2 = join(tmpDir, 'corrupt', '.omx', 'state');
+    const stateDir2 = join(tmpDir, 'corrupt', '.rcs', 'state');
     await mkdir(stateDir2, { recursive: true });
     const statePath = join(stateDir2, 'star-prompt.json');
     await writeFile(statePath, 'not valid json {{{');
@@ -90,10 +90,10 @@ describe('star-prompt state path', () => {
     assert.ok(p.endsWith('star-prompt.json'), `Expected path to end with star-prompt.json, got: ${p}`);
   });
 
-  it('starPromptStatePath includes .omx/state', async () => {
+  it('starPromptStatePath includes .rcs/state', async () => {
     const { starPromptStatePath } = await import('../star-prompt.js');
     const p = starPromptStatePath();
-    assert.ok(p.includes(join('.omx', 'state')), `Expected path to include .omx/state, got: ${p}`);
+    assert.ok(p.includes(join('.rcs', 'state')), `Expected path to include .rcs/state, got: ${p}`);
   });
 });
 
@@ -175,7 +175,7 @@ describe('maybePromptGithubStar', () => {
       warnFn: (message) => warns.push(message),
     });
 
-    assert.deepEqual(logs, ['[omx] Thanks for the star!']);
+    assert.deepEqual(logs, ['[rcs] Thanks for the star!']);
     assert.deepEqual(warns, []);
   });
 

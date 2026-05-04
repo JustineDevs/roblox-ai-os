@@ -16,7 +16,7 @@ called out in issue #1243.
 Durable owner:
 
 - Rust runtime dispatch log when the bridge is enabled
-  - `crates/omx-runtime-core/src/dispatch.rs`
+  - `crates/rcs-runtime-core/src/dispatch.rs`
   - surfaced through `src/runtime/bridge.ts`
 - legacy JSON fallback only when the bridge is disabled or unreadable
   - `src/team/state/dispatch.ts`
@@ -69,8 +69,8 @@ Success contract:
 Durable owner depends on subject:
 
 - runtime authority staleness:
-  - `crates/omx-runtime-core/src/lib.rs`
-  - `crates/omx-runtime-core/src/engine.rs`
+  - `crates/rcs-runtime-core/src/lib.rs`
+  - `crates/rcs-runtime-core/src/engine.rs`
   - surfaced via `src/runtime/bridge.ts`
 - leader/session staleness:
   - `src/team/leader-activity.ts`

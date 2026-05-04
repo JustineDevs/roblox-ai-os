@@ -44,9 +44,9 @@ interface DedupeMarker {
 }
 
 const PROTECTED_PATH_PREFIXES = [
-  '.omx/state/',
-  '.omx/logs/',
-  '.omx/reports/',
+  '.rcs/state/',
+  '.rcs/logs/',
+  '.rcs/reports/',
 ];
 const PROTECTED_PATH_SUFFIXES = [
   '.pid',
@@ -366,7 +366,7 @@ async function checkpointIfEligible(cwd: string, workerName: string): Promise<{
   if (checkpointable.length === 0) {
     const onlyRuntimeArtifacts = paths.every((path) => {
       const normalized = path.replace(/\\/g, '/');
-      return normalized.startsWith('.omx/state/') || normalized.startsWith('.omx/logs/') || normalized.startsWith('.omx/reports/');
+      return normalized.startsWith('.rcs/state/') || normalized.startsWith('.rcs/logs/') || normalized.startsWith('.rcs/reports/');
     });
     return onlyRuntimeArtifacts
       ? { status: 'noop', checkpointCommit: null, workerHeadAfter: await gitHead(cwd) }
@@ -379,7 +379,7 @@ async function checkpointIfEligible(cwd: string, workerName: string): Promise<{
     return { status: 'skipped', reason: `git_add_failed:${addResult.stderr.slice(0, 120)}`, checkpointCommit: null, workerHeadAfter: await gitHead(cwd) };
   }
 
-  const commitResult = await gitMaybe(cwd, ['commit', '--no-verify', '-m', `omx(team): auto-checkpoint ${workerName}`]);
+  const commitResult = await gitMaybe(cwd, ['commit', '--no-verify', '-m', `rcs(team): auto-checkpoint ${workerName}`]);
   if (!commitResult.ok) {
     await unstageCheckpointablePaths(cwd, checkpointable);
     const reason = commitResult.stderr.includes('conflict') ? 'git_commit_conflict' : `git_commit_failed:${commitResult.stderr.slice(0, 120)}`;
@@ -400,7 +400,7 @@ export async function handleTeamWorkerPostToolUseSuccess(
     if (readToolName(payload) !== 'Bash') return { handled: false, status: 'skipped', reason: 'not_bash', operationKinds: [] };
     if (readExitCode(payload) !== 0) return { handled: false, status: 'skipped', reason: 'nonzero_exit', operationKinds: [] };
 
-    const parsedWorker = parseTeamWorkerEnv(env.OMX_TEAM_INTERNAL_WORKER ?? env.OMX_TEAM_WORKER);
+    const parsedWorker = parseTeamWorkerEnv(env.RCS_TEAM_INTERNAL_WORKER ?? env.RCS_TEAM_WORKER);
     if (!parsedWorker) return { handled: false, status: 'skipped', reason: 'missing_worker_env', operationKinds: [] };
 
     const resolvedStateRoot = await resolveWorkerTeamStateRoot(cwd, parsedWorker, env);

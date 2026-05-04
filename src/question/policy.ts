@@ -34,7 +34,7 @@ function safeString(value: unknown): string {
 }
 
 function hasWorkerContext(env: NodeJS.ProcessEnv): boolean {
-  return safeString(env.OMX_TEAM_WORKER).trim() !== '';
+  return safeString(env.RCS_TEAM_WORKER).trim() !== '';
 }
 
 export async function evaluateQuestionPolicy(
@@ -48,7 +48,7 @@ export async function evaluateQuestionPolicy(
       allowed: false,
       sessionId,
       code: 'worker_blocked',
-      message: 'omx question is unavailable for OMX team workers; only non-team leader sessions may ask user questions.',
+      message: 'rcs question is unavailable for RCS team workers; only non-team leader sessions may ask user questions.',
       fallbackAllowed: false,
       activeModes: [],
       activeSkills: [],
@@ -70,7 +70,7 @@ export async function evaluateQuestionPolicy(
       allowed: false,
       sessionId,
       code: 'team_blocked',
-      message: `omx question is unavailable while this session owns active team mode: ${summary}.`,
+      message: `rcs question is unavailable while this session owns active team mode: ${summary}.`,
       fallbackAllowed: false,
       activeModes,
       activeSkills,
@@ -87,7 +87,7 @@ export async function evaluateQuestionPolicy(
       allowed: false,
       sessionId,
       code: 'active_execution_mode_blocked',
-      message: `omx question is unavailable while auto-executing workflows are active: ${blocked.join(', ')}.`,
+      message: `rcs question is unavailable while auto-executing workflows are active: ${blocked.join(', ')}.`,
       fallbackAllowed: false,
       activeModes,
       activeSkills,

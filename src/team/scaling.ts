@@ -2,7 +2,7 @@
  * Dynamic worker scaling for team mode — Phase 1: Manual Scaling.
  *
  * Provides scale_up (add workers mid-session) and scale_down (drain + remove idle workers).
- * Gated behind the OMX_TEAM_SCALING_ENABLED environment variable.
+ * Gated behind the RCS_TEAM_SCALING_ENABLED environment variable.
  *
  * Key design decisions:
  * - Monotonic worker index counter (next_worker_index in config) ensures unique names
@@ -77,11 +77,11 @@ import {
 
 // ── Environment gate ──────────────────────────────────────────────────────────
 
-const OMX_TEAM_SCALING_ENABLED_ENV = 'OMX_TEAM_SCALING_ENABLED';
-const WORKTREE_TRIGGER_STATE_ROOT = '$OMX_TEAM_STATE_ROOT';
+const RCS_TEAM_SCALING_ENABLED_ENV = 'RCS_TEAM_SCALING_ENABLED';
+const WORKTREE_TRIGGER_STATE_ROOT = '$RCS_TEAM_STATE_ROOT';
 
 export function isScalingEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  const raw = env[OMX_TEAM_SCALING_ENABLED_ENV];
+  const raw = env[RCS_TEAM_SCALING_ENABLED_ENV];
   if (!raw) return false;
   const normalized = raw.trim().toLowerCase();
   return ['1', 'true', 'yes', 'on', 'enabled'].includes(normalized);
@@ -90,7 +90,7 @@ export function isScalingEnabled(env: NodeJS.ProcessEnv = process.env): boolean 
 function assertScalingEnabled(env: NodeJS.ProcessEnv = process.env): void {
   if (!isScalingEnabled(env)) {
     throw new Error(
-      `Dynamic scaling is disabled. Set ${OMX_TEAM_SCALING_ENABLED_ENV}=1 to enable.`,
+      `Dynamic scaling is disabled. Set ${RCS_TEAM_SCALING_ENABLED_ENV}=1 to enable.`,
     );
   }
 }
@@ -289,7 +289,7 @@ export async function scaleUp(
       }
 
       for (const taskId of createdTaskIds) {
-        await rm(join(leaderCwd, '.omx', 'state', 'team', sanitized, 'tasks', `task-${taskId}.json`), { force: true }).catch(() => {});
+        await rm(join(leaderCwd, '.rcs', 'state', 'team', sanitized, 'tasks', `task-${taskId}.json`), { force: true }).catch(() => {});
       }
 
       config.worker_count = config.workers.length;
@@ -324,7 +324,7 @@ export async function scaleUp(
       const workerName = `worker-${workerIndex}`;
 
       // Create worker directory
-      const workerDirPath = join(leaderCwd, '.omx', 'state', 'team', sanitized, 'workers', workerName);
+      const workerDirPath = join(leaderCwd, '.rcs', 'state', 'team', sanitized, 'workers', workerName);
       await mkdir(workerDirPath, { recursive: true });
 
       // Resolve per-worker role from assigned task roles before launch so reasoning effort can vary by teammate.
@@ -335,7 +335,7 @@ export async function scaleUp(
         : agentType;
       const runtimeRole = workerRole;
       if (uniqueTaskRoles.size > 1) {
-        console.log(`[omx:scaling] ${workerName}: mixed task roles [${[...uniqueTaskRoles].join(', ')}], falling back to ${agentType}`);
+        console.log(`[rcs:scaling] ${workerName}: mixed task roles [${[...uniqueTaskRoles].join(', ')}], falling back to ${agentType}`);
       }
 
       const worktreeMode = resolveScaleUpWorktreeMode(config);
@@ -360,7 +360,7 @@ export async function scaleUp(
       const rolePromptContent = rawRolePromptContent
         ? composeRoleInstructionsForRole(runtimeRole, rawRolePromptContent, resolvedWorkerModel)
         : null;
-      const teamInstructionsPath = join(leaderCwd, '.omx', 'state', 'team', sanitized, 'worker-agents.md');
+      const teamInstructionsPath = join(leaderCwd, '.rcs', 'state', 'team', sanitized, 'worker-agents.md');
       const instructionsFilePath = workerWorkspace
         ? await writeWorkerWorktreeRootAgentsFile({
             teamName: sanitized,
@@ -375,16 +375,16 @@ export async function scaleUp(
           ? await writeWorkerRoleInstructionsFile(sanitized, workerName, leaderCwd, teamInstructionsPath, runtimeRole, rolePromptContent)
           : teamInstructionsPath;
       const extraEnv: Record<string, string> = {
-        OMX_TEAM_STATE_ROOT: teamStateRoot,
-        OMX_TEAM_LEADER_CWD: leaderCwd,
-        OMX_MODEL_INSTRUCTIONS_FILE: instructionsFilePath,
+        RCS_TEAM_STATE_ROOT: teamStateRoot,
+        RCS_TEAM_LEADER_CWD: leaderCwd,
+        RCS_MODEL_INSTRUCTIONS_FILE: instructionsFilePath,
       };
       if (workerWorkspace) {
-        extraEnv.OMX_TEAM_WORKTREE_PATH = workerWorkspace.worktreePath;
+        extraEnv.RCS_TEAM_WORKTREE_PATH = workerWorkspace.worktreePath;
         if (workerWorkspace.branchName) {
-          extraEnv.OMX_TEAM_WORKTREE_BRANCH = workerWorkspace.branchName;
+          extraEnv.RCS_TEAM_WORKTREE_BRANCH = workerWorkspace.branchName;
         }
-        extraEnv.OMX_TEAM_WORKTREE_DETACHED = workerWorkspace.detached ? '1' : '0';
+        extraEnv.RCS_TEAM_WORKTREE_DETACHED = workerWorkspace.detached ? '1' : '0';
       }
       const cmd = buildWorkerStartupCommand(
         sanitized,
@@ -452,11 +452,11 @@ export async function scaleUp(
 
       // Wait for worker readiness
       const readyTimeoutMs = resolveWorkerReadyTimeoutMs(env);
-      const skipReadyWait = env.OMX_TEAM_SKIP_READY_WAIT === '1';
+      const skipReadyWait = env.RCS_TEAM_SKIP_READY_WAIT === '1';
       if (!skipReadyWait) {
         const ready = waitForWorkerReady(sessionName, workerIndex, readyTimeoutMs, paneId);
         if (!ready) {
-          console.log(`[omx:scaling] Warning: worker ${workerName} did not become ready within timeout`);
+          console.log(`[rcs:scaling] Warning: worker ${workerName} did not become ready within timeout`);
         }
       }
 
@@ -802,7 +802,7 @@ export async function scaleDown(
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function resolveWorkerReadyTimeoutMs(env: NodeJS.ProcessEnv): number {
-  const raw = env.OMX_TEAM_READY_TIMEOUT_MS;
+  const raw = env.RCS_TEAM_READY_TIMEOUT_MS;
   const parsed = Number.parseInt(String(raw ?? ''), 10);
   if (Number.isFinite(parsed) && parsed >= 5_000) return parsed;
   return 45_000;
@@ -817,7 +817,7 @@ function resolveWorkerLaunchArgsForScaling(
   const fallbackModel = resolveAgentDefaultModel(agentType, env.CODEX_HOME);
 
   return resolveTeamWorkerLaunchArgs({
-    existingRaw: env.OMX_TEAM_WORKER_LAUNCH_ARGS,
+    existingRaw: env.RCS_TEAM_WORKER_LAUNCH_ARGS,
     inheritedArgs,
     fallbackModel,
     preferredReasoning,

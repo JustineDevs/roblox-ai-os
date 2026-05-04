@@ -1,7 +1,7 @@
 /**
  * Tests for the [tui].status_line preset feature.
  *
- * The OMX default for [tui].status_line is now derived from a HudPreset
+ * The RCS default for [tui].status_line is now derived from a HudPreset
  * (minimal | focused | full). The default preset is "focused", which must
  * remain byte-identical to the legacy hard-coded array so existing installs
  * see no behavior change after this feature lands.
@@ -63,7 +63,7 @@ describe("status_line preset matrix", () => {
 
 describe("buildMergedConfig with statusLinePreset", () => {
   it("emits the focused (legacy default) status_line when no preset is passed", () => {
-    const wd = "/tmp/omx-preset-noop";
+    const wd = "/tmp/rcs-preset-noop";
     const toml = buildMergedConfig("", wd, {});
     assert.match(
       toml,
@@ -72,7 +72,7 @@ describe("buildMergedConfig with statusLinePreset", () => {
   });
 
   it("emits the minimal status_line when statusLinePreset='minimal' on a fresh config", () => {
-    const wd = "/tmp/omx-preset-minimal";
+    const wd = "/tmp/rcs-preset-minimal";
     const toml = buildMergedConfig("", wd, { statusLinePreset: "minimal" });
     assert.match(toml, /^status_line = \["model-with-reasoning", "git-branch"\]$/m);
     assert.doesNotMatch(toml, /context-remaining/);
@@ -80,7 +80,7 @@ describe("buildMergedConfig with statusLinePreset", () => {
   });
 
   it("emits the focused status_line when statusLinePreset='focused' on a fresh config", () => {
-    const wd = "/tmp/omx-preset-focused";
+    const wd = "/tmp/rcs-preset-focused";
     const toml = buildMergedConfig("", wd, { statusLinePreset: "focused" });
     assert.match(
       toml,
@@ -89,7 +89,7 @@ describe("buildMergedConfig with statusLinePreset", () => {
   });
 
   it("preserves a user-defined status_line even when a preset is requested", async () => {
-    const wd = await mkdtemp(join(tmpdir(), "omx-preset-pres-"));
+    const wd = await mkdtemp(join(tmpdir(), "rcs-preset-pres-"));
     try {
       const configPath = join(wd, "config.toml");
       await writeFile(
@@ -107,8 +107,8 @@ describe("buildMergedConfig with statusLinePreset", () => {
     }
   });
 
-  it("upgrades a previously OMX-managed status_line to the new preset", async () => {
-    const wd = await mkdtemp(join(tmpdir(), "omx-preset-upgrade-"));
+  it("upgrades a previously RCS-managed status_line to the new preset", async () => {
+    const wd = await mkdtemp(join(tmpdir(), "rcs-preset-upgrade-"));
     try {
       const configPath = join(wd, "config.toml");
       // First populate with the focused (legacy) default via a no-preset merge.
@@ -116,7 +116,7 @@ describe("buildMergedConfig with statusLinePreset", () => {
       let toml = await readFile(configPath, "utf-8");
       assert.match(toml, /^status_line = \["model-with-reasoning", "git-branch", "context-remaining"/m);
 
-      // Now request minimal — the OMX-managed status_line should be replaced
+      // Now request minimal — the RCS-managed status_line should be replaced
       // because it is detected as a known preset value, not a user override.
       await mergeConfig(configPath, wd, { statusLinePreset: "minimal" });
       toml = await readFile(configPath, "utf-8");
@@ -129,35 +129,35 @@ describe("buildMergedConfig with statusLinePreset", () => {
   });
 });
 
-describe("user-customized status_line inside the OMX marker block", () => {
+describe("user-customized status_line inside the RCS marker block", () => {
   // Regression guard for the codex-flagged scenario: a user manually editing
-  // a [tui] block inside the OMX marker to a value that happens to byte-match
+  // a [tui] block inside the RCS marker to a value that happens to byte-match
   // a preset literal (e.g. ["model-with-reasoning", "git-branch"] equals the
   // `minimal` preset) must still be treated as a user customization and
   // preserved across rebuild.
   it("preserves a user-edited preset-literal status_line that lacks the managed marker", async () => {
-    const wd = await mkdtemp(join(tmpdir(), "omx-preset-coll-"));
+    const wd = await mkdtemp(join(tmpdir(), "rcs-preset-coll-"));
     try {
       const configPath = join(wd, "config.toml");
       const userEditedConfig = [
         "# ============================================================",
-        "# oh-my-codex (OMX) Configuration",
-        "# Managed by omx setup - manual edits preserved on next setup",
+        "# RCS Configuration",
+        "# Managed by rcs setup - manual edits preserved on next setup",
         "# ============================================================",
         "",
-        "[mcp_servers.omx_state]",
+        "[mcp_servers.rcs_state]",
         'command = "node"',
         `args = ["${join(wd, "dist/mcp/state-server.js").replace(/\\/g, "\\\\")}"]`,
         "enabled = true",
         "",
-        "# OMX TUI StatusLine (Codex CLI v0.101.0+)",
+        "# RCS TUI StatusLine (Codex CLI v0.101.0+)",
         "[tui]",
-        // No "# omx:managed-status-line" marker — this is a user edit that
+        // No "# rcs:managed-status-line" marker — this is a user edit that
         // happens to byte-match the `minimal` preset literal.
         'status_line = ["model-with-reasoning", "git-branch"]',
         "",
         "# ============================================================",
-        "# End oh-my-codex",
+        "# End RCS",
         "",
       ].join("\n");
       await writeFile(configPath, userEditedConfig);
@@ -174,30 +174,30 @@ describe("user-customized status_line inside the OMX marker block", () => {
     }
   });
 
-  it("recognizes the legacy seven-field default as OMX-managed for back-compat", async () => {
-    const wd = await mkdtemp(join(tmpdir(), "omx-preset-legacy-"));
+  it("recognizes the legacy seven-field default as RCS-managed for back-compat", async () => {
+    const wd = await mkdtemp(join(tmpdir(), "rcs-preset-legacy-"));
     try {
       const configPath = join(wd, "config.toml");
-      // Pre-marker install: OMX wrote the focused 7-field array without
+      // Pre-marker install: RCS wrote the focused 7-field array without
       // the marker comment. A subsequent merge requesting `minimal` must
       // still recognize this as managed and replace it.
       const legacyConfig = [
         "# ============================================================",
-        "# oh-my-codex (OMX) Configuration",
-        "# Managed by omx setup - manual edits preserved on next setup",
+        "# RCS Configuration",
+        "# Managed by rcs setup - manual edits preserved on next setup",
         "# ============================================================",
         "",
-        "[mcp_servers.omx_state]",
+        "[mcp_servers.rcs_state]",
         'command = "node"',
         `args = ["${join(wd, "dist/mcp/state-server.js").replace(/\\/g, "\\\\")}"]`,
         "enabled = true",
         "",
-        "# OMX TUI StatusLine (Codex CLI v0.101.0+)",
+        "# RCS TUI StatusLine (Codex CLI v0.101.0+)",
         "[tui]",
         'status_line = ["model-with-reasoning", "git-branch", "context-remaining", "total-input-tokens", "total-output-tokens", "five-hour-limit", "weekly-limit"]',
         "",
         "# ============================================================",
-        "# End oh-my-codex",
+        "# End RCS",
         "",
       ].join("\n");
       await writeFile(configPath, legacyConfig);
@@ -212,15 +212,15 @@ describe("user-customized status_line inside the OMX marker block", () => {
     }
   });
 
-  it("emits the managed-status-line marker comment when OMX writes status_line", async () => {
-    const wd = await mkdtemp(join(tmpdir(), "omx-preset-marker-"));
+  it("emits the managed-status-line marker comment when RCS writes status_line", async () => {
+    const wd = await mkdtemp(join(tmpdir(), "rcs-preset-marker-"));
     try {
       const configPath = join(wd, "config.toml");
       await mergeConfig(configPath, wd, {});
       const toml = await readFile(configPath, "utf-8");
       assert.match(
         toml,
-        /# omx:managed-status-line\nstatus_line = \["model-with-reasoning", "git-branch", "context-remaining"/,
+        /# rcs:managed-status-line\nstatus_line = \["model-with-reasoning", "git-branch", "context-remaining"/,
       );
     } finally {
       await rm(wd, { recursive: true, force: true });
@@ -228,13 +228,13 @@ describe("user-customized status_line inside the OMX marker block", () => {
   });
 });
 
-describe("mergeConfig with statusLinePreset (integration via .omx/hud-config.json)", () => {
+describe("mergeConfig with statusLinePreset (integration via .rcs/hud-config.json)", () => {
   it("renders the preset selected in MergeOptions when [tui] does not yet exist", async () => {
-    const wd = await mkdtemp(join(tmpdir(), "omx-preset-int-"));
+    const wd = await mkdtemp(join(tmpdir(), "rcs-preset-int-"));
     try {
-      await mkdir(join(wd, ".omx"), { recursive: true });
+      await mkdir(join(wd, ".rcs"), { recursive: true });
       await writeFile(
-        join(wd, ".omx", "hud-config.json"),
+        join(wd, ".rcs", "hud-config.json"),
         JSON.stringify({
           preset: "focused",
           statusLine: { preset: "minimal" },

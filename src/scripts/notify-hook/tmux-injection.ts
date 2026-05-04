@@ -30,7 +30,7 @@ import {
 } from '../tmux-hook-engine.js';
 
 function isHudPaneStartCommand(startCommand: any): boolean {
-  return /\bomx\b.*\bhud\b.*--watch/i.test(safeString(startCommand));
+  return /\brcs\b.*\bhud\b.*--watch/i.test(safeString(startCommand));
 }
 
 async function resolvePaneCwdMismatch(paneId: string, expectedCwd: any): Promise<any | null> {
@@ -203,7 +203,7 @@ export async function resolveSessionToPane(sessionName: any): Promise<string | n
 }
 
 export async function resolvePaneTarget(target: any, expectedCwd: any, modePane: any, cwd: string, payload: any): Promise<any> {
-  const requiresManagedOwnership = safeString(cwd).trim() !== '' && safeString(payload?.session_id || payload?.['session-id'] || process.env.OMX_SESSION_ID || '').trim() !== '';
+  const requiresManagedOwnership = safeString(cwd).trim() !== '' && safeString(payload?.session_id || payload?.['session-id'] || process.env.RCS_SESSION_ID || '').trim() !== '';
   const managedContext = requiresManagedOwnership
     ? await resolveManagedSessionContext(cwd, payload, { allowTeamWorker: false })
     : { managed: false, reason: 'not_required', invocationSessionId: '', sessionState: null, expectedTmuxSessionName: '', currentTmuxSessionName: '' };
@@ -323,8 +323,8 @@ export async function handleTmuxInjection({
   stateDir,
   logsDir,
 }: any): Promise<void> {
-  const omxDir = join(cwd, '.omx');
-  const configPath = join(omxDir, 'tmux-hook.json');
+  const rcsDir = join(cwd, '.rcs');
+  const configPath = join(rcsDir, 'tmux-hook.json');
   const hookStatePath = join(stateDir, 'tmux-hook-state.json');
   const nowIso = new Date().toISOString();
   const now = Date.now();

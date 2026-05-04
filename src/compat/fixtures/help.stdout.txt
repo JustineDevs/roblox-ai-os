@@ -1,40 +1,81 @@
 
-oh-my-codex (omx) - Multi-agent orchestration for Codex CLI
+Roblox Creator Skills (rcs) - Creator workflow runtime for Codex CLI
 
 Usage:
-  omx           Launch Codex CLI (HUD auto-attaches only when already inside tmux)
-  omx exec      Run codex exec non-interactively with OMX AGENTS/overlay injection
-  omx setup     Install skills, prompts, MCP servers, and scope-specific AGENTS.md
+  rcs           Launch Codex CLI (detached tmux by default on supported interactive terminals)
+  rcs exec      Run codex exec non-interactively with RCS AGENTS/overlay injection
+  rcs exec inject <session-id> --prompt <text>
+                Queue audited follow-up instructions for a running non-interactive exec job
+  rcs setup     Install skills, prompts, MCP servers, and scope-specific AGENTS.md
                 (user scope prompts for legacy vs plugin skill delivery when needed)
-  omx uninstall Remove OMX configuration and clean up installed artifacts
-  omx doctor    Check installation health
-  omx cleanup   Kill orphaned OMX MCP server processes from prior sessions
-  omx doctor --team  Check team/swarm runtime health diagnostics
-  omx ask       Ask local provider CLI (claude|gemini) and write artifact output
-  omx autoresearch [DEPRECATED] Use $autoresearch; direct CLI launch removed
-  omx explore   Default read-only exploration entrypoint (may adaptively use sparkshell backend)
-  omx session   Search prior local session transcripts and history artifacts
-  omx agents-init [path]
+  rcs update    Check npm now, update the global install immediately, then refresh setup
+  rcs uninstall Remove RCS configuration and clean up installed artifacts
+  rcs doctor    Check installation health
+  rcs list      List packaged RCS skills and native agent prompts (--json)
+  rcs cleanup   Kill orphaned RCS MCP server processes and remove stale RCS /tmp directories
+  rcs doctor --team  Check team/swarm runtime health diagnostics
+  rcs ask       Ask local provider CLI (claude|gemini) and write artifact output
+  rcs question  RCS-owned blocking question UI entrypoint for agent-invoked user questions
+  rcs adapt     Scaffold RCS-owned adapter foundations for persistent external targets
+  rcs resume    Resume a previous interactive Codex session
+  rcs explore   Default read-only exploration entrypoint (may adaptively use sparkshell backend)
+  rcs session   Search prior local session transcripts and history artifacts
+  rcs agents-init [path]
                 Bootstrap lightweight AGENTS.md files for a repo/subtree
-  omx deepinit [path]
+  rcs agents    Manage Codex native agent TOML files
+  rcs deepinit [path]
                 Alias for agents-init (lightweight AGENTS bootstrap only)
-  omx team      Spawn parallel worker panes in tmux and bootstrap inbox/task state
-  omx ralph     Launch Codex with ralph persistence mode active
-  omx version   Show version information
-  omx tmux-hook Manage tmux prompt injection workaround (init|status|validate|test)
-  omx hooks     Manage hook plugins (init|status|validate|test)
-  omx hud       Show HUD statusline (--watch, --json, --preset=NAME)
-  omx sparkshell <command> [args...]
-  omx sparkshell --tmux-pane <pane-id> [--tail-lines <100-1000>]
+  rcs team      Spawn parallel worker panes in tmux and bootstrap inbox/task state
+  rcs ralph     Launch Codex with ralph persistence mode active
+  rcs autoresearch [DEPRECATED] Use $autoresearch; direct CLI launch removed
+  rcs version   Show version information
+  rcs tmux-hook Manage tmux prompt injection workaround (init|status|validate|test)
+  rcs hooks     Manage hook plugins (init|status|validate|test)
+  rcs hud       Show HUD statusline (--watch, --json, --preset=NAME)
+  rcs sidecar   Show read-only team/multi-agent visualization (--watch, --json, --tmux)
+  rcs state     Read/write/list RCS mode state via CLI parity surface
+  rcs notepad   CLI parity for RCS notepad MCP tools
+  rcs project-memory
+                CLI parity for RCS project-memory MCP tools
+  rcs trace     CLI parity for RCS trace MCP tools
+  rcs code-intel
+                CLI parity for RCS code-intel MCP tools
+  rcs wiki      CLI parity for RCS wiki MCP tools
+  rcs mcp-serve Launch an RCS stdio MCP server target (plugin/runtime use)
+  rcs sparkshell <command> [args...]
+  rcs sparkshell --tmux-pane <pane-id> [--tail-lines <100-1000>]
                 Run native sparkshell sidecar for direct command execution or explicit tmux-pane summarization
                 (also used as an adaptive backend for qualifying read-only explore tasks)
-  omx help      Show this help message
-  omx status    Show active modes and state
-  omx cancel    Cancel active execution modes
-  omx reasoning Show or set model reasoning effort (low|medium|high|xhigh)
+  rcs help      Show this help message
+  rcs status    Show active modes and state
+  rcs cancel    Cancel active execution modes
+  rcs reasoning Show or set model reasoning effort (low|medium|high|xhigh)
+
+Creator workflow triggers (use inside Codex sessions):
+  $brief         Capture goals, constraints, genre, audience, and outcome
+  $blueprint     Generate structured design and planning artifacts
+  $forge         Generate concrete creator-facing deliverables and specs
+  $crew          Orchestrate multi-role creator workflows
+  $autoforge     Run the end-to-end creator workflow with minimal supervision
+
+Psychology-aware creator triggers:
+  $brief:audience      Target fantasy, habit patterns, pain language, return motive
+  $brief:motivation    Driver ranking + anti-pattern risk scan
+  $blueprint:psych     Player psychology blueprint
+  $blueprint:loop      Session, daily, weekly, and comeback loop map
+  $blueprint:retention D1/D7/D30 retention assumptions and cadence
+  $blueprint:social    Social machine design
+  $forge:reward-loop   Reward loop specification
+  $forge:daily-loop    Daily return motivator spec
+  $forge:event-loop    Event and urgency loop spec
+  $forge:progression   XP, level, prestige, rebirth, and unlock ladders
+  $forge:status        Prestige and visible status systems
+  $forge:fomo          Fair urgency mechanics with guardrails
+  $forge:mastery       Skill-expression and optimization systems
+  $forge:community     Social stickiness systems
 
 Options:
-  --yolo        Launch Codex in yolo mode (shorthand for: omx launch --yolo)
+  --yolo        Launch Codex in yolo mode (shorthand for: rcs launch --yolo)
   --high        Launch Codex with high reasoning effort
                 (shorthand for: -c model_reasoning_effort="high")
   --xhigh       Launch Codex with xhigh reasoning effort
@@ -46,6 +87,8 @@ Options:
   --madmax-spark  spark model for workers + bypass approvals for leader and workers
                 (shorthand for: --spark --madmax)
   --notify-temp  Enable temporary notification routing for this run/session only
+  --direct       Launch the interactive leader directly without RCS tmux/HUD management
+  --tmux         Launch the interactive leader session in detached tmux
   --discord      Select Discord provider for temporary notification mode
   --slack        Select Slack provider for temporary notification mode
   --telegram     Select Telegram provider for temporary notification mode
@@ -54,9 +97,29 @@ Options:
   -w, --worktree[=<name>]
                 Launch Codex in a git worktree (detached when no name is given)
   --force       Force reinstall (overwrite existing files)
+  --merge-agents
+                Merge RCS-managed AGENTS.md sections into an existing AGENTS.md
+                instead of overwriting user-authored content
   --dry-run     Show what would be done without doing it
+  --plugin      Use Codex plugin delivery for rcs setup and remove legacy RCS-managed user/project components
+  --legacy      Use legacy setup delivery for rcs setup, overriding persisted plugin mode
+  --install-mode <legacy|plugin>
+                Explicit setup install mode (canonical form; --legacy/--plugin are aliases)
   --keep-config Skip config.toml cleanup during uninstall
-  --purge       Remove .omx/ cache directory during uninstall
+  --purge       Remove .rcs/ cache directory during uninstall
   --verbose     Show detailed output
-  --scope       Setup scope for "omx setup" only:
+  --scope       Setup scope for "rcs setup" only:
                 user | project
+
+Launch policy:
+  RCS_LAUNCH_POLICY=direct|tmux|detached-tmux|auto
+                Choose the default leader launch policy when no CLI policy flag is present
+  unset RCS_LAUNCH_POLICY
+                Return to the auto/default policy (detached tmux on supported interactive terminals)
+  rcs --direct --yolo
+                Run this launch without RCS tmux/HUD management
+  RCS_LAUNCH_POLICY=direct rcs --yolo
+                Use direct launch from the environment
+  RCS_LAUNCH_POLICY=direct rcs --tmux --yolo
+                CLI policy flags override the environment for one launch
+  Config files are intentionally not used for launch policy in this release.

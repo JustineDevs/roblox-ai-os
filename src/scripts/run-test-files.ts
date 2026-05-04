@@ -46,8 +46,8 @@ if (files.length === 0) {
   process.exit(1);
 }
 
-const testTimeoutMs = parseTimeoutMs(process.env.OMX_NODE_TEST_TIMEOUT_MS, DEFAULT_TEST_TIMEOUT_MS);
-const runnerTimeoutMs = parseTimeoutMs(process.env.OMX_NODE_TEST_RUNNER_TIMEOUT_MS, DEFAULT_RUNNER_TIMEOUT_MS);
+const testTimeoutMs = parseTimeoutMs(process.env.RCS_NODE_TEST_TIMEOUT_MS, DEFAULT_TEST_TIMEOUT_MS);
+const runnerTimeoutMs = parseTimeoutMs(process.env.RCS_NODE_TEST_RUNNER_TIMEOUT_MS, DEFAULT_RUNNER_TIMEOUT_MS);
 const testArgs = ['--test'];
 if (testTimeoutMs > 0) {
   testArgs.push(`--test-timeout=${testTimeoutMs}`);
@@ -62,7 +62,7 @@ console.error(
 
 const childEnv = { ...process.env };
 delete childEnv.NODE_TEST_CONTEXT;
-childEnv.OMX_TEST_RELAX_TMUX_TIMEOUT = '1';
+childEnv.RCS_TEST_RELAX_TMUX_TIMEOUT = '1';
 
 const result = spawnSync(process.execPath, testArgs, {
   stdio: 'inherit',

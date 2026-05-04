@@ -1,13 +1,13 @@
 # Autoresearch Research Showcase
 
-This folder collects **small, reproducible research-style demos** used to showcase `omx autoresearch` on harder optimization problems.
+This folder collects **small, reproducible research-style demos** used to showcase `rcs autoresearch` on harder optimization problems.
 
 Design goals:
 - deterministic or seed-controlled evaluations
 - small code footprint
 - no large datasets checked into git
 - no heavyweight runtime artifacts committed
-- evaluator-driven keep/discard loops that are easy to inspect under `.omx/logs/autoresearch/`
+- evaluator-driven keep/discard loops that are easy to inspect under `.rcs/logs/autoresearch/`
 
 ## Layout
 
@@ -26,7 +26,7 @@ Naming convention:
 
 | Showcase | Mission | Evaluator | Status | Representative result |
 |---|---|---|---|---|
-| OMX self-optimization | `missions/in-action-cat-shellout-demo/` | `scripts/eval-in-action-cat-shellout-demo.js` | ✅ completed | kept commit `99ebf16` / cherry-picked as `8478261` removing the autoresearch manifest `cat` shell-out |
+| RCS self-optimization | `missions/in-action-cat-shellout-demo/` | `scripts/eval-in-action-cat-shellout-demo.js` | ✅ completed | kept commit `99ebf16` / cherry-picked as `8478261` removing the autoresearch manifest `cat` shell-out |
 | Kaggle-style tabular ML | `missions/ml-kaggle-model-optimization/` | `scripts/eval-ml-kaggle-model-optimization.py` | ✅ completed | ROC AUC improved from `0.9458071278825997` to `0.9976939203354298` |
 | Noisy high-dimensional Bayes-opt | `missions/noisy-bayesopt-highdim/` | `scripts/eval-noisy-bayesopt-highdim.py` | ✅ completed | score improved from `2.833048700169374` to `4.75978993804531` |
 | Latent subspace discovery | `missions/noisy-latent-subspace-discovery/` | `scripts/eval-noisy-latent-subspace-discovery.py` | ✅ completed | score improved from `3.7019658949006504` to `4.176124116152444` with a compact `cem_search` strategy |
@@ -38,7 +38,7 @@ Use `scripts/run-autoresearch-showcase.sh --list` to see the bundled launch targ
 
 | Showcase | Baseline | Kept / best documented result | Delta |
 |---|---:|---:|---:|
-| OMX self-optimization | n/a | behavior-preserving cleanup | n/a |
+| RCS self-optimization | n/a | behavior-preserving cleanup | n/a |
 | Kaggle-style tabular ML | 0.9458071278825997 AUC | 0.9976939203354298 AUC | +0.0518867924528301 |
 | Noisy high-dimensional Bayes-opt | 2.833048700169374 | 4.75978993804531 | +1.926741237875936 |
 | Latent subspace discovery | 3.7019658949006504 | 4.176124116152444 | +0.47415822125179353 |
@@ -46,10 +46,10 @@ Use `scripts/run-autoresearch-showcase.sh --list` to see the bundled launch targ
 
 ## Demos
 
-### 1. OMX self-optimization
+### 1. RCS self-optimization
 - Mission: `missions/in-action-cat-shellout-demo/`
 - Evaluator: `scripts/eval-in-action-cat-shellout-demo.js`
-- What it demonstrates: a tiny self-hosted code optimization loop where autoresearch removes an unnecessary shell-out from OMX itself.
+- What it demonstrates: a tiny self-hosted code optimization loop where autoresearch removes an unnecessary shell-out from RCS itself.
 
 ### 2. Kaggle-style tabular ML optimization
 - Demo code: `playground/ml_kaggle_demo/`
@@ -80,16 +80,16 @@ Use `scripts/run-autoresearch-showcase.sh --list` to see the bundled launch targ
 Example:
 
 ```bash
-omx autoresearch missions/noisy-bayesopt-highdim
+rcs autoresearch missions/noisy-bayesopt-highdim
 ```
 
 Then inspect:
 
 ```bash
-RUN_ID=$(find .omx/logs/autoresearch -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort | tail -n 1)
-cat .omx/logs/autoresearch/$RUN_ID/manifest.json
-cat .omx/logs/autoresearch/$RUN_ID/candidate.json
-cat .omx/logs/autoresearch/$RUN_ID/iteration-ledger.json
+RUN_ID=$(find .rcs/logs/autoresearch -maxdepth 1 -mindepth 1 -type d -printf '%f\n' | sort | tail -n 1)
+cat .rcs/logs/autoresearch/$RUN_ID/manifest.json
+cat .rcs/logs/autoresearch/$RUN_ID/candidate.json
+cat .rcs/logs/autoresearch/$RUN_ID/iteration-ledger.json
 ```
 
 You can also run evaluators directly without the supervisor:
@@ -111,6 +111,6 @@ Please avoid committing:
 - large model artifacts
 - benchmark output dumps
 - generated caches like `__pycache__/`
-- runtime autoresearch logs under `.omx/logs/`
+- runtime autoresearch logs under `.rcs/logs/`
 
 Keep research state in code, configs, missions, and evaluator scripts; keep bulky runtime outputs local.

@@ -8,16 +8,16 @@ import { readModeState, startMode, updateModeState } from '../base.js';
 
 describe('modes/base session-scoped persistence', () => {
   it('writes mode state into the current session scope when session.json exists', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-session-scope-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-session-scope-'));
     try {
-      await mkdir(join(wd, '.omx', 'state'), { recursive: true });
-      await writeFile(join(wd, '.omx', 'state', 'session.json'), JSON.stringify({ session_id: 'sess-base-write' }));
+      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
+      await writeFile(join(wd, '.rcs', 'state', 'session.json'), JSON.stringify({ session_id: 'sess-base-write' }));
 
       await startMode('ralplan', 'write in session scope', 5, wd);
 
-      const scopedPath = join(wd, '.omx', 'state', 'sessions', 'sess-base-write', 'ralplan-state.json');
+      const scopedPath = join(wd, '.rcs', 'state', 'sessions', 'sess-base-write', 'ralplan-state.json');
       assert.equal(existsSync(scopedPath), true);
-      assert.equal(existsSync(join(wd, '.omx', 'state', 'ralplan-state.json')), false);
+      assert.equal(existsSync(join(wd, '.rcs', 'state', 'ralplan-state.json')), false);
 
       const raw = JSON.parse(await readFile(scopedPath, 'utf-8')) as Record<string, unknown>;
       assert.equal(raw.mode, 'ralplan');
@@ -27,10 +27,10 @@ describe('modes/base session-scoped persistence', () => {
     }
   });
 
-  it('persists owner_omx_session_id for Ralph when session scope is active', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-session-ralph-owner-'));
+  it('persists owner_rcs_session_id for Ralph when session scope is active', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-session-ralph-owner-'));
     try {
-      const stateDir = join(wd, '.omx', 'state');
+      const stateDir = join(wd, '.rcs', 'state');
       const sessionId = 'sess-ralph-owner';
       const sessionDir = join(stateDir, 'sessions', sessionId);
       await mkdir(sessionDir, { recursive: true });
@@ -39,7 +39,7 @@ describe('modes/base session-scoped persistence', () => {
       await startMode('ralph', 'own this session', 5, wd);
 
       const scoped = JSON.parse(await readFile(join(sessionDir, 'ralph-state.json'), 'utf-8')) as Record<string, unknown>;
-      assert.equal(scoped.owner_omx_session_id, sessionId);
+      assert.equal(scoped.owner_rcs_session_id, sessionId);
       assert.equal(scoped.active, true);
     } finally {
       await rm(wd, { recursive: true, force: true });
@@ -47,9 +47,9 @@ describe('modes/base session-scoped persistence', () => {
   });
 
   it('prefers session-scoped reads over root fallback and writes updates back to the session scope', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-session-read-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-session-read-'));
     try {
-      const stateDir = join(wd, '.omx', 'state');
+      const stateDir = join(wd, '.rcs', 'state');
       const sessionId = 'sess-base-read';
       const sessionDir = join(stateDir, 'sessions', sessionId);
       await mkdir(sessionDir, { recursive: true });
@@ -75,9 +75,9 @@ describe('modes/base session-scoped persistence', () => {
   });
 
   it('allows an explicit Ralph start to overwrite an inactive current-session Ralph file', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'omx-mode-session-ralph-restart-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-session-ralph-restart-'));
     try {
-      const stateDir = join(wd, '.omx', 'state');
+      const stateDir = join(wd, '.rcs', 'state');
       const sessionId = 'sess-ralph-restart';
       const sessionDir = join(stateDir, 'sessions', sessionId);
       await mkdir(sessionDir, { recursive: true });
@@ -98,7 +98,7 @@ describe('modes/base session-scoped persistence', () => {
       assert.equal(scoped.iteration, 0);
       assert.equal(scoped.max_iterations, 5);
       assert.equal(scoped.current_phase, 'starting');
-      assert.equal(scoped.owner_omx_session_id, sessionId);
+      assert.equal(scoped.owner_rcs_session_id, sessionId);
       assert.equal(typeof scoped.completed_at, 'undefined');
     } finally {
       await rm(wd, { recursive: true, force: true });

@@ -7,11 +7,11 @@ if [ "$#" -eq 0 ]; then
 fi
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-echo "[omx] wrapper deprecation: prefer 'omx ask claude \"...\"'." >&2
-if [ -x "$SCRIPT_DIR/../bin/omx.js" ]; then
-  if node "$SCRIPT_DIR/../bin/omx.js" ask claude "$@"; then
+echo "[rcs] wrapper deprecation: prefer 'rcs ask claude \"...\"'." >&2
+if [ -x "$SCRIPT_DIR/../bin/rcs.js" ]; then
+  if node "$SCRIPT_DIR/../bin/rcs.js" ask claude "$@"; then
     exit 0
   fi
-  echo "[omx] wrapper fallback: bin/omx ask failed, using legacy advisor script." >&2
+  echo "[rcs] wrapper fallback: bin/rcs ask failed, using legacy advisor script." >&2
 fi
 exec node "$SCRIPT_DIR/run-provider-advisor.js" claude "$@"

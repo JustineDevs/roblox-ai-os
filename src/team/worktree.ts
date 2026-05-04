@@ -154,7 +154,7 @@ export function assertCleanLeaderWorkspaceForWorkerWorktrees(cwd: string): void 
   if (lines.length === 0) return;
   const preview = lines.slice(0, 8).join(' | ');
   throw new Error(
-    `leader_workspace_dirty_for_worktrees:${resolve(cwd)}:${preview}:commit_or_stash_before_omx_team`,
+    `leader_workspace_dirty_for_worktrees:${resolve(cwd)}:${preview}:commit_or_stash_before_rcs_team`,
   );
 }
 
@@ -222,7 +222,7 @@ function resolveBranchName(input: WorktreePlanInput): string | null {
 
 function resolveWorktreePath(input: WorktreePlanInput, repoRoot: string): string {
   const parent = dirname(repoRoot);
-  const bucket = `${basename(repoRoot)}.omx-worktrees`;
+  const bucket = `${basename(repoRoot)}.rcs-worktrees`;
 
   if (input.scope === 'launch') {
     if (!input.mode.enabled || input.mode.detached) {
@@ -236,12 +236,12 @@ function resolveWorktreePath(input: WorktreePlanInput, repoRoot: string): string
       throw new Error('autoresearch_worktree_requires_named_mode');
     }
     const runTag = sanitizePathToken(input.worktreeTag || 'run');
-    return join(repoRoot, '.omx', 'worktrees', `autoresearch-${sanitizePathToken(input.mode.name)}-${runTag}`);
+    return join(repoRoot, '.rcs', 'worktrees', `autoresearch-${sanitizePathToken(input.mode.name)}-${runTag}`);
   }
 
   const teamName = sanitizePathToken(input.teamName || 'team');
   const workerName = sanitizePathToken(input.workerName || 'worker');
-  return join(repoRoot, '.omx', 'team', teamName, 'worktrees', workerName);
+  return join(repoRoot, '.rcs', 'team', teamName, 'worktrees', workerName);
 }
 
 function findWorktreeByPath(entries: GitWorktreeEntry[], worktreePath: string): GitWorktreeEntry | null {

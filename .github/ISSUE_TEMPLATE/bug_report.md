@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a reproducible problem in oh-my-codex
+about: Report a reproducible problem in Roblox Creator Skills
 title: "[Bug] "
 labels: bug
 assignees: ''
@@ -14,7 +14,7 @@ A clear and concise description of the bug.
 
 - OS:
 - Node.js version:
-- `oh-my-codex` version:
+- `@jstn-sdk/rcs` version:
 - Codex CLI version:
 
 ## Steps to reproduce
@@ -33,4 +33,4 @@ What actually happened.
 
 ## Logs / screenshots
 
-Paste relevant command output (for example `omx doctor`) and screenshots if helpful.
+Paste relevant command output (for example `rcs doctor`) and screenshots if helpful.

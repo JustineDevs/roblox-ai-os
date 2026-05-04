@@ -18,13 +18,18 @@ describe('analyzePaneContent', () => {
     assert.ok(result.confidence >= 0.5);
   });
 
-  it('detects "omx" keyword', () => {
-    const result = analyzePaneContent('omx session started');
+  it('detects "rcs" keyword', () => {
+    const result = analyzePaneContent('rcs session started');
     assert.equal(result.hasCodex, true);
   });
 
-  it('detects "oh-my-codex" keyword', () => {
-    const result = analyzePaneContent('oh-my-codex v1.0');
+  it('detects the legacy package-name compatibility alias', () => {
+    const result = analyzePaneContent('roblox-ai-os-creator-skills v1.0');
+    assert.equal(result.hasCodex, true);
+  });
+
+  it('detects "Roblox Creator Skills" keyword', () => {
+    const result = analyzePaneContent('Roblox Creator Skills v0.1.0');
     assert.equal(result.hasCodex, true);
   });
 
@@ -81,7 +86,7 @@ describe('analyzePaneContent', () => {
   });
 
   it('caps confidence at 1.0', () => {
-    const result = analyzePaneContent('Codex $ > agent task running omx');
+    const result = analyzePaneContent('Codex $ > agent task running rcs');
     assert.ok(result.confidence <= 1.0);
   });
 

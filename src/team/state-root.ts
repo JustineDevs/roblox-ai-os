@@ -1,20 +1,20 @@
 import { existsSync } from 'fs';
 import { readFile, realpath, stat } from 'fs/promises';
 import { join, relative, resolve, sep } from 'path';
-import { omxStateDir } from '../utils/paths.js';
+import { rcsStateDir } from '../utils/paths.js';
 
 /**
- * Resolve the canonical OMX team state root for a leader working directory.
+ * Resolve the canonical RCS team state root for a leader working directory.
  */
 export function resolveCanonicalTeamStateRoot(
   leaderCwd: string,
   env: NodeJS.ProcessEnv = process.env,
 ): string {
-  const explicit = env.OMX_TEAM_STATE_ROOT;
+  const explicit = env.RCS_TEAM_STATE_ROOT;
   if (typeof explicit === 'string' && explicit.trim() !== '') {
     return resolve(leaderCwd, explicit.trim());
   }
-  return resolve(omxStateDir(leaderCwd));
+  return resolve(rcsStateDir(leaderCwd));
 }
 
 export interface TeamWorkerIdentityRef {
@@ -33,7 +33,7 @@ export type WorkerTeamStateRootSource =
 
 interface WorkerTeamStateRootResolveOptions {
   /**
-   * Allow probing cwd/.omx/state as a last-resort candidate. This remains
+   * Allow probing cwd/.rcs/state as a last-resort candidate. This remains
    * available for the strict PostToolUse/git path where the worker worktree
    * itself may intentionally carry a validated state root, but notify-hook
    * paths should leave it disabled so they never guess a local state root.
@@ -269,16 +269,16 @@ async function resolveWorkerTeamStateRootWithOptions(
   env: NodeJS.ProcessEnv,
   options: WorkerTeamStateRootResolveOptions,
 ): Promise<WorkerTeamStateRootResolution> {
-  const explicit = typeof env.OMX_TEAM_STATE_ROOT === 'string' ? env.OMX_TEAM_STATE_ROOT.trim() : '';
+  const explicit = typeof env.RCS_TEAM_STATE_ROOT === 'string' ? env.RCS_TEAM_STATE_ROOT.trim() : '';
   if (explicit) {
     const resolved = await validateWithSource(resolve(cwd, explicit), 'env', cwd, worker);
     if (resolved.ok) return resolved;
     return { ...resolved, source: 'env' };
   }
 
-  const leaderCwd = typeof env.OMX_TEAM_LEADER_CWD === 'string' ? env.OMX_TEAM_LEADER_CWD.trim() : '';
-  const leaderStateRoot = leaderCwd ? join(resolve(cwd, leaderCwd), '.omx', 'state') : '';
-  const cwdStateRoot = join(cwd, '.omx', 'state');
+  const leaderCwd = typeof env.RCS_TEAM_LEADER_CWD === 'string' ? env.RCS_TEAM_LEADER_CWD.trim() : '';
+  const leaderStateRoot = leaderCwd ? join(resolve(cwd, leaderCwd), '.rcs', 'state') : '';
+  const cwdStateRoot = join(cwd, '.rcs', 'state');
 
   const hintedCandidates: Array<{ stateRoot: string; source: WorkerTeamStateRootSource }> = [
     ...(leaderStateRoot ? [{ stateRoot: leaderStateRoot, source: 'leader_cwd' as const }] : []),
@@ -325,12 +325,12 @@ async function resolveWorkerTeamStateRootWithOptions(
 }
 
 /**
- * Resolve the canonical team state root for an OMX team worker PostToolUse/git hook.
+ * Resolve the canonical team state root for an RCS team worker PostToolUse/git hook.
  *
  * This resolver is intentionally fail-closed: every successful source must have
  * a valid worker identity and, when present, whose worktree path matches the hook cwd/current
  * worktree. It prevents hooks running inside worker worktrees from guessing a
- * local `.omx/state` root and writing cross-worker runtime state in the wrong
+ * local `.rcs/state` root and writing cross-worker runtime state in the wrong
  * place. The cwd fallback is retained only for this strict worker-worktree path.
  */
 export async function resolveWorkerTeamStateRoot(
@@ -349,7 +349,7 @@ export async function resolveWorkerTeamStateRoot(
  *
  * Notify hooks update heartbeat/idle/dispatch state and may run in contexts that
  * are not safe git operation contexts. They must still be worker-aware, but they
- * must not invent `cwd/.omx/state` when the runtime did not provide a canonical
+ * must not invent `cwd/.rcs/state` when the runtime did not provide a canonical
  * root hint. Only explicit environment/leader metadata roots are considered, and
  * all successful roots still require a matching worker identity.
  */
@@ -358,15 +358,15 @@ export async function resolveWorkerNotifyTeamStateRoot(
   worker: TeamWorkerIdentityRef,
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<WorkerTeamStateRootResolution> {
-  const explicit = typeof env.OMX_TEAM_STATE_ROOT === 'string' ? env.OMX_TEAM_STATE_ROOT.trim() : '';
+  const explicit = typeof env.RCS_TEAM_STATE_ROOT === 'string' ? env.RCS_TEAM_STATE_ROOT.trim() : '';
   if (explicit) {
     const resolved = await validateWorkerNotifyStateRoot(resolve(cwd, explicit), 'env', cwd, worker);
     if (resolved.ok) return resolved;
     return { ...resolved, source: 'env' };
   }
 
-  const leaderCwd = typeof env.OMX_TEAM_LEADER_CWD === 'string' ? env.OMX_TEAM_LEADER_CWD.trim() : '';
-  const leaderStateRoot = leaderCwd ? join(resolve(cwd, leaderCwd), '.omx', 'state') : '';
+  const leaderCwd = typeof env.RCS_TEAM_LEADER_CWD === 'string' ? env.RCS_TEAM_LEADER_CWD.trim() : '';
+  const leaderStateRoot = leaderCwd ? join(resolve(cwd, leaderCwd), '.rcs', 'state') : '';
   if (!leaderStateRoot) {
     return {
       ok: false,

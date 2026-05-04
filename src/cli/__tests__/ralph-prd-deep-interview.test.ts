@@ -12,7 +12,7 @@ describe('ralph PRD mode deep interview gate', () => {
   it('requires deep-interview --quick before PRD artifact creation', () => {
     assert.match(ralphSkill, /Run deep-interview in quick mode before creating PRD artifacts/i);
     assert.match(ralphSkill, /\$deep-interview\s+--quick/i);
-    assert.match(ralphSkill, /\.omx\/interviews\/\{slug\}-\{timestamp\}\.md/);
+    assert.match(ralphSkill, /\.rcs\/interviews\/\{slug\}-\{timestamp\}\.md/);
   });
 
   it('documents --no-deslop as a PRD-mode opt-out for the final deslop pass', () => {
@@ -21,7 +21,7 @@ describe('ralph PRD mode deep interview gate', () => {
   });
 
   it('keeps ralph-init aligned with the PRD startup compatibility contract', () => {
-    assert.match(ralphInitSkill, /startup still validates machine-readable story state from `\.omx\/prd\.json`/i);
+    assert.match(ralphInitSkill, /startup still validates machine-readable story state from `\.rcs\/prd\.json`/i);
     assert.match(ralphInitSkill, /canonical PRD markdown is not yet the startup validation source/i);
   });
 });

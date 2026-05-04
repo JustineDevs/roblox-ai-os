@@ -38,7 +38,7 @@ describe("document refresh evaluator", () => {
   it("commit path suppresses when tracked or force-staged rule-scoped planning spec appears in the diff", () => {
     const warning = warningFor([
       { status: "M", path: "src/document-refresh/enforcer.ts" },
-      { status: "A", path: ".omx/plans/prd-document-refresh-enforcer.md" },
+      { status: "A", path: ".rcs/plans/prd-document-refresh-enforcer.md" },
     ]);
 
     assert.equal(warning, null);
@@ -47,7 +47,7 @@ describe("document refresh evaluator", () => {
   it("does not suppress native-hook changes with document-refresh-only planning specs", () => {
     const warning = warningFor([
       { status: "M", path: "src/scripts/codex-native-hook.ts" },
-      { status: "A", path: ".omx/plans/prd-document-refresh-enforcer.md" },
+      { status: "A", path: ".rcs/plans/prd-document-refresh-enforcer.md" },
     ]);
 
     assert.ok(warning);
@@ -57,7 +57,7 @@ describe("document refresh evaluator", () => {
   it("commit path does not suppress on ignored local-only planning spec evidence", () => {
     const warning = warningFor(
       [{ status: "M", path: "src/scripts/codex-native-hook.ts" }],
-      { scope: "commit", localFreshTargets: [".omx/plans/prd-document-refresh-enforcer.md"] },
+      { scope: "commit", localFreshTargets: [".rcs/plans/prd-document-refresh-enforcer.md"] },
     );
 
     assert.ok(warning);
@@ -75,7 +75,7 @@ describe("document refresh evaluator", () => {
   it("does not suppress on unrelated doc change", () => {
     const warning = warningFor([
       { status: "M", path: "src/scripts/codex-native-hook.ts" },
-      { status: "M", path: "docs/release-notes-0.14.3.md" },
+      { status: "M", path: "docs/release-notes-v0.1.0.md" },
     ]);
 
     assert.ok(warning);
@@ -106,7 +106,7 @@ describe("document refresh evaluator", () => {
     const warning = warningFor([
       { status: "M", path: "CHANGELOG.md" },
       { status: "M", path: "RELEASE_BODY.md" },
-      { status: "M", path: "docs/release-notes-0.14.3.md" },
+      { status: "M", path: "docs/release-notes-v0.1.0.md" },
       { status: "M", path: "docs/qa/release-readiness-20260423.md" },
     ]);
 
@@ -145,13 +145,13 @@ describe("document refresh evaluator", () => {
     assert.equal(isFinalHandoffDocumentRefreshCandidate(""), false);
   });
 
-  it("final handoff local .omx freshness suppresses when planning spec is newer than source", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "omx-document-refresh-fresh-"));
+  it("final handoff local .rcs freshness suppresses when planning spec is newer than source", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-document-refresh-fresh-"));
     try {
       const sourcePath = join(cwd, "src", "scripts", "codex-native-hook.ts");
-      const planPath = join(cwd, ".omx", "plans", "prd-native-hook-behavior.md");
+      const planPath = join(cwd, ".rcs", "plans", "prd-native-hook-behavior.md");
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
-      await mkdir(join(cwd, ".omx", "plans"), { recursive: true });
+      await mkdir(join(cwd, ".rcs", "plans"), { recursive: true });
       await writeFile(sourcePath, "source", "utf-8");
       await writeFile(planPath, "plan", "utf-8");
       const oldDate = new Date("2026-04-23T00:00:00Z");
@@ -161,7 +161,7 @@ describe("document refresh evaluator", () => {
 
       const changes = [{ status: "M", path: "src/scripts/codex-native-hook.ts" }];
       const freshTargets = findFreshLocalPlanningTargets(cwd, changes);
-      assert.deepEqual(freshTargets, [".omx/plans/prd-native-hook-behavior.md"]);
+      assert.deepEqual(freshTargets, [".rcs/plans/prd-native-hook-behavior.md"]);
       assert.equal(warningFor(changes, { scope: "final-handoff", localFreshTargets: freshTargets }), null);
     } finally {
       await rm(cwd, { recursive: true, force: true });

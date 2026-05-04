@@ -1,16 +1,16 @@
 /**
- * omx uninstall - Remove oh-my-codex configuration and installed artifacts
+ * rcs uninstall - Remove Roblox Creator Skills configuration and installed artifacts
  */
 
 import { readFile, writeFile, readdir, rm } from "fs/promises";
 import { existsSync } from "fs";
 import { join, basename } from "path";
 import {
-  stripExistingOmxBlocks,
-  stripOmxEnvSettings,
-  stripOmxTopLevelKeys,
-  stripOmxFeatureFlags,
-  stripOmxSeededBehavioralDefaults,
+  stripExistingRcsSeededBlocks,
+  stripRcsSeededEnvSettings,
+  stripRcsSeededTopLevelKeys,
+  stripRcsSeededFeatureFlags,
+  stripRcsSeededBehavioralDefaults,
 } from "../config/generator.js";
 import {
   parseCodexHooksConfig,
@@ -21,8 +21,8 @@ import { AGENT_DEFINITIONS } from "../agents/definitions.js";
 import { detectLegacySkillRootOverlap } from "../utils/paths.js";
 import { resolveScopeDirectories, type SetupScope } from "./setup.js";
 import { readPersistedSetupScope } from "./index.js";
-import { isOmxGeneratedAgentsMd } from "../utils/agents-md.js";
-import { OMX_FIRST_PARTY_MCP_SERVER_NAMES } from "../config/omx-first-party-mcp.js";
+import { isRcsGeneratedAgentsMd } from "../utils/agents-md.js";
+import { RCS_FIRST_PARTY_MCP_SERVER_NAMES } from "../config/rcs-first-party-mcp.js";
 
 export interface UninstallOptions {
   dryRun?: boolean;
@@ -48,7 +48,7 @@ interface UninstallSummary {
   legacySkillRootWarning: string | null;
 }
 
-function detectOmxConfigArtifacts(config: string): {
+function detectRcsSeededConfigArtifacts(config: string): {
   hasMcpServers: string[];
   hasAgentEntries: number;
   hasTuiSection: boolean;
@@ -56,7 +56,7 @@ function detectOmxConfigArtifacts(config: string): {
   hasFeatureFlags: boolean;
   hasExploreRoutingEnv: boolean;
 } {
-  const hasMcpServers = OMX_FIRST_PARTY_MCP_SERVER_NAMES.filter((name) =>
+  const hasMcpServers = RCS_FIRST_PARTY_MCP_SERVER_NAMES.filter((name) =>
     new RegExp(`\\[mcp_servers\\.${name}\\]`).test(config),
   );
 
@@ -71,18 +71,18 @@ function detectOmxConfigArtifacts(config: string): {
 
   const hasTuiSection =
     /^\[tui\]/m.test(config) &&
-    config.includes("oh-my-codex (OMX) Configuration");
+    config.includes("RCS Configuration");
 
   const hasTopLevelKeys =
     /^\s*notify\s*=.*node/m.test(config) ||
     /^\s*model_reasoning_effort\s*=/m.test(config) ||
-    /^\s*developer_instructions\s*=.*oh-my-codex/m.test(config);
+    /^\s*developer_instructions\s*=.*You have RCS installed/m.test(config);
 
   const hasFeatureFlags =
     /^\s*multi_agent\s*=\s*true/m.test(config) ||
     /^\s*child_agents_md\s*=\s*true/m.test(config) ||
     /^\s*codex_hooks\s*=\s*true/m.test(config);
-  const hasExploreRoutingEnv = /^\s*USE_OMX_EXPLORE_CMD\s*=/m.test(config);
+  const hasExploreRoutingEnv = /^\s*USE_RCS_EXPLORE_CMD\s*=/m.test(config);
 
   return {
     hasMcpServers,
@@ -123,7 +123,7 @@ async function cleanConfig(
   }
 
   const original = await readFile(configPath, "utf-8");
-  const detected = detectOmxConfigArtifacts(original);
+  const detected = detectRcsSeededConfigArtifacts(original);
 
   result.mcpServersRemoved = detected.hasMcpServers;
   result.agentEntriesRemoved = detected.hasAgentEntries;
@@ -131,22 +131,22 @@ async function cleanConfig(
   result.topLevelKeysRemoved = detected.hasTopLevelKeys;
   result.featureFlagsRemoved = detected.hasFeatureFlags;
 
-  // Strip OMX tables block (MCP servers, agents, tui)
+  // Strip RCS tables block (MCP servers, agents, tui)
   let config = original;
-  const { cleaned } = stripExistingOmxBlocks(config);
+  const { cleaned } = stripExistingRcsSeededBlocks(config);
   config = cleaned;
 
   // Strip top-level keys
-  config = stripOmxTopLevelKeys(config);
+  config = stripRcsSeededTopLevelKeys(config);
 
-  // Strip OMX-seeded behavioral defaults only when the seeded pair is unchanged.
-  config = stripOmxSeededBehavioralDefaults(config);
+  // Strip RCS-seeded behavioral defaults only when the seeded pair is unchanged.
+  config = stripRcsSeededBehavioralDefaults(config);
 
   // Strip feature flags
-  config = stripOmxFeatureFlags(config);
+  config = stripRcsSeededFeatureFlags(config);
 
-  // Strip OMX-managed env defaults
-  config = stripOmxEnvSettings(config);
+  // Strip RCS-managed env defaults
+  config = stripRcsSeededEnvSettings(config);
 
   // Normalize trailing whitespace
   config = config.trimEnd() + "\n";
@@ -162,7 +162,7 @@ async function cleanConfig(
       );
     }
   } else {
-    if (options.verbose) console.log("  No OMX config entries found.");
+    if (options.verbose) console.log("  No RCS config entries found.");
   }
 
   return result;
@@ -273,9 +273,9 @@ async function removeAgentsMd(
 
   try {
     const content = await readFile(agentsMdPath, "utf-8");
-    if (!isOmxGeneratedAgentsMd(content)) {
+    if (!isRcsGeneratedAgentsMd(content)) {
       if (options.verbose)
-        console.log("  AGENTS.md is not OMX-generated, skipping.");
+        console.log("  AGENTS.md is not RCS-generated, skipping.");
       return false;
     }
   } catch {
@@ -325,14 +325,14 @@ async function removeCacheDirectory(
   projectRoot: string,
   options: Pick<UninstallOptions, "dryRun" | "verbose">,
 ): Promise<boolean> {
-  const omxDir = join(projectRoot, ".omx");
-  if (!existsSync(omxDir)) return false;
+  const rcsDir = join(projectRoot, ".rcs");
+  if (!existsSync(rcsDir)) return false;
 
   if (!options.dryRun) {
-    await rm(omxDir, { recursive: true, force: true });
+    await rm(rcsDir, { recursive: true, force: true });
   }
   if (options.verbose)
-    console.log(`  ${options.dryRun ? "Would remove" : "Removed"} ${omxDir}`);
+    console.log(`  ${options.dryRun ? "Would remove" : "Removed"} ${rcsDir}`);
   return true;
 }
 
@@ -349,7 +349,7 @@ async function detectLegacySkillRootWarning(
   if (overlap.overlappingSkillNames.length === 0) {
     return (
       `legacy ~/.agents/skills still exists (${overlap.legacySkillCount} skills). ` +
-      "omx uninstall does not remove that historical root automatically; " +
+      "rcs uninstall does not remove that historical root automatically; " +
       "archive or remove ~/.agents/skills if Codex still shows stale or duplicate skills"
     );
   }
@@ -361,7 +361,7 @@ async function detectLegacySkillRootWarning(
   return (
     `${overlap.overlappingSkillNames.length} overlapping skill names remain between ` +
     `${overlap.canonicalDir} and ${overlap.legacyDir}${mismatchMessage}. ` +
-    "omx uninstall only removes the active canonical skill root; " +
+    "rcs uninstall only removes the active canonical skill root; " +
     "archive or remove ~/.agents/skills if Codex still shows duplicates"
   );
 }
@@ -372,7 +372,7 @@ function printSummary(summary: UninstallSummary, dryRun: boolean): void {
   console.log("\nUninstall summary:");
 
   if (summary.configCleaned) {
-    console.log(`  ${prefix} OMX configuration block from config.toml`);
+    console.log(`  ${prefix} RCS configuration block from config.toml`);
     if (summary.mcpServersRemoved.length > 0) {
       console.log(`    MCP servers: ${summary.mcpServersRemoved.join(", ")}`);
     }
@@ -391,11 +391,11 @@ function printSummary(summary: UninstallSummary, dryRun: boolean): void {
       console.log("    Feature flags (multi_agent, child_agents_md, codex_hooks)");
     }
   } else if (!summary.configCleaned && summary.mcpServersRemoved.length === 0) {
-    console.log("  config.toml: no OMX entries found (or --keep-config used)");
+    console.log("  config.toml: no RCS entries found (or --keep-config used)");
   }
 
   if (summary.hooksFileRemoved) {
-    console.log(`  ${prefix} OMX-managed entries in .codex/hooks.json`);
+    console.log(`  ${prefix} RCS-managed entries in .codex/hooks.json`);
   }
 
   if (summary.promptsRemoved > 0) {
@@ -413,7 +413,7 @@ function printSummary(summary: UninstallSummary, dryRun: boolean): void {
     console.log(`  ${prefix} AGENTS.md`);
   }
   if (summary.cacheDirectoryRemoved) {
-    console.log(`  ${prefix} .omx/ cache directory`);
+    console.log(`  ${prefix} .rcs/ cache directory`);
   }
   if (summary.legacySkillRootWarning) {
     console.log(`  Warning: ${summary.legacySkillRootWarning}`);
@@ -430,7 +430,7 @@ function printSummary(summary: UninstallSummary, dryRun: boolean): void {
 
   if (totalActions === 0) {
     console.log(
-      "  Nothing to remove. oh-my-codex does not appear to be installed.",
+      "  Nothing to remove. RCS does not appear to be installed.",
     );
   }
 }
@@ -450,7 +450,7 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
   const scope = options.scope ?? readPersistedSetupScope(projectRoot) ?? "user";
   const scopeDirs = resolveScopeDirectories(scope, projectRoot);
 
-  console.log("oh-my-codex uninstall");
+  console.log("RCS uninstall");
   console.log("=====================\n");
   if (dryRun) {
     console.log("[dry-run mode] No files will be modified.\n");
@@ -534,7 +534,7 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
   );
   console.log();
 
-  // Step 6: Remove AGENTS.md and optionally .omx/ cache directory
+  // Step 6: Remove AGENTS.md and optionally .rcs/ cache directory
   console.log("[6/6] Cleaning up...");
   const agentsMdPath =
     scope === "project"
@@ -551,8 +551,8 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
     });
   } else {
     // Always clean up setup-scope.json and hud-config.json
-    const scopeFile = join(projectRoot, ".omx", "setup-scope.json");
-    const hudConfig = join(projectRoot, ".omx", "hud-config.json");
+    const scopeFile = join(projectRoot, ".rcs", "setup-scope.json");
+    const hudConfig = join(projectRoot, ".rcs", "hud-config.json");
     for (const f of [scopeFile, hudConfig]) {
       if (existsSync(f)) {
         if (!dryRun) await rm(f, { force: true });
@@ -569,7 +569,7 @@ export async function uninstall(options: UninstallOptions = {}): Promise<void> {
 
   if (!dryRun) {
     console.log(
-      '\noh-my-codex has been uninstalled. Run "omx setup" to reinstall.',
+      '\nRCS has been uninstalled. Run "rcs setup" to reinstall.',
     );
   } else {
     console.log("\nRun without --dry-run to apply changes.");

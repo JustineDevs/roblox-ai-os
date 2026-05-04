@@ -5,8 +5,8 @@
  * Independent of workflow mode state (ralph-state.json, skill-active-state.json, etc.).
  *
  * File location:
- *   With session id : .omx/state/sessions/<session_id>/prompt-routing-state.json
- *   Without session id: .omx/state/prompt-routing-state.json
+ *   With session id : .rcs/state/sessions/<session_id>/prompt-routing-state.json
+ *   Without session id: .rcs/state/prompt-routing-state.json
  *
  * Rules:
  *   - Write ONLY for HEAVY/LIGHT decisions (never for PASS).
@@ -49,8 +49,8 @@ function resolveStatePath(workingDirectory?: string, sessionId?: string | null):
   if (typeof sessionId === 'string' && !SESSION_ID_PATTERN.test(sessionId)) {
     return null;
   }
-  // getStateDir returns .omx/state/sessions/<sessionId>/ when sessionId is provided,
-  // or .omx/state/ as the root fallback — exactly the paths we need.
+  // getStateDir returns .rcs/state/sessions/<sessionId>/ when sessionId is provided,
+  // or .rcs/state/ as the root fallback — exactly the paths we need.
   const stateDir = getStateDir(workingDirectory ?? undefined, sessionId ?? undefined);
   return join(stateDir, STATE_FILENAME);
 }

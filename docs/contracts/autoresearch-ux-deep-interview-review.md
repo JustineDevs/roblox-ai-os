@@ -1,4 +1,4 @@
-# `omx autoresearch` deep-interview UX review notes
+# `rcs autoresearch` deep-interview UX review notes
 
 Date: 2026-03-17  
 Reviewer lane: worker-3
@@ -7,8 +7,8 @@ Reviewer lane: worker-3
 
 Compared the current implementation and operator-facing docs against:
 
-- `.omx/plans/prd-autoresearch-ux-deep-interview.md`
-- `.omx/plans/test-spec-autoresearch-ux-deep-interview.md`
+- `.rcs/plans/prd-autoresearch-ux-deep-interview.md`
+- `.rcs/plans/test-spec-autoresearch-ux-deep-interview.md`
 
 Reviewed files:
 
@@ -27,9 +27,9 @@ Reviewed files:
 
 Current code still reflects the older guided-init flow:
 
-- `omx autoresearch` with no args enters `guidedAutoresearchSetup()` and immediately asks for a raw evaluator command.
+- `rcs autoresearch` with no args enters `guidedAutoresearchSetup()` and immediately asks for a raw evaluator command.
 - bare `init` still routes into that same guided path instead of an explicit novice compatibility bridge.
-- there is no autoresearch-specific intake module, no canonical `.omx/specs/deep-interview-autoresearch-{slug}.md` artifact, and no confirm/refine launch gate.
+- there is no autoresearch-specific intake module, no canonical `.rcs/specs/deep-interview-autoresearch-{slug}.md` artifact, and no confirm/refine launch gate.
 - launch still happens immediately after guided setup returns.
 - README/help/contract docs still describe the thin-supervisor runtime, but not the new novice deep-interview intake surface from this PRD.
 
@@ -43,7 +43,7 @@ Current code still reflects the older guided-init flow:
 - `src/cli/autoresearch-guided.ts`
   - `guidedAutoresearchSetup()` still prompts directly for `Evaluator command`.
   - no placeholder/readiness rejection exists beyond `parseSandboxContract()`.
-  - no draft artifact is written under `.omx/specs/`.
+  - no draft artifact is written under `.rcs/specs/`.
 - `skills/deep-interview/SKILL.md`
   - the generic execution bridge exists, but the autoresearch specialization section required by the PRD is absent on this branch.
 
@@ -51,7 +51,7 @@ Current code still reflects the older guided-init flow:
 - `src/cli/__tests__/autoresearch-guided.test.ts`
   - covers mission/scaffold creation and flag parsing for the older init/guided flow only.
 - `src/cli/__tests__/autoresearch.test.ts`
-  - still asserts the older `omx autoresearch init [--topic ...]` help surface and non-interactive `mission-dir is required` failure.
+  - still asserts the older `rcs autoresearch init [--topic ...]` help surface and non-interactive `mission-dir is required` failure.
 - worker-2 has an in-progress test addition that correctly starts locking the expected deep-interview specialization text in `src/hooks/__tests__/deep-interview-contract.test.ts`.
 
 ## PRD checklist assessment
@@ -64,9 +64,9 @@ The first guided prompt still asks for a concrete evaluator shell command.
 **Fail on current branch.**
 No autoresearch-specific refinement loop or seeded novice bridge exists.
 
-### 3. Canonical draft artifact at `.omx/specs/deep-interview-autoresearch-{slug}.md`
+### 3. Canonical draft artifact at `.rcs/specs/deep-interview-autoresearch-{slug}.md`
 **Fail on current branch.**
-No `.omx/specs/` draft artifact is generated.
+No `.rcs/specs/` draft artifact is generated.
 
 ### 4. Explicit `refine further` vs `launch` confirmation boundary
 **Fail on current branch.**
@@ -84,7 +84,7 @@ Those flags are not accepted at top level; only `init` parses them today.
 **Pass on current branch.**
 Existing expert/runtime flows remain intact.
 
-### 8. Bare `omx autoresearch init` documented as novice alias
+### 8. Bare `rcs autoresearch init` documented as novice alias
 **Fail on current branch.**
 Bare `init` is routed into guided mode, but help/docs do not explain the compatibility semantics required by the PRD.
 
@@ -99,7 +99,7 @@ Those tests are not present yet.
 ## Documentation follow-ups once implementation lands
 
 1. Update `README.md` with the new novice entry surfaces:
-   - `omx autoresearch` as a deep-interview-style refinement flow
+   - `rcs autoresearch` as a deep-interview-style refinement flow
    - top-level seeded novice flags
    - explicit confirm-before-launch behavior
 2. Update `docs/contracts/autoresearch-command-contract.md` to add:

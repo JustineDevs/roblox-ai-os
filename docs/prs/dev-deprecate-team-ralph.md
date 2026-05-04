@@ -1,19 +1,21 @@
-# PR Draft: Deprecate `omx team ralph` and keep team standalone
+> Archive context: retained release and migration collateral from the pre-v0.1.0 fork-to-RCS transition. Links are normalized to the canonical JustineDevs repository, but historical chronology and contributor references may still describe pre-fork development.
+
+# PR Draft: Deprecate `rcs team ralph` and keep team standalone
 
 ## Target branch
 `dev`
 
 ## Title
-Deprecate `omx team ralph` and remove linked team↔Ralph lifecycle machinery
+Deprecate `rcs team ralph` and remove linked team↔Ralph lifecycle machinery
 
 ## Summary
-This PR removes the built-in linked `omx team ralph` workflow and restores a clean separation between `team` and `ralph`.
+This PR removes the built-in linked `rcs team ralph` workflow and restores a clean separation between `team` and `ralph`.
 
 After this change:
-- `omx team ...` / `$team ...` is the only supported team launch path
-- `omx ralph ...` / `$ralph ...` remains available as a separate, explicit follow-up
+- `rcs team ...` / `$team ...` is the only supported team launch path
+- `rcs ralph ...` / `$ralph ...` remains available as a separate, explicit follow-up
 - team no longer creates, syncs, or depends on linked Ralph state
-- legacy `omx team ralph ...` usage now fails with a clear deprecation error instead of being tolerated silently
+- legacy `rcs team ralph ...` usage now fails with a clear deprecation error instead of being tolerated silently
 
 This matches the intended product model: team can own coordinated execution and verification itself, while Ralph remains an independent persistence loop that a leader or separate worker may choose to run later.
 
@@ -33,19 +35,19 @@ That coupling made the runtime harder to reason about without providing enough v
 - linked notify-hook terminal sync
 - linked cleanup/shutdown policy behavior
 - `linked_ralph` lifecycle profile handling
-- advertised/generated `omx team ralph ...` launch hints
+- advertised/generated `rcs team ralph ...` launch hints
 - linked-Ralph-specific tests and compatibility paths inside team runtime
 
 ### Updated
-- team help/usage text now documents only `omx team [N:agent-type] "<task>"`
+- team help/usage text now documents only `rcs team [N:agent-type] "<task>"`
 - planning, ralplan, team, and deep-interview guidance now describe a **team verification path** rather than a built-in `team -> ralph` lifecycle
-- follow-up planner and pipeline launch hints now generate plain `omx team ...`
+- follow-up planner and pipeline launch hints now generate plain `rcs team ...`
 - shutdown/resume/state flows now operate on standalone team semantics only
 
 ### Behavior change
-- `omx team ralph ...` is now rejected with an explicit deprecation error:
-  - use `omx team ...` for coordinated team execution
-  - use `omx ralph ...` separately if a later persistent follow-up loop is still needed
+- `rcs team ralph ...` is now rejected with an explicit deprecation error:
+  - use `rcs team ...` for coordinated team execution
+  - use `rcs ralph ...` separately if a later persistent follow-up loop is still needed
 
 ## Notable implementation areas
 - `src/cli/team.ts`
@@ -68,15 +70,15 @@ That coupling made the runtime harder to reason about without providing enough v
 
 ## Impact
 ### Before
-- `omx team ralph ...` had special runtime behavior
+- `rcs team ralph ...` had special runtime behavior
 - team state could carry linked Ralph metadata
 - notify-hook and shutdown logic had linked team↔Ralph branches
 - docs/planning artifacts promoted a built-in linked verification path
 
 ### After
-- `omx team ...` runs coordinated team execution only
+- `rcs team ...` runs coordinated team execution only
 - team owns its own verification lanes and shutdown evidence
-- `omx ralph ...` is separate and explicit
+- `rcs ralph ...` is separate and explicit
 - a leader or separate worker may still choose to run Ralph later
 - there is no built-in linked team+Ralph lifecycle anymore
 
@@ -93,6 +95,6 @@ Result:
 - `428 pass, 0 fail`
 
 ## Risks / notes
-- This is an intentional CLI behavior break for users still invoking `omx team ralph ...`
+- This is an intentional CLI behavior break for users still invoking `rcs team ralph ...`
 - The break is now explicit and easier to understand than the previous silent compatibility path
 - Separate Ralph execution remains supported, but it must be initiated intentionally rather than being baked into team runtime semantics

@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an enhancement for oh-my-codex
+about: Suggest an enhancement for Roblox Creator Skills
 title: "[Feature] "
 labels: enhancement
 assignees: ''

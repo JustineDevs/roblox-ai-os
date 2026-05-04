@@ -1,5 +1,5 @@
 /**
- * OMX HUD - Statusline composer
+ * RCS HUD - Statusline composer
  *
  * Renders HudRenderContext into formatted ANSI strings.
  */
@@ -334,7 +334,7 @@ export function renderHud(
     .filter((s): s is string => s !== null);
 
   const ver = ctx.version ? `#${ctx.version.replace(/^v/, '')}` : '';
-  const label = bold(`[OMX${ver}]`);
+  const label = bold(`[RCS${ver}]`);
 
   if (parts.length === 0) {
     return wrapHudParts(label, [dim('No active modes.')], options);

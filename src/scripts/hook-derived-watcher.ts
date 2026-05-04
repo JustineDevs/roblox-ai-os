@@ -25,12 +25,12 @@ function asNumber(value: string | undefined, fallback: number): number {
 
 const cwd = resolve(argValue('--cwd', process.cwd()));
 const runOnce = process.argv.includes('--once');
-const pollMs = Math.max(250, asNumber(argValue('--poll-ms', process.env.OMX_HOOK_DERIVED_POLL_MS || '800'), 800));
-const maxFileAgeMs = Math.max(10_000, asNumber(argValue('--file-age-ms', process.env.OMX_HOOK_DERIVED_FILE_AGE_MS || '90000'), 90000));
+const pollMs = Math.max(250, asNumber(argValue('--poll-ms', process.env.RCS_HOOK_DERIVED_POLL_MS || '800'), 800));
+const maxFileAgeMs = Math.max(10_000, asNumber(argValue('--file-age-ms', process.env.RCS_HOOK_DERIVED_FILE_AGE_MS || '90000'), 90000));
 
-const omxDir = join(cwd, '.omx');
-const logsDir = join(omxDir, 'logs');
-const stateDir = join(omxDir, 'state');
+const rcsDir = join(cwd, '.rcs');
+const logsDir = join(rcsDir, 'logs');
+const stateDir = join(rcsDir, 'state');
 const watcherStatePath = join(stateDir, 'hook-derived-watcher-state.json');
 const logPath = join(logsDir, `hook-derived-watcher-${new Date().toISOString().split('T')[0]}.jsonl`);
 
@@ -609,7 +609,7 @@ function shutdown(signal: string): void {
 }
 
 async function main(): Promise<void> {
-  if (process.env.OMX_HOOK_DERIVED_SIGNALS !== '1') {
+  if (process.env.RCS_HOOK_DERIVED_SIGNALS !== '1') {
     process.exit(0);
   }
 

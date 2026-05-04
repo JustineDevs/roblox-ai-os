@@ -1,4 +1,4 @@
-# Contributing to oh-my-codex
+# Contributing to Roblox Creator Skills
 
 Thanks for contributing.
 
@@ -18,8 +18,8 @@ For local CLI testing:
 
 ```bash
 npm link
-omx setup
-omx doctor
+rcs setup
+rcs doctor
 ```
 
 ### Team/state coverage gate (issue #454)
@@ -45,7 +45,7 @@ npm test
 If you were recently in a team worker session, clear team env vars first so tests do not inherit worker-specific state roots:
 
 ```bash
-unset OMX_TEAM_WORKER OMX_TEAM_STATE_ROOT OMX_TEAM_LEADER_CWD OMX_TEAM_WORKER_CLI OMX_TEAM_WORKER_CLI_MAP OMX_TEAM_WORKER_LAUNCH_ARGS
+unset RCS_TEAM_WORKER RCS_TEAM_STATE_ROOT RCS_TEAM_LEADER_CWD RCS_TEAM_WORKER_CLI RCS_TEAM_WORKER_CLI_MAP RCS_TEAM_WORKER_LAUNCH_ARGS
 ```
 
 ## Project structure
@@ -58,7 +58,7 @@ unset OMX_TEAM_WORKER OMX_TEAM_STATE_ROOT OMX_TEAM_LEADER_CWD OMX_TEAM_WORKER_CL
 ### Adding a new agent prompt
 
 1. Create `prompts/my-agent.md` with the agent's system prompt
-2. Run `omx setup --force` to install it to `~/.codex/prompts/`
+2. Run `rcs setup --force` to install it to `~/.codex/prompts/`
 3. Use `/prompts:my-agent` in Codex CLI
 
 ### Prompt guidance contract
@@ -70,14 +70,14 @@ That document defines the GPT-5.4 behavior contract contributors should preserve
 ### Adding a new skill
 
 1. Create `skills/my-skill/SKILL.md` with the skill workflow
-2. Run `omx setup --force` to install it to `~/.codex/skills/`
+2. Run `rcs setup --force` to install it to `~/.codex/skills/`
 3. Use `$my-skill` in Codex CLI
 
 
 ### Document refresh warnings
 
-OMX has an agent-only document-refresh warning MVP for spec-driven changes. It
-warns Codex/OMX agents when mapped product or test-contract code changes appear
+RCS has an agent-only document-refresh warning MVP for spec-driven changes. It
+warns Codex/RCS agents when mapped product or test-contract code changes appear
 without a rule-scoped planning-spec or product-doc refresh. This is warning-only:
 it does not add a generic CI failure, does not install a pre-commit framework,
 and must not hard-block `git commit` for document-refresh reasons.
@@ -96,10 +96,10 @@ Current mapped refresh examples:
   refresh `docs/prompt-guidance-contract.md` or a relevant planning/spec file.
 
 Commit-path warnings are Bash `git commit` scoped and read only the staged diff.
-Because `.omx/` is gitignored, `.omx/plans/**` and `.omx/specs/**` count for
+Because `.rcs/` is gitignored, `.rcs/plans/**` and `.rcs/specs/**` count for
 commit-path suppression only when tracked or force-staged and rule-owned.
 Final-handoff warnings run only on terminal-looking handoff attempts, read staged
-plus unstaged changes, and can count fresh local rule-owned `.omx` planning/spec
+plus unstaged changes, and can count fresh local rule-owned `.rcs` planning/spec
 files. That mtime-based local freshness is heuristic evidence, not proof of a
 semantic refresh.
 

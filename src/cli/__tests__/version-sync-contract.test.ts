@@ -20,29 +20,29 @@ describe('version sync contract', () => {
     const workspace = TOML.parse(readFileSync(join(process.cwd(), 'Cargo.toml'), 'utf-8')) as {
       workspace?: { package?: WorkspacePackageMetadata; members?: string[] };
     };
-    const explore = TOML.parse(readFileSync(join(process.cwd(), 'crates', 'omx-explore', 'Cargo.toml'), 'utf-8')) as {
+    const explore = TOML.parse(readFileSync(join(process.cwd(), 'crates', 'rcs-explore', 'Cargo.toml'), 'utf-8')) as {
       package?: WorkspaceMemberPackageMetadata;
     };
     const runtimeCore = TOML.parse(
-      readFileSync(join(process.cwd(), 'crates', 'omx-runtime-core', 'Cargo.toml'), 'utf-8'),
+      readFileSync(join(process.cwd(), 'crates', 'rcs-runtime-core', 'Cargo.toml'), 'utf-8'),
     ) as { package?: WorkspaceMemberPackageMetadata };
-    const mux = TOML.parse(readFileSync(join(process.cwd(), 'crates', 'omx-mux', 'Cargo.toml'), 'utf-8')) as {
+    const mux = TOML.parse(readFileSync(join(process.cwd(), 'crates', 'rcs-mux', 'Cargo.toml'), 'utf-8')) as {
       package?: WorkspaceMemberPackageMetadata;
     };
-    const runtime = TOML.parse(readFileSync(join(process.cwd(), 'crates', 'omx-runtime', 'Cargo.toml'), 'utf-8')) as {
+    const runtime = TOML.parse(readFileSync(join(process.cwd(), 'crates', 'rcs-runtime', 'Cargo.toml'), 'utf-8')) as {
       package?: WorkspaceMemberPackageMetadata;
     };
-    const sparkshell = TOML.parse(readFileSync(join(process.cwd(), 'crates', 'omx-sparkshell', 'Cargo.toml'), 'utf-8')) as {
+    const sparkshell = TOML.parse(readFileSync(join(process.cwd(), 'crates', 'rcs-sparkshell', 'Cargo.toml'), 'utf-8')) as {
       package?: WorkspaceMemberPackageMetadata;
     };
 
     assert.equal(workspace.workspace?.package?.version, pkg.version);
     assert.deepEqual(workspace.workspace?.members, [
-      'crates/omx-explore',
-      'crates/omx-mux',
-      'crates/omx-runtime-core',
-      'crates/omx-runtime',
-      'crates/omx-sparkshell',
+      'crates/rcs-explore',
+      'crates/rcs-mux',
+      'crates/rcs-runtime-core',
+      'crates/rcs-runtime',
+      'crates/rcs-sparkshell',
     ]);
     assert.equal(workspace.workspace?.package?.['rust-version'], '1.73');
     assert.deepEqual(explore.package?.version, { workspace: true });
@@ -60,6 +60,6 @@ describe('version sync contract', () => {
   it('keeps Cargo.lock readable by the packaged fallback Rust toolchain floor', () => {
     const lockfile = readFileSync(join(process.cwd(), 'Cargo.lock'), 'utf-8');
     assert.match(lockfile, /^version = 3$/m);
-    assert.doesNotMatch(lockfile, /^version = 4$/m, 'Cargo.lock v4 breaks cargo 1.73 fallback builds used by omx explore');
+    assert.doesNotMatch(lockfile, /^version = 4$/m, 'Cargo.lock v4 breaks cargo 1.73 fallback builds used by rcs explore');
   });
 });

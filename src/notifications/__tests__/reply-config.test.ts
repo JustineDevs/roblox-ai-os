@@ -6,12 +6,12 @@ import { tmpdir } from 'node:os';
 
 const ENV_KEYS = [
   'CODEX_HOME',
-  'OMX_DISCORD_NOTIFIER_BOT_TOKEN',
-  'OMX_DISCORD_NOTIFIER_CHANNEL',
-  'OMX_REPLY_ENABLED',
-  'OMX_REPLY_DISCORD_USER_IDS',
-  'OMX_REPLY_POLL_INTERVAL_MS',
-  'OMX_REPLY_RATE_LIMIT',
+  'RCS_DISCORD_NOTIFIER_BOT_TOKEN',
+  'RCS_DISCORD_NOTIFIER_CHANNEL',
+  'RCS_REPLY_ENABLED',
+  'RCS_REPLY_DISCORD_USER_IDS',
+  'RCS_REPLY_POLL_INTERVAL_MS',
+  'RCS_REPLY_RATE_LIMIT',
 ] as const;
 
 let codexHomeDir = '';
@@ -30,7 +30,7 @@ async function importConfigFresh(): Promise<typeof import('../config.js')> {
 describe('getReplyConfig validation', () => {
   beforeEach(async () => {
     clearReplyEnv();
-    codexHomeDir = await mkdtemp(join(tmpdir(), 'omx-reply-config-'));
+    codexHomeDir = await mkdtemp(join(tmpdir(), 'rcs-reply-config-'));
     await mkdir(codexHomeDir, { recursive: true });
     process.env.CODEX_HOME = codexHomeDir;
   });
@@ -43,12 +43,12 @@ describe('getReplyConfig validation', () => {
   });
 
   it('clamps invalid env poll interval and rate limit', async () => {
-    process.env.OMX_DISCORD_NOTIFIER_BOT_TOKEN = 'bot-token';
-    process.env.OMX_DISCORD_NOTIFIER_CHANNEL = 'channel-id';
-    process.env.OMX_REPLY_ENABLED = 'true';
-    process.env.OMX_REPLY_DISCORD_USER_IDS = '12345678901234567';
-    process.env.OMX_REPLY_POLL_INTERVAL_MS = '0';
-    process.env.OMX_REPLY_RATE_LIMIT = '-2';
+    process.env.RCS_DISCORD_NOTIFIER_BOT_TOKEN = 'bot-token';
+    process.env.RCS_DISCORD_NOTIFIER_CHANNEL = 'channel-id';
+    process.env.RCS_REPLY_ENABLED = 'true';
+    process.env.RCS_REPLY_DISCORD_USER_IDS = '12345678901234567';
+    process.env.RCS_REPLY_POLL_INTERVAL_MS = '0';
+    process.env.RCS_REPLY_RATE_LIMIT = '-2';
 
     const { getReplyConfig } = await importConfigFresh();
     const config = getReplyConfig();
@@ -58,7 +58,7 @@ describe('getReplyConfig validation', () => {
   });
 
   it('normalizes invalid config file reply values', async () => {
-    const configFile = join(codexHomeDir, '.omx-config.json');
+    const configFile = join(codexHomeDir, '.rcs-config.json');
     const raw = {
       notifications: {
         enabled: true,

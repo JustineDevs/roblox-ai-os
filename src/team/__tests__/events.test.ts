@@ -7,7 +7,7 @@ import { initTeamState, appendTeamEvent } from '../state.js';
 import { readTeamEvents, waitForTeamEvent } from '../state/events.js';
 
 async function setupTeam(name: string): Promise<{ cwd: string; cleanup: () => Promise<void> }> {
-  const cwd = await mkdtemp(join(tmpdir(), `omx-team-events-${name}-`));
+  const cwd = await mkdtemp(join(tmpdir(), `rcs-team-events-${name}-`));
   await initTeamState(name, 'event test', 'executor', 2, cwd);
   return { cwd, cleanup: () => rm(cwd, { recursive: true, force: true }) };
 }
@@ -54,7 +54,7 @@ describe('team/state/events', () => {
         reason: 'diff persisted',
         metadata: {
           worktree_path: '/tmp/team/worktrees/worker-1',
-          diff_path: '/tmp/team/worktrees/worker-1/.omx/diff.md',
+          diff_path: '/tmp/team/worktrees/worker-1/.rcs/diff.md',
         },
       }, cwd);
       await appendTeamEvent('wakeable-matrix', {
@@ -64,7 +64,7 @@ describe('team/state/events', () => {
         reason: 'merge conflict',
         metadata: {
           worktree_path: '/tmp/team/worktrees/worker-1',
-          diff_path: '/tmp/team/worktrees/worker-1/.omx/diff.md',
+          diff_path: '/tmp/team/worktrees/worker-1/.rcs/diff.md',
         },
       }, cwd);
       await appendTeamEvent('wakeable-matrix', {
@@ -144,7 +144,7 @@ describe('team/state/events', () => {
         wakeable.map((event) => event.type),
         ['worker_merge_conflict', 'worker_cherry_pick_conflict', 'worker_rebase_conflict', 'worker_integration_attempt_requested', 'worker_cross_rebase_conflict', 'worker_stale_stdout'],
       );
-      assert.equal(wakeable[0]?.metadata?.diff_path, '/tmp/team/worktrees/worker-1/.omx/diff.md');
+      assert.equal(wakeable[0]?.metadata?.diff_path, '/tmp/team/worktrees/worker-1/.rcs/diff.md');
       assert.deepEqual(wakeable[1]?.metadata?.conflict_files, ['src/team/runtime.ts']);
       assert.deepEqual(wakeable[2]?.metadata?.conflict_files, ['src/team/runtime.ts']);
       assert.equal(wakeable[3]?.metadata?.operation_kind, 'leader_integration_attempt');
@@ -188,7 +188,7 @@ describe('team/state/events', () => {
         void appendTeamEvent('await-integration-request', {
           type: 'worker_diff_report',
           worker: 'worker-1',
-          metadata: { diff_path: '/tmp/worker-1/.omx/diff.md' },
+          metadata: { diff_path: '/tmp/worker-1/.rcs/diff.md' },
         }, cwd);
       }, 25);
 
@@ -262,7 +262,7 @@ describe('team/state/events', () => {
         metadata: {
           summary: 'worker diff report',
           worktree_path: '/tmp/team/worktrees/worker-1',
-          diff_path: '/tmp/team/worktrees/worker-1/.omx/diff.md',
+          diff_path: '/tmp/team/worktrees/worker-1/.rcs/diff.md',
           full_diff_available: true,
         },
       }, cwd);
@@ -290,7 +290,7 @@ describe('team/state/events', () => {
       const staleStdout = allEvents.find((event) => event.type === 'worker_stale_stdout');
 
       assert.equal(diffReport?.metadata?.summary, 'worker diff report');
-      assert.equal(diffReport?.metadata?.diff_path, '/tmp/team/worktrees/worker-1/.omx/diff.md');
+      assert.equal(diffReport?.metadata?.diff_path, '/tmp/team/worktrees/worker-1/.rcs/diff.md');
       assert.equal(mergeConflict?.metadata?.summary, 'merge conflict');
       assert.deepEqual(mergeConflict?.metadata?.conflict_files, ['src/team/runtime.ts']);
       assert.equal(staleStdout?.metadata?.stale_window_ms, 60_000);

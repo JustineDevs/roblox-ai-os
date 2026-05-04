@@ -9,7 +9,7 @@ Each mission directory contains:
 Current pilots / examples:
 - `cli-discoverability-pilot/`
 - `security-path-traversal-pilot/`
-- `in-action-cat-shellout-demo/` — a small self-hosted OMX optimization demo that removes the autoresearch loop's manifest `cat` shell-out and proves the fix with a focused evaluator
+- `in-action-cat-shellout-demo/` — a small self-hosted RCS optimization demo that removes the autoresearch loop's manifest `cat` shell-out and proves the fix with a focused evaluator
 
 You can run the evaluators directly today:
 
@@ -22,9 +22,9 @@ node scripts/eval-in-action-cat-shellout-demo.js
 To see a real end-to-end run, launch:
 
 ```bash
-omx autoresearch missions/in-action-cat-shellout-demo
+rcs autoresearch missions/in-action-cat-shellout-demo
 ```
 
-Then inspect `.omx/logs/autoresearch/<run-id>/manifest.json`, `candidate.json`, and `iteration-ledger.json` to see the supervisor's keep/discard/stop decisions.
+Then inspect `.rcs/logs/autoresearch/<run-id>/manifest.json`, `candidate.json`, and `iteration-ledger.json` to see the supervisor's keep/discard/stop decisions.
 
-These bundles are designed to be first-class `omx autoresearch` missions rather than generic prose examples.
+These bundles are designed to be first-class `rcs autoresearch` missions rather than generic prose examples.

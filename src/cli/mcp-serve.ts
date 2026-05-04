@@ -1,11 +1,11 @@
 import {
-  OMX_FIRST_PARTY_MCP_ENTRYPOINTS,
-  OMX_FIRST_PARTY_MCP_PLUGIN_TARGETS,
-  OMX_PLUGIN_MCP_SERVE_SUBCOMMAND,
-} from "../config/omx-first-party-mcp.js";
+  RCS_FIRST_PARTY_MCP_ENTRYPOINTS,
+  RCS_FIRST_PARTY_MCP_PLUGIN_TARGETS,
+  RCS_PLUGIN_MCP_SERVE_SUBCOMMAND,
+} from "../config/rcs-first-party-mcp.js";
 import { MCP_ENTRYPOINT_MARKER_ENV } from "../mcp/bootstrap.js";
 
-type McpServeEntrypoint = (typeof OMX_FIRST_PARTY_MCP_ENTRYPOINTS)[number];
+type McpServeEntrypoint = (typeof RCS_FIRST_PARTY_MCP_ENTRYPOINTS)[number];
 
 type McpServeLoader = () => Promise<unknown>;
 type McpServeLoaderMap = Record<McpServeEntrypoint, McpServeLoader>;
@@ -17,12 +17,12 @@ interface McpServeCommandOptions {
 }
 
 const MCP_SERVE_USAGE = [
-  `Usage: omx ${OMX_PLUGIN_MCP_SERVE_SUBCOMMAND} <target>`,
+  `Usage: rcs ${RCS_PLUGIN_MCP_SERVE_SUBCOMMAND} <target>`,
   "",
-  "Launch an OMX stdio MCP server target via the installed omx CLI.",
+  "Launch an RCS stdio MCP server target via the installed rcs CLI.",
   "Intended for plugin-scoped MCP metadata and other runtime launchers.",
   "",
-  `Supported targets: ${OMX_FIRST_PARTY_MCP_PLUGIN_TARGETS.join(", ")}`,
+  `Supported targets: ${RCS_FIRST_PARTY_MCP_PLUGIN_TARGETS.join(", ")}`,
 ].join("\n");
 
 const MCP_SERVE_LOADERS: McpServeLoaderMap = {
@@ -53,7 +53,7 @@ const MCP_SERVE_TARGET_ALIASES: Record<string, McpServeEntrypoint> = {
   "wiki-server.js": "wiki-server.js",
 };
 
-export function normalizeOmxMcpServeTarget(
+export function normalizeRcsMcpServeTarget(
   rawTarget: string | undefined,
 ): McpServeEntrypoint | null {
   if (typeof rawTarget !== "string") return null;
@@ -72,7 +72,7 @@ export async function mcpServeCommand(
     return;
   }
 
-  const target = normalizeOmxMcpServeTarget(firstArg);
+  const target = normalizeRcsMcpServeTarget(firstArg);
   if (!target) {
     throw new Error(`Unknown MCP target: ${firstArg}\n${MCP_SERVE_USAGE}`);
   }

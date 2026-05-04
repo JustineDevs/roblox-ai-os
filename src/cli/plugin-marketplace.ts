@@ -2,10 +2,10 @@ import { existsSync } from "fs";
 import { readFile } from "fs/promises";
 import { join, resolve } from "path";
 
-export const OMX_LOCAL_MARKETPLACE_NAME = "oh-my-codex-local";
-export const OMX_PLUGIN_NAME = "oh-my-codex";
+export const RCS_LOCAL_MARKETPLACE_NAME = "roblox-ai-os-creator-skills-local";
+export const RCS_PLUGIN_NAME = "roblox-ai-os-creator-skills";
 
-export interface PackagedOmxMarketplace {
+export interface PackagedRcsMarketplace {
 	marketplacePath: string;
 	packageRoot: string;
 	pluginRoot: string;
@@ -25,9 +25,9 @@ interface PluginManifest {
 	skills?: unknown;
 }
 
-export async function resolvePackagedOmxMarketplace(
+export async function resolvePackagedRcsMarketplace(
 	packageRoot: string,
-): Promise<PackagedOmxMarketplace | null> {
+): Promise<PackagedRcsMarketplace | null> {
 	const marketplacePath = join(
 		packageRoot,
 		".agents",
@@ -45,10 +45,9 @@ export async function resolvePackagedOmxMarketplace(
 		return null;
 	}
 
-	if (marketplace.name !== OMX_LOCAL_MARKETPLACE_NAME) return null;
 	const pluginEntry = marketplace.plugins?.find(
 		(entry) =>
-			entry.name === OMX_PLUGIN_NAME &&
+			entry.name === RCS_PLUGIN_NAME &&
 			entry.source?.source === "local" &&
 			typeof entry.source.path === "string",
 	);
@@ -63,7 +62,7 @@ export async function resolvePackagedOmxMarketplace(
 			await readFile(pluginManifestPath, "utf-8"),
 		) as PluginManifest;
 		if (
-			pluginManifest.name !== OMX_PLUGIN_NAME ||
+			pluginManifest.name !== RCS_PLUGIN_NAME ||
 			pluginManifest.skills !== "./skills/"
 		) {
 			return null;
@@ -77,7 +76,7 @@ export async function resolvePackagedOmxMarketplace(
 
 function marketplaceTableHeaderPattern(): RegExp {
 	return new RegExp(
-		`^\\s*\\[marketplaces\\.${OMX_LOCAL_MARKETPLACE_NAME.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\]\\s*$`,
+		`^\\s*\\[marketplaces\\.${RCS_LOCAL_MARKETPLACE_NAME.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\]\\s*$`,
 	);
 }
 
@@ -85,7 +84,7 @@ function isTomlTableHeader(line: string): boolean {
 	return /^\s*\[/.test(line);
 }
 
-export function stripLocalOmxMarketplaceRegistration(config: string): string {
+export function stripLocalRcsMarketplaceRegistration(config: string): string {
 	const lines = config.split(/\r?\n/);
 	const headerPattern = marketplaceTableHeaderPattern();
 	const start = lines.findIndex((line) => headerPattern.test(line));
@@ -106,21 +105,21 @@ export function stripLocalOmxMarketplaceRegistration(config: string): string {
 		.trimEnd();
 }
 
-export function buildLocalOmxMarketplaceRegistration(
+export function buildLocalRcsMarketplaceRegistration(
 	packageRoot: string,
 ): string {
 	return [
-		`[marketplaces.${OMX_LOCAL_MARKETPLACE_NAME}]`,
+		`[marketplaces.${RCS_LOCAL_MARKETPLACE_NAME}]`,
 		`source_type = "local"`,
 		`source = ${JSON.stringify(packageRoot)}`,
 	].join("\n");
 }
 
-export function upsertLocalOmxMarketplaceRegistration(
+export function upsertLocalRcsMarketplaceRegistration(
 	config: string,
 	packageRoot: string,
 ): string {
-	const stripped = stripLocalOmxMarketplaceRegistration(config).trimEnd();
-	const registration = buildLocalOmxMarketplaceRegistration(packageRoot);
+	const stripped = stripLocalRcsMarketplaceRegistration(config).trimEnd();
+	const registration = buildLocalRcsMarketplaceRegistration(packageRoot);
 	return `${stripped ? `${stripped}\n\n` : ""}${registration}\n`;
 }

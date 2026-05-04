@@ -104,7 +104,7 @@ export function parseCodexHooksConfig(
   }
 }
 
-function isOmxManagedHookCommand(command: string): boolean {
+function isRcsManagedHookCommand(command: string): boolean {
   return /(?:^|[\\/])codex-native-hook\.js(?:["'\s]|$)/.test(command);
 }
 
@@ -117,7 +117,7 @@ function countManagedHooksInEntry(entry: unknown): number {
     return isPlainObject(hook)
       && hook.type === "command"
       && typeof hook.command === "string"
-      && isOmxManagedHookCommand(hook.command);
+      && isRcsManagedHookCommand(hook.command);
   }).length;
 }
 
@@ -148,7 +148,7 @@ function stripManagedHooksFromEntry(entry: unknown): {
     return !(
       hook.type === "command" &&
       typeof hook.command === "string" &&
-      isOmxManagedHookCommand(hook.command)
+      isRcsManagedHookCommand(hook.command)
     );
   });
 

@@ -1,8 +1,8 @@
 /**
- * Update orchestration for oh-my-codex.
+ * Update orchestration for Roblox Creator Skills.
  *
  * The launch-time checker is intentionally passive, non-fatal, and throttled.
- * The explicit `omx update` command uses the same executor but bypasses the
+ * The explicit `rcs update` command uses the same executor but bypasses the
  * launch-time cadence so a user request always checks npm immediately.
  */
 
@@ -12,7 +12,7 @@ import { dirname, join } from 'path';
 import { spawnSync } from 'child_process';
 import { createInterface } from 'readline/promises';
 import { getPackageRoot } from '../utils/package.js';
-import { omxUserInstallStampPath } from '../utils/paths.js';
+import { rcsUserInstallStampPath } from '../utils/paths.js';
 
 export interface UpdateState {
   last_checked_at: string;
@@ -44,7 +44,7 @@ type RunGlobalUpdateResult = { ok: boolean; stderr: string };
 type RunSetupRefreshResult = { ok: boolean; stderr: string };
 type SpawnSyncLike = typeof spawnSync;
 
-const PACKAGE_NAME = 'oh-my-codex';
+const PACKAGE_NAME = '@jstn-sdk/rcs';
 const CHECK_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12h
 
 function parseSemver(version: string): [number, number, number] | null {
@@ -74,7 +74,7 @@ export function shouldCheckForUpdates(
 }
 
 function updateStatePath(cwd: string): string {
-  return join(cwd, '.omx', 'state', 'update-check.json');
+  return join(cwd, '.rcs', 'state', 'update-check.json');
 }
 
 async function readUpdateState(cwd: string): Promise<UpdateState | null> {
@@ -89,7 +89,7 @@ async function readUpdateState(cwd: string): Promise<UpdateState | null> {
 }
 
 async function writeUpdateState(cwd: string, state: UpdateState): Promise<void> {
-  const stateDir = join(cwd, '.omx', 'state');
+  const stateDir = join(cwd, '.rcs', 'state');
   await mkdir(stateDir, { recursive: true });
   await writeFile(updateStatePath(cwd), JSON.stringify(state, null, 2));
 }
@@ -184,7 +184,7 @@ async function writeSuccessfulInstallStamp(
 }
 
 export async function readUserInstallStamp(
-  path = omxUserInstallStampPath(),
+  path = rcsUserInstallStampPath(),
 ): Promise<UserInstallStamp | null> {
   if (!existsSync(path)) return null;
   try {
@@ -207,7 +207,7 @@ export async function readUserInstallStamp(
 
 export async function writeUserInstallStamp(
   stamp: UserInstallStamp,
-  path = omxUserInstallStampPath(),
+  path = rcsUserInstallStampPath(),
 ): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, JSON.stringify(stamp, null, 2));
@@ -248,7 +248,7 @@ function resolveGlobalInstallRoot(): string | null {
 export async function resolveInstalledCliEntry(globalInstallRoot: string): Promise<string | null> {
   const packageRoot = join(globalInstallRoot, PACKAGE_NAME);
   const packageJsonPath = join(packageRoot, 'package.json');
-  let cliRelativePath = join('dist', 'cli', 'omx.js');
+  let cliRelativePath = join('dist', 'cli', 'rcs.js');
 
   try {
     const content = await readFile(packageJsonPath, 'utf-8');
@@ -258,10 +258,10 @@ export async function resolveInstalledCliEntry(globalInstallRoot: string): Promi
     } else if (
       pkg.bin &&
       typeof pkg.bin === 'object' &&
-      typeof pkg.bin.omx === 'string' &&
-      pkg.bin.omx.trim() !== ''
+      typeof pkg.bin.rcs === 'string' &&
+      pkg.bin.rcs.trim() !== ''
     ) {
-      cliRelativePath = pkg.bin.omx;
+      cliRelativePath = pkg.bin.rcs;
     }
   } catch {
     // Fall back to the published contract used in package.json today.
@@ -310,7 +310,7 @@ async function runSetupRefresh(cwd: string): Promise<RunSetupRefreshResult> {
   if (!cliEntry) {
     return {
       ok: false,
-      stderr: `Unable to find the updated OMX CLI entry under ${join(globalInstallRoot, PACKAGE_NAME)}.`,
+      stderr: `Unable to find the updated RCS CLI entry under ${join(globalInstallRoot, PACKAGE_NAME)}.`,
     };
   }
 
@@ -344,7 +344,7 @@ async function executeUpdate(
 
   if (!current || !latest) {
     if (immediate) {
-      console.log('[omx] Unable to determine the latest oh-my-codex version. Try again later.');
+      console.log('[rcs] Unable to determine the latest RCS version. Try again later.');
     }
     return { status: 'unavailable', currentVersion: current, latestVersion: latest };
   }
@@ -354,54 +354,54 @@ async function executeUpdate(
       const installStamp = await dependencies.readUserInstallStamp();
       if (!doesSetupStampMatchVersion(current, installStamp)) {
         console.log(
-          `[omx] oh-my-codex is already up to date (v${current}). Running setup refresh...`,
+          `[rcs] RCS is already up to date (v${current}). Running setup refresh...`,
         );
         const setupRefreshResult = await dependencies.runSetupRefresh(cwd);
         if (!setupRefreshResult.ok) {
           console.log(
-            `[omx] Update installed, but the setup refresh failed. Run \`omx setup\` with the new install. (${setupRefreshResult.stderr})`,
+            `[rcs] Update installed, but the setup refresh failed. Run \`rcs setup\` with the new install. (${setupRefreshResult.stderr})`,
           );
           return { status: 'failed', currentVersion: current, latestVersion: latest };
         }
         await writeSuccessfulInstallStamp(current);
-        console.log(`[omx] Setup refresh completed for v${current}. Restart to use current code.`);
+        console.log(`[rcs] Setup refresh completed for v${current}. Restart to use current code.`);
         return { status: 'up-to-date', currentVersion: current, latestVersion: latest };
       }
     }
 
     if (immediate) {
-      console.log(`[omx] oh-my-codex is already up to date (v${current}).`);
+      console.log(`[rcs] RCS is already up to date (v${current}).`);
     }
     return { status: 'up-to-date', currentVersion: current, latestVersion: latest };
   }
 
   if (prompt) {
     const approved = await dependencies.askYesNo(
-      `[omx] Update available: v${current} → v${latest}. Update now? [Y/n] `,
+      `[rcs] Update available: v${current} → v${latest}. Update now? [Y/n] `,
     );
     if (!approved) {
       return { status: 'declined', currentVersion: current, latestVersion: latest };
     }
   }
 
-  console.log(`[omx] Running: npm install -g ${PACKAGE_NAME}@latest`);
+  console.log(`[rcs] Running: npm install -g ${PACKAGE_NAME}@latest`);
   const result = dependencies.runGlobalUpdate();
 
   if (!result.ok) {
-    console.log('[omx] Update failed. Run manually: npm install -g oh-my-codex@latest');
+    console.log('[rcs] Update failed. Run manually: npm install -g @jstn-sdk/rcs@latest');
     return { status: 'failed', currentVersion: current, latestVersion: latest };
   }
 
   const setupRefreshResult = await dependencies.runSetupRefresh(cwd);
   if (!setupRefreshResult.ok) {
     console.log(
-      `[omx] Update installed, but the setup refresh failed. Run \`omx setup\` with the new install. (${setupRefreshResult.stderr})`,
+      `[rcs] Update installed, but the setup refresh failed. Run \`rcs setup\` with the new install. (${setupRefreshResult.stderr})`,
     );
     return { status: 'failed', currentVersion: current, latestVersion: latest };
   }
 
   await writeSuccessfulInstallStamp(latest);
-  console.log(`[omx] Updated to v${latest}. Restart to use new code.`);
+  console.log(`[rcs] Updated to v${latest}. Restart to use new code.`);
   return { status: 'updated', currentVersion: current, latestVersion: latest };
 }
 
@@ -423,7 +423,7 @@ export async function maybeCheckAndPromptUpdate(
   dependencies: Partial<UpdateDependencies> = {},
 ): Promise<void> {
   const updateDependencies = { ...defaultUpdateDependencies, ...dependencies };
-  if (process.env.OMX_AUTO_UPDATE === '0') return;
+  if (process.env.RCS_AUTO_UPDATE === '0') return;
   if (!process.stdin.isTTY || !process.stdout.isTTY) return;
 
   const now = Date.now();

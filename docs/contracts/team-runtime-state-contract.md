@@ -12,7 +12,7 @@ This document records the currently authoritative owners for the team-runtime st
   - `src/team/state/dispatch.ts`
   - `src/team/state.ts`
 - Rust bridge shape:
-  - `crates/omx-runtime-core/src/dispatch.rs`
+  - `crates/rcs-runtime-core/src/dispatch.rs`
   - `src/runtime/bridge.ts`
 - Rule: dispatch `status` is authoritative. Timestamp fields are supporting evidence and must not contradict `status`.
 
@@ -27,7 +27,7 @@ This document records the currently authoritative owners for the team-runtime st
 ### `stale`
 - No single shared owner yet; this remains split by boundary.
 - Runtime authority stale:
-  - `crates/omx-runtime-core/src/lib.rs`
+  - `crates/rcs-runtime-core/src/lib.rs`
   - `src/runtime/bridge.ts`
 - Leader activity stale:
   - `src/team/leader-activity.ts`

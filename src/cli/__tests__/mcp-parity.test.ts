@@ -22,7 +22,7 @@ function captureLogs(): string[] {
 
 describe("mcpParityCommand", () => {
   it("supports state write/read parity via CLI", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "omx-mcp-parity-state-"));
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-mcp-parity-state-"));
     const logs = captureLogs();
 
     try {
@@ -50,12 +50,12 @@ describe("mcpParityCommand", () => {
   });
 
   it("preserves session-scoped state when used as the state fallback path", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "omx-mcp-parity-state-session-"));
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-mcp-parity-state-session-"));
     const logs = captureLogs();
-    const previousDisable = process.env.OMX_STATE_SERVER_DISABLE_AUTO_START;
+    const previousDisable = process.env.RCS_STATE_SERVER_DISABLE_AUTO_START;
 
     try {
-      process.env.OMX_STATE_SERVER_DISABLE_AUTO_START = "1";
+      process.env.RCS_STATE_SERVER_DISABLE_AUTO_START = "1";
       await mcpParityCommand("state", [
         "write",
         "--input",
@@ -71,7 +71,7 @@ describe("mcpParityCommand", () => {
       const writeResult = JSON.parse(logs.pop() || "{}") as { path?: string };
       assert.equal(
         writeResult.path,
-        join(cwd, ".omx", "state", "sessions", "session-fallback", "ralph-state.json"),
+        join(cwd, ".rcs", "state", "sessions", "session-fallback", "ralph-state.json"),
       );
 
       await mcpParityCommand("state", [
@@ -87,20 +87,20 @@ describe("mcpParityCommand", () => {
       const readResult = JSON.parse(logs.pop() || "{}") as {
         active?: boolean;
         current_phase?: string;
-        owner_omx_session_id?: string;
+        owner_rcs_session_id?: string;
       };
       assert.equal(readResult.active, true);
       assert.equal(readResult.current_phase, "executing");
-      assert.equal(readResult.owner_omx_session_id, "session-fallback");
+      assert.equal(readResult.owner_rcs_session_id, "session-fallback");
     } finally {
-      if (typeof previousDisable === "string") process.env.OMX_STATE_SERVER_DISABLE_AUTO_START = previousDisable;
-      else delete process.env.OMX_STATE_SERVER_DISABLE_AUTO_START;
+      if (typeof previousDisable === "string") process.env.RCS_STATE_SERVER_DISABLE_AUTO_START = previousDisable;
+      else delete process.env.RCS_STATE_SERVER_DISABLE_AUTO_START;
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
   it("matches state tool outcome-clearing semantics on fallback writes", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "omx-mcp-parity-state-outcome-"));
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-mcp-parity-state-outcome-"));
     const logs = captureLogs();
 
     try {
@@ -150,7 +150,7 @@ describe("mcpParityCommand", () => {
   });
 
   it("supports notepad and project-memory parity via CLI", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "omx-mcp-parity-memory-"));
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-mcp-parity-memory-"));
     const logs = captureLogs();
 
     try {
@@ -197,11 +197,11 @@ describe("mcpParityCommand", () => {
   });
 
   it("supports trace summary parity via CLI", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "omx-mcp-parity-trace-"));
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-mcp-parity-trace-"));
     const logs = captureLogs();
 
     try {
-      const logsDir = join(cwd, ".omx", "logs");
+      const logsDir = join(cwd, ".rcs", "logs");
       await mkdir(logsDir, { recursive: true });
       await writeFile(
         join(logsDir, "turns-2026-04-08.jsonl"),
@@ -225,7 +225,7 @@ describe("mcpParityCommand", () => {
   });
 
   it("supports wiki parity via CLI", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "omx-mcp-parity-wiki-"));
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-mcp-parity-wiki-"));
     const logs = captureLogs();
 
     try {

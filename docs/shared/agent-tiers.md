@@ -1,10 +1,10 @@
 # Agent Tiers
 
-This file defines practical tier guidance for OMX agent routing.
+This file defines practical tier guidance for RCS agent routing.
 
 ## Mental Model
 
-OMX now separates three concepts:
+RCS now separates three concepts:
 
 - `role`: what the agent is responsible for (`executor`, `planner`, `architect`)
 - `tier`: how much reasoning/cost to spend (`LOW`, `STANDARD`, `THOROUGH`)

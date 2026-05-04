@@ -9,7 +9,7 @@ const PROVIDER_BINARIES: Record<string, string> = {
   claude: 'claude',
   gemini: 'gemini',
 };
-const ASK_ORIGINAL_TASK_ENV = 'OMX_ASK_ORIGINAL_TASK';
+const ASK_ORIGINAL_TASK_ENV = 'RCS_ASK_ORIGINAL_TASK';
 const ISSUE_WORK_PROMPT_PATTERNS = [
   /\bgh\s+issue\b/i,
   /\b(?:fix|work on|work|investigate|implement|triage|debug|review|handle)\s+issue\s*#?\d+\b/i,
@@ -17,7 +17,7 @@ const ISSUE_WORK_PROMPT_PATTERNS = [
 ];
 
 function usage(): void {
-  console.error('Usage: omx ask <claude|gemini> "<prompt>"');
+  console.error('Usage: rcs ask <claude|gemini> "<prompt>"');
   console.error('Legacy direct usage: node scripts/run-provider-advisor.js <claude|gemini> <prompt...>');
   console.error('                 or: node scripts/run-provider-advisor.js claude --print "<prompt>"');
   console.error('                 or: node scripts/run-provider-advisor.js gemini --prompt "<prompt>"');
@@ -114,7 +114,7 @@ async function writeArtifact({ provider, originalTask, finalPrompt, rawOutput, e
   exitCode: number;
 }): Promise<string> {
   const root = process.cwd();
-  const artifactDir = join(root, '.omx', 'artifacts');
+  const artifactDir = join(root, '.rcs', 'artifacts');
   const slug = slugify(originalTask);
   const timestamp = timestampToken();
   const artifactPath = join(artifactDir, `${provider}-${slug}-${timestamp}.md`);

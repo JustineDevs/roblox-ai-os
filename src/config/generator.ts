@@ -1,6 +1,6 @@
 /**
- * Config.toml generator/merger for oh-my-codex
- * Merges OMX MCP server entries and feature flags into existing config.toml
+ * Config.toml generator/merger for roblox-ai-os-creator-skills
+ * Merges RCS MCP server entries and feature flags into existing config.toml
  *
  * TOML structure reminder: bare key=value pairs after a [table] header belong
  * to that table.  Top-level (root-table) keys MUST appear before the first
@@ -17,7 +17,7 @@ import TOML from "@iarna/toml";
 import { AGENT_DEFINITIONS } from "../agents/definitions.js";
 import { DEFAULT_FRONTIER_MODEL } from "./models.js";
 import type { UnifiedMcpRegistryServer } from "./mcp-registry.js";
-import { getOmxFirstPartySetupMcpServers } from "./omx-first-party-mcp.js";
+import { getRcsFirstPartySetupMcpServers } from "./rcs-first-party-mcp.js";
 import type { HudPreset } from "../hud/types.js";
 
 interface MergeOptions {
@@ -35,11 +35,11 @@ function escapeTomlString(value: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Top-level OMX keys (must live before any [table] header)
+// Top-level RCS keys (must live before any [table] header)
 // ---------------------------------------------------------------------------
 
 /** Keys we own at the TOML root level. Used for upsert + strip. */
-const OMX_TOP_LEVEL_KEYS = [
+const RCS_TOP_LEVEL_KEYS = [
   "notify",
   "model_reasoning_effort",
   "developer_instructions",
@@ -66,20 +66,20 @@ export function getModelContextRecommendation(
     modelAutoCompactTokenLimit: DEFAULT_SETUP_MODEL_AUTO_COMPACT_TOKEN_LIMIT,
   };
 }
-const OMX_SEEDED_BEHAVIORAL_DEFAULTS_START_MARKER =
-  "# oh-my-codex seeded behavioral defaults (uninstall removes unchanged defaults)";
-const OMX_SEEDED_BEHAVIORAL_DEFAULTS_END_MARKER =
-  "# End oh-my-codex seeded behavioral defaults";
+const RCS_SEEDED_BEHAVIORAL_DEFAULTS_START_MARKER =
+  "# rcs seeded behavioral defaults (uninstall removes unchanged defaults)";
+const RCS_SEEDED_BEHAVIORAL_DEFAULTS_END_MARKER =
+  "# End rcs seeded behavioral defaults";
 
-export const OMX_DEVELOPER_INSTRUCTIONS =
-  "You have oh-my-codex installed. AGENTS.md is the orchestration brain and main control surface. Follow AGENTS.md for skill/keyword routing, $name workflow invocation, and role-specialized subagents. Use outcome-first, concise progress updates: state the target result, constraints, validation evidence, and stop condition before adding process detail. Native subagents live in .codex/agents and may handle independent parallel subtasks within one Codex session or team pane. Skills load from .codex/skills, not native-agent TOMLs. Treat installed prompts as narrower execution surfaces under AGENTS.md authority.";
-const SHARED_MCP_REGISTRY_MARKER = "oh-my-codex (OMX) Shared MCP Registry Sync";
+export const RCS_DEVELOPER_INSTRUCTIONS =
+  "You have RCS installed for Roblox AI OS (Creator) Skills. AGENTS.md is the orchestration brain and main control surface. Follow AGENTS.md for creator workflow routing, $name workflow invocation, and role-specialized subagents. Creator-facing aliases such as $brief, $blueprint, $forge, $crew, and $autoforge may layer over canonical engine workflows, but the execution substrate stays disciplined and evidence-first. Native subagents live in .codex/agents and may handle independent parallel subtasks within one Codex session or team pane. Skills load from .codex/skills, not native-agent TOMLs. Treat installed prompts as narrower execution surfaces under AGENTS.md authority.";
+const SHARED_MCP_REGISTRY_MARKER = "RCS Shared MCP Registry Sync";
 const SHARED_MCP_REGISTRY_END_MARKER =
-  "# End oh-my-codex shared MCP registry sync";
-const OMX_AGENTS_MAX_THREADS = 6;
-const OMX_AGENTS_MAX_DEPTH = 2;
-const OMX_EXPLORE_ROUTING_DEFAULT = "1";
-const OMX_EXPLORE_CMD_ENV = "USE_OMX_EXPLORE_CMD";
+  "# End RCS shared MCP registry sync";
+const RCS_AGENTS_MAX_THREADS = 6;
+const RCS_AGENTS_MAX_DEPTH = 2;
+const RCS_EXPLORE_ROUTING_DEFAULT = "1";
+const RCS_EXPLORE_CMD_ENV = "USE_RCS_EXPLORE_CMD";
 const DEFAULT_LAUNCHER_MCP_STARTUP_TIMEOUT_SEC = 15;
 const STATUS_LINE_FOCUSED_FIELDS: readonly string[] = [
   "model-with-reasoning",
@@ -110,35 +110,35 @@ export function statusLineForPreset(
   return `status_line = [${fields.map((field) => `"${field}"`).join(", ")}]`;
 }
 
-// Marker comment OMX emits immediately above any status_line it owns. New writes
+// Marker comment RCS emits immediately above any status_line it owns. New writes
 // always include it; the customized-section detector keys on this marker so a
 // user-edited status_line that happens to byte-match a preset literal (e.g.
 // `["model-with-reasoning", "git-branch"]` matching the `minimal` preset) is
 // still recognized as a user customization and preserved.
-const OMX_MANAGED_STATUS_LINE_MARKER = "# omx:managed-status-line";
+const RCS_MANAGED_STATUS_LINE_MARKER = "# rcs:managed-status-line";
 
 // Pre-marker installs only ever shipped the seven-field `focused` array.
-// Treat that exact value as OMX-managed for backward compatibility so
+// Treat that exact value as RCS-managed for backward compatibility so
 // upgrades/preset switches still strip the legacy line. Any other preset
 // literal without the marker is assumed user-written.
-const LEGACY_OMX_STATUS_LINE = statusLineForPreset(
+const LEGACY_RCS_STATUS_LINE = statusLineForPreset(
   DEFAULT_STATUS_LINE_PRESET,
 );
 
-// Set of every status_line literal OMX itself can emit today. Used together
+// Set of every status_line literal RCS itself can emit today. Used together
 // with the marker comment: if a status_line is preceded by the marker AND
-// its value is a known OMX preset, it is OMX-managed. If the marker is
+// its value is a known RCS preset, it is RCS-managed. If the marker is
 // present but the value is something else, the user edited the value (and
 // left the marker untouched) — treat as a user customization and preserve.
-const OMX_PRESET_STATUS_LINE_VALUES: ReadonlySet<string> = new Set(
+const RCS_PRESET_STATUS_LINE_VALUES: ReadonlySet<string> = new Set(
   (Object.keys(STATUS_LINE_PRESETS) as HudPreset[]).map((preset) =>
     statusLineForPreset(preset),
   ),
 );
-const LEGACY_OMX_TEAM_RUN_TABLE_PATTERN =
-  /^\s*\[mcp_servers\.(?:"omx_team_run"|omx_team_run)\]\s*$/m;
-const OMX_CONFIG_MARKER = "oh-my-codex (OMX) Configuration";
-const OMX_CONFIG_END_MARKER = "# End oh-my-codex";
+const LEGACY_RCS_TEAM_RUN_TABLE_PATTERN =
+  /^\s*\[mcp_servers\.(?:"rcs_team_run"|rcs_team_run)\]\s*$/m;
+const RCS_CONFIG_MARKER = "RCS Configuration";
+const RCS_CONFIG_END_MARKER = "# End RCS";
 
 const CODEX_MODEL_AVAILABILITY_NUX_TABLE_PATTERN = /^\s*\[tui\.model_availability_nux\]\s*(?:#.*)?$/;
 const TOML_TABLE_HEADER_PATTERN = /^\s*\[\[?[^\]]+\]?\]\s*(?:#.*)?$/;
@@ -178,8 +178,8 @@ export async function cleanCodexModelAvailabilityNuxIfNeeded(
   return true;
 }
 
-export function hasLegacyOmxTeamRunTable(config: string): boolean {
-  return LEGACY_OMX_TEAM_RUN_TABLE_PATTERN.test(config);
+export function hasLegacyRcsTeamRunTable(config: string): boolean {
+  return LEGACY_RCS_TEAM_RUN_TABLE_PATTERN.test(config);
 }
 
 function unwrapTomlString(value: string | undefined): string | undefined {
@@ -257,7 +257,7 @@ function parseRootKeyValues(config: string): Map<string, string> {
   return values;
 }
 
-function getOmxTopLevelLines(
+function getRcsSeededTopLevelLines(
   pkgRoot: string,
   existingConfig = "",
   modelOverride?: string,
@@ -267,10 +267,10 @@ function getOmxTopLevelLines(
   const rootValues = parseRootKeyValues(existingConfig);
 
   const lines = [
-    "# oh-my-codex top-level settings (must be before any [table])",
+    "# RCS top-level settings (must be before any [table])",
     `notify = ["node", "${escapedPath}"]`,
     'model_reasoning_effort = "medium"',
-    `developer_instructions = "${escapeTomlString(OMX_DEVELOPER_INSTRUCTIONS)}"`,
+    `developer_instructions = "${escapeTomlString(RCS_DEVELOPER_INSTRUCTIONS)}"`,
   ];
 
   const existingModel = rootValues.get("model");
@@ -296,16 +296,16 @@ function getOmxTopLevelLines(
       );
     }
     if (seededBehavioralDefaults.length > 0) {
-      lines.push(OMX_SEEDED_BEHAVIORAL_DEFAULTS_START_MARKER);
+      lines.push(RCS_SEEDED_BEHAVIORAL_DEFAULTS_START_MARKER);
       lines.push(...seededBehavioralDefaults);
-      lines.push(OMX_SEEDED_BEHAVIORAL_DEFAULTS_END_MARKER);
+      lines.push(RCS_SEEDED_BEHAVIORAL_DEFAULTS_END_MARKER);
     }
   }
 
   return lines;
 }
 
-function isUnchangedOmxSeededBehavioralDefaultsBlock(lines: string[]): boolean {
+function isUnchangedRcsSeededBehavioralDefaultsBlock(lines: string[]): boolean {
   const relevant = lines.filter((line) => {
     const trimmed = line.trim();
     return trimmed.length > 0 && !trimmed.startsWith("#");
@@ -322,7 +322,7 @@ function isUnchangedOmxSeededBehavioralDefaultsBlock(lines: string[]): boolean {
   );
 }
 
-export function stripOmxSeededBehavioralDefaults(config: string): string {
+export function stripRcsSeededBehavioralDefaults(config: string): string {
   const lines = config.split(/\r?\n/);
   const firstTable = lines.findIndex((line) => /^\s*\[/.test(line));
   const boundary = firstTable >= 0 ? firstTable : lines.length;
@@ -333,13 +333,13 @@ export function stripOmxSeededBehavioralDefaults(config: string): string {
 
     if (
       index < boundary &&
-      trimmed === OMX_SEEDED_BEHAVIORAL_DEFAULTS_START_MARKER
+      trimmed === RCS_SEEDED_BEHAVIORAL_DEFAULTS_START_MARKER
     ) {
       const endIndex = lines.findIndex(
         (line, candidateIndex) =>
           candidateIndex > index &&
           candidateIndex < boundary &&
-          line.trim() === OMX_SEEDED_BEHAVIORAL_DEFAULTS_END_MARKER,
+          line.trim() === RCS_SEEDED_BEHAVIORAL_DEFAULTS_END_MARKER,
       );
 
       if (endIndex < 0) {
@@ -347,7 +347,7 @@ export function stripOmxSeededBehavioralDefaults(config: string): string {
       }
 
       const blockLines = lines.slice(index + 1, endIndex);
-      if (!isUnchangedOmxSeededBehavioralDefaultsBlock(blockLines)) {
+      if (!isUnchangedRcsSeededBehavioralDefaultsBlock(blockLines)) {
         result.push(...blockLines);
       }
       index = endIndex;
@@ -356,7 +356,7 @@ export function stripOmxSeededBehavioralDefaults(config: string): string {
 
     if (
       index < boundary &&
-      trimmed === OMX_SEEDED_BEHAVIORAL_DEFAULTS_END_MARKER
+      trimmed === RCS_SEEDED_BEHAVIORAL_DEFAULTS_END_MARKER
     ) {
       continue;
     }
@@ -373,11 +373,11 @@ function stripRootLevelKeys(config: string, keys: readonly string[]): string {
   const filteredEntries = entries.filter((entry) => {
     if (
       keys.some((key) =>
-        OMX_TOP_LEVEL_KEYS.includes(key as (typeof OMX_TOP_LEVEL_KEYS)[number]),
+        RCS_TOP_LEVEL_KEYS.includes(key as (typeof RCS_TOP_LEVEL_KEYS)[number]),
       ) &&
       entry.lines.length === 1 &&
       entry.lines[0].trim() ===
-        "# oh-my-codex top-level settings (must be before any [table])"
+        "# RCS top-level settings (must be before any [table])"
     ) {
       return false;
     }
@@ -410,11 +410,11 @@ function stripOrphanedManagedNotify(config: string): string {
 }
 
 /**
- * Remove any existing OMX-owned top-level keys so we can re-insert them
+ * Remove any existing RCS-owned top-level keys so we can re-insert them
  * cleanly. Also removes the comment line that precedes them.
  */
-export function stripOmxTopLevelKeys(config: string): string {
-  return stripRootLevelKeys(config, OMX_TOP_LEVEL_KEYS);
+export function stripRcsSeededTopLevelKeys(config: string): string {
+  return stripRootLevelKeys(config, RCS_TOP_LEVEL_KEYS);
 }
 
 // ---------------------------------------------------------------------------
@@ -671,11 +671,11 @@ function upsertEnvSettings(config: string): string {
     const envLines = legacyEnvEntries.flatMap((entry) => entry.lines);
     if (
       legacyEnvEntries.every(
-        (entry) => entry.key !== OMX_EXPLORE_CMD_ENV,
+        (entry) => entry.key !== RCS_EXPLORE_CMD_ENV,
       )
     ) {
       envLines.push(
-        `${OMX_EXPLORE_CMD_ENV} = "${OMX_EXPLORE_ROUTING_DEFAULT}"`,
+        `${RCS_EXPLORE_CMD_ENV} = "${RCS_EXPLORE_ROUTING_DEFAULT}"`,
       );
     }
     const envBlock = [
@@ -701,9 +701,9 @@ function upsertEnvSettings(config: string): string {
     }
   }
 
-  if (!shellEnvKeys.has(OMX_EXPLORE_CMD_ENV)) {
+  if (!shellEnvKeys.has(RCS_EXPLORE_CMD_ENV)) {
     linesToInsert.push(
-      `${OMX_EXPLORE_CMD_ENV} = "${OMX_EXPLORE_ROUTING_DEFAULT}"`,
+      `${RCS_EXPLORE_CMD_ENV} = "${RCS_EXPLORE_ROUTING_DEFAULT}"`,
     );
   }
 
@@ -724,8 +724,8 @@ function upsertAgentsSettings(config: string): string {
     const base = config.trimEnd();
     const agentsBlock = [
       "[agents]",
-      `max_threads = ${OMX_AGENTS_MAX_THREADS}`,
-      `max_depth = ${OMX_AGENTS_MAX_DEPTH}`,
+      `max_threads = ${RCS_AGENTS_MAX_THREADS}`,
+      `max_depth = ${RCS_AGENTS_MAX_DEPTH}`,
       "",
     ].join("\n");
     if (base.length === 0) return agentsBlock;
@@ -751,21 +751,21 @@ function upsertAgentsSettings(config: string): string {
   }
 
   if (maxThreadsIdx < 0) {
-    lines.splice(sectionEnd, 0, `max_threads = ${OMX_AGENTS_MAX_THREADS}`);
+    lines.splice(sectionEnd, 0, `max_threads = ${RCS_AGENTS_MAX_THREADS}`);
     sectionEnd += 1;
   }
   if (maxDepthIdx < 0) {
-    lines.splice(sectionEnd, 0, `max_depth = ${OMX_AGENTS_MAX_DEPTH}`);
+    lines.splice(sectionEnd, 0, `max_depth = ${RCS_AGENTS_MAX_DEPTH}`);
   }
 
   return lines.join("\n");
 }
 
 /**
- * Remove OMX-owned feature flags from the [features] section.
+ * Remove RCS-owned feature flags from the [features] section.
  * If the section becomes empty after removal, remove the section header too.
  */
-export function stripOmxFeatureFlags(config: string): string {
+export function stripRcsSeededFeatureFlags(config: string): string {
   const lines = config.split(/\r?\n/);
   const featuresStart = lines.findIndex((line) =>
     /^\s*\[features\]\s*$/.test(line),
@@ -781,14 +781,14 @@ export function stripOmxFeatureFlags(config: string): string {
     }
   }
 
-  const omxFlags = ["multi_agent", "child_agents_md", "codex_hooks", "collab"];
+  const rcsSeededFeatureFlags = ["multi_agent", "child_agents_md", "codex_hooks", "collab"];
   const filtered: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     if (i > featuresStart && i < sectionEnd) {
-      const isOmxFlag = omxFlags.some((f) =>
+      const isRcsSeededFlag = rcsSeededFeatureFlags.some((f) =>
         new RegExp(`^\\s*${f}\\s*=`).test(lines[i]),
       );
-      if (isOmxFlag) continue;
+      if (isRcsSeededFlag) continue;
     }
     filtered.push(lines[i]);
   }
@@ -814,26 +814,26 @@ export function stripOmxFeatureFlags(config: string): string {
   return filtered.join("\n");
 }
 
-export function stripOmxEnvSettings(config: string): string {
+export function stripRcsSeededEnvSettings(config: string): string {
   let lines = config.split(/\r?\n/);
-  lines = stripTomlTableKey(lines, /^\s*\[env\]\s*$/, OMX_EXPLORE_CMD_ENV);
+  lines = stripTomlTableKey(lines, /^\s*\[env\]\s*$/, RCS_EXPLORE_CMD_ENV);
   lines = stripTomlTableKey(
     lines,
     /^\s*\[shell_environment_policy\.set\]\s*$/,
-    OMX_EXPLORE_CMD_ENV,
+    RCS_EXPLORE_CMD_ENV,
   );
   return lines.join("\n");
 }
 
 // ---------------------------------------------------------------------------
-// Orphaned OMX table sections (no marker block)
+// Orphaned RCS table sections (no marker block)
 // ---------------------------------------------------------------------------
 
 /**
- * Check whether a TOML table name belongs to a legacy OMX-managed agent entry.
+ * Check whether a TOML table name belongs to a legacy RCS-managed agent entry.
  * Handles both `agents.name` and `agents."name"` forms.
  */
-function isLegacyOmxAgentSection(tableName: string): boolean {
+function isLegacyRcsAgentSection(tableName: string): boolean {
   const m = tableName.match(/^agents\.(?:"([^"]+)"|(\w[\w-]*))$/);
   if (!m) return false;
   const name = m[1] || m[2] || "";
@@ -841,13 +841,13 @@ function isLegacyOmxAgentSection(tableName: string): boolean {
 }
 
 /**
- * Strip OMX-owned table sections that exist outside the marker block.
+ * Strip RCS-owned table sections that exist outside the marker block.
  * This covers legacy configs that were written before markers were added,
  * or configs where the marker was accidentally removed.
  *
- * Targets: [mcp_servers.omx_*], legacy [agents.<name>] entries, [tui]
+ * Targets: [mcp_servers.rcs_*], legacy [agents.<name>] entries, [tui]
  */
-function stripOrphanedOmxSections(config: string): string {
+function stripOrphanedRcsAgentSections(config: string): string {
   const lines = config.split(/\r?\n/);
   const result: string[] = [];
 
@@ -859,17 +859,17 @@ function stripOrphanedOmxSections(config: string): string {
     if (tableMatch) {
       const tableName = tableMatch[1];
       // Note: [tui] is NOT stripped here because it could be user-owned.
-      // The marker-based stripExistingOmxBlocks already handles [tui]
-      // when it lives inside the OMX marker block.
-      const isOmxSection =
-        /^mcp_servers\.omx_/.test(tableName) ||
-        isLegacyOmxAgentSection(tableName);
+      // The marker-based stripExistingRcsSeededBlocks already handles [tui]
+      // when it lives inside the RCS marker block.
+      const isRcsSeededAgentSectionTable =
+        /^mcp_servers\.rcs_/.test(tableName) ||
+        isLegacyRcsAgentSection(tableName);
 
-      if (isOmxSection) {
-        // Remove preceding OMX comment lines and blank lines
+      if (isRcsSeededAgentSectionTable) {
+        // Remove preceding RCS comment lines and blank lines
         while (result.length > 0) {
           const last = result[result.length - 1];
-          if (last.trim() === "" || /^#\s*(OMX|oh-my-codex)/i.test(last)) {
+          if (last.trim() === "" || /^#\s*(RCS|roblox-ai-os-creator-skills)/i.test(last)) {
             result.pop();
           } else {
             break;
@@ -892,15 +892,15 @@ function stripOrphanedOmxSections(config: string): string {
   return result.join("\n");
 }
 
-function extractCustomizedTuiSectionsFromOmxBlocks(config: string): string[] {
+function extractCustomizedTuiSectionsFromRcsSeededBlocks(config: string): string[] {
   const sections: string[] = [];
   let searchStart = 0;
 
   while (true) {
-    const markerIdx = config.indexOf(OMX_CONFIG_MARKER, searchStart);
+    const markerIdx = config.indexOf(RCS_CONFIG_MARKER, searchStart);
     if (markerIdx < 0) break;
 
-    const endIdx = config.indexOf(OMX_CONFIG_END_MARKER, markerIdx);
+    const endIdx = config.indexOf(RCS_CONFIG_END_MARKER, markerIdx);
     if (endIdx < 0) break;
 
     const blockLines = config.slice(markerIdx, endIdx).split(/\r?\n/);
@@ -920,21 +920,21 @@ function extractCustomizedTuiSectionsFromOmxBlocks(config: string): string[] {
 
         tuiLines.push(trimmed);
         if (/^status_line\s*=/.test(trimmed)) {
-          // OMX-managed when:
+          // RCS-managed when:
           //   1. Preceded by the managed-status-line marker AND the value is
-          //      a known OMX preset literal (post-marker installs). If the
+          //      a known RCS preset literal (post-marker installs). If the
           //      marker is present but the value isn't a preset, the user
           //      edited the value and left the marker — treat as customized.
           //   2. No marker but the value byte-matches the legacy seven-field
           //      default (pre-marker installs only ever shipped focused).
-          // Anything else inside an OMX-marker block is treated as a user
+          // Anything else inside an RCS-marker block is treated as a user
           // customization and preserved across rebuild.
           const hasMarker =
-            lastNonBlankBeforeStatusLine === OMX_MANAGED_STATUS_LINE_MARKER;
-          const matchesPreset = OMX_PRESET_STATUS_LINE_VALUES.has(trimmed);
+            lastNonBlankBeforeStatusLine === RCS_MANAGED_STATUS_LINE_MARKER;
+          const matchesPreset = RCS_PRESET_STATUS_LINE_VALUES.has(trimmed);
           const isManagedByMarker = hasMarker && matchesPreset;
           const isManagedByLegacyValue =
-            !hasMarker && trimmed === LEGACY_OMX_STATUS_LINE;
+            !hasMarker && trimmed === LEGACY_RCS_STATUS_LINE;
           if (!isManagedByMarker && !isManagedByLegacyValue) {
             hasCustomizedStatusLine = true;
           }
@@ -947,7 +947,7 @@ function extractCustomizedTuiSectionsFromOmxBlocks(config: string): string[] {
       }
     }
 
-    searchStart = endIdx + OMX_CONFIG_END_MARKER.length;
+    searchStart = endIdx + RCS_CONFIG_END_MARKER.length;
   }
 
   return sections;
@@ -1016,15 +1016,15 @@ function upsertTuiStatusLine(
         }
         const statusLineEntry = entryLines.join("\n");
         const hasMarker =
-          lastNonBlankBeforeStatusLine === OMX_MANAGED_STATUS_LINE_MARKER;
+          lastNonBlankBeforeStatusLine === RCS_MANAGED_STATUS_LINE_MARKER;
         const isManagedByMarker =
-          hasMarker && OMX_PRESET_STATUS_LINE_VALUES.has(statusLineEntry);
+          hasMarker && RCS_PRESET_STATUS_LINE_VALUES.has(statusLineEntry);
         const isManagedByLegacyValue =
-          !hasMarker && statusLineEntry === LEGACY_OMX_STATUS_LINE;
-        const isOmxManagedStatusLine =
+          !hasMarker && statusLineEntry === LEGACY_RCS_STATUS_LINE;
+        const isRcsManagedStatusLine =
           isManagedByMarker || isManagedByLegacyValue;
 
-        if (!options.forceStatusLinePreset || !isOmxManagedStatusLine) {
+        if (!options.forceStatusLinePreset || !isRcsManagedStatusLine) {
           preservedStatusLine ??= statusLineEntry;
         }
         lastNonBlankBeforeStatusLine = statusLineEntry;
@@ -1040,7 +1040,7 @@ function upsertTuiStatusLine(
     }
   }
 
-  // When OMX is supplying the status_line (no user-preserved value),
+  // When RCS is supplying the status_line (no user-preserved value),
   // emit the managed-status-line marker comment alongside it so the
   // customized-section detector can unambiguously tell our writes apart
   // from a user edit on the next merge.
@@ -1049,7 +1049,7 @@ function upsertTuiStatusLine(
     : [
         "[tui]",
         ...preservedKeyLines,
-        OMX_MANAGED_STATUS_LINE_MARKER,
+        RCS_MANAGED_STATUS_LINE_MARKER,
         statusLineForPreset(preset),
       ];
   const firstStart = sections[0].start;
@@ -1079,10 +1079,10 @@ function upsertTuiStatusLine(
 }
 
 // ---------------------------------------------------------------------------
-// OMX [table] sections block (appended at end of file)
+// RCS [table] sections block (appended at end of file)
 // ---------------------------------------------------------------------------
 
-export function stripExistingOmxBlocks(config: string): {
+export function stripExistingRcsSeededBlocks(config: string): {
   cleaned: string;
   removed: number;
 } {
@@ -1090,7 +1090,7 @@ export function stripExistingOmxBlocks(config: string): {
   let removed = 0;
 
   while (true) {
-    const markerIdx = cleaned.indexOf(OMX_CONFIG_MARKER);
+    const markerIdx = cleaned.indexOf(RCS_CONFIG_MARKER);
     if (markerIdx < 0) break;
 
     let blockStart = cleaned.lastIndexOf("\n", markerIdx);
@@ -1109,7 +1109,7 @@ export function stripExistingOmxBlocks(config: string): {
     }
 
     let blockEnd = cleaned.length;
-    const endIdx = cleaned.indexOf(OMX_CONFIG_END_MARKER, markerIdx);
+    const endIdx = cleaned.indexOf(RCS_CONFIG_END_MARKER, markerIdx);
     if (endIdx >= 0) {
       const endLineBreak = cleaned.indexOf("\n", endIdx);
       blockEnd = endLineBreak >= 0 ? endLineBreak + 1 : cleaned.length;
@@ -1234,7 +1234,7 @@ function findLauncherTimeoutRepairTargets(
     const [name, value] = Object.entries(mcpServers ?? {})[0] ?? [];
     if (
       !name ||
-      name.startsWith("omx_") ||
+      name.startsWith("rcs_") ||
       typeof value !== "object" ||
       !value
     ) {
@@ -1307,7 +1307,7 @@ function getSharedMcpRegistryBlock(
   const lines = [
     "# ============================================================",
     `# ${SHARED_MCP_REGISTRY_MARKER}`,
-    "# Managed by omx setup - edit the registry file instead",
+    "# Managed by rcs setup - edit the registry file instead",
   ];
   if (sourcePath) {
     lines.push(`# Source: ${sourcePath}`);
@@ -1339,10 +1339,10 @@ function getSharedMcpRegistryBlock(
 }
 
 /**
- * OMX table-section block (MCP servers, TUI).
+ * RCS table-section block (MCP servers, TUI).
  * Contains ONLY [table] sections — no bare keys.
  */
-function getOmxTablesBlock(
+function getRcsSeededTablesBlock(
   pkgRoot: string,
   includeTui = true,
   statusLinePreset: HudPreset = DEFAULT_STATUS_LINE_PRESET,
@@ -1350,12 +1350,12 @@ function getOmxTablesBlock(
   const lines = [
     "",
     "# ============================================================",
-    "# oh-my-codex (OMX) Configuration",
-    "# Managed by omx setup - manual edits preserved on next setup",
+    "# RCS Configuration",
+    "# Managed by rcs setup - manual edits preserved on next setup",
     "# ============================================================",
   ];
 
-  for (const server of getOmxFirstPartySetupMcpServers(pkgRoot)) {
+  for (const server of getRcsFirstPartySetupMcpServers(pkgRoot)) {
     lines.push("");
     lines.push(server.title);
     lines.push(`[mcp_servers.${server.name}]`);
@@ -1375,16 +1375,16 @@ function getOmxTablesBlock(
     ...(includeTui
       ? [
           "",
-          "# OMX TUI StatusLine (Codex CLI v0.101.0+)",
+          "# RCS TUI StatusLine (Codex CLI v0.101.0+)",
           "[tui]",
-          OMX_MANAGED_STATUS_LINE_MARKER,
+          RCS_MANAGED_STATUS_LINE_MARKER,
           statusLineForPreset(statusLinePreset),
           "",
         ]
       : [""]),
   );
   lines.push("# ============================================================");
-  lines.push("# End oh-my-codex");
+  lines.push("# End RCS");
   lines.push("");
   return lines.join("\n");
 }
@@ -1394,15 +1394,15 @@ function getOmxTablesBlock(
 // ---------------------------------------------------------------------------
 
 /**
- * Merge OMX config into existing config.toml
- * Preserves existing user settings, appends OMX block if not present.
+ * Merge RCS config into existing config.toml
+ * Preserves existing user settings, appends RCS block if not present.
  *
  * Layout:
- *   1. OMX top-level keys (notify, model_reasoning_effort, developer_instructions)
+ *   1. RCS top-level keys (notify, model_reasoning_effort, developer_instructions)
  *   2. [features] with multi_agent + child_agents_md
  *   3. [shell_environment_policy.set] with defaulted explore-routing opt-in
  *   4. … user sections …
- *   5. OMX [table] sections (mcp_servers, tui)
+ *   5. RCS [table] sections (mcp_servers, tui)
  */
 export function buildMergedConfig(
   existingConfig: string,
@@ -1414,10 +1414,10 @@ export function buildMergedConfig(
   const statusLinePreset =
     options.statusLinePreset ?? DEFAULT_STATUS_LINE_PRESET;
   const customizedManagedTuiSections =
-    extractCustomizedTuiSectionsFromOmxBlocks(existing);
+    extractCustomizedTuiSectionsFromRcsSeededBlocks(existing);
 
-  if (existing.includes(OMX_CONFIG_MARKER)) {
-    const stripped = stripExistingOmxBlocks(existing);
+  if (existing.includes(RCS_CONFIG_MARKER)) {
+    const stripped = stripExistingRcsSeededBlocks(existing);
     existing = stripped.cleaned;
     if (customizedManagedTuiSections.length > 0) {
       existing = `${existing.trimEnd()}\n\n${customizedManagedTuiSections.join("\n\n")}\n`;
@@ -1428,12 +1428,12 @@ export function buildMergedConfig(
     existing = stripped.cleaned;
   }
 
-  existing = stripOmxTopLevelKeys(existing);
+  existing = stripRcsSeededTopLevelKeys(existing);
   existing = stripOrphanedManagedNotify(existing);
   if (options.modelOverride) {
     existing = stripRootLevelKeys(existing, ["model"]);
   }
-  existing = stripOrphanedOmxSections(existing);
+  existing = stripOrphanedRcsAgentSections(existing);
   existing = upsertFeatureFlags(existing);
   existing = upsertEnvSettings(existing);
   existing = upsertAgentsSettings(existing);
@@ -1444,12 +1444,12 @@ export function buildMergedConfig(
     : { cleaned: existing, hadExistingTui: false };
   existing = tuiUpsert.cleaned;
 
-  const topLines = getOmxTopLevelLines(
+  const topLines = getRcsSeededTopLevelLines(
     pkgRoot,
     existing,
     options.modelOverride,
   );
-  const tablesBlock = getOmxTablesBlock(
+  const tablesBlock = getRcsSeededTablesBlock(
     pkgRoot,
     includeTui && !tuiUpsert.hadExistingTui,
     statusLinePreset,
@@ -1473,10 +1473,10 @@ export function buildMergedConfig(
 /**
  * Detect and repair upgrade-era managed config incompatibilities in config.toml.
  *
- * After an omx version upgrade the OLD setup code (still loaded in memory)
+ * After an rcs version upgrade the OLD setup code (still loaded in memory)
  * may leave a config with duplicate [tui] sections or the retired
- * [mcp_servers.omx_team_run] table. Codex rejects duplicate tables and newer
- * OMX builds no longer ship the team MCP entrypoint, so we repair both before
+ * [mcp_servers.rcs_team_run] table. Codex rejects duplicate tables and newer
+ * RCS builds no longer ship the team MCP entrypoint, so we repair both before
  * the CLI is spawned.
  *
  * Returns `true` if a repair was performed.
@@ -1490,7 +1490,7 @@ export async function repairConfigIfNeeded(
 
   const content = await readFile(configPath, "utf-8");
   const tuiCount = (content.match(/^\s*\[tui\]\s*$/gm) || []).length;
-  const hasLegacyTeamRunTable = hasLegacyOmxTeamRunTable(content);
+  const hasLegacyTeamRunTable = hasLegacyRcsTeamRunTable(content);
   const hasLauncherTimeoutGap =
     findLauncherTimeoutRepairTargets(content).length > 0;
   if (tuiCount <= 1 && !hasLegacyTeamRunTable && !hasLauncherTimeoutGap)
@@ -1514,10 +1514,10 @@ export async function mergeConfig(
     existing = await readFile(configPath, "utf-8");
   }
 
-  if (existing.includes("oh-my-codex (OMX) Configuration")) {
-    const stripped = stripExistingOmxBlocks(existing);
+  if (existing.includes("RCS Configuration")) {
+    const stripped = stripExistingRcsSeededBlocks(existing);
     if (options.verbose && stripped.removed > 0) {
-      console.log("  Updating existing OMX config block.");
+      console.log("  Updating existing RCS config block.");
     }
   }
 

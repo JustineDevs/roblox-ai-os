@@ -8,7 +8,7 @@ import { readModeState, startMode } from '../../modes/base.js';
 import { cancelRalplanConsensus, runRalplanConsensus } from '../runtime.js';
 
 function sessionStatePath(cwd: string, sessionId: string): string {
-  return join(cwd, '.omx', 'state', 'sessions', sessionId, 'ralplan-state.json');
+  return join(cwd, '.rcs', 'state', 'sessions', sessionId, 'ralplan-state.json');
 }
 
 async function readScopedRalplanState(cwd: string, sessionId: string): Promise<Record<string, unknown>> {
@@ -17,11 +17,11 @@ async function readScopedRalplanState(cwd: string, sessionId: string): Promise<R
 
 describe('ralplan runtime', () => {
   it('persists a successful session-scoped lifecycle through complete', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralplan-runtime-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralplan-runtime-'));
     const sessionId = 'sess-ralplan-success';
     try {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
-      await writeFile(join(cwd, '.omx', 'state', 'session.json'), JSON.stringify({ session_id: sessionId }));
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'state', 'session.json'), JSON.stringify({ session_id: sessionId }));
 
       const seenPhases: string[] = [];
       const result = await runRalplanConsensus({
@@ -31,7 +31,7 @@ describe('ralplan runtime', () => {
           assert.equal(state.current_phase, 'draft');
           assert.equal(state.iteration, 1);
 
-          const plansDir = join(cwd, '.omx', 'plans');
+          const plansDir = join(cwd, '.rcs', 'plans');
           await mkdir(plansDir, { recursive: true });
           const prdPath = join(plansDir, 'prd-success.md');
           await writeFile(prdPath, '# plan\n');
@@ -59,7 +59,7 @@ describe('ralplan runtime', () => {
       assert.equal(result.iteration, 1);
       assert.equal(result.planningComplete, true);
       assert.deepEqual(seenPhases, ['draft', 'architect-review', 'critic-review']);
-      assert.equal(existsSync(join(cwd, '.omx', 'state', 'ralplan-state.json')), false);
+      assert.equal(existsSync(join(cwd, '.rcs', 'state', 'ralplan-state.json')), false);
       assert.equal(existsSync(sessionStatePath(cwd, sessionId)), true);
 
       const finalState = await readModeState('ralplan', cwd);
@@ -76,11 +76,11 @@ describe('ralplan runtime', () => {
   });
 
   it('increments iteration when critic requests a re-review loop', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralplan-runtime-loop-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralplan-runtime-loop-'));
     const sessionId = 'sess-ralplan-loop';
     try {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
-      await writeFile(join(cwd, '.omx', 'state', 'session.json'), JSON.stringify({ session_id: sessionId }));
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'state', 'session.json'), JSON.stringify({ session_id: sessionId }));
 
       const draftIterations: number[] = [];
       const criticVerdicts: string[] = [];
@@ -92,7 +92,7 @@ describe('ralplan runtime', () => {
           draftIterations.push(Number(state.iteration));
           assert.equal(state.current_phase, 'draft');
 
-          const plansDir = join(cwd, '.omx', 'plans');
+          const plansDir = join(cwd, '.rcs', 'plans');
           await mkdir(plansDir, { recursive: true });
           const prdPath = join(plansDir, 'prd-loop.md');
           await writeFile(prdPath, '# loop plan\n');
@@ -129,11 +129,11 @@ describe('ralplan runtime', () => {
   });
 
   it('marks failed cleanly when execution throws', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralplan-runtime-fail-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralplan-runtime-fail-'));
     const sessionId = 'sess-ralplan-fail';
     try {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
-      await writeFile(join(cwd, '.omx', 'state', 'session.json'), JSON.stringify({ session_id: sessionId }));
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'state', 'session.json'), JSON.stringify({ session_id: sessionId }));
 
       const result = await runRalplanConsensus({
         async draft() {
@@ -160,11 +160,11 @@ describe('ralplan runtime', () => {
   });
 
   it('marks cancelled state cleanly', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'omx-ralplan-runtime-cancel-'));
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-ralplan-runtime-cancel-'));
     const sessionId = 'sess-ralplan-cancel';
     try {
-      await mkdir(join(cwd, '.omx', 'state'), { recursive: true });
-      await writeFile(join(cwd, '.omx', 'state', 'session.json'), JSON.stringify({ session_id: sessionId }));
+      await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'state', 'session.json'), JSON.stringify({ session_id: sessionId }));
 
       await startMode('ralplan', 'cancel me', 2, cwd);
       await cancelRalplanConsensus(cwd);

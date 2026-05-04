@@ -4,7 +4,7 @@
  * runs startTeam/monitorTeam/shutdownTeam, writes structured JSON result
  * to stdout.
  *
- * Spawned by OMX team orchestration entrypoints when a background team run starts.
+ * Spawned by RCS team orchestration entrypoints when a background team run starts.
  */
 
 import { createInterface } from 'readline';
@@ -19,7 +19,7 @@ import { resolveCanonicalTeamStateRoot } from './state-root.js';
 
 async function promptStaleCleanup(summary: StaleTeamSummary): Promise<boolean> {
   process.stderr.write(
-    `\n[omx] Stale artifacts from previous team "${summary.teamName}":\n` +
+    `\n[rcs] Stale artifacts from previous team "${summary.teamName}":\n` +
     `  Worktrees: ${summary.worktreePaths.join(', ')}\n` +
     `  State dir: ${summary.statePath}\n` +
     (summary.hasDirtyWorktrees
@@ -98,10 +98,10 @@ async function writePanesFile(
   paneIds: string[],
   leaderPaneId: string,
 ): Promise<void> {
-  const omxJobsDir = process.env.OMX_JOBS_DIR;
-  if (!jobId || !omxJobsDir) return;
+  const jobsDir = process.env.RCS_JOBS_DIR;
+  if (!jobId || !jobsDir) return;
 
-  const panesPath = join(omxJobsDir, `${jobId}-panes.json`);
+  const panesPath = join(jobsDir, `${jobId}-panes.json`);
   await writeFile(
     panesPath + '.tmp',
     JSON.stringify({ paneIds: [...paneIds], leaderPaneId }),
@@ -202,8 +202,8 @@ export function buildTerminalCliResult(
     exitCode: status === 'completed' ? 0 : 1,
     notice:
       `[runtime-cli] phase=${phase} reached terminal state; preserving team state for inspection. `
-      + `Inspect with "omx team status ${teamName} --json" or "omx team api read-stall-state --input '{\"team_name\":\"${teamName}\"}' --json". `
-      + `Run "omx team shutdown ${teamName}" (or --force after state capture) when explicit cleanup is desired.\n`,
+      + `Inspect with "rcs team status ${teamName} --json" or "rcs team api read-stall-state --input '{\"team_name\":\"${teamName}\"}' --json". `
+      + `Run "rcs team shutdown ${teamName}" (or --force after state capture) when explicit cleanup is desired.\n`,
   };
 }
 
@@ -376,14 +376,14 @@ async function main(): Promise<void> {
   process.on('SIGINT', () => handleShutdown('SIGINT'));
   process.on('SIGTERM', () => handleShutdown('SIGTERM'));
 
-  // Start the team — OMX's startTeam takes individual parameters
+  // Start the team — RCS's startTeam takes individual parameters
   const agentType = resolveRuntimeCliAgentType(rawAgentType);
   try {
     const providerMap = resolveRuntimeCliProviderMap(agentTypes, workerCount);
-    const previousCliMap = process.env.OMX_TEAM_WORKER_CLI_MAP;
+    const previousCliMap = process.env.RCS_TEAM_WORKER_CLI_MAP;
     try {
       if (providerMap) {
-        process.env.OMX_TEAM_WORKER_CLI_MAP = providerMap;
+        process.env.RCS_TEAM_WORKER_CLI_MAP = providerMap;
       }
       runtime = await startTeam(
         teamName,
@@ -399,8 +399,8 @@ async function main(): Promise<void> {
       );
     } finally {
       if (providerMap) {
-        if (typeof previousCliMap === 'string') process.env.OMX_TEAM_WORKER_CLI_MAP = previousCliMap;
-        else delete process.env.OMX_TEAM_WORKER_CLI_MAP;
+        if (typeof previousCliMap === 'string') process.env.RCS_TEAM_WORKER_CLI_MAP = previousCliMap;
+        else delete process.env.RCS_TEAM_WORKER_CLI_MAP;
       }
     }
   } catch (err) {
@@ -408,8 +408,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Persist pane IDs when a background launcher provides an OMX job ID.
-  const jobId = process.env.OMX_JOB_ID;
+  // Persist pane IDs when a background launcher provides an RCS job ID.
+  const jobId = process.env.RCS_JOB_ID;
   try {
     const livePanes = await loadLivePaneState(teamName, cwd);
     if (livePanes) {
@@ -489,7 +489,7 @@ async function main(): Promise<void> {
   }
 }
 
-const shouldAutoStart = process.env.OMX_RUNTIME_CLI_DISABLE_AUTO_START !== '1';
+const shouldAutoStart = process.env.RCS_RUNTIME_CLI_DISABLE_AUTO_START !== '1';
 
 if (shouldAutoStart) {
   main().catch(err => {

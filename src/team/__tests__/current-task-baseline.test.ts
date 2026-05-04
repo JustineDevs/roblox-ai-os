@@ -13,7 +13,7 @@ import {
 import { ensureWorktree, planWorktreeTarget } from '../worktree.js';
 
 async function initRepo(): Promise<string> {
-  const cwd = await mkdtemp(join(tmpdir(), 'omx-current-task-baseline-'));
+  const cwd = await mkdtemp(join(tmpdir(), 'rcs-current-task-baseline-'));
   execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
   execFileSync('git', ['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
@@ -43,7 +43,7 @@ describe('current-task-baseline', () => {
       assert.ok(entry, 'baseline entry should exist');
       assert.equal(entry?.worktree_path, ensured.worktreePath);
       assert.equal(entry?.status, 'active');
-      assert.equal(existsSync(join(repo, '.omx', 'state', 'current-task-baseline.json')), true);
+      assert.equal(existsSync(join(repo, '.rcs', 'state', 'current-task-baseline.json')), true);
     } finally {
       await rm(repo, { recursive: true, force: true });
     }
@@ -81,11 +81,11 @@ describe('current-task-baseline', () => {
         worktree_path: repo,
         issue_number: 1407,
         pr_number: 1416,
-        pr_url: 'https://github.com/Yeachan-Heo/oh-my-codex/pull/1416',
+        pr_url: 'https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/pull/1416',
         status: 'merged',
       });
 
-      const raw = JSON.parse(readFileSync(join(repo, '.omx', 'state', 'current-task-baseline.json'), 'utf-8'));
+      const raw = JSON.parse(readFileSync(join(repo, '.rcs', 'state', 'current-task-baseline.json'), 'utf-8'));
       const entry = raw.tasks.find((item: { branch_name: string }) => item.branch_name === 'feature/pr-lifecycle');
       assert.equal(entry.issue_number, 1407);
       assert.equal(entry.pr_number, 1416);

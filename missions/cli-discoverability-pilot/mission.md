@@ -1,6 +1,6 @@
 # Mission: CLI discoverability hardening
 
-Improve command discoverability across the OMX CLI, with emphasis on:
+Improve command discoverability across the RCS CLI, with emphasis on:
 - top-level help
 - nested help routing
 - sparkshell discoverability
