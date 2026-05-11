@@ -6,6 +6,23 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-05-11
+
+Release-automation follow-up for **`@jstn-sdk/rcs@0.1.6`**. This ship line adds blunt latest-version triggers, binds automated npm publishing to the guarded `npm-publish` GitHub Actions environment, and finishes ownership/acknowledgement consistency on README surfaces.
+
+### Summary
+
+- **Latest-version triggers** — Added `rcs latest` and `rcs @latest` as explicit aliases for the verified `rcs update` path, while documenting the direct npm form `npm install -g @jstn-sdk/rcs@latest`.
+- **Automated npm publish guardrail** — The release workflow now uses the `npm-publish` environment for the `publish-npm` job so maintainers can gate registry access separately from ordinary repo write access.
+- **README consistency** — Ownership links, acknowledgements, and linked MIT license surfaces are now aligned across the canonical README and localized README variants, including explicit thanks to `oh-my-codex` as a stepping stone.
+
+### Verification (this release line)
+
+- `npm run build`
+- `node --test dist/cli/__tests__/index.test.js dist/cli/__tests__/update.test.js dist/cli/__tests__/package-bin-contract.test.js`
+- `node --test dist/verification/__tests__/explore-harness-release-workflow.test.js`
+- `npm view @jstn-sdk/rcs versions --json` to confirm only `0.1.0` and `0.1.1` were live on npm before selecting `0.1.6`
+
 ## [0.1.1] - 2026-05-11
 
 Roblox-native hardening release for **`@jstn-sdk/rcs@0.1.1`**. This ship line finishes the public migration away from older compatibility branding, adds a strict semantic/taxonomy system for prompts/skills/missions, introduces a real Roblox Studio workspace standard, documents optional `robloxstudio-mcp` live Studio compatibility, adds a CI proof artifact, and tightens README/onboarding presentation.

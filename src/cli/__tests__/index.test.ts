@@ -1148,6 +1148,19 @@ describe("resolveCliInvocation", () => {
 
   it("advertises the explicit update command in top-level help", () => {
     assert.match(HELP, /rcs update\s+Check npm now, update the global install immediately, then refresh setup/);
+    assert.match(HELP, /rcs latest\s+Alias for "rcs update" \(pull @jstn-sdk\/rcs@latest, then refresh setup\)/);
+    assert.match(HELP, /rcs @latest\s+Alias for "rcs update" \(explicit @latest trigger\)/);
+  });
+
+  it("resolves latest aliases to the update command", () => {
+    assert.deepEqual(resolveCliInvocation(["latest"]), {
+      command: "update",
+      launchArgs: [],
+    });
+    assert.deepEqual(resolveCliInvocation(["@latest"]), {
+      command: "update",
+      launchArgs: [],
+    });
   });
 
   it("advertises direct launch policy controls in top-level help", () => {

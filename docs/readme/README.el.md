@@ -33,6 +33,7 @@ RCS is owned and maintained by [JustineDevs](https://github.com/JustineDevs) and
 ## Acknowledgements
 
 - [OpenAI Codex CLI](https://github.com/openai/codex)
+- [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex)
 - [robloxstudio-mcp](https://github.com/boshyxd/robloxstudio-mcp)
 
 ## License

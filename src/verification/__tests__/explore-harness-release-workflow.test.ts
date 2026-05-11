@@ -40,6 +40,7 @@ describe('native release workflow', () => {
     assert.match(workflow, /Smoke Test Packed Global Install/);
     assert.match(workflow, /Publish npm Package/);
     assert.match(workflow, /needs:\s*\[smoke-packed-install\]/);
+    assert.match(workflow, /publish-npm:\s*\n(?:.*\n)*?\s+environment:\s*npm-publish/m);
     assert.match(workflow, /npm publish --access public --provenance/);
     assert.doesNotMatch(workflow, /Older Linux Runtime Proof/);
     assert.doesNotMatch(workflow, /node:20-bullseye/);

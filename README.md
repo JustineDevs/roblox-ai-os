@@ -1,5 +1,3 @@
-# RCS - Roblox Creator Skills
-
 <p align="center">
   <img src="./docs/readme/rcs-cover.svg" alt="RCS cover" width="1200" />
 </p>
@@ -75,6 +73,20 @@ What it does:
 - keeps runtime state under `.rcs/`
 
 On a real RCS version bump, the global npm install prints an explicit reminder instead of auto-running setup. If you want npm update + setup refresh in one step later, use `rcs update`.
+
+Blunt latest-version triggers:
+
+```bash
+npm install -g @jstn-sdk/rcs@latest
+rcs update
+rcs latest
+rcs @latest
+```
+
+What they do:
+- `npm install -g @jstn-sdk/rcs@latest` pulls the newest published package directly
+- `rcs update` checks npm now, installs `@latest`, then refreshes setup
+- `rcs latest` and `rcs @latest` are explicit aliases for the same update path
 
 ### 3. Run doctor
 
@@ -436,6 +448,7 @@ RCS is owned and maintained by [JustineDevs](https://github.com/JustineDevs) for
 ## Acknowledgements
 
 - [OpenAI Codex CLI](https://github.com/openai/codex) for the underlying agent runtime RCS is built on top of.
+- [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex) for serving as an important stepping stone in the broader workflow/runtime direction behind this project.
 - [robloxstudio-mcp](https://github.com/boshyxd/robloxstudio-mcp) for the optional live Roblox Studio MCP connection standard adopted as a compatibility lane in this project.
 
 ## License

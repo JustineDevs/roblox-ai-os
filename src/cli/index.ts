@@ -173,6 +173,8 @@ Usage:
   rcs setup     Install skills, prompts, MCP servers, and scope-specific AGENTS.md
                 (user scope prompts for legacy vs plugin skill delivery when needed)
   rcs update    Check npm now, update the global install immediately, then refresh setup
+  rcs latest    Alias for "rcs update" (pull @jstn-sdk/rcs@latest, then refresh setup)
+  rcs @latest   Alias for "rcs update" (explicit @latest trigger)
   rcs uninstall Remove RCS configuration and clean up installed artifacts
   rcs doctor    Check installation health
   rcs list      List packaged RCS skills and native agent prompts (--json)
@@ -492,6 +494,9 @@ export function resolveCliInvocation(args: string[]): ResolvedCliInvocation {
   }
   if (firstArg === "resume") {
     return { command: "resume", launchArgs: args.slice(1) };
+  }
+  if (firstArg === "latest" || firstArg === "@latest") {
+    return { command: "update", launchArgs: [] };
   }
   return { command: firstArg, launchArgs: [] };
 }

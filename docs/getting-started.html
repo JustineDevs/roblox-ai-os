@@ -34,6 +34,11 @@
       <pre><code>npm install -g @openai/codex @jstn-sdk/rcs
 rcs doctor</code></pre>
       <p>When <code>@jstn-sdk/rcs</code> actually bumps to a newer version, the global npm install prints an explicit reminder instead of launching <code>rcs setup</code> automatically. When you're ready, rerun <code>rcs setup</code> manually or use <code>rcs update</code> to check npm and then run the same setup refresh path. Fresh RCS-managed <code>gpt-5.5</code> configs now recommend <code>model_context_window = 250000</code> and <code>model_auto_compact_token_limit = 200000</code> only when those keys are missing.</p>
+      <p>Explicit latest-version triggers also exist:</p>
+      <pre><code>npm install -g @jstn-sdk/rcs@latest
+rcs update
+rcs latest
+rcs @latest</code></pre>
       <p><code>rcs doctor</code> verifies the install shape. Before treating the runtime as ready, also prove that the active Codex profile can perform a real request:</p>
       <pre><code>codex login status
 rcs exec --skip-git-repo-check -C . &quot;Reply with exactly RCS-EXEC-OK&quot;</code></pre>
