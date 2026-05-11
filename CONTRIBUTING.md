@@ -14,6 +14,18 @@ npm run build
 npm test
 ```
 
+Before commit/push, the strict local mirror of the main CI gate is:
+
+```bash
+npm run ci:preflight
+```
+
+For a faster local iteration loop that still catches the most common failures:
+
+```bash
+npm run ci:preflight:quick
+```
+
 For local CLI testing:
 
 ```bash

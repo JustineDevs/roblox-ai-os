@@ -45,6 +45,8 @@ Analyze is **read-only by contract**.
 - Do not invent facts that are not supported by repository evidence.
 - Do not use judgmental, normative, or speculative language that outruns the evidence.
 
+The goal is to explain what the codebase most likely says about the question.
+
 If a next step is helpful, keep it to a **discriminating read-only probe** that would reduce uncertainty.
 
 ## Question-aligned synthesis
@@ -60,9 +62,9 @@ Answer the user’s actual question first.
 
 Maintain an explicit **evidence-vs-inference distinction**. Every material claim must be labeled as one of:
 
-1. **Evidence** — directly supported by concrete repository artifacts
-2. **Inference** — a reasoned conclusion drawn from evidence
-3. **Unknown** — a question the current repository evidence does not resolve
+- **Evidence** — directly supported by concrete repository artifacts
+- **Inference** — a reasoned conclusion drawn from evidence
+- **Unknown** — a question the current repository evidence does not resolve
 
 Never present an inference as if it were direct evidence.
 Never present a guess as if it were an inference.

@@ -373,6 +373,7 @@ rcs team shutdown <team-name>
 
 These are operator/support surfaces:
 - Codex plugin marketplace install/discovery can cache the plugin under `${CODEX_HOME:-~/.codex}/plugins/cache/$MARKETPLACE_NAME/roblox-ai-os-creator-skills/$VERSION/` (local installs may use `local` as the version identifier); that packaged plugin includes plugin-scoped companion metadata for MCP servers and apps, while native/runtime hooks remain setup-owned, so it is still not the full RCS runtime setup
+- Plugin install/discovery is not a replacement for `npm install -g @jstn-sdk/rcs` plus `rcs setup`; legacy setup mode installs native agents/prompts, and plugin setup mode archives stale legacy prompt/native-agent files before relying on plugin discovery for bundled skills.
 - `rcs setup` installs prompts, skills, AGENTS scaffolding, `.codex/config.toml`, and RCS-managed native Codex hooks in `.codex/hooks.json`
   - setup refresh preserves non-RCS hook entries in `.codex/hooks.json` and only rewrites RCS-managed wrappers
   - `rcs setup --merge-agents` preserves existing `AGENTS.md` guidance while inserting or refreshing generated RCS sections between `<!-- RCS:AGENTS:START -->` / `<!-- RCS:AGENTS:END -->`; without `--merge-agents` or `--force`, non-interactive setup keeps skipping existing `AGENTS.md` files

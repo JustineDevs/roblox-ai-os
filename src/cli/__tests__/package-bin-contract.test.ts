@@ -68,6 +68,8 @@ describe('package bin contract', () => {
     assert.equal(pkg.scripts?.['sync:release-notes'], 'node dist/scripts/sync-release-notes.js');
     assert.equal(pkg.scripts?.['sync:release-notes:check'], 'node dist/scripts/sync-release-notes.js --check');
     assert.equal(pkg.scripts?.['release:backfill:github'], 'node dist/scripts/backfill-github-releases.js');
+    assert.equal(pkg.scripts?.['ci:preflight'], 'node dist/scripts/ci-preflight.js');
+    assert.equal(pkg.scripts?.['ci:preflight:quick'], 'node dist/scripts/ci-preflight.js --mode quick');
     assert.equal(pkg.scripts?.['verify:plugin-bundle'], 'node dist/scripts/sync-plugin-mirror.js --check');
     assert.equal(pkg.scripts?.['verify:native-agents'], 'node dist/scripts/verify-native-agents.js');
     assert.equal(

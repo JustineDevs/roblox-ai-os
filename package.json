@@ -13,6 +13,8 @@
     "build:full": "npm run build && npm run build:explore:release && npm run build:sparkshell",
     "build:explore:release": "node dist/scripts/build-explore-harness.js",
     "check:no-unused": "tsc -p tsconfig.no-unused.json",
+    "ci:preflight": "node dist/scripts/ci-preflight.js",
+    "ci:preflight:quick": "node dist/scripts/ci-preflight.js --mode quick",
     "clean:native-package-assets": "node dist/scripts/cleanup-explore-harness.js",
     "dev": "tsc --watch",
     "lint": "biome lint src",
