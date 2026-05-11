@@ -113,6 +113,25 @@ That usually means:
 - marketplace/package metadata may be portable
 - setup-owned native agents and runtime hooks are **not** automatically portable one-to-one
 
+## Claude-like hosts (Claude Code, Anthropic API clients, and similar)
+
+The manifest lane **`claude-like`** is **planned**: it records the contract and naming boundary for Anthropic-first or Claude-branded hosts. It does **not** promise a finished exporter in any given release until release notes say so.
+
+**Portable without pretending Codex parity**
+
+- Root **`skills/`** workflow markdown (Roblox creator triggers, forge loops, psychology-aware briefs) can be read or mirrored into a host-specific skill or rules directory **as long as** you keep this repository—or a generated export—as the **canonical** text you diff against.
+- **`templates/AGENTS.md`** and Roblox-first reference docs under **`docs/reference/`** are portable **policy and vocabulary** surfaces for any agent that can load markdown instructions.
+
+**Not portable one-for-one**
+
+- **Generated Codex native agent TOMLs**, **setup-owned `hooks.json` behavior**, and **`rcs` CLI lifecycle** are owned by the **`codex-native`** lane. Claude Code and similar hosts use different configuration shapes, hook models, and session lifecycles—do not assume you can copy `.codex/` paths verbatim and get equivalent enforcement.
+- **RCS-managed MCP defaults** are generated from TypeScript SSOT (`src/config/rcs-first-party-mcp.ts`). Other IDEs may consume MCP via their own config files; treat those files as **host delivery artifacts**, not a second place to edit server lists long-term.
+
+**Practical posture for Anthropic-first teams**
+
+- Treat RCS as the **authoritative Roblox creator policy + skill library** in git, and Codex as **one** supported execution backend—not the only runtime that may ever consume those files.
+- When you add automation, add a **small adapter or emitter** (or documented sync step) rather than forking `SKILL.md` bodies into a divergent “Claude-only” tree.
+
 ## Marketplace example
 
 For a marketplace-oriented platform, the package should be treated as a delivery artifact:
