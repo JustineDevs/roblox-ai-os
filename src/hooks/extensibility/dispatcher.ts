@@ -243,7 +243,7 @@ async function runPluginRunner(
 			stderr += chunk.toString();
 		});
 
-		child.on("error", (error) => {
+		child.on("error", () => {
 			void runPluginInProcessFallback(
 				plugin,
 				event,

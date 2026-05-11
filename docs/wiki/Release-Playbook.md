@@ -48,6 +48,35 @@ Important:
 - create or update the GitHub Release object from the tag workflow
 - publish npm and GitHub Packages from the workflow lanes, not by assumption
 
+## Release-note sync commands
+
+Use the managed template flow so versioned release-note files stay aligned with `package.json`:
+
+```bash
+npm run sync:release-notes
+npm run sync:release-notes:check
+```
+
+Notes:
+
+- `sync:release-notes` creates or refreshes the managed version/date block for the current versioned file such as `docs/release-notes-v0.1.9.md`
+- `sync:release-notes:check` fails when that managed block is missing or stale
+
+## Backfilling GitHub Releases for existing tags
+
+If tags already exist but the Releases page is empty, use:
+
+```bash
+npm run release:backfill:github -- --repo JustineDevs/roblox-ai-os --all
+```
+
+Useful variants:
+
+```bash
+npm run release:backfill:github -- --repo JustineDevs/roblox-ai-os --tag v0.1.8
+npm run release:backfill:github -- --repo JustineDevs/roblox-ai-os --all --check-only
+```
+
 ## Contributor-facing outputs
 
 - release notes

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
@@ -8,6 +8,7 @@ import {
   buildFullChangelogLine,
   generateReleaseBody,
   renderContributorsSection,
+  resolveReleaseTemplatePath,
   verifyCompareRange,
   type Contributor,
 } from '../generate-release-body.js';
@@ -271,5 +272,25 @@ Missing required sections.
       buildFullChangelogLine('example/roblox-ai-os-creator-skills', 'v0.1.0'),
       '**Full Changelog**: [`v0.1.0`](https://github.com/example/roblox-ai-os-creator-skills/releases/tag/v0.1.0)',
     );
+  });
+
+  it('prefers versioned release-note files when template auto is requested', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'rcs-generate-release-body-auto-template-'));
+    try {
+      await writeFile(join(root, 'RELEASE_BODY.md'), TEMPLATE);
+      await mkdir(join(root, 'docs'), { recursive: true });
+      await writeFile(join(root, 'docs', 'release-notes-v0.13.1.md'), TEMPLATE);
+
+      assert.equal(
+        resolveReleaseTemplatePath(root, 'auto', 'v0.13.1'),
+        join(root, 'docs', 'release-notes-v0.13.1.md'),
+      );
+      assert.equal(
+        resolveReleaseTemplatePath(root, 'auto', 'v9.9.9'),
+        join(root, 'RELEASE_BODY.md'),
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });

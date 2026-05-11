@@ -65,11 +65,14 @@ describe('package bin contract', () => {
     assert.equal(pkg.scripts?.['clean:native-package-assets'], 'node dist/scripts/cleanup-explore-harness.js');
     assert.equal(pkg.scripts?.['sync:plugin'], 'node dist/scripts/sync-plugin-mirror.js');
     assert.equal(pkg.scripts?.['sync:plugin:check'], 'node dist/scripts/sync-plugin-mirror.js --check');
+    assert.equal(pkg.scripts?.['sync:release-notes'], 'node dist/scripts/sync-release-notes.js');
+    assert.equal(pkg.scripts?.['sync:release-notes:check'], 'node dist/scripts/sync-release-notes.js --check');
+    assert.equal(pkg.scripts?.['release:backfill:github'], 'node dist/scripts/backfill-github-releases.js');
     assert.equal(pkg.scripts?.['verify:plugin-bundle'], 'node dist/scripts/sync-plugin-mirror.js --check');
     assert.equal(pkg.scripts?.['verify:native-agents'], 'node dist/scripts/verify-native-agents.js');
     assert.equal(
       pkg.scripts?.prepack,
-      'npm run build && npm run verify:native-agents && npm run sync:plugin && npm run verify:plugin-bundle && npm run surface:map:check && npm run clean:native-package-assets',
+      'npm run build && npm run sync:release-notes:check && npm run verify:native-agents && npm run sync:plugin && npm run verify:plugin-bundle && npm run surface:map:check && npm run clean:native-package-assets',
     );
     assert.equal(pkg.scripts?.postinstall, 'node src/scripts/postinstall-bootstrap.js');
     assert.equal(pkg.scripts?.postpack, 'npm run clean:native-package-assets');

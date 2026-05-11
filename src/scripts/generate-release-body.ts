@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
@@ -37,7 +37,7 @@ interface GenerateReleaseBodyOptions {
 }
 
 function usage(): never {
-  console.error('Usage: node scripts/generate-release-body.mjs --template <path> --out <path> [--current-tag <tag>] [--previous-tag <tag>] [--repo <owner/name>]');
+  console.error('Usage: node scripts/generate-release-body.mjs --template <path|auto> --out <path> [--current-tag <tag>] [--previous-tag <tag>] [--repo <owner/name>]');
   process.exit(1);
 }
 
@@ -73,6 +73,23 @@ export function resolveCurrentTag(cwd: string, explicit?: string): string {
   const described = runGit(['describe', '--tags', '--exact-match'], cwd, true);
   if (described) return described;
   throw new Error('unable to determine current release tag; pass --current-tag or set GITHUB_REF_NAME');
+}
+
+function versionFromTag(tag: string): string {
+  return tag.replace(/^v/, '');
+}
+
+export function resolveReleaseTemplatePath(
+  cwd: string,
+  requestedTemplatePath: string,
+  currentTag: string,
+): string {
+  if (requestedTemplatePath !== 'auto') {
+    return resolve(cwd, requestedTemplatePath);
+  }
+  const versionedPath = resolve(cwd, 'docs', `release-notes-v${versionFromTag(currentTag)}.md`);
+  if (existsSync(versionedPath)) return versionedPath;
+  return resolve(cwd, 'RELEASE_BODY.md');
 }
 
 function isAncestorTag(cwd: string, possibleAncestor: string, currentTag: string): boolean {
@@ -283,9 +300,9 @@ export async function resolveContributors(options: {
 
 export async function generateReleaseBody(options: GenerateReleaseBodyOptions): Promise<string> {
   const cwd = resolve(options.cwd ?? process.cwd());
-  const templatePath = resolve(cwd, options.templatePath);
   const outPath = resolve(cwd, options.outPath);
   const currentTag = resolveCurrentTag(cwd, options.currentTag);
+  const templatePath = resolveReleaseTemplatePath(cwd, options.templatePath, currentTag);
   const previousTag = resolvePreviousTag(cwd, currentTag, options.previousTag);
   verifyCompareRange(cwd, currentTag, previousTag);
   const repo = options.repo || process.env.GITHUB_REPOSITORY || resolveRepositoryFromRemote(cwd);

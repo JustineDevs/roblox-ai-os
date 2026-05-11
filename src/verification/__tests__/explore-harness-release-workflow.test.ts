@@ -45,7 +45,8 @@ describe('native release workflow', () => {
     assert.match(workflow, /publish-npm:\s*\n(?:.*\n)*?\s+environment:\s*npm-publish/m);
     assert.match(workflow, /npm publish --access public --provenance/);
     assert.match(workflow, /packages:\s*write/);
-    assert.match(workflow, /create-github-release:[\s\S]*generate-release-body\.js --template RELEASE_BODY\.md --out RELEASE_BODY\.generated\.md/);
+    assert.match(workflow, /create-github-release:[\s\S]*npm run sync:release-notes:check/);
+    assert.match(workflow, /create-github-release:[\s\S]*generate-release-body\.js --template auto --out RELEASE_BODY\.generated\.md/);
     assert.match(workflow, /create-github-release:[\s\S]*softprops\/action-gh-release@v3/);
     assert.match(workflow, /create-github-release:[\s\S]*append_body:\s*true/);
     assert.match(workflow, /create-github-release:[\s\S]*generate_release_notes:\s*true/);
@@ -92,6 +93,18 @@ describe('native release workflow', () => {
     assert.match(releaseTemplate, /Dependencies/);
     assert.match(releaseTemplate, /change-template:\s*"- \$TITLE by @\$AUTHOR in #\$NUMBER"/);
     assert.match(releaseTemplate, /template:\s*\|/);
+  });
+
+  it('ships a managed release-notes template for versioned docs sync', () => {
+    const releaseNotesTemplatePath = join(process.cwd(), 'docs', 'release-notes-template.md');
+    assert.equal(existsSync(releaseNotesTemplatePath), true, `missing release-notes template: ${releaseNotesTemplatePath}`);
+
+    const template = readFileSync(releaseNotesTemplatePath, 'utf-8');
+    assert.match(template, /RCS:RELEASE-NOTES:START/);
+    assert.match(template, /{{VERSION}}/);
+    assert.match(template, /{{DATE}}/);
+    assert.match(template, /## Contributors/);
+    assert.match(template, /\*\*Full Changelog\*\*: placeholder/);
   });
 
   it('keeps cargo-dist Linux targets aligned with musl-first plus glibc fallback assets', () => {

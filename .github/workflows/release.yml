@@ -99,11 +99,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: npm run sync:release-notes:check
       - name: Generate release body
         shell: bash
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: node dist/scripts/generate-release-body.js --template RELEASE_BODY.md --out RELEASE_BODY.generated.md
+        run: node dist/scripts/generate-release-body.js --template auto --out RELEASE_BODY.generated.md
       - name: Create GitHub Release object
         uses: softprops/action-gh-release@v3
         with:
