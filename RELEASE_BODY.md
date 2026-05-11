@@ -1,25 +1,22 @@
-> Release context: patch release for archive removal, Roblox-first demos, stricter prompt framing, and real localized README bodies.
+> Release context: patch release for default Roblox reference MCP activation and clearer MCP activation guidance.
 
-# Roblox Creator Skills — `@jstn-sdk/rcs` v0.1.7
+# Roblox Creator Skills — `@jstn-sdk/rcs` v0.1.8
 
 ## Summary
 
-`v0.1.7` removes the remaining legacy doc/archive lane, makes the demo guide fully Roblox-first, tightens the internal prompts around Roblox-native primary framing, and upgrades the localized README variants from English stubs to actual localized content.
+`v0.1.8` enables the GitMCP Roblox reference servers by default in the managed Codex config path, clarifies the MCP activation split for users, and adds the config/reference verification needed to keep that layer stable.
 
 ## Highlights
 
-- **No archive lane** — `docs/archive/` and the leftover historical readiness/report/benchmark/issue collateral are gone from the repo.
-- **Roblox-first demo surface** — `DEMO.md` now teaches creator workflow, Creator Labs, workspace standard, and live Studio compatibility instead of generic enterprise demos.
-- **Prompt-native framing** — key internal prompts now lead with Roblox Studio, Luau, remotes, DataStore, plugin, and creator-runtime concepts in their primary identity/goal sections.
-- **Real localized READMEs** — localized README files now contain actual language-specific content instead of English placeholder text.
+- **Default GitMCP Roblox references** — the managed config now includes `creator_docs`, `roblox_skills`, `devprod_docs`, and `roblox_scripts_corpus` through `npx mcp-remote https://gitmcp.io/...`.
+- **Clear activation model** — docs now explicitly recommend keeping first-party `rcs mcp-serve` and GitMCP Roblox references active by default, while leaving `robloxstudio-mcp` as the explicit manual live Studio bridge.
+- **Reference-layer enforcement** — config and verification tests now lock the Roblox external MCP reference layer into the repo’s setup and policy surface.
 
 ## Verification
 
 - `npm run build`
-- `node --test dist/hooks/__tests__/prompt-guidance-contract.test.js dist/hooks/__tests__/prompt-guidance-wave-two.test.js dist/hooks/__tests__/surface-taxonomy-contract.test.js`
-- `node --test dist/hooks/__tests__/semantic-system-contract.test.js dist/hooks/__tests__/surface-taxonomy-contract.test.js dist/verification/__tests__/roblox-workspace-standard.test.js dist/verification/__tests__/robloxstudio-mcp-compatibility.test.js`
-- `node dist/scripts/surface-taxonomy.js`
+- `node --test dist/config/__tests__/roblox-reference-mcp.test.js dist/config/__tests__/generator-idempotent.test.js dist/verification/__tests__/roblox-mcp-reference-layer.test.js dist/verification/__tests__/robloxstudio-mcp-compatibility.test.js`
 
 ## Full notes
 
-See **[CHANGELOG.md](./CHANGELOG.md)** for the canonical **`[0.1.7]`** entry and release summary.
+See **[CHANGELOG.md](./CHANGELOG.md)** for the canonical **`[0.1.8]`** entry and release summary.

@@ -18,6 +18,7 @@ import { AGENT_DEFINITIONS } from "../agents/definitions.js";
 import { DEFAULT_FRONTIER_MODEL } from "./models.js";
 import type { UnifiedMcpRegistryServer } from "./mcp-registry.js";
 import { getRcsFirstPartySetupMcpServers } from "./rcs-first-party-mcp.js";
+import { getRobloxReferenceMcpServers } from "./roblox-reference-mcp.js";
 import type { HudPreset } from "../hud/types.js";
 
 interface MergeOptions {
@@ -1355,11 +1356,14 @@ function getRcsSeededTablesBlock(
     "# ============================================================",
   ];
 
-  for (const server of getRcsFirstPartySetupMcpServers(pkgRoot)) {
+  for (const server of [
+    ...getRcsFirstPartySetupMcpServers(pkgRoot),
+    ...getRobloxReferenceMcpServers(),
+  ]) {
     lines.push("");
     lines.push(server.title);
     lines.push(`[mcp_servers.${server.name}]`);
-    lines.push('command = "node"');
+    lines.push(`command = "${escapeTomlString(server.command)}"`);
     lines.push(
       `args = [${server.args
         .map((arg) => `"${escapeTomlString(arg)}"`)

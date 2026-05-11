@@ -26,6 +26,22 @@ Roblox 実装作業では、コード生成の前に必須の pre-action gate �
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
+## MCP の有効化
+
+`rcs setup` の後、Codex 互換の標準設定には 2 つの MCP レイヤーが含まれているべきです。
+
+1. `rcs mcp-serve` による **RCS ファーストパーティ MCP サーバー**
+2. GitMCP リモート transport による **Roblox 参照 MCP サーバー**
+
+推奨モデル:
+- ローカルの runtime / state / control-plane 用に **`rcs mcp-serve`** を有効のままにする
+- 幻覚を減らしプラットフォーム理解を強めるため、**GitMCP の Roblox 参照サーバー**を標準で有効にする
+- **`robloxstudio-mcp`** は Codex CLI と Roblox Studio のリアルタイム接続が必要な場合にのみ手動で有効にする
+
+重要な補足:
+- `rcs mcp-serve` は **RCS 所有のローカル MCP サーバー**のみを提供します
+- `robloxstudio-mcp` は **提供しません**
+
 ## 所有者
 
 RCS は [JustineDevs](https://github.com/JustineDevs) と [@JustineDevs](https://github.com/JustineDevs) によって所有・保守されており、Roblox クリエイターワークフロー向けに提供されています。

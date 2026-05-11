@@ -53,6 +53,26 @@ function assertSingleRcsSeededBlock(toml: string): void {
     "[mcp_servers.rcs_wiki] should appear once",
   );
   assert.equal(
+    count(toml, /^\[mcp_servers\.creator_docs\]$/gm),
+    1,
+    "[mcp_servers.creator_docs] should appear once",
+  );
+  assert.equal(
+    count(toml, /^\[mcp_servers\.roblox_skills\]$/gm),
+    1,
+    "[mcp_servers.roblox_skills] should appear once",
+  );
+  assert.equal(
+    count(toml, /^\[mcp_servers\.devprod_docs\]$/gm),
+    1,
+    "[mcp_servers.devprod_docs] should appear once",
+  );
+  assert.equal(
+    count(toml, /^\[mcp_servers\.roblox_scripts_corpus\]$/gm),
+    1,
+    "[mcp_servers.roblox_scripts_corpus] should appear once",
+  );
+  assert.equal(
     count(toml, /^\[mcp_servers\.rcs_team_run\]$/gm),
     0,
     "[mcp_servers.rcs_team_run] should not be emitted",
@@ -1041,8 +1061,17 @@ describe("config generator idempotency (#384)", () => {
     const second = buildMergedConfig(first, "/tmp/rcs");
 
     assert.match(first, /^\[mcp_servers\.filesystem\]$/m);
-    assert.match(first, /^startup_timeout_sec = 15$/m);
-    assert.equal(count(second, /^startup_timeout_sec = 15$/gm), 1);
+    assert.match(
+      first,
+      /\[mcp_servers\.filesystem\][\s\S]*?startup_timeout_sec = 15/m,
+    );
+    assert.equal(
+      count(
+        second,
+        /\[mcp_servers\.filesystem\][\s\S]*?startup_timeout_sec = 15/m,
+      ),
+      1,
+    );
   });
 
   it("preserves explicit launcher timeouts and leaves non-launcher MCP servers untouched", () => {
@@ -1061,9 +1090,11 @@ describe("config generator idempotency (#384)", () => {
     const merged = buildMergedConfig(existing, "/tmp/rcs");
 
     assert.equal(count(merged, /^startup_timeout_sec = 22$/gm), 1);
+    const customSectionMatch = merged.match(/\[mcp_servers\.custom\]([\s\S]*?)(?:\n\[[^\n]+\]|\n# =+|\Z)/);
+    assert.ok(customSectionMatch?.[1]);
     assert.doesNotMatch(
-      merged,
-      /\[mcp_servers\.custom\][\s\S]*?startup_timeout_sec = 15/,
+      customSectionMatch?.[1] ?? "",
+      /startup_timeout_sec = 15/,
     );
   });
 
@@ -1078,7 +1109,10 @@ describe("config generator idempotency (#384)", () => {
     const merged = buildMergedConfig(existing, "/tmp/rcs");
 
     assert.match(merged, /^\[mcp_servers\.seq\]$/m);
-    assert.match(merged, /^startup_timeout_sec = 15$/m);
+    assert.match(
+      merged,
+      /\[mcp_servers\.seq\][\s\S]*?startup_timeout_sec = 15/m,
+    );
   });
 
   it("removes an existing multiline developer_instructions assignment as one root entry", () => {
@@ -1150,7 +1184,10 @@ describe("config generator idempotency (#384)", () => {
       const config = await readFile(configPath, "utf-8");
 
       assert.equal(repaired, true);
-      assert.match(config, /^startup_timeout_sec = 15$/m);
+      assert.match(
+        config,
+        /\[mcp_servers\.filesystem\][\s\S]*?startup_timeout_sec = 15/m,
+      );
     } finally {
       await rm(wd, { recursive: true, force: true });
     }

@@ -26,6 +26,22 @@ Bakınız:
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
+## MCP etkinleştirme
+
+`rcs setup` sonrasında varsayılan Codex uyumlu yapılandırma iki MCP katmanı içermelidir:
+
+1. `rcs mcp-serve` üzerinden **RCS birinci taraf MCP sunucuları**
+2. GitMCP uzak taşıması üzerinden **varsayılan Roblox referans MCP sunucuları**
+
+Önerilen model:
+- yerel runtime/state/control-plane çalışmaları için **`rcs mcp-serve`** etkin kalsın
+- halüsinasyonları azaltmak ve platforma dayalı doğruluğu artırmak için **GitMCP Roblox referans sunucuları** varsayılan olarak etkin kalsın
+- yalnızca Codex CLI ile Roblox Studio arasında gerçek zamanlı bağlantı istediğinizde **`robloxstudio-mcp`** yi manuel olarak etkinleştirin
+
+Önemli açıklama:
+- `rcs mcp-serve` yalnızca **RCS’ye ait yerel MCP sunucularını** sunar
+- `robloxstudio-mcp` yi sunmaz
+
 ## Sahiplik
 
 RCS, Roblox creator iş akışları için [JustineDevs](https://github.com/JustineDevs) ve [@JustineDevs](https://github.com/JustineDevs) tarafından sahiplenilir ve sürdürülür.

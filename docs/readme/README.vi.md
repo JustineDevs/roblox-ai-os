@@ -26,6 +26,22 @@ Xem:
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
+## Kích hoạt MCP
+
+Sau `rcs setup`, cấu hình mặc định tương thích với Codex nên bao gồm hai lớp MCP:
+
+1. **Máy chủ MCP first-party của RCS** qua `rcs mcp-serve`
+2. **Máy chủ MCP tham chiếu Roblox mặc định** qua cơ chế vận chuyển từ xa GitMCP
+
+Mô hình khuyến nghị:
+- giữ **`rcs mcp-serve`** hoạt động cho công việc runtime/state/control-plane cục bộ
+- giữ **các máy chủ tham chiếu Roblox qua GitMCP** bật theo mặc định để giảm hallucination và tăng độ bám sát nền tảng
+- chỉ bật **`robloxstudio-mcp`** thủ công khi bạn muốn có kết nối thời gian thực giữa Codex CLI và Roblox Studio
+
+Làm rõ quan trọng:
+- `rcs mcp-serve` chỉ phục vụ **các máy chủ MCP cục bộ thuộc sở hữu của RCS**
+- nó **không** phục vụ `robloxstudio-mcp`
+
 ## Quyền sở hữu
 
 RCS thuộc sở hữu và được duy trì bởi [JustineDevs](https://github.com/JustineDevs) và [@JustineDevs](https://github.com/JustineDevs) cho các workflow creator của Roblox.

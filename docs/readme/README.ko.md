@@ -26,6 +26,22 @@ Roblox 구현 작업에서는 어떤 코드 생성보다 먼저 필수 pre-actio
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
+## MCP 활성화
+
+`rcs setup` 이후 기본 Codex 호환 설정에는 두 가지 MCP 계층이 포함되어야 합니다:
+
+1. `rcs mcp-serve`를 통한 **RCS 1st-party MCP 서버**
+2. GitMCP 원격 전송을 통한 **기본 Roblox 참고 MCP 서버**
+
+권장 모델:
+- 로컬 runtime/state/control-plane 작업을 위해 **`rcs mcp-serve`** 를 활성 상태로 유지
+- 환각을 줄이고 플랫폼 기반 정확도를 높이기 위해 **GitMCP Roblox 참고 서버**를 기본으로 활성화
+- Codex CLI와 Roblox Studio 사이의 실시간 연결이 필요할 때만 **`robloxstudio-mcp`** 를 수동으로 활성화
+
+중요한 설명:
+- `rcs mcp-serve` 는 **RCS 소유의 로컬 MCP 서버**만 제공합니다
+- `robloxstudio-mcp` 는 제공하지 않습니다
+
 ## 소유권
 
 RCS는 Roblox 크리에이터 워크플로우를 위해 [JustineDevs](https://github.com/JustineDevs)와 [@JustineDevs](https://github.com/JustineDevs)가 소유하고 유지 관리합니다.

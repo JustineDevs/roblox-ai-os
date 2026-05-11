@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-05-11
+
+MCP/reference-layer activation release for **`@jstn-sdk/rcs@0.1.8`**. This ship line enables the GitMCP Roblox reference servers by default in the managed Codex config path, documents the MCP activation split more clearly in the README and localized README files, and adds the supporting config/reference verification tests.
+
+### Summary
+
+- **Default Roblox reference MCP layer** — `rcs setup` now seeds GitMCP-backed Roblox reference servers for `creator_docs`, `roblox_skills`, `devprod_docs`, and `roblox_scripts_corpus` in the managed Codex config path.
+- **Clear MCP split** — README and localized README variants now explain the recommended activation model: first-party `rcs mcp-serve` plus default GitMCP references, with `robloxstudio-mcp` still kept manual for live Studio connections.
+- **Verification hardening** — Added config and verification tests for the Roblox external MCP reference layer and updated generator expectations to cover the expanded default MCP set.
+
+### Verification (this release line)
+
+- `npm run build`
+- `node --test dist/config/__tests__/roblox-reference-mcp.test.js dist/config/__tests__/generator-idempotent.test.js dist/verification/__tests__/roblox-mcp-reference-layer.test.js dist/verification/__tests__/robloxstudio-mcp-compatibility.test.js`
+
 ## [0.1.7] - 2026-05-11
 
 Documentation and prompt-surface hardening release for **`@jstn-sdk/rcs@0.1.7`**. This ship line removes the remaining archive lane, makes the demo guide fully Roblox-first, upgrades the internal prompt roles from “generic first, Roblox later” to Roblox-native primary framing, and replaces the fake localized README stubs with real localized bodies.

@@ -147,6 +147,34 @@ That is the main path.
 > Native/runtime hooks still stay on the setup/runtime side rather than the installable plugin manifest.
 > It is still **not** a replacement for `npm install -g @jstn-sdk/rcs` plus `rcs setup`.
 
+> [!IMPORTANT]
+> **MCP activation split**
+>
+> After `rcs setup`, the default Codex-compatible config should include two MCP layers:
+>
+> 1. **First-party RCS MCP servers** via `rcs mcp-serve`
+>    - `rcs_state`
+>    - `rcs_memory`
+>    - `rcs_code_intel`
+>    - `rcs_trace`
+>    - `rcs_wiki`
+>
+> 2. **Default Roblox reference MCP servers** via GitMCP remote transport
+>    - `creator_docs`
+>    - `roblox_skills`
+>    - `devprod_docs`
+>    - `roblox_scripts_corpus`
+>
+> Recommended activation model:
+> - keep **first-party `rcs mcp-serve`** active for local runtime/state/control-plane work
+> - keep the **GitMCP Roblox reference servers** active by default to reduce hallucination and improve Roblox platform grounding
+> - enable **`robloxstudio-mcp`** manually only when you want a live Codex CLI <-> Roblox Studio connection
+>
+> Important clarification:
+> - `rcs mcp-serve` is only for **RCS-owned local MCP servers**
+> - it does **not** serve `robloxstudio-mcp`
+> - `robloxstudio-mcp` remains an explicit opt-in live Studio bridge because it requires a Studio plugin, HTTP enabled in Studio, and a higher-trust write boundary
+
 ## Who RCS is for
 
 Use RCS if you are:

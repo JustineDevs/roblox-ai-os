@@ -26,6 +26,22 @@
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
+## MCP 激活
+
+执行 `rcs setup` 之后，默认的 Codex 兼容配置应包含两层 MCP：
+
+1. 通过 `rcs mcp-serve` 提供的 **RCS 第一方 MCP 服务器**
+2. 通过 GitMCP 远程传输提供的 **默认 Roblox 参考 MCP 服务器**
+
+推荐模型：
+- 保持 **`rcs mcp-serve`** 处于启用状态，用于本地 runtime / state / control-plane 工作
+- 默认启用 **GitMCP Roblox 参考服务器**，以减少幻觉并提高平台语境准确度
+- 只有在你需要 Codex CLI 与 Roblox Studio 的实时连接时，才手动启用 **`robloxstudio-mcp`**
+
+重要说明：
+- `rcs mcp-serve` 只服务于 **RCS 自有的本地 MCP 服务器**
+- 它 **不会** 服务 `robloxstudio-mcp`
+
 ## 所有权
 
 RCS 由 [JustineDevs](https://github.com/JustineDevs) 和 [@JustineDevs](https://github.com/JustineDevs) 拥有并维护，用于 Roblox 创作者工作流。

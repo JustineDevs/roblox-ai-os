@@ -26,6 +26,22 @@
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
+## Ενεργοποίηση MCP
+
+Μετά το `rcs setup`, η προεπιλεγμένη συμβατή με Codex ρύθμιση θα πρέπει να περιλαμβάνει δύο επίπεδα MCP:
+
+1. **First-party RCS MCP servers** μέσω `rcs mcp-serve`
+2. **Προεπιλεγμένους Roblox reference MCP servers** μέσω GitMCP remote transport
+
+Προτεινόμενο μοντέλο:
+- κράτησε το **`rcs mcp-serve`** ενεργό για τοπικό runtime/state/control-plane έργο
+- κράτησε τους **GitMCP Roblox reference servers** ενεργούς από προεπιλογή για λιγότερες παραισθήσεις και καλύτερη πλατφορμική θεμελίωση
+- ενεργοποίησε το **`robloxstudio-mcp`** χειροκίνητα μόνο όταν θέλεις ζωντανή σύνδεση Codex CLI <-> Roblox Studio
+
+Σημαντική διευκρίνιση:
+- το `rcs mcp-serve` εξυπηρετεί μόνο **τοπικούς MCP servers που ανήκουν στο RCS**
+- **δεν** εξυπηρετεί το `robloxstudio-mcp`
+
 ## Ιδιοκτησία
 
 Το RCS ανήκει και συντηρείται από τους [JustineDevs](https://github.com/JustineDevs) και [@JustineDevs](https://github.com/JustineDevs) για Roblox creator workflows.
