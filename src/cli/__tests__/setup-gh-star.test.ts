@@ -32,7 +32,7 @@ function shouldSkipForSpawnPermissions(err: string): boolean {
 }
 
 describe('rcs setup (gh star hint)', () => {
-  it('prints a star hint when GitHub CLI is configured', async () => {
+  it('prints the support link when GitHub CLI is configured', async () => {
     const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-gh-'));
     try {
       const fakeBin = join(wd, 'bin');
@@ -53,13 +53,13 @@ describe('rcs setup (gh star hint)', () => {
       });
       if (shouldSkipForSpawnPermissions(res.error)) return;
       assert.equal(res.status, 0, res.stderr || res.stdout);
-      assert.match(res.stdout, /gh repo star Yeachan-Heo\/roblox-ai-os-creator-skills/);
+      assert.match(res.stdout, /Support the project: https:\/\/github\.com\/JustineDevs\/roblox-ai-os/);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('does not print a star hint when GitHub CLI is missing', async () => {
+  it('does not print the support link when GitHub CLI is missing', async () => {
     const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-gh-'));
     try {
       const home = join(wd, 'home');
@@ -68,7 +68,7 @@ describe('rcs setup (gh star hint)', () => {
       const res = runRcsCli(wd, ['setup', '--dry-run'], { PATH: '', HOME: home });
       if (shouldSkipForSpawnPermissions(res.error)) return;
       assert.equal(res.status, 0, res.stderr || res.stdout);
-      assert.doesNotMatch(res.stdout, /gh repo star Yeachan-Heo\/roblox-ai-os-creator-skills/);
+      assert.doesNotMatch(res.stdout, /Support the project: https:\/\/github\.com\/JustineDevs\/roblox-ai-os/);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
