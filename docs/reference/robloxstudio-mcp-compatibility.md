@@ -18,6 +18,27 @@ For that lane, RCS adopts compatibility with the upstream standard:
   - `robloxstudio-mcp`
   - `robloxstudio-mcp-inspector`
 
+## Upstream Setup First
+
+RCS does **not** replace the upstream plugin installation or activation guide.
+
+If you want this running locally, do the upstream setup first:
+
+- upstream repo and README: `https://github.com/boshyxd/robloxstudio-mcp`
+- official Roblox Studio MCP docs: `https://create.roblox.com/docs/studio/mcp`
+
+Use those upstream instructions for:
+- installing the Studio plugin
+- enabling/activating the Studio-side MCP lane
+- confirming the plugin or Studio MCP server shows connected
+- client-specific quick-connect or platform-specific path details
+
+Then come back to the RCS docs for:
+- Codex-compatible command examples
+- inspector vs full-write lane choice
+- trust-boundary guidance
+- how this fits with `rcs mcp-serve` and GitMCP references
+
 ## When To Use It
 
 Use `robloxstudio-mcp` when you need:
@@ -43,8 +64,8 @@ They solve different problems and compose cleanly:
 
 ## Recommended Standard
 
-1. Install the upstream Studio plugin from the upstream release flow.
-2. Enable **Allow HTTP Requests** in Roblox Studio.
+1. Follow the upstream plugin/server setup guide first.
+2. Confirm the upstream plugin or Studio MCP lane shows connected.
 3. Connect Codex with one of the standard commands:
 
 ### Full live Studio write lane

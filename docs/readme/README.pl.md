@@ -45,6 +45,7 @@ Zalecany model:
 Ważne doprecyzowanie:
 - `rcs mcp-serve` obsługuje tylko **lokalne serwery MCP należące do RCS**
 - **nie** obsługuje `robloxstudio-mcp`
+- instalację i aktywację wtyczki wykonaj najpierw według upstreamowego przewodnika `robloxstudio-mcp`; dokumentacja kompatybilności RCS **nie** zastępuje tych kroków
 
 ## Wkład
 

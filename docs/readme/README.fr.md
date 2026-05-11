@@ -45,6 +45,7 @@ Modèle recommandé :
 Clarification importante :
 - `rcs mcp-serve` ne sert que les **serveurs MCP locaux appartenant à RCS**
 - il ne sert **pas** `robloxstudio-mcp`
+- pour l’installation et l’activation du plugin, suivez d’abord le guide upstream de `robloxstudio-mcp` ; la documentation de compatibilité RCS **ne** remplace **pas** ces étapes
 
 ## Contributions
 

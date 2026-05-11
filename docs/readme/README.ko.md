@@ -45,6 +45,7 @@ Roblox 구현 작업에서는 어떤 코드 생성보다 먼저 필수 pre-actio
 중요한 설명:
 - `rcs mcp-serve` 는 **RCS 소유의 로컬 MCP 서버**만 제공합니다
 - `robloxstudio-mcp` 는 제공하지 않습니다
+- 플러그인 설치와 활성화는 먼저 upstream `robloxstudio-mcp` 가이드를 따르세요. RCS 호환성 문서는 그 절차를 **대체하지 않습니다**
 
 ## 기여
 

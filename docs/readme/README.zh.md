@@ -45,6 +45,7 @@
 重要说明：
 - `rcs mcp-serve` 只服务于 **RCS 自有的本地 MCP 服务器**
 - 它 **不会** 服务 `robloxstudio-mcp`
+- 插件安装与启用请先遵循上游 `robloxstudio-mcp` 指南；RCS 兼容性文档**不**替代这些步骤
 
 ## 贡献
 

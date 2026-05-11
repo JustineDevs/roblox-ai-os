@@ -174,6 +174,7 @@ That is the main path.
 > - `rcs mcp-serve` is only for **RCS-owned local MCP servers**
 > - it does **not** serve `robloxstudio-mcp`
 > - `robloxstudio-mcp` remains an explicit opt-in live Studio bridge because it requires a Studio plugin, HTTP enabled in Studio, and a higher-trust write boundary
+> - for plugin install/activation steps, follow the upstream `robloxstudio-mcp` guide first; RCS compatibility docs do **not** replace the upstream setup instructions
 
 ## Who RCS is for
 

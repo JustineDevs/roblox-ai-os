@@ -45,6 +45,7 @@ Roblox 実装作業では、コード生成の前に必須の pre-action gate �
 重要な補足:
 - `rcs mcp-serve` は **RCS 所有のローカル MCP サーバー**のみを提供します
 - `robloxstudio-mcp` は **提供しません**
+- プラグインの導入と有効化は、まず upstream の `robloxstudio-mcp` ガイドに従ってください。RCS の互換性ドキュメントはその手順を**置き換えません**
 
 ## コントリビューション
 

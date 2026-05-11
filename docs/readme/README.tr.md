@@ -45,6 +45,7 @@ Bakınız:
 Önemli açıklama:
 - `rcs mcp-serve` yalnızca **RCS’ye ait yerel MCP sunucularını** sunar
 - `robloxstudio-mcp` yi sunmaz
+- eklenti kurulumu ve etkinleştirmesi için önce upstream `robloxstudio-mcp` kılavuzunu izleyin; RCS uyumluluk belgeleri bu adımların **yerini almaz**
 
 ## Katkılar
 

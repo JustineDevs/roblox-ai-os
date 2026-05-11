@@ -45,6 +45,7 @@
 重要說明：
 - `rcs mcp-serve` 只服務 **RCS 自有的本機 MCP 伺服器**
 - 它 **不會** 服務 `robloxstudio-mcp`
+- 外掛安裝與啟用請先遵循上游 `robloxstudio-mcp` 指南；RCS 相容性文件**不會**取代這些步驟
 
 ## 貢獻
 

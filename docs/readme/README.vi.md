@@ -45,6 +45,7 @@ Mô hình khuyến nghị:
 Làm rõ quan trọng:
 - `rcs mcp-serve` chỉ phục vụ **các máy chủ MCP cục bộ thuộc sở hữu của RCS**
 - nó **không** phục vụ `robloxstudio-mcp`
+- để cài đặt và kích hoạt plugin, hãy làm theo hướng dẫn upstream của `robloxstudio-mcp` trước; tài liệu tương thích của RCS **không** thay thế các bước đó
 
 ## Đóng góp
 
