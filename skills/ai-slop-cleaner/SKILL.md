@@ -141,6 +141,3 @@ Remaining Risks:
 **Bad:** Keep a `fallback if it fails` branch that silently defaults after a swallowed error instead of fixing the root cause or making failure explicit.
 
 **Good:** A version-specific compatibility shim is narrow, documented, preserves error evidence, has primary and fallback regression tests, and is reported as a grounded compatibility/fail-safe fallback.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

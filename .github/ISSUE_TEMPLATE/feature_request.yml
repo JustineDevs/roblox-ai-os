@@ -1,0 +1,70 @@
+name: Feature request
+description: Propose a product or workflow improvement for Roblox Creator Skills
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for real product or workflow improvements.
+
+        RCS is Roblox-first. Feature requests should be framed around creator workflows, Roblox Studio, Luau, remotes, DataStore, plugin/tooling, or runtime/platform quality.
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: What creator/operator problem exists today?
+      placeholder: Explain the real user or maintainer problem, not just a solution idea.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should RCS do?
+    validations:
+      required: true
+  - type: dropdown
+    id: workflow
+    attributes:
+      label: Primary workflow area
+      options:
+        - brief / blueprint / forge / crew
+        - Roblox Studio workspace / Luau
+        - MCP / hooks / notifications
+        - Team runtime / tmux
+        - Docs / onboarding / contributor workflow
+        - Release / CI / packaging
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: roblox_context
+    attributes:
+      label: Roblox-specific context
+      description: If this is creator-facing, explain the Roblox Studio / experience / plugin / Luau angle explicitly.
+      placeholder: Mention services, remotes, DataStore, UI/HUD, plugin widgets, creator labs, etc.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches or workarounds did you consider?
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What should be true when this feature is done?
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+        - [ ] ...
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I confirmed this request matches the Roblox-first product direction
+          required: true
+        - label: I searched existing issues and docs first
+          required: true

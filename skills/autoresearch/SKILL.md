@@ -70,6 +70,3 @@ The completion artifact must include both an architect approval verdict and an o
 - No direct CLI launch.
 - No tmux split-pane launch.
 - No noop-count completion gate.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

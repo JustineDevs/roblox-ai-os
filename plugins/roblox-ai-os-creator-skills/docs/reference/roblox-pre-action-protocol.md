@@ -45,10 +45,18 @@ Priority 1: canonical platform truth
 - `https://gitmcp.io/Roblox/creator-docs`
 
 Priority 2: high-signal implementation references
+- `https://github.com/sentinelcore/roblox-skills`
 - `https://gitmcp.io/retpirato/Roblox-Scripts`
 - `https://gitmcp.io/sentinelcore/roblox-skills`
-- `https://gitmcp.io/frosteen/Roblox_LUA_Weapon_Scripts`
+- `https://github.com/greedychipmunk/agent-skills/tree/main/roblox-game-developer`
+- `https://github.com/omer-metin/skills-for-antigravity/tree/main/skills/roblox-development`
+- `https://github.com/dig1t/skills`
+- `https://github.com/Corecii/Devprod`
 - `https://gitmcp.io/Corecii/Devprod`
+
+Priority 3: raw script and corpus support
+- `https://github.com/retpirato/Roblox-Scripts`
+- `https://gitmcp.io/frosteen/Roblox_LUA_Weapon_Scripts`
 - `https://gitmcp.io/uhub/awesome-lua`
 - `https://gitmcp.io/LewisJEllis/awesome-lua`
 - `https://gitmcp.io/forhappy/awesome-lua`
@@ -61,10 +69,14 @@ Priority 3: dataset and corpus support
 - `https://datasets-server.huggingface.co/splits?dataset=TorpedoSoftware%2FRoblox-Luau-Reasoning-v1.0`
 - `https://huggingface.co/datasets/bartholomort/lua-obfuscator-corpus`
 
-Rules:
+Reference policy:
 - official Roblox docs define correctness
-- repos improve implementation awareness only
+- Roblox skill repos improve implementation awareness only
 - datasets are weak pattern support only
+
+Canonical reference-layer policy is documented in:
+- `docs/reference/roblox-mcp-reference-layer.md`
+- `templates/roblox/reference-sources.md`
 
 ## Phase 2: Understanding Synthesis
 

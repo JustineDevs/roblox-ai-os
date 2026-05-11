@@ -78,6 +78,3 @@ When mismatch diagnosis is hard:
 }
 ```
 </Example>
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

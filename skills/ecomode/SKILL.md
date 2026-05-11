@@ -116,6 +116,3 @@ Use `rcs_state` MCP tools for ecomode lifecycle state.
   `state_write({mode: "ecomode", active: false})`
 - **On cancellation/cleanup**:
   run `$cancel` (which should call `state_clear(mode="ecomode")`)
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

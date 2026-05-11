@@ -29,6 +29,8 @@ Current code recognizes these top-level `.rcs-config.json` keys:
 | --- | --- | --- |
 | `env` | Object of non-empty string values | Fallback environment values for model routing and helper launch paths. Model-related supported keys are listed below. |
 | `models` | Object of non-empty string values | Mode defaults and low-complexity model aliases. Supported model-routing keys are listed below. |
+| `providers` | Object | Provider profiles for model/API-agnostic routing (`base_url`, `api_format`, `env_key`, `capabilities`, `label`). |
+| `routing` | Object | Default provider, mode-specific provider mapping, fallback provider chains, and hot-swap/failover flags. |
 | `notifications` | Object | Notification transports, profiles, templates, cooldowns, replies, and OpenClaw/custom aliases. See the notification summary below and the OpenClaw guide for full examples. |
 | `stopHookCallbacks` | Legacy object | Backward-compatible legacy session-end notification config for `telegram` and `discord`; prefer `notifications`. |
 | `promptRouting` | `{ "triage": { "enabled": boolean } }` | Enables/disables advisory triage prompt routing. Missing key defaults to enabled; malformed shape fails closed to disabled. |
@@ -251,6 +253,7 @@ If behavior does not match your config, first confirm whether you are in user or
 ## Related docs and source surfaces
 
 - Notification and OpenClaw config: [`docs/openclaw-integration.md`](../openclaw-integration.md)
+- Provider abstraction: [`docs/reference/llm-provider-abstraction.md`](./llm-provider-abstraction.md)
 - Project wiki config: [`docs/reference/project-wiki.md`](./project-wiki.md)
 - Model routing source: `src/config/models.ts`
 - Notification config source: `src/notifications/config.ts`, `src/notifications/types.ts`, `src/notifications/hook-config-types.ts`

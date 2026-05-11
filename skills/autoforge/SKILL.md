@@ -20,6 +20,3 @@ For Roblox implementation tasks, `$autoforge` must still obey the mandatory gate
 5. only then begin execution
 
 `PRE_ACTION_COMPLETE` must become `true` before any Roblox code generation.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

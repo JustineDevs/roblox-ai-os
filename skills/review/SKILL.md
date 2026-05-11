@@ -40,6 +40,3 @@ The review workflow:
 - Approval must cite concrete evidence, not author claims.
 
 Follow the Plan skill's full documentation for review mode details.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

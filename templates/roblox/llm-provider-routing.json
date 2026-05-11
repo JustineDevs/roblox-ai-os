@@ -1,0 +1,42 @@
+{
+  "providers": {
+    "openrouter": {
+      "base_url": "https://openrouter.ai/api/v1",
+      "api_format": "openai-compatible",
+      "env_key": "OPENROUTER_API_KEY",
+      "capabilities": [
+        "chat",
+        "reasoning"
+      ],
+      "label": "OpenRouter"
+    },
+    "anthropic_proxy": {
+      "base_url": "https://proxy.example.com/anthropic",
+      "api_format": "anthropic",
+      "env_key": "ANTHROPIC_PROXY_KEY",
+      "capabilities": [
+        "chat",
+        "long-context"
+      ],
+      "label": "Anthropic Proxy"
+    }
+  },
+  "routing": {
+    "default_provider": "openrouter",
+    "mode_providers": {
+      "forge": "openrouter",
+      "team": "anthropic_proxy"
+    },
+    "fallback_providers": [
+      "openrouter"
+    ],
+    "mode_fallback_providers": {
+      "forge": [
+        "openrouter",
+        "anthropic_proxy"
+      ]
+    },
+    "hot_swap": true,
+    "failover": true
+  }
+}

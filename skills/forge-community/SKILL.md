@@ -18,6 +18,3 @@ Generate a **Community Stickiness Spec**.
 - group progression or co-op loops
 - social presence surfaces
 - anti-spam and anti-abuse guardrails
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

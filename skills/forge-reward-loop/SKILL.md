@@ -21,6 +21,3 @@ Generate a concrete **Reward Loop Spec**.
 - fail state
 - recovery path
 - Roblox-fit note
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

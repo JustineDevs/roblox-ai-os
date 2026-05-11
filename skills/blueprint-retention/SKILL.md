@@ -17,6 +17,3 @@ Return:
 - a filled **Retention Design Sheet** from `templates/psychology/retention-design-sheet.md`
 - a compact **Weekly LiveOps Plan**
 - comeback hooks and burnout guardrails
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

@@ -7,14 +7,20 @@ import {
   DEFAULT_FRONTIER_MODEL,
   DEFAULT_SPARK_MODEL,
   DEFAULT_TEAM_CHILD_MODEL,
+  getConfiguredDefaultProvider,
   getEnvConfiguredStandardDefaultModel,
+  getFallbackProvidersForMode,
   getMainDefaultModel,
   getModelForMode,
+  getProviderForMode,
   getSparkDefaultModel,
   getStandardDefaultModel,
   getTeamChildModel,
   getTeamLowComplexityModel,
+  readActiveProviderConnection,
   readConfiguredEnvOverrides,
+  readProviderProfiles,
+  readProviderRoutingFlags,
 } from '../models.js';
 
 describe('getModelForMode', () => {
@@ -262,5 +268,88 @@ describe('getModelForMode', () => {
     assert.equal(getStandardDefaultModel(), DEFAULT_FRONTIER_MODEL);
     assert.equal(getSparkDefaultModel(), DEFAULT_SPARK_MODEL);
     assert.equal(getTeamLowComplexityModel(), DEFAULT_SPARK_MODEL);
+  });
+
+  it('reads provider profiles and mode-specific provider routing from .rcs-config.json', async () => {
+    await writeConfig({
+      providers: {
+        openrouter: {
+          base_url: 'https://openrouter.ai/api/v1',
+          api_format: 'openai-compatible',
+          env_key: 'OPENROUTER_API_KEY',
+          capabilities: ['chat', 'reasoning'],
+          label: 'OpenRouter',
+        },
+        anthropic_proxy: {
+          base_url: 'https://proxy.example.com/anthropic',
+          api_format: 'anthropic',
+          env_key: 'ANTHROPIC_PROXY_KEY',
+        },
+      },
+      routing: {
+        default_provider: 'openrouter',
+        mode_providers: {
+          forge: 'anthropic_proxy',
+        },
+        fallback_providers: ['openrouter'],
+        mode_fallback_providers: {
+          forge: ['anthropic_proxy', 'openrouter'],
+        },
+        hot_swap: true,
+        failover: true,
+      },
+    });
+
+    const profiles = readProviderProfiles();
+    assert.equal(profiles.openrouter?.base_url, 'https://openrouter.ai/api/v1');
+    assert.equal(profiles.openrouter?.api_format, 'openai-compatible');
+    assert.equal(profiles.openrouter?.env_key, 'OPENROUTER_API_KEY');
+    assert.equal(profiles.openrouter?.label, 'OpenRouter');
+    assert.deepEqual(profiles.openrouter?.capabilities, ['chat', 'reasoning']);
+
+    assert.equal(getConfiguredDefaultProvider(), 'openrouter');
+    assert.equal(getProviderForMode('forge'), 'anthropic_proxy');
+    assert.equal(getProviderForMode('team'), 'openrouter');
+    assert.deepEqual(getFallbackProvidersForMode('forge'), ['anthropic_proxy', 'openrouter']);
+    assert.deepEqual(getFallbackProvidersForMode('team'), ['openrouter']);
+
+    assert.deepEqual(readProviderRoutingFlags(), {
+      hotSwapEnabled: true,
+      failoverEnabled: true,
+    });
+  });
+
+  it('prefers shell provider overrides and exposes a normalized active provider connection view', async () => {
+    process.env.RCS_DEFAULT_PROVIDER = 'shell-provider';
+    process.env.RCS_PROVIDER_HOT_SWAP = '1';
+    process.env.RCS_PROVIDER_FAILOVER = '1';
+    process.env.SHELL_PROVIDER_KEY = 'secret';
+
+    await writeConfig({
+      providers: {
+        'shell-provider': {
+          base_url: 'https://proxy.example.com/v1',
+          api_format: 'openai-compatible',
+          env_key: 'SHELL_PROVIDER_KEY',
+        },
+      },
+      routing: {
+        fallback_providers: ['openrouter'],
+      },
+    });
+
+    assert.equal(getConfiguredDefaultProvider(), 'shell-provider');
+
+    const active = readActiveProviderConnection(process.env, 'team');
+    assert.deepEqual(active, {
+      provider: 'shell-provider',
+      baseUrl: 'https://proxy.example.com/v1',
+      apiFormat: 'openai-compatible',
+      envKey: 'SHELL_PROVIDER_KEY',
+      envValuePresent: true,
+      fallbackProviders: ['openrouter'],
+      hotSwapEnabled: true,
+      failoverEnabled: true,
+    });
   });
 });

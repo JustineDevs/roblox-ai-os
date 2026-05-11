@@ -177,6 +177,3 @@ ecomode (token efficiency)
 
 Ultrawork is the parallelism and execution-discipline layer. Forge adds persistence, architect verification, deslop, and retry-until-done behavior. Autoforge adds the broader autonomous lifecycle pipeline. Ecomode adjusts ultrawork's model routing to favor cheaper models.
 </Advanced>
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

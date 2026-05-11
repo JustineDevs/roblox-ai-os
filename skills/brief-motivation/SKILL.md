@@ -24,6 +24,3 @@ Return a **Motivation Matrix** with:
 - Explain the dominant driver in one sentence.
 - Separate “good urgency” from manipulative pressure.
 - Prefer community when social play is naturally supported.
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

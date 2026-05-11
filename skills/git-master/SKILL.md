@@ -31,6 +31,3 @@ delegate(role="git-master", tier="STANDARD", task="{{ARGUMENTS}}")
 - Style detection from repo history
 
 Task: {{ARGUMENTS}}
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

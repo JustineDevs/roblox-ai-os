@@ -26,6 +26,3 @@ If this skill is selected by older routing, stop the standalone web-clone pipeli
 ## Rationale
 
 The URL extraction, visual iteration, and implementation verification responsibilities are now part of Visual Forge's broader visual-delivery workflow. Keeping a second standalone cloning skill would split guidance and make verification behavior drift.
-surface-class: "historical"
-domain: "creator-runtime"
-audience: "internal"

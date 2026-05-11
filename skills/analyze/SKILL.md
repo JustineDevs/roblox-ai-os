@@ -9,7 +9,7 @@ artifact-type: "skill"
 
 # Analyze — Read-Only Deep Analysis
 
-Use this skill to answer the user’s question through **read-only repository analysis**. The goal is to explain what the codebase most likely says about the question, not to drift into implementation, debugging theater, or generic fix planning.
+Use this skill to answer the user’s question through **read-only repository analysis**. In this repo, that usually means Roblox Studio, Luau, plugin, creator-runtime, or workflow evidence, not generic software diagnosis detached from the actual creator surface.
 
 ## Use `$analyze` when
 
@@ -20,11 +20,11 @@ Use this skill to answer the user’s question through **read-only repository an
 - the user wants to understand architecture, behavior, causality, impact, or tradeoffs before changing anything
 
 Examples:
-- why a workflow behaves a certain way
-- how a feature is wired across modules
-- what likely explains a failure, regression, or mismatch
-- what would be impacted by changing a dependency or contract
-- which interpretation of the current codebase is best supported
+- why a remote validation path behaves a certain way
+- how a creator HUD or plugin surface is wired across modules
+- what likely explains a trade, datastore, or workflow regression
+- what would be impacted by changing a provider contract, remote schema, or creator-runtime boundary
+- which interpretation of the current Roblox-facing codebase is best supported
 
 ## Do not use `$analyze` when
 
@@ -150,6 +150,3 @@ A good analyze response is:
 - concise for simple cases, broader only when the question truly needs it
 
 Task: {{ARGUMENTS}}
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

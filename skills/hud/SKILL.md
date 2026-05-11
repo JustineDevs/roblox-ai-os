@@ -100,6 +100,3 @@ If the TUI statusline is not showing:
 If `rcs hud` shows "No active modes":
 - This is expected when no workflows are running
 - Start a workflow (forge, autopilot, etc.) and check again
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

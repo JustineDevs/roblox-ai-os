@@ -32,9 +32,28 @@ export interface RcsConfigEnv {
   [key: string]: string | undefined;
 }
 
+export interface ProviderProfile {
+  base_url?: string;
+  api_format?: string;
+  env_key?: string;
+  capabilities?: string[];
+  label?: string;
+}
+
+export interface ProviderRoutingConfig {
+  default_provider?: string;
+  mode_providers?: Record<string, string | undefined>;
+  fallback_providers?: string[];
+  mode_fallback_providers?: Record<string, string[] | undefined>;
+  hot_swap?: boolean;
+  failover?: boolean;
+}
+
 interface RcsConfigFile {
   env?: RcsConfigEnv;
   models?: ModelsConfig;
+  providers?: Record<string, ProviderProfile>;
+  routing?: ProviderRoutingConfig;
 }
 
 interface CodexConfigFile {
@@ -48,6 +67,20 @@ export const RCS_DEFAULT_STANDARD_MODEL_ENV = 'RCS_DEFAULT_STANDARD_MODEL';
 export const RCS_DEFAULT_SPARK_MODEL_ENV = 'RCS_DEFAULT_SPARK_MODEL';
 export const RCS_SPARK_MODEL_ENV = 'RCS_SPARK_MODEL';
 export const RCS_TEAM_CHILD_MODEL_ENV = 'RCS_TEAM_CHILD_MODEL';
+export const RCS_DEFAULT_PROVIDER_ENV = 'RCS_DEFAULT_PROVIDER';
+export const RCS_PROVIDER_FAILOVER_ENV = 'RCS_PROVIDER_FAILOVER';
+export const RCS_PROVIDER_HOT_SWAP_ENV = 'RCS_PROVIDER_HOT_SWAP';
+
+export interface ActiveProviderConnection {
+  provider: string | null;
+  baseUrl: string | null;
+  apiFormat: string | null;
+  envKey: string | null;
+  envValuePresent: boolean;
+  fallbackProviders: string[];
+  hotSwapEnabled: boolean;
+  failoverEnabled: boolean;
+}
 
 function readRcsConfigFile(codexHomeOverride?: string): RcsConfigFile | null {
   const configPath = join(codexHomeOverride || codexHome(), '.rcs-config.json');
@@ -84,6 +117,36 @@ function readModelsBlock(codexHomeOverride?: string): ModelsConfig | null {
   return null;
 }
 
+function readProvidersBlock(
+  codexHomeOverride?: string,
+): Record<string, ProviderProfile> | null {
+  const config = readRcsConfigFile(codexHomeOverride);
+  if (!config) return null;
+  if (
+    config.providers &&
+    typeof config.providers === 'object' &&
+    !Array.isArray(config.providers)
+  ) {
+    return config.providers;
+  }
+  return null;
+}
+
+function readRoutingBlock(
+  codexHomeOverride?: string,
+): ProviderRoutingConfig | null {
+  const config = readRcsConfigFile(codexHomeOverride);
+  if (!config) return null;
+  if (
+    config.routing &&
+    typeof config.routing === 'object' &&
+    !Array.isArray(config.routing)
+  ) {
+    return config.routing;
+  }
+  return null;
+}
+
 export const DEFAULT_FRONTIER_MODEL = 'gpt-5.5';
 export const DEFAULT_STANDARD_MODEL = 'gpt-5.4-mini';
 export const DEFAULT_SPARK_MODEL = 'gpt-5.3-codex-spark';
@@ -101,6 +164,13 @@ function readConfigEnvValue(key: string, codexHomeOverride?: string): string | u
     return undefined;
   }
   return normalizeConfiguredValue(config.env[key]);
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((entry) => normalizeConfiguredValue(entry))
+    .filter((entry): entry is string => Boolean(entry));
 }
 
 function readTeamLowComplexityOverride(codexHomeOverride?: string): string | undefined {
@@ -127,16 +197,104 @@ export function readConfiguredEnvOverrides(codexHomeOverride?: string): NodeJS.P
   return resolved;
 }
 
+export function readProviderProfiles(
+  codexHomeOverride?: string,
+): Record<string, ProviderProfile> {
+  const providers = readProvidersBlock(codexHomeOverride);
+  if (!providers) return {};
+
+  const normalized: Record<string, ProviderProfile> = {};
+  for (const [name, profile] of Object.entries(providers)) {
+    const normalizedName = normalizeConfiguredValue(name);
+    if (!normalizedName || !profile || typeof profile !== 'object' || Array.isArray(profile)) {
+      continue;
+    }
+
+    normalized[normalizedName] = {
+      ...(normalizeConfiguredValue(profile.base_url)
+        ? { base_url: normalizeConfiguredValue(profile.base_url) }
+        : {}),
+      ...(normalizeConfiguredValue(profile.api_format)
+        ? { api_format: normalizeConfiguredValue(profile.api_format) }
+        : {}),
+      ...(normalizeConfiguredValue(profile.env_key)
+        ? { env_key: normalizeConfiguredValue(profile.env_key) }
+        : {}),
+      ...(normalizeConfiguredValue(profile.label)
+        ? { label: normalizeConfiguredValue(profile.label) }
+        : {}),
+      ...(normalizeStringArray(profile.capabilities).length > 0
+        ? { capabilities: normalizeStringArray(profile.capabilities) }
+        : {}),
+    };
+  }
+
+  return normalized;
+}
+
+export function getConfiguredDefaultProvider(
+  env: NodeJS.ProcessEnv = process.env,
+  codexHomeOverride?: string,
+): string | undefined {
+  return normalizeConfiguredValue(env[RCS_DEFAULT_PROVIDER_ENV])
+    ?? normalizeConfiguredValue(readRoutingBlock(codexHomeOverride)?.default_provider)
+    ?? getCodexConfigRootModelProvider(codexHomeOverride);
+}
+
+export function getProviderForMode(
+  mode: string,
+  env: NodeJS.ProcessEnv = process.env,
+  codexHomeOverride?: string,
+): string | undefined {
+  const routing = readRoutingBlock(codexHomeOverride);
+  const modeProvider = normalizeConfiguredValue(routing?.mode_providers?.[mode]);
+  if (modeProvider) return modeProvider;
+  return getConfiguredDefaultProvider(env, codexHomeOverride);
+}
+
+export function getFallbackProvidersForMode(
+  mode: string,
+  codexHomeOverride?: string,
+): string[] {
+  const routing = readRoutingBlock(codexHomeOverride);
+  const modeFallbacks = normalizeStringArray(routing?.mode_fallback_providers?.[mode]);
+  if (modeFallbacks.length > 0) return modeFallbacks;
+  return normalizeStringArray(routing?.fallback_providers);
+}
+
+export function readProviderRoutingFlags(
+  env: NodeJS.ProcessEnv = process.env,
+  codexHomeOverride?: string,
+): { hotSwapEnabled: boolean; failoverEnabled: boolean } {
+  const routing = readRoutingBlock(codexHomeOverride);
+
+  const hotSwapEnabled = normalizeConfiguredValue(env[RCS_PROVIDER_HOT_SWAP_ENV]) === '1'
+    || routing?.hot_swap === true;
+  const failoverEnabled = normalizeConfiguredValue(env[RCS_PROVIDER_FAILOVER_ENV]) === '1'
+    || routing?.failover === true;
+
+  return { hotSwapEnabled, failoverEnabled };
+}
+
 export function readActiveProviderEnvOverrides(
   env: NodeJS.ProcessEnv = process.env,
   codexHomeOverride?: string,
   activeProviderOverride?: string,
 ): NodeJS.ProcessEnv {
+  const activeProvider =
+    normalizeConfiguredValue(activeProviderOverride)
+    ?? getConfiguredDefaultProvider(env, codexHomeOverride);
+  if (!activeProvider) return {};
+
+  const rcsProviderProfile = readProviderProfiles(codexHomeOverride)[activeProvider];
+  const rcsEnvKey = normalizeConfiguredValue(rcsProviderProfile?.env_key);
+  if (rcsEnvKey) {
+    const envValue = normalizeConfiguredValue(env[rcsEnvKey]);
+    return envValue ? { [rcsEnvKey]: envValue } : {};
+  }
+
   const config = readCodexConfigFile(codexHomeOverride);
   if (!config) return {};
-
-  const activeProvider = normalizeConfiguredValue(activeProviderOverride) ?? normalizeConfiguredValue(config.model_provider);
-  if (!activeProvider) return {};
 
   const providers = config.model_providers;
   if (!providers || typeof providers !== 'object' || Array.isArray(providers)) {
@@ -153,6 +311,38 @@ export function readActiveProviderEnvOverrides(
 
   const envValue = normalizeConfiguredValue(env[envKey]);
   return envValue ? { [envKey]: envValue } : {};
+}
+
+export function readActiveProviderConnection(
+  env: NodeJS.ProcessEnv = process.env,
+  mode?: string,
+  codexHomeOverride?: string,
+  activeProviderOverride?: string,
+): ActiveProviderConnection {
+  const provider =
+    normalizeConfiguredValue(activeProviderOverride)
+    ?? (mode ? getProviderForMode(mode, env, codexHomeOverride) : getConfiguredDefaultProvider(env, codexHomeOverride))
+    ?? null;
+
+  const profile = provider ? readProviderProfiles(codexHomeOverride)[provider] : undefined;
+  const fallbackProviders = mode
+    ? getFallbackProvidersForMode(mode, codexHomeOverride)
+    : normalizeStringArray(readRoutingBlock(codexHomeOverride)?.fallback_providers);
+  const { hotSwapEnabled, failoverEnabled } = readProviderRoutingFlags(env, codexHomeOverride);
+
+  const envKey = normalizeConfiguredValue(profile?.env_key) ?? null;
+  const envValuePresent = envKey ? normalizeConfiguredValue(env[envKey]) !== undefined : false;
+
+  return {
+    provider,
+    baseUrl: normalizeConfiguredValue(profile?.base_url) ?? null,
+    apiFormat: normalizeConfiguredValue(profile?.api_format) ?? null,
+    envKey,
+    envValuePresent,
+    fallbackProviders,
+    hotSwapEnabled,
+    failoverEnabled,
+  };
 }
 
 export function getEnvConfiguredMainDefaultModel(

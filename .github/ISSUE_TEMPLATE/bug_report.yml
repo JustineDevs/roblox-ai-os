@@ -1,0 +1,94 @@
+name: Bug report
+description: Report a reproducible problem in Roblox Creator Skills
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug.
+
+        Use this form only for real defects in the current RCS product surface.
+        For usage questions, setup confusion, or workflow help, use the docs/contact links instead of filing a bug.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+      placeholder: Describe the failure in 1-3 sentences.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: Which surface is failing?
+      options:
+        - CLI runtime
+        - Setup / doctor
+        - Team / tmux runtime
+        - Forge / blueprint workflow
+        - MCP / hooks / notifications
+        - Roblox workspace / Luau surface
+        - Docs / README / templates
+        - Release / packaging / CI
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Provide the smallest reliable reproduction.
+      placeholder: |
+        1. Run ...
+        2. Open ...
+        3. Trigger ...
+        4. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include versions and runtime shape.
+      placeholder: |
+        - OS:
+        - Node.js:
+        - @jstn-sdk/rcs:
+        - Codex CLI:
+        - tmux / psmux:
+        - Setup scope (user/project):
+        - CODEX_HOME override:
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs / screenshots / evidence
+      description: Paste relevant command output such as `rcs doctor`, `rcs exec`, stack traces, screenshots, or failing test output.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I ran `rcs doctor`
+          required: true
+        - label: I ran a real execution smoke test when relevant (`codex login status` and `rcs exec ...`)
+          required: false
+        - label: I searched existing issues before filing this bug
+          required: true

@@ -401,6 +401,3 @@ rm -rf .rcs/state/team/                  # All team state
 # Kill all rcs-team-* tmux sessions
 tmux list-sessions -F '#{session_name}' 2>/dev/null | grep '^rcs-team-' | while read s; do tmux kill-session -t "$s" 2>/dev/null; done
 ```
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

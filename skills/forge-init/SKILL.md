@@ -48,6 +48,3 @@ After creating the PRD, start execution with:
 ```
 
 Forge will iterate until all acceptance criteria in the PRD are met and architect-verified.
-surface-class: "historical"
-domain: "creator-runtime"
-audience: "internal"

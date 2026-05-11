@@ -115,7 +115,8 @@ Document-refresh: not-needed | <reason>
 1. Create a branch from `dev` for normal contributions.
 2. Make focused changes.
 3. Run lint, build, and tests locally.
-4. Open a pull request targeting `dev` using the provided template. Use `main` only for maintainer-directed exceptions.
+4. If you change public docs, onboarding, workflow language, or `README.md`, review locale domino effects before opening the PR.
+5. Open a pull request targeting `dev` using the provided template. Use `main` only for maintainer-directed exceptions.
 
 ## Commit style
 
@@ -132,7 +133,7 @@ Example:
 docs: clarify setup steps for Codex CLI users
 ```
 
-## Pull request checklist
+## Pull request expectations
 
 - [ ] Scope is focused and clearly described
 - [ ] `npm run build` passes
@@ -140,6 +141,9 @@ docs: clarify setup steps for Codex CLI users
 - [ ] `npm run lint` passes
 - [ ] Documentation updated when behavior changed
 - [ ] No unrelated formatting/refactor churn
+- [ ] README root changes considered locale domino effects
+- [ ] Active Roblox-facing surfaces avoid generic web/enterprise framing
+- [ ] GitHub issue / PR templates were used rather than free-form reports when applicable
 
 ## Reporting issues
 

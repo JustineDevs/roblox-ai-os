@@ -279,6 +279,3 @@ Before asking any interview question, classify it:
 
 The separate `/planner` and `/review` skills have been merged into `$plan`. Consensus planning remains available through `$plan --consensus`, while `$blueprint` is the canonical creator-facing planning workflow when you want the full Roblox-native design lane.
 </Advanced>
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

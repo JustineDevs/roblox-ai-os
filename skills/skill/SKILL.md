@@ -11,6 +11,7 @@ artifact-type: "skill"
 # Skill Management CLI
 
 Meta-skill for managing Roblox Creator Skills workflow skills via CLI-like commands.
+Default examples should stay grounded in Roblox creator workflows rather than generic software helpers.
 
 ## Subcommands
 
@@ -28,13 +29,13 @@ Show all local skills organized by scope.
 USER SKILLS (~/.codex/skills/):
 | Name              | Triggers           | Quality | Usage | Scope |
 |-------------------|--------------------|---------|-------|-------|
-| error-handler     | fix, error         | 95%     | 42    | user  |
-| remote-audit      | remote, payload    | 88%     | 23    | user  |
+| remote-audit      | remote, payload    | 95%     | 42    | user  |
+| gui-state-check   | gui, hud, state    | 88%     | 23    | user  |
 
 PROJECT SKILLS (.codex/skills/):
 | Name              | Triggers           | Quality | Usage | Scope   |
 |-------------------|--------------------|---------|-------|---------|
-| test-runner       | test, run          | 92%     | 15    | project |
+| datastore-guard   | datastore, profile | 92%     | 15    | project |
 ```
 
 **Fallback:** If quality/usage stats not available, show "N/A"
@@ -101,16 +102,16 @@ argument-hint: "<args>"
 
 **Example:**
 ```
-User: /skill add custom-logger
-Assistant: Creating new skill 'custom-logger'...
+User: /skill add remote-audit-helper
+Assistant: Creating new skill 'remote-audit-helper'...
 
-Description: Enhanced logging with structured output
-Triggers (comma-separated): log, logger, logging
-Argument hint (optional): <level> [message]
+Description: Audit RemoteEvent payload validation and server authority checks
+Triggers (comma-separated): remote, payload, validation
+Argument hint (optional): <remote-name> [surface]
 Scope (user/project): user
 
-✓ Created skill at ~/.codex/skills/custom-logger/SKILL.md
-→ Edit with: /skill edit custom-logger
+✓ Created skill at ~/.codex/skills/remote-audit-helper/SKILL.md
+→ Edit with: /skill edit remote-audit-helper
 ```
 
 ---
@@ -136,15 +137,15 @@ Remove a skill by name.
 
 **Example:**
 ```
-User: /skill remove old-logger
-Assistant: Found skill 'old-logger' in user scope:
-  Description: Legacy logging utility
+User: /skill remove old-trade-audit
+Assistant: Found skill 'old-trade-audit' in user scope:
+  Description: Legacy trading remote audit helper
   Scope: user (~/.codex/skills/)
 
-Delete 'old-logger' skill? (yes/no)
+Delete 'old-trade-audit' skill? (yes/no)
 
 User: yes
-Assistant: ✓ Removed skill 'old-logger' from user scope
+Assistant: ✓ Removed skill 'old-trade-audit' from user scope
 ```
 
 ---
@@ -158,10 +159,10 @@ Edit an existing skill interactively.
 2. **Read current content** via Read tool
 3. **Display current values:**
    ```
-   Current skill 'custom-logger':
-   - Description: Enhanced logging with structured output
-   - Triggers: log, logger, logging
-   - Argument hint: <level> [message]
+   Current skill 'remote-audit-helper':
+   - Description: Audit RemoteEvent payload validation and server authority checks
+   - Triggers: remote, payload, validation
+   - Argument hint: <remote-name> [surface]
    - Scope: user
    ```
 4. **Ask what to change:**
@@ -180,19 +181,19 @@ Edit an existing skill interactively.
 
 **Example:**
 ```
-User: /skill edit custom-logger
-Assistant: Current skill 'custom-logger':
-  - Description: Enhanced logging with structured output
-  - Triggers: log, logger, logging
-  - Argument hint: <level> [message]
+User: /skill edit remote-audit-helper
+Assistant: Current skill 'remote-audit-helper':
+  - Description: Audit RemoteEvent payload validation and server authority checks
+  - Triggers: remote, payload, validation
+  - Argument hint: <remote-name> [surface]
 
 What would you like to edit? (description/triggers/argument-hint/content/rename/cancel)
 
 User: triggers
-Assistant: Current triggers: log, logger, logging
-New triggers (comma-separated): log, logger, logging, trace
+Assistant: Current triggers: remote, payload, validation
+New triggers (comma-separated): remote, payload, validation, server-authority
 
-✓ Updated triggers for 'custom-logger'
+✓ Updated triggers for 'remote-audit-helper'
 ```
 
 ---
@@ -211,19 +212,19 @@ Search skills by content, triggers, name, or description.
 3. **Display matches** with context:
 
 ```
-Found 3 skills matching "typescript error":
+Found 3 skills matching "remote payload":
 
-1. typescript-fixer (user)
-   Description: Fix common TypeScript errors
-   Match: "typescript error handling patterns"
+1. remote-audit (user)
+   Description: Review RemoteEvent / RemoteFunction payload contracts
+   Match: "remote payload validation"
 
-2. error-handler (user)
-   Description: Generic error handling utilities
-   Match: "Supports TypeScript and JavaScript errors"
+2. trade-safety (user)
+   Description: Trading safety checks for inventory mutation
+   Match: "payload ownership and duplicate-request validation"
 
-3. lint-fix (project)
-   Description: Auto-fix linting errors
-   Match: "TypeScript ESLint error resolution"
+3. datastore-guard (project)
+   Description: Profile and save-path safety helpers
+   Match: "remote requests that mutate persistent state"
 ```
 
 **Ranking:** Prioritize matches in name/triggers over content matches
@@ -837,6 +838,3 @@ What would you like to do?
 - `/skill stats` - Show usage statistics across all skills
 - `/skill validate` - Check all skills for format errors
 - `/skill template <type>` - Create from predefined templates
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

@@ -10,6 +10,7 @@ artifact-type: "skill"
 # Build Fix Skill
 
 Fix build and compilation errors quickly with minimal code changes. Get the build green without refactoring.
+For this repo, that usually means TypeScript/Rust/toolchain fixes around the RCS runtime or Roblox workspace scaffolding, not generic product rewrites.
 
 ## When to Use
 
@@ -144,9 +145,6 @@ Keeps trying until build passes, even if it takes multiple iterations.
 
 **With Team:**
 ```
-/team "debug build failures and fix type errors"
+/team "debug build failures and fix Roblox workspace or RCS runtime type errors"
 ```
 Uses: explore → build-fixer → verifier workflow.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

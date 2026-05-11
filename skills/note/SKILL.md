@@ -64,6 +64,3 @@ Notepad content is automatically loaded on session start:
 - Working Memory: Loaded if recent entries exist
 
 This helps survive conversation compaction without losing critical context.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

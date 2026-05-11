@@ -9,9 +9,9 @@ artifact-type: "skill"
 
 # UltraQA Skill
 
-[ULTRAQA ACTIVATED - AUTONOMOUS QA CYCLING]
+Use `$ultraqa` when you need a strict QA loop for Roblox Studio, Luau, creator-runtime, or plugin changes and the first verification pass is not enough.
 
-## Overview
+This skill is strongest when the work needs repeatable test -> diagnose -> fix -> retest cycling until the changed behavior is actually proven.
 
 ## GPT-5.5 Guidance Alignment
 
@@ -30,7 +30,7 @@ Parse the goal from arguments. Supported formats:
 | `/ultraqa --tests` | tests | All test suites pass |
 | `/ultraqa --build` | build | Build succeeds with exit 0 |
 | `/ultraqa --lint` | lint | No lint errors |
-| `/ultraqa --typecheck` | typecheck | No TypeScript errors |
+| `/ultraqa --typecheck` | typecheck | No TypeScript errors in the RCS runtime/tooling layer |
 | `/ultraqa --custom "pattern"` | custom | Custom success pattern in output |
 
 If no structured goal provided, interpret the argument as a custom goal.
@@ -49,7 +49,7 @@ If no structured goal provided, interpret the argument as a custom goal.
      ```
      delegate(role="test-engineer", tier="STANDARD", task="TEST:
      Goal: [describe what to verify]
-     Service: [how to start]
+     Surface: [Roblox Studio, Luau module, plugin widget, or RCS runtime]
      Test cases: [specific scenarios to verify]")
      ```
 
@@ -89,11 +89,11 @@ If no structured goal provided, interpret the argument as a custom goal.
 Output progress each cycle:
 ```
 [ULTRAQA Cycle 1/5] Running tests...
-[ULTRAQA Cycle 1/5] FAILED - 3 tests failing
+[ULTRAQA Cycle 1/5] FAILED - 3 checks failing
 [ULTRAQA Cycle 1/5] Architect diagnosing...
-[ULTRAQA Cycle 1/5] Fixing: auth.test.ts - missing mock
+[ULTRAQA Cycle 1/5] Fixing: TradeRequest.server.luau validation path or matching runtime harness
 [ULTRAQA Cycle 2/5] Running tests...
-[ULTRAQA Cycle 2/5] PASSED - All 47 tests pass
+[ULTRAQA Cycle 2/5] PASSED - verification target is green
 [ULTRAQA COMPLETE] Goal met after 2 cycles
 ```
 
@@ -145,6 +145,3 @@ Use MCP state cleanup rather than deleting files directly.
 ---
 
 Begin ULTRAQA cycling now. Parse the goal and start cycle 1.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"
