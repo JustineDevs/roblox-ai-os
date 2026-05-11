@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "manifestVersion": "2026.05.12.1",
+  "manifestVersion": "2026.05.12.2",
   "targets": [
     {
       "id": "codex-native",
@@ -73,20 +73,22 @@
       "id": "cursor",
       "displayName": "Cursor IDE",
       "lane": "delivery",
-      "status": "planned",
+      "status": "active",
       "runtimeOwnership": "platform-owned",
-      "purpose": "Future delivery lane for Cursor (rules, project skills, MCP clients) consuming canonical RCS skills and orchestration guidance without Codex-native runtime semantics.",
+      "purpose": "Reference delivery for Cursor (rules, project skills, MCP clients) consuming canonical RCS skills and orchestration guidance without Codex-native runtime semantics.",
       "canonicalSources": [
         "skills/",
         "templates/AGENTS.md",
         "docs/reference/agentic-platform-compatibility.md"
       ],
       "deliveryArtifacts": [
-        "docs/reference/agentic-platform-compatibility.md"
+        "docs/reference/agentic-platform-compatibility.md",
+        "docs/reference/cursor-rcs-integration.md",
+        "docs/reference/mcp-capable-ide-presets.md"
       ],
       "notes": [
         "Treat Cursor-specific rules or skill mirrors as emitted artifacts from canonical sources.",
-        "Do not fork SKILL.md content into a second editing surface; add an emitter or documented sync contract when this lane becomes active."
+        "Reference doc is the v0.2.0 delivery surface; optional future emitters should diff against canonical skills/."
       ]
     },
     {
@@ -115,9 +117,9 @@
       "id": "mcp-capable-ide",
       "displayName": "MCP-capable IDE / assistant",
       "lane": "delivery",
-      "status": "planned",
+      "status": "active",
       "runtimeOwnership": "platform-owned",
-      "purpose": "Future delivery lane for editors and assistants that attach to RCS first-party MCP servers via stdio or marketplace wiring without the full Codex setup path.",
+      "purpose": "Reference delivery for editors and assistants that attach to RCS first-party MCP servers via stdio or marketplace wiring without the full Codex setup path.",
       "canonicalSources": [
         "src/config/rcs-first-party-mcp.ts",
         "skills/",
@@ -125,7 +127,8 @@
       ],
       "deliveryArtifacts": [
         "docs/integrations.html",
-        "docs/reference/agentic-platform-compatibility.md"
+        "docs/reference/agentic-platform-compatibility.md",
+        "docs/reference/mcp-capable-ide-presets.md"
       ],
       "notes": [
         "Hosts include any MCP client that can run rcs mcp-serve targets or consume published MCP manifests.",

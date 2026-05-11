@@ -42,6 +42,8 @@ describe('agentic platform compatibility', () => {
     assert.match(doc, /Claude-like hosts/i);
     assert.match(doc, /Claude Code/i);
     assert.match(doc, /Anthropic-first teams/i);
+    assert.match(doc, /cursor-rcs-integration\.md/i);
+    assert.match(doc, /mcp-capable-ide-presets\.md/i);
   });
 
   it('links the platform compatibility contract from active docs', () => {

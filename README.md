@@ -21,7 +21,7 @@ RCS is a Roblox Studio operating layer for [OpenAI Codex CLI](https://github.com
 
 **Package:** `@jstn-sdk/rcs`  
 **Repo:** `https://github.com/JustineDevs/roblox-ai-os`  
-**Docs:** [Getting Started](./docs/getting-started.html) · [Skills](./docs/skills.html) · [Agents](./docs/agents.html) · [Contributor wiki](./docs/wiki/Home.md) · [Integrations](./docs/integrations.html) · [Notification Gateway and OpenClaw guide](./docs/openclaw-integration.md) · [Agentic platform compatibility](./docs/reference/agentic-platform-compatibility.md)
+**Docs:** [Getting Started](./docs/getting-started.html) · [Skills](./docs/skills.html) · [Agents](./docs/agents.html) · [Contributor wiki](./docs/wiki/Home.md) · [Integrations](./docs/integrations.html) · [Notification Gateway and OpenClaw guide](./docs/openclaw-integration.md) · [Agentic platform compatibility](./docs/reference/agentic-platform-compatibility.md) · [Cursor + RCS](./docs/reference/cursor-rcs-integration.md) · [MCP IDE presets](./docs/reference/mcp-capable-ide-presets.md)
 
 > [!WARNING]
 > Recommended default: macOS or Linux with Codex CLI.
@@ -35,7 +35,7 @@ RCS separates **what we author once** (canonical `skills/`, prompts, catalog, te
 | Tier | Hosts | What you get today |
 |------|--------|-------------------|
 | **Tier 1 — Recommended** | **Codex CLI** on macOS or Linux with `rcs setup` | Full runtime: installed skills and prompts, managed native hooks, generated Codex agents where applicable, `.rcs/` state, and the normal `$brief` / `$forge` / `$crew` workflow surface. |
-| **Tier 2 — Planned delivery** | **Cursor**, **MCP-first editors**, **Claude-like** assistants (e.g. Claude Code) | Canonical Roblox creator **skills** and **AGENTS-style** orchestration stay in this repo as [SSOT](./docs/plugin-bundle-ssot.md). **Concrete emitters** for those hosts are **planned lanes** (`cursor`, `mcp-capable-ide`, `claude-like` in the manifest)—track releases for the first shipped path per host class. |
+| **Tier 2 — Reference delivery** | **Cursor**, **MCP-first editors**, **Claude-like** assistants (e.g. Claude Code) | Canonical Roblox creator **skills** and **AGENTS-style** orchestration stay in this repo as [SSOT](./docs/plugin-bundle-ssot.md). **`cursor`** and **`mcp-capable-ide`** ship **v0.2.0 reference docs** ([Cursor + RCS](./docs/reference/cursor-rcs-integration.md), [MCP presets](./docs/reference/mcp-capable-ide-presets.md)); **`claude-like`** remains manifest-**planned** until a similar reference ships—see [Agentic platform compatibility](./docs/reference/agentic-platform-compatibility.md). |
 | **Tier 3 — Adapters today** | **OpenClaw**, **Hermes** | RCS-owned **adapter** surfaces under [`src/adapt/`](./src/adapt/) for notifications, gateways, and observation—**not** a drop-in replacement for Tier 1 Codex runtime semantics. |
 
 **Windows vs CI:** GitHub Actions runs the primary Node test gate on **Linux**. A full local `npm test` on **native Windows** may still fail on path- or tool-specific tests unrelated to your feature work; prefer **Linux or WSL2** when verifying a release line, or run the same scoped commands your PR checks use.

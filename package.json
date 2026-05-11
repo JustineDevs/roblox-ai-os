@@ -1,6 +1,6 @@
 {
   "name": "@jstn-sdk/rcs",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "description": "Roblox Creator Skills toolkit and workflow layer for Codex CLI",
   "type": "module",
   "main": "dist/index.js",

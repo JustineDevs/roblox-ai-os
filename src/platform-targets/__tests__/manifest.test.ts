@@ -49,5 +49,7 @@ describe('platform target manifest', () => {
     assert.equal(byId.get('mcp-capable-ide')?.lane, 'delivery');
     assert.equal(byId.get('adapter-openclaw')?.lane, 'adapter');
     assert.equal(byId.get('adapter-hermes')?.lane, 'adapter');
+    assert.equal(byId.get('cursor')?.status, 'active');
+    assert.equal(byId.get('mcp-capable-ide')?.status, 'active');
   });
 });

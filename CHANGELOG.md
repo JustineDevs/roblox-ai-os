@@ -6,6 +6,26 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-11
+
+Ecosystem reference release for **`@jstn-sdk/rcs@0.2.0`**. Ships documented **Cursor** and **MCP-capable IDE** consumption of canonical RCS surfaces, activates those lanes at the **reference-doc** layer in the platform target manifest, and bundles contributor-facing clarity (README support matrix, corpora README, compat doctor contract hardening) since `0.1.9`.
+
+### Summary
+
+- **Cursor + RCS** — [`docs/reference/cursor-rcs-integration.md`](./docs/reference/cursor-rcs-integration.md) for project rules, SSOT, and boundaries vs `rcs setup`.
+- **MCP-capable IDE presets** — [`docs/reference/mcp-capable-ide-presets.md`](./docs/reference/mcp-capable-ide-presets.md) with `mcp.json` examples using `rcs mcp-serve` for `rcs_state`, `rcs_memory`, `rcs_code_intel`, `rcs_trace`, `rcs_wiki`.
+- **Platform targets** — `cursor` and `mcp-capable-ide` set to **`active`** with new delivery artifacts; `manifestVersion` bumped.
+- **README** — Agentic IDE support matrix links v0.2.0 reference docs; docs index lists new guides.
+- **Agentic compatibility doc** — posture updated for active vs planned lanes; verification tests assert new doc links.
+- **Corpora** — root [`corpora/README.md`](./corpora/README.md) expanded (quarantine, packaging, CI vs Windows).
+- **CI / compat** — [`doctor-contract` tests](./src/compat/__tests__/doctor-contract.test.ts) and fixtures aligned for Windows and legacy skill-root normalization.
+
+### Verification (this release line)
+
+- `npm run build`
+- `npm run sync:release-notes:check`
+- `node --test dist/platform-targets/__tests__/manifest.test.js dist/verification/__tests__/agentic-platform-compatibility.test.js dist/compat/__tests__/doctor-contract.test.js`
+
 ## [0.1.9] - 2026-05-11
 
 Contributor-workflow, release-surface, and platform-compatibility follow-up for **`@jstn-sdk/rcs@0.1.9`**. This ship line adds a real contributor wiki + roadmap, official newcomer labels and label sync automation, a clean GitHub Releases/GitHub Packages contract, and a typed platform target manifest for concrete delivery/adapter lanes.
