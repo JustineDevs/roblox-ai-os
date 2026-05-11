@@ -8,7 +8,7 @@ Use a documentação canônica abaixo para a superfície atual do produto.
 - Primeiros passos: [../site/getting-started.html](../site/getting-started.html)
 - Referência de skills: [../skills.html](../skills.html)
 - Wiki de contribuidores: [../wiki/Home.md](../wiki/Home.md)
-- Roadmap: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Roadmap: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Arquitetura: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Contribuir: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Integrações: [../site/integrations.html](../site/integrations.html)

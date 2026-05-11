@@ -8,7 +8,7 @@
 - 시작 가이드: [../site/getting-started.html](../site/getting-started.html)
 - 스킬 참고서: [../skills.html](../skills.html)
 - 기여자 위키: [../wiki/Home.md](../wiki/Home.md)
-- 로드맵: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- 로드맵: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - 아키텍처: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - 기여 가이드: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - 통합 문서: [../site/integrations.html](../site/integrations.html)

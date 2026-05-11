@@ -8,7 +8,7 @@ Usa la documentación canónica enlazada abajo para la superficie actual del pro
 - Primeros pasos: [../site/getting-started.html](../site/getting-started.html)
 - Referencia de skills: [../skills.html](../skills.html)
 - Wiki para contribuidores: [../wiki/Home.md](../wiki/Home.md)
-- Hoja de ruta: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Hoja de ruta: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Arquitectura: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Contribuir: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Integraciones: [../site/integrations.html](../site/integrations.html)

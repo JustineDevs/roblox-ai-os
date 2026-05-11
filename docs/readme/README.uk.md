@@ -8,7 +8,7 @@
 - Початок роботи: [../site/getting-started.html](../site/getting-started.html)
 - Довідник skills: [../skills.html](../skills.html)
 - Вікі для контриб'юторів: [../wiki/Home.md](../wiki/Home.md)
-- Дорожня карта: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Дорожня карта: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Архітектура: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Посібник з внеску: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Інтеграції: [../site/integrations.html](../site/integrations.html)

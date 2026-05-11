@@ -8,7 +8,7 @@ Usa la documentazione canonica collegata qui sotto per la superficie attuale del
 - Introduzione: [../site/getting-started.html](../site/getting-started.html)
 - Riferimento skills: [../skills.html](../skills.html)
 - Wiki dei contributori: [../wiki/Home.md](../wiki/Home.md)
-- Roadmap: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Roadmap: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Architettura: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Contribuire: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Integrazioni: [../site/integrations.html](../site/integrations.html)

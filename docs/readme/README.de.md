@@ -8,7 +8,7 @@ Nutze die unten verlinkten kanonischen Dokumente für die aktuelle Produktoberfl
 - Einstieg: [../site/getting-started.html](../site/getting-started.html)
 - Skills-Referenz: [../skills.html](../skills.html)
 - Mitwirkenden-Wiki: [../wiki/Home.md](../wiki/Home.md)
-- Roadmap: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Roadmap: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Architektur: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Mitwirken: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Integrationen: [../site/integrations.html](../site/integrations.html)

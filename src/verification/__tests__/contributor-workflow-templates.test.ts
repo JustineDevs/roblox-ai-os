@@ -64,7 +64,7 @@ describe('contributor workflow templates', () => {
       'docs/wiki/Home.md',
       'docs/wiki/Contributing.md',
       'docs/wiki/Good-First-Issues.md',
-      'docs/wiki/Roadmap.md',
+      'docs/wiki/ROADMAP.md',
       'docs/wiki/Release-Playbook.md',
     ]) {
       assert.equal(existsSync(join(root, path)), true, `missing contributor wiki file: ${path}`);
@@ -73,17 +73,19 @@ describe('contributor workflow templates', () => {
     const readme = read('README.md');
     const docsIndex = read('docs/site/index.html');
     const wikiHome = read('docs/wiki/Home.md');
-    const roadmap = read('docs/wiki/Roadmap.md');
+    const roadmap = read('docs/wiki/ROADMAP.md');
 
     assert.match(readme, /Contributor wiki/i);
     assert.match(readme, /Good first issues and labels/i);
     assert.match(docsIndex, /Community and Contributors/);
     assert.match(docsIndex, /\.\.\/wiki\/Home\.md/);
+    assert.match(docsIndex, /\.\.\/wiki\/ROADMAP\.md/);
     assert.match(wikiHome, /This is the contributor-facing wiki source/i);
-    assert.match(roadmap, /Worldbuilding and design production skills/i);
-    assert.match(roadmap, /Roblox monetization planner/i);
-    assert.match(roadmap, /Patch assistant/i);
-    assert.match(roadmap, /Audience and retention planner/i);
-    assert.match(roadmap, /Live ops mode/i);
+    assert.match(roadmap, /canonical versioned product roadmap/i);
+    assert.match(roadmap, /`0\.2\.0`/);
+    assert.match(roadmap, /Patch Assistant/i);
+    assert.match(roadmap, /Roblox Monetization Planner/i);
+    assert.match(roadmap, /Audience and Retention Planner/i);
+    assert.match(roadmap, /`1\.0\.0`/);
   });
 });

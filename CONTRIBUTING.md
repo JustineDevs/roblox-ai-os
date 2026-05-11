@@ -38,7 +38,7 @@ Contributor planning surfaces:
 
 - [Contributor wiki](./docs/wiki/Home.md)
 - [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
-- [Roadmap](./docs/wiki/Roadmap.md)
+- [Roadmap](./docs/wiki/ROADMAP.md)
 
 ### Team/state coverage gate (issue #454)
 

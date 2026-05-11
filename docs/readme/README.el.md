@@ -8,7 +8,7 @@
 - Ξεκίνημα: [../site/getting-started.html](../site/getting-started.html)
 - Αναφορά skills: [../skills.html](../skills.html)
 - Wiki συνεισφερόντων: [../wiki/Home.md](../wiki/Home.md)
-- Οδικός χάρτης: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Οδικός χάρτης: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Αρχιτεκτονική: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Συνεισφορά: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Ενσωματώσεις: [../site/integrations.html](../site/integrations.html)

@@ -8,7 +8,7 @@ Hãy dùng các tài liệu chuẩn liên kết bên dưới cho bề mặt sả
 - Bắt đầu: [../site/getting-started.html](../site/getting-started.html)
 - Tham chiếu skills: [../skills.html](../skills.html)
 - Wiki cho người đóng góp: [../wiki/Home.md](../wiki/Home.md)
-- Lộ trình: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Lộ trình: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Kiến trúc: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Hướng dẫn đóng góp: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Tích hợp: [../site/integrations.html](../site/integrations.html)

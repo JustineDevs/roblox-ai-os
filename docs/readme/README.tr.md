@@ -8,7 +8,7 @@ Bu yerelleştirilmiş README bilinçli olarak kısa tutulmuştur.
 - Başlangıç: [../site/getting-started.html](../site/getting-started.html)
 - Skill başvurusu: [../skills.html](../skills.html)
 - Katkıcı vikisi: [../wiki/Home.md](../wiki/Home.md)
-- Yol haritası: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Yol haritası: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Mimari: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Katkı rehberi: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Entegrasyonlar: [../site/integrations.html](../site/integrations.html)

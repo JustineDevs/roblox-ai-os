@@ -8,7 +8,7 @@ Aktualną powierzchnię produktu opisują kanoniczne dokumenty podlinkowane poni
 - Pierwsze kroki: [../site/getting-started.html](../site/getting-started.html)
 - Dokumentacja skills: [../skills.html](../skills.html)
 - Wiki dla współtwórców: [../wiki/Home.md](../wiki/Home.md)
-- Plan rozwoju: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Plan rozwoju: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Architektura: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Współtworzenie: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Integracje: [../site/integrations.html](../site/integrations.html)

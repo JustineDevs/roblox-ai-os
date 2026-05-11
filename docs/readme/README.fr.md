@@ -8,7 +8,7 @@ Utilise les documents canoniques liés ci-dessous pour la surface produit actuel
 - Démarrage : [../site/getting-started.html](../site/getting-started.html)
 - Référence des skills : [../skills.html](../skills.html)
 - Wiki des contributeurs : [../wiki/Home.md](../wiki/Home.md)
-- Feuille de route : [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Feuille de route : [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - Architecture : [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Contribution : [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Intégrations : [../site/integrations.html](../site/integrations.html)

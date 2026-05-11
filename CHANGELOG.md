@@ -9,6 +9,7 @@ All notable changes to this project are documented in this file.
 ### Docs
 
 - Reorganized contributor-facing and release docs into named subtrees: `docs/site/` (static HTML hub), `docs/integrations/` (OpenClaw + adapters), `docs/guides/` (operator how-tos), `docs/release/` (versioned release notes + template), consolidated formal contracts under `docs/contracts/`, and moved `STATE_MODEL.md` to `docs/reference/state-model.md`. Updated scripts, tests, manifest delivery paths, and cross-links accordingly.
+- Canonical product roadmap now lives at `docs/wiki/ROADMAP.md` (removed duplicate `docs/wiki/Roadmap.md`; root `ROADMAP.md` moved into the wiki).
 
 ## [0.2.0] - 2026-05-11
 

@@ -8,7 +8,7 @@
 - はじめに: [../site/getting-started.html](../site/getting-started.html)
 - Skills リファレンス: [../skills.html](../skills.html)
 - コントリビューター向けWiki: [../wiki/Home.md](../wiki/Home.md)
-- ロードマップ: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- ロードマップ: [../wiki/ROADMAP.md](../wiki/ROADMAP.md)
 - アーキテクチャ: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - 貢献ガイド: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - 連携: [../site/integrations.html](../site/integrations.html)
