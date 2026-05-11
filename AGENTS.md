@@ -1,10 +1,12 @@
 ## Learned User Preferences
 
-- Keep public docs, changelog, and release notes aligned to RCS / roblox-ai-os branding and Roblox creator workflows.
+- Keep public docs, changelog, and release notes aligned to RCS / roblox-ai-os branding and Roblox creator workflows; avoid legacy `.omx` / oh-my-codex naming in shipped narrative (local-only `.omx` artifacts stay out of published docs unless the user explicitly keeps a named exception).
 - Prefer Roblox-native concepts, terms, syntax, data flow, and creator language over generic orchestration or enterprise-software framing.
+- Do not run `git push` or other remote-changing git operations unless the user explicitly asks to push or publish.
 
 ## Learned Workspace Facts
 
+- Notify-fallback-watcher and related hook logic span `src/scripts/notify-fallback-watcher.ts`, `src/scripts/notify-hook/`, and `src/hooks/__tests__/notify-fallback-watcher.test.ts`.
 - On Windows, Node tests in this tree that shell out to fake `tmux` or prepend fake bins to `PATH` should use `path.delimiter`, resolve `dist/` script paths with `fileURLToPath(new URL(..., import.meta.url))` instead of `URL#pathname`, and use bash-backed shims when the harness relies on `#!/usr/bin/env bash` stubs.
 
 ## Execution Protocol
