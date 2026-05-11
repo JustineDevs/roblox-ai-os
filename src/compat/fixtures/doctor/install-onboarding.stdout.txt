@@ -4,7 +4,6 @@ RCS doctor
 Resolved setup scope: user
 
   [CODEX_CLI_STATUS]
-Reinstall with: npm install -g @openai/codex@latest
   [OK] Node.js: <NODE_VERSION>
   [EXPLORE_HARNESS_STATUS]
   [OK] Codex home: <CODEX_HOME>
@@ -13,7 +12,7 @@ Reinstall with: npm install -g @openai/codex@latest
   [OK] Explore routing: enabled by default
   [!!] Prompts: prompts directory not found
   [!!] Skills: skills directory not found
-  [OK] Legacy skill roots: no ~/.agents/skills overlap detected
+  [LEGACY_SKILLS_STATUS]
   [!!] AGENTS.md: not found in <CODEX_HOME>/AGENTS.md (run rcs setup --scope user)
   [!!] State dir: <REPO_STATE_DIR> (not created yet)
   [!!] MCP Servers: 1 servers but no RCS servers yet (expected before first setup; run "rcs setup --force" once)

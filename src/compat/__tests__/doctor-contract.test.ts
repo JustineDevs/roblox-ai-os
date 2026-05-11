@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { chmod, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
-import { dirname, isAbsolute, join, resolve } from "node:path";
+import { delimiter, dirname, isAbsolute, join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
@@ -52,11 +52,25 @@ function runCompatTarget(cwd: string, argv: string[], envOverrides: Record<strin
 
 function normalizeInstallDoctorOutput(text: string, home: string, cwd: string): string {
   const repoStateDir = join(cwd, '.rcs', 'state').replace(/\\/g, '/');
-  return text
+  let normalized = text
     .replaceAll(join(home, '.codex').replace(/\\/g, '/'), '<CODEX_HOME>')
     .replaceAll(`/private${repoStateDir}`, '<REPO_STATE_DIR>')
     .replaceAll(repoStateDir, '<REPO_STATE_DIR>')
-    .replace(/\\/g, '/')
+    .replace(/\\/g, '/');
+  // Windows may print 8.3 short paths so replaceAll(longPath) misses; normalize known lines.
+  normalized = normalized.replace(
+    /^  \[OK\] Codex home: .+$/gm,
+    '  [OK] Codex home: <CODEX_HOME>',
+  );
+  normalized = normalized.replace(
+    /^  \[!!\] AGENTS\.md: not found in .+\/AGENTS\.md \(run rcs setup --scope user\)$/gm,
+    '  [!!] AGENTS.md: not found in <CODEX_HOME>/AGENTS.md (run rcs setup --scope user)',
+  );
+  normalized = normalized.replace(
+    /^  \[!!\] State dir: .+ \(not created yet\)$/gm,
+    '  [!!] State dir: <REPO_STATE_DIR> (not created yet)',
+  );
+  return normalized
     .split('\n')
     .map((line) => {
       if (line.startsWith('  [OK] Codex CLI:') || line.startsWith('  [XX] Codex CLI:')) {
@@ -73,6 +87,9 @@ function normalizeInstallDoctorOutput(text: string, home: string, cwd: string): 
       }
       if (line.startsWith('Run "rcs setup')) {
         return 'Run <SETUP_FOLLOWUP>';
+      }
+      if (/^\s+\[(OK|!!)\] Legacy skill roots:/.test(line)) {
+        return '  [LEGACY_SKILLS_STATUS]';
       }
       return line;
     })
@@ -106,11 +123,23 @@ describe('compat doctor contract', () => {
       await writeFile(join(teamRoot, 'config.json'), JSON.stringify({ name: 'alpha', tmux_session: 'rcs-team-alpha' }));
       const fakeBin = join(wd, 'bin');
       await mkdir(fakeBin, { recursive: true });
-      const tmuxPath = join(fakeBin, 'tmux');
-      await writeFile(tmuxPath, '#!/bin/sh\n# list-sessions success with no sessions\nexit 0\n');
-      await chmod(tmuxPath, 0o755);
+      if (process.platform === 'win32') {
+        const tmuxCmd = join(fakeBin, 'tmux.cmd');
+        await writeFile(tmuxCmd, '@echo off\r\nexit /b 0\r\n');
+      } else {
+        const tmuxPath = join(fakeBin, 'tmux');
+        await writeFile(tmuxPath, '#!/bin/sh\n# list-sessions success with no sessions\nexit 0\n');
+        await chmod(tmuxPath, 0o755);
+      }
 
-      const result = runCompatTarget(wd, ['doctor', '--team'], { PATH: `${fakeBin}:${process.env.PATH || ''}` });
+      const pathPrefix = `${fakeBin}${delimiter}`;
+      const basePath = process.env.PATH ?? process.env.Path ?? '';
+      const mergedPath = `${pathPrefix}${basePath}`;
+      const result = runCompatTarget(wd, ['doctor', '--team'], {
+        PATH: mergedPath,
+        Path: mergedPath,
+        RCS_RUNTIME_BRIDGE: '0',
+      });
       if (shouldSkipForSpawnPermissions(result.error)) return;
       assert.equal(result.status, Number.parseInt(readFixture('team-resume-blocker.exitcode.txt').trim(), 10), result.stderr || result.stdout);
       assert.equal(result.stderr, '');
