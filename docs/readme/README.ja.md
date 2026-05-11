@@ -5,13 +5,13 @@
 
 - パッケージ: `@jstn-sdk/rcs`
 - リポジトリ: `https://github.com/JustineDevs/roblox-ai-os`
-- はじめに: [../getting-started.html](../getting-started.html)
+- はじめに: [../site/getting-started.html](../site/getting-started.html)
 - Skills リファレンス: [../skills.html](../skills.html)
 - コントリビューター向けWiki: [../wiki/Home.md](../wiki/Home.md)
 - ロードマップ: [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - アーキテクチャ: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - 貢献ガイド: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- 連携: [../integrations.html](../integrations.html)
+- 連携: [../site/integrations.html](../site/integrations.html)
 - 正規 README: [../../README.md](../../README.md)
 
 ## 正規のクリエイターワークフロー

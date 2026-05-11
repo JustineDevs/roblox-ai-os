@@ -10,8 +10,8 @@ contact_links:
     url: https://github.com/JustineDevs/roblox-ai-os/tree/main/docs
     about: For Roblox Creator Skills usage questions, start with the checked-in RCS docs and guides.
   - name: Getting Started
-    url: https://github.com/JustineDevs/roblox-ai-os/blob/main/docs/getting-started.html
+    url: https://github.com/JustineDevs/roblox-ai-os/blob/main/docs/site/getting-started.html
     about: Use the setup and smoke-test guide before opening setup/runtime issues.
   - name: Integrations and live Studio compatibility
-    url: https://github.com/JustineDevs/roblox-ai-os/blob/main/docs/integrations.html
+    url: https://github.com/JustineDevs/roblox-ai-os/blob/main/docs/site/integrations.html
     about: OpenClaw, GitMCP, and robloxstudio-mcp questions should start with the integration/reference docs.

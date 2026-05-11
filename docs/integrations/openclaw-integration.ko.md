@@ -1,17 +1,17 @@
-# Guía de integración de OpenClaw (ajuste de prompts localizado)
+# OpenClaw 통합 가이드 (프롬프트 튜닝 로컬라이즈)
 
-> [← Back to Docs Home](./index.html) · [Integrations Landing](./integrations.html)
+> [← Back to Docs Home](../site/index.html) · [Integrations Landing](../site/integrations.html)
 
 **Language Switcher:** [English](./openclaw-integration.md) | [한국어](./openclaw-integration.ko.md) | [日本語](./openclaw-integration.ja.md) | [简体中文](./openclaw-integration.zh.md) | [繁體中文](./openclaw-integration.zh-TW.md) | [Tiếng Việt](./openclaw-integration.vi.md) | [Español](./openclaw-integration.es.md) | [Português](./openclaw-integration.pt.md) | [Русский](./openclaw-integration.ru.md) | [Türkçe](./openclaw-integration.tr.md) | [Deutsch](./openclaw-integration.de.md) | [Français](./openclaw-integration.fr.md) | [Italiano](./openclaw-integration.it.md) | [Українська](./openclaw-integration.uk.md)
 
 
-Esta página localiza la sección **“Prompt tuning guide (concise + context-aware)”** de la documentación principal en inglés.
+이 문서는 영문 본문 가이드의 **“Prompt tuning guide (concise + context-aware)”** 섹션을 한국어로 정리한 페이지입니다.
 
-Para la guía completa de integración (gateways, hooks, verificación), consulta [English guide](./openclaw-integration.md).
+게이트웨이/훅/검증까지 포함한 전체 통합 문서는 [English guide](./openclaw-integration.md)를 참고하세요.
 
-## Ajuste de prompts (conciso y consciente del contexto)
+## 프롬프트 튜닝 (간결 + 컨텍스트 인식)
 
-## Dónde editar las plantillas de prompt
+## 프롬프트 템플릿 수정 위치
 
 - `notifications.openclaw.hooks["session-start"].instruction`
 - `notifications.openclaw.hooks["session-idle"].instruction`
@@ -19,18 +19,56 @@ Para la guía completa de integración (gateways, hooks, verificación), consult
 - `notifications.openclaw.hooks["stop"].instruction`
 - `notifications.openclaw.hooks["session-end"].instruction`
 
-## Tokens de contexto recomendados
+## 권장 컨텍스트 토큰
 
-- Siempre: `{{sessionId}}`, `{{tmuxSession}}`
-- Según evento: `{{projectName}}`, `{{question}}`, `{{reason}}`
+- 항상 포함: `{{sessionId}}`, `{{tmuxSession}}`
+- 이벤트별 선택: `{{projectName}}`, `{{question}}`, `{{reason}}`
 
-## Estrategia de verbosidad
+## verbosity 전략
 
-- `minimal`: avisos muy cortos
-- `session`: contexto operativo conciso (recomendado)
-- `verbose`: más contexto de estado, acción y riesgo
+- `minimal`: 매우 짧은 알림
+- `session`: 간결한 운영 맥락 (권장)
+- `verbose`: 상태/액션/리스크까지 확장
 
-## Comando rápido de actualización (jq)
+## 프로덕션 구성 모범 사례
+
+### 명령 게이트웨이 설정
+
+clawdbot agent를 사용하는 프로덕션 환경에서는 다음 설정을 권장합니다:
+
+```json
+{
+  "notifications": {
+    "openclaw": {
+      "gateways": {
+        "local": {
+          "type": "command",
+          "command": "(clawdbot agent --session-id rcs-hooks --message {{instruction}} --thinking minimal --deliver --reply-channel discord --reply-to 'channel:1468539002985644084' --timeout 120 --json >>/tmp/rcs-openclaw-agent.jsonl 2>&1 || true)",
+          "timeout": 120000
+        }
+      }
+    }
+  }
+}
+```
+
+**주요 설정 설명:**
+- `|| true`: clawdbot 실패 시 RCS 세션이 차단되지 않도록 합니다
+- `>>/tmp/rcs-openclaw-agent.jsonl`: 구조화된 JSONL 로그를 append 모드로 기록합니다
+- `--reply-to 'channel:CHANNEL_ID'`: 채널 별칭 대신 ID를 사용하여 안정적인 전달을 보장합니다
+- `timeout: 120000`: 2분 타임아웃으로 clawdbot agent 작업이 완료될 시간을 확보합니다
+
+### 로그 확인 명령어
+
+```bash
+# JSONL 로그에서 최근 항목 확인
+tail -n 120 /tmp/rcs-openclaw-agent.jsonl | jq -s '.[] | {timestamp: (.timestamp // .time), status: (.status // .error // "ok")}'
+
+# 오류 검색
+rg '"error"|"failed"|"timeout"' /tmp/rcs-openclaw-agent.jsonl | tail -20
+```
+
+## 빠른 업데이트 명령어 (jq)
 
 ```bash
 CONFIG_FILE="$HOME/.codex/.rcs-config.json"

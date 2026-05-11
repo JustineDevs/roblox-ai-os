@@ -30,9 +30,9 @@ describe('robloxstudio-mcp compatibility standard', () => {
   });
 
   it('surfaces the compatibility lane from active docs and workspace standards', () => {
-    assert.match(read('docs/index.html'), /robloxstudio-mcp Compatibility/i);
-    assert.match(read('docs/integrations.html'), /robloxstudio-mcp live Studio compatibility/i);
-    assert.match(read('docs/getting-started.html'), /Optional Live Studio Connection/i);
+    assert.match(read('docs/site/index.html'), /robloxstudio-mcp Compatibility/i);
+    assert.match(read('docs/site/integrations.html'), /robloxstudio-mcp live Studio compatibility/i);
+    assert.match(read('docs/site/getting-started.html'), /Optional Live Studio Connection/i);
     assert.match(read('docs/reference/roblox-workspace-standard.md'), /robloxstudio-mcp-compatibility\.md/i);
   });
 

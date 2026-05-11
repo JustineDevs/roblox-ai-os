@@ -18,7 +18,7 @@ export const DEFAULT_DOCUMENT_REFRESH_RULES: DocumentRefreshRule[] = [
       "src/config/__tests__/codex-hooks.test.ts",
     ],
     refreshTargets: [
-      "docs/codex-native-hooks.md",
+      "docs/guides/codex-native-hooks.md",
       ".rcs/plans/*codex-native*",
       ".rcs/specs/*codex-native*",
       ".rcs/plans/*native-hook*",
@@ -32,7 +32,7 @@ export const DEFAULT_DOCUMENT_REFRESH_RULES: DocumentRefreshRule[] = [
       "src/document-refresh/**",
     ],
     refreshTargets: [
-      "docs/codex-native-hooks.md",
+      "docs/guides/codex-native-hooks.md",
       ".rcs/plans/*document-refresh*",
       ".rcs/specs/*document-refresh*",
     ],
@@ -45,7 +45,7 @@ export const DEFAULT_DOCUMENT_REFRESH_RULES: DocumentRefreshRule[] = [
     ],
     refreshTargets: [
       "README.md",
-      "docs/getting-started.html",
+      "docs/site/getting-started.html",
       ".rcs/plans/*cli*",
       ".rcs/specs/*cli*",
       ".rcs/plans/*operator*",
@@ -67,7 +67,7 @@ export const DEFAULT_DOCUMENT_REFRESH_RULES: DocumentRefreshRule[] = [
       "src/hooks/__tests__/analyze-*-contract.test.ts",
     ],
     refreshTargets: [
-      "docs/prompt-guidance-contract.md",
+      "docs/contracts/prompt-guidance-contract.md",
       ".rcs/plans/*prompt*",
       ".rcs/specs/*prompt*",
       ".rcs/plans/*guidance*",

@@ -1,17 +1,17 @@
-# OpenClaw 統合ガイド（プロンプト調整・ローカライズ版）
+# Руководство по интеграции OpenClaw (локализованный тюнинг промптов)
 
-> [← Back to Docs Home](./index.html) · [Integrations Landing](./integrations.html)
+> [← Back to Docs Home](../site/index.html) · [Integrations Landing](../site/integrations.html)
 
 **Language Switcher:** [English](./openclaw-integration.md) | [한국어](./openclaw-integration.ko.md) | [日本語](./openclaw-integration.ja.md) | [简体中文](./openclaw-integration.zh.md) | [繁體中文](./openclaw-integration.zh-TW.md) | [Tiếng Việt](./openclaw-integration.vi.md) | [Español](./openclaw-integration.es.md) | [Português](./openclaw-integration.pt.md) | [Русский](./openclaw-integration.ru.md) | [Türkçe](./openclaw-integration.tr.md) | [Deutsch](./openclaw-integration.de.md) | [Français](./openclaw-integration.fr.md) | [Italiano](./openclaw-integration.it.md) | [Українська](./openclaw-integration.uk.md)
 
 
-このページは英語版ドキュメントの **「Prompt tuning guide (concise + context-aware)」** セクションをローカライズしたものです。
+Эта страница локализует раздел **“Prompt tuning guide (concise + context-aware)”** из основной англоязычной документации.
 
-統合全体（gateway / hooks / 検証手順）は [English guide](./openclaw-integration.md) を参照してください。
+Полное руководство по интеграции (gateway, hooks, проверка) см. в [English guide](./openclaw-integration.md).
 
-## プロンプト調整（簡潔 + コンテキスト重視）
+## Тюнинг промптов (кратко + с учетом контекста)
 
-## プロンプトテンプレートの編集箇所
+## Где редактировать шаблоны промптов
 
 - `notifications.openclaw.hooks["session-start"].instruction`
 - `notifications.openclaw.hooks["session-idle"].instruction`
@@ -19,18 +19,18 @@
 - `notifications.openclaw.hooks["stop"].instruction`
 - `notifications.openclaw.hooks["session-end"].instruction`
 
-## 推奨コンテキストトークン
+## Рекомендуемые контекстные токены
 
-- 常時含める: `{{sessionId}}`, `{{tmuxSession}}`
-- イベント依存: `{{projectName}}`, `{{question}}`, `{{reason}}`
+- Всегда включать: `{{sessionId}}`, `{{tmuxSession}}`
+- По событию: `{{projectName}}`, `{{question}}`, `{{reason}}`
 
-## 詳細度（verbosity）戦略
+## Стратегия детализации (verbosity)
 
-- `minimal`: きわめて短い通知
-- `session`: 簡潔な運用文脈（推奨）
-- `verbose`: 状態・アクション・リスクを詳細化
+- `minimal`: очень короткие уведомления
+- `session`: сжатый операционный контекст (рекомендуется)
+- `verbose`: расширенный контекст статуса/действий/рисков
 
-## クイック更新コマンド（jq）
+## Быстрая команда обновления (jq)
 
 ```bash
 CONFIG_FILE="$HOME/.codex/.rcs-config.json"

@@ -1,17 +1,17 @@
-# Guia de integração OpenClaw (ajuste de prompts localizado)
+# Guide d’intégration OpenClaw (réglage localisé des prompts)
 
-> [← Back to Docs Home](./index.html) · [Integrations Landing](./integrations.html)
+> [← Back to Docs Home](../site/index.html) · [Integrations Landing](../site/integrations.html)
 
 **Language Switcher:** [English](./openclaw-integration.md) | [한국어](./openclaw-integration.ko.md) | [日本語](./openclaw-integration.ja.md) | [简体中文](./openclaw-integration.zh.md) | [繁體中文](./openclaw-integration.zh-TW.md) | [Tiếng Việt](./openclaw-integration.vi.md) | [Español](./openclaw-integration.es.md) | [Português](./openclaw-integration.pt.md) | [Русский](./openclaw-integration.ru.md) | [Türkçe](./openclaw-integration.tr.md) | [Deutsch](./openclaw-integration.de.md) | [Français](./openclaw-integration.fr.md) | [Italiano](./openclaw-integration.it.md) | [Українська](./openclaw-integration.uk.md)
 
 
-Esta página localiza a seção **“Prompt tuning guide (concise + context-aware)”** da documentação principal em inglês.
+Cette page localise la section **« Prompt tuning guide (concise + context-aware) »** de la documentation principale en anglais.
 
-Para a documentação completa de integração (gateways, hooks, verificação), veja o [English guide](./openclaw-integration.md).
+Pour la documentation complète d’intégration (gateways, hooks, vérification), voir le [English guide](./openclaw-integration.md).
 
-## Ajuste de prompts (conciso + sensível ao contexto)
+## Réglage des prompts (concis et contextuel)
 
-## Onde editar os templates de prompt
+## Où modifier les modèles de prompt
 
 - `notifications.openclaw.hooks["session-start"].instruction`
 - `notifications.openclaw.hooks["session-idle"].instruction`
@@ -19,18 +19,18 @@ Para a documentação completa de integração (gateways, hooks, verificação),
 - `notifications.openclaw.hooks["stop"].instruction`
 - `notifications.openclaw.hooks["session-end"].instruction`
 
-## Tokens de contexto recomendados
+## Tokens de contexte recommandés
 
-- Sempre incluir: `{{sessionId}}`, `{{tmuxSession}}`
-- Conforme evento: `{{projectName}}`, `{{question}}`, `{{reason}}`
+- Toujours : `{{sessionId}}`, `{{tmuxSession}}`
+- Selon l’événement : `{{projectName}}`, `{{question}}`, `{{reason}}`
 
-## Estratégia de verbosidade
+## Stratégie de verbosité
 
-- `minimal`: avisos muito curtos
-- `session`: contexto operacional conciso (recomendado)
-- `verbose`: mais contexto de status/ação/risco
+- `minimal` : signaux très courts
+- `session` : contexte opérationnel concis (recommandé)
+- `verbose` : plus de contexte état/action/risque
 
-## Comando rápido de atualização (jq)
+## Commande de mise à jour rapide (jq)
 
 ```bash
 CONFIG_FILE="$HOME/.codex/.rcs-config.json"

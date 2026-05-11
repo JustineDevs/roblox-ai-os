@@ -1,17 +1,17 @@
-# Hướng dẫn tích hợp OpenClaw (bản địa hóa tinh chỉnh prompt)
+# OpenClaw 統合ガイド（プロンプト調整・ローカライズ版）
 
-> [← Back to Docs Home](./index.html) · [Integrations Landing](./integrations.html)
+> [← Back to Docs Home](../site/index.html) · [Integrations Landing](../site/integrations.html)
 
 **Language Switcher:** [English](./openclaw-integration.md) | [한국어](./openclaw-integration.ko.md) | [日本語](./openclaw-integration.ja.md) | [简体中文](./openclaw-integration.zh.md) | [繁體中文](./openclaw-integration.zh-TW.md) | [Tiếng Việt](./openclaw-integration.vi.md) | [Español](./openclaw-integration.es.md) | [Português](./openclaw-integration.pt.md) | [Русский](./openclaw-integration.ru.md) | [Türkçe](./openclaw-integration.tr.md) | [Deutsch](./openclaw-integration.de.md) | [Français](./openclaw-integration.fr.md) | [Italiano](./openclaw-integration.it.md) | [Українська](./openclaw-integration.uk.md)
 
 
-Trang này bản địa hóa mục **“Prompt tuning guide (concise + context-aware)”** từ tài liệu tiếng Anh chính.
+このページは英語版ドキュメントの **「Prompt tuning guide (concise + context-aware)」** セクションをローカライズしたものです。
 
-Để xem tài liệu tích hợp đầy đủ (gateway, hook, xác minh), hãy xem [English guide](./openclaw-integration.md).
+統合全体（gateway / hooks / 検証手順）は [English guide](./openclaw-integration.md) を参照してください。
 
-## Tinh chỉnh prompt (ngắn gọn + nhận biết ngữ cảnh)
+## プロンプト調整（簡潔 + コンテキスト重視）
 
-## Vị trí chỉnh sửa mẫu prompt
+## プロンプトテンプレートの編集箇所
 
 - `notifications.openclaw.hooks["session-start"].instruction`
 - `notifications.openclaw.hooks["session-idle"].instruction`
@@ -19,18 +19,18 @@ Trang này bản địa hóa mục **“Prompt tuning guide (concise + context-a
 - `notifications.openclaw.hooks["stop"].instruction`
 - `notifications.openclaw.hooks["session-end"].instruction`
 
-## Token ngữ cảnh khuyến nghị
+## 推奨コンテキストトークン
 
-- Luôn có: `{{sessionId}}`, `{{tmuxSession}}`
-- Theo sự kiện: `{{projectName}}`, `{{question}}`, `{{reason}}`
+- 常時含める: `{{sessionId}}`, `{{tmuxSession}}`
+- イベント依存: `{{projectName}}`, `{{question}}`, `{{reason}}`
 
-## Chiến lược mức độ chi tiết (verbosity)
+## 詳細度（verbosity）戦略
 
-- `minimal`: thông báo rất ngắn
-- `session`: ngữ cảnh vận hành ngắn gọn (khuyến nghị)
-- `verbose`: nhiều ngữ cảnh hơn về trạng thái/hành động/rủi ro
+- `minimal`: きわめて短い通知
+- `session`: 簡潔な運用文脈（推奨）
+- `verbose`: 状態・アクション・リスクを詳細化
 
-## Lệnh cập nhật nhanh (jq)
+## クイック更新コマンド（jq）
 
 ```bash
 CONFIG_FILE="$HOME/.codex/.rcs-config.json"

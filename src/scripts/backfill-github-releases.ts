@@ -77,7 +77,7 @@ function releaseExists(repo: string, tag: string, cwd: string): boolean {
 
 function resolveTemplatePath(cwd: string, tag: string): string {
   const version = tag.replace(/^v/, '');
-  const versioned = join(cwd, `docs/release-notes-v${version}.md`);
+  const versioned = join(cwd, `docs/release/release-notes-v${version}.md`);
   if (existsSync(versioned)) return versioned;
   return join(cwd, 'RELEASE_BODY.md');
 }

@@ -5,13 +5,13 @@ Usa la documentación canónica enlazada abajo para la superficie actual del pro
 
 - Paquete: `@jstn-sdk/rcs`
 - Repositorio: `https://github.com/JustineDevs/roblox-ai-os`
-- Primeros pasos: [../getting-started.html](../getting-started.html)
+- Primeros pasos: [../site/getting-started.html](../site/getting-started.html)
 - Referencia de skills: [../skills.html](../skills.html)
 - Wiki para contribuidores: [../wiki/Home.md](../wiki/Home.md)
 - Hoja de ruta: [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - Arquitectura: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Contribuir: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- Integraciones: [../integrations.html](../integrations.html)
+- Integraciones: [../site/integrations.html](../site/integrations.html)
 - README canónico: [../../README.md](../../README.md)
 
 ## Flujo canónico para creadores

@@ -12,8 +12,8 @@
 
 ## Highlights
 
-- **Cursor + RCS** — new [`docs/reference/cursor-rcs-integration.md`](./reference/cursor-rcs-integration.md): project rules, SSOT boundaries, optional MCP pointer.
-- **MCP IDE presets** — new [`docs/reference/mcp-capable-ide-presets.md`](./reference/mcp-capable-ide-presets.md): copy-paste `mcp.json` for all first-party `rcs mcp-serve` targets (`state`, `memory`, `code-intel`, `trace`, `wiki`), aligned with `src/config/rcs-first-party-mcp.ts`.
+- **Cursor + RCS** — new [`docs/reference/cursor-rcs-integration.md`](../reference/cursor-rcs-integration.md): project rules, SSOT boundaries, optional MCP pointer.
+- **MCP IDE presets** — new [`docs/reference/mcp-capable-ide-presets.md`](../reference/mcp-capable-ide-presets.md): copy-paste `mcp.json` for all first-party `rcs mcp-serve` targets (`state`, `memory`, `code-intel`, `trace`, `wiki`), aligned with `src/config/rcs-first-party-mcp.ts`.
 - **Platform manifest** — `cursor` and `mcp-capable-ide` lanes move to **`active`** at the reference-doc layer; `claude-like` stays **planned** until a similar ship.
 - **README support matrix** — Tier 2 now points at the shipped reference docs and clarifies `claude-like` vs Cursor/MCP.
 - **Corpora clarity** — expanded [`corpora/README.md`](../../corpora/README.md) (quarantine, npm vs clone, CI vs Windows testing expectations).

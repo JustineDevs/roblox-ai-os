@@ -87,7 +87,7 @@ export function resolveReleaseTemplatePath(
   if (requestedTemplatePath !== 'auto') {
     return resolve(cwd, requestedTemplatePath);
   }
-  const versionedPath = resolve(cwd, 'docs', `release-notes-v${versionFromTag(currentTag)}.md`);
+  const versionedPath = resolve(cwd, 'docs', 'release', `release-notes-v${versionFromTag(currentTag)}.md`);
   if (existsSync(versionedPath)) return versionedPath;
   return resolve(cwd, 'RELEASE_BODY.md');
 }

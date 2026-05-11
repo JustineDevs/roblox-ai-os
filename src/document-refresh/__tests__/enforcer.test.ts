@@ -32,7 +32,7 @@ describe("document refresh evaluator", () => {
     assert.ok(warning);
     assert.match(warning.message, /Document-refresh warning/);
     assert.deepEqual(warning.triggeringPaths, ["src/scripts/codex-native-hook.ts"]);
-    assert.ok(warning.expectedTargets.includes("docs/codex-native-hooks.md"));
+    assert.ok(warning.expectedTargets.includes("docs/guides/codex-native-hooks.md"));
   });
 
   it("commit path suppresses when tracked or force-staged rule-scoped planning spec appears in the diff", () => {
@@ -66,7 +66,7 @@ describe("document refresh evaluator", () => {
   it("commit path suppresses when relevant product doc changed", () => {
     const warning = warningFor([
       { status: "M", path: "src/scripts/codex-native-hook.ts" },
-      { status: "M", path: "docs/codex-native-hooks.md" },
+      { status: "M", path: "docs/guides/codex-native-hooks.md" },
     ]);
 
     assert.equal(warning, null);
@@ -75,7 +75,7 @@ describe("document refresh evaluator", () => {
   it("does not suppress on unrelated doc change", () => {
     const warning = warningFor([
       { status: "M", path: "src/scripts/codex-native-hook.ts" },
-      { status: "M", path: "docs/release-notes-v0.1.0.md" },
+      { status: "M", path: "docs/release/release-notes-v0.1.0.md" },
     ]);
 
     assert.ok(warning);
@@ -106,7 +106,7 @@ describe("document refresh evaluator", () => {
     const warning = warningFor([
       { status: "M", path: "CHANGELOG.md" },
       { status: "M", path: "RELEASE_BODY.md" },
-      { status: "M", path: "docs/release-notes-v0.1.0.md" },
+      { status: "M", path: "docs/release/release-notes-v0.1.0.md" },
       { status: "M", path: "docs/qa/release-readiness-20260423.md" },
     ]);
 

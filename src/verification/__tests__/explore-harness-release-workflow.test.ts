@@ -96,7 +96,7 @@ describe('native release workflow', () => {
   });
 
   it('ships a managed release-notes template for versioned docs sync', () => {
-    const releaseNotesTemplatePath = join(process.cwd(), 'docs', 'release-notes-template.md');
+    const releaseNotesTemplatePath = join(process.cwd(), 'docs', 'release', 'release-notes-template.md');
     assert.equal(existsSync(releaseNotesTemplatePath), true, `missing release-notes template: ${releaseNotesTemplatePath}`);
 
     const template = readFileSync(releaseNotesTemplatePath, 'utf-8');

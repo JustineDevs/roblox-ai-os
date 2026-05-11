@@ -3184,7 +3184,7 @@ esac
       assert.equal((result.outputJson as { decision?: string } | null)?.decision, undefined);
       assert.equal((result.outputJson as { hookSpecificOutput?: { hookEventName?: string } } | null)?.hookSpecificOutput?.hookEventName, "PreToolUse");
       assert.match(JSON.stringify(result.outputJson), /Document-refresh warning/);
-      assert.match(JSON.stringify(result.outputJson), /docs\/codex-native-hooks\.md/);
+      assert.match(JSON.stringify(result.outputJson), /docs\/guides\/codex-native-hooks\.md/);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -3194,17 +3194,17 @@ esac
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-pretool-document-refresh-docs-"));
     try {
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
-      await mkdir(join(cwd, "docs"), { recursive: true });
+      await mkdir(join(cwd, "docs", "guides"), { recursive: true });
       execFileSyncCompat("git", ["init"], { cwd, stdio: "ignore" });
       execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
       execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 1;\n", "utf-8");
-      await writeFile(join(cwd, "docs", "codex-native-hooks.md"), "initial\n", "utf-8");
-      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts", "docs/codex-native-hooks.md"], { cwd, stdio: "ignore" });
+      await writeFile(join(cwd, "docs", "guides", "codex-native-hooks.md"), "initial\n", "utf-8");
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts", "docs/guides/codex-native-hooks.md"], { cwd, stdio: "ignore" });
       execFileSyncCompat("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 2;\n", "utf-8");
-      await writeFile(join(cwd, "docs", "codex-native-hooks.md"), "updated\n", "utf-8");
-      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts", "docs/codex-native-hooks.md"], { cwd, stdio: "ignore" });
+      await writeFile(join(cwd, "docs", "guides", "codex-native-hooks.md"), "updated\n", "utf-8");
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts", "docs/guides/codex-native-hooks.md"], { cwd, stdio: "ignore" });
 
       const result = await dispatchCodexNativeHook(
         {

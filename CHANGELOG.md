@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+### Docs
+
+- Reorganized contributor-facing and release docs into named subtrees: `docs/site/` (static HTML hub), `docs/integrations/` (OpenClaw + adapters), `docs/guides/` (operator how-tos), `docs/release/` (versioned release notes + template), consolidated formal contracts under `docs/contracts/`, and moved `STATE_MODEL.md` to `docs/reference/state-model.md`. Updated scripts, tests, manifest delivery paths, and cross-links accordingly.
+
 ## [0.2.0] - 2026-05-11
 
 Ecosystem reference release for **`@jstn-sdk/rcs@0.2.0`**. Ships documented **Cursor** and **MCP-capable IDE** consumption of canonical RCS surfaces, activates those lanes at the **reference-doc** layer in the platform target manifest, and bundles contributor-facing clarity (README support matrix, corpora README, compat doctor contract hardening) since `0.1.9`.

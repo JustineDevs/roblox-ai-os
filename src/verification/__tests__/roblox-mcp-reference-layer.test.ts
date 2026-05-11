@@ -52,7 +52,7 @@ describe('Roblox MCP reference layer', () => {
 
   it('wires the pre-action protocol and docs index to the Roblox MCP reference layer', () => {
     const protocol = read('docs/reference/roblox-pre-action-protocol.md');
-    const index = read('docs/index.html');
+    const index = read('docs/site/index.html');
 
     assert.match(protocol, /roblox-mcp-reference-layer\.md/i);
     assert.match(protocol, /reference-sources\.md/i);

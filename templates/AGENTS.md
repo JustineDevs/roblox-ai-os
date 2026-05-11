@@ -13,7 +13,7 @@ Role prompts under `prompts/*.md` are narrower execution surfaces. They must fol
 When RCS is installed, load the installed prompt/skill/agent surfaces from `~/.codex/prompts`, `~/.codex/skills`, and `~/.codex/agents` (or the project-local `./.codex/...` equivalents when project scope is active).
 
 <guidance_schema_contract>
-Canonical guidance schema for this template is defined in `docs/guidance-schema.md`.
+Canonical guidance schema for this template is defined in `docs/reference/guidance-schema.md`.
 Canonical vocabulary and semantic system are defined in:
 - `docs/reference/canonical-vocabulary.md`
 - `docs/reference/semantic-design-system.md`

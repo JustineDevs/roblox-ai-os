@@ -2,7 +2,7 @@
 
 The repository keeps one canonical authoring surface for each plugin/setup asset type and treats `plugins/roblox-ai-os-creator-skills` as generated-or-verified plugin output.
 
-This plugin bundle is one **delivery lane**, not the whole cross-platform compatibility model. See [`docs/reference/agentic-platform-compatibility.md`](./reference/agentic-platform-compatibility.md) for the broader canonical-source -> delivery -> adapter model, and [`src/platform-targets/manifest.json`](../src/platform-targets/manifest.json) for the concrete target registry (including planned lanes such as `cursor` and `mcp-capable-ide`).
+This plugin bundle is one **delivery lane**, not the whole cross-platform compatibility model. See [`docs/reference/agentic-platform-compatibility.md`](../reference/agentic-platform-compatibility.md) for the broader canonical-source -> delivery -> adapter model, and [`src/platform-targets/manifest.json`](../../src/platform-targets/manifest.json) for the concrete target registry (including planned lanes such as `cursor` and `mcp-capable-ide`).
 
 ## Canonical roots
 

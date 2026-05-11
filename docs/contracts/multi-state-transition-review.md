@@ -115,7 +115,7 @@ Also clarified two adjacent operator-facing docs so the approved overlap is not
 misread as the removed linked team-follow-up lifecycle:
 
 - `docs/contracts/forge-state-contract.md`
-- `docs/codex-native-hooks.md`
+- `docs/guides/codex-native-hooks.md`
 
 Added concrete recovery examples to the compatibility contract so denial
 messages can point operators at exact parity surfaces instead of vague

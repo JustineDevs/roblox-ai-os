@@ -35,8 +35,8 @@ describe('prompt inventory', () => {
       const paths = listPromptSurfacePaths(root);
       assert.deepEqual(paths, [
         'AGENTS.md',
-        'docs/guidance-schema.md',
-        'docs/prompt-guidance-contract.md',
+        'docs/reference/guidance-schema.md',
+        'docs/contracts/prompt-guidance-contract.md',
         'docs/prompt-guidance-fragments/core.md',
         'prompts/executor.md',
         'skills/worker/SKILL.md',

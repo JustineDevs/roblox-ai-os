@@ -47,9 +47,9 @@ describe('agentic platform compatibility', () => {
   });
 
   it('links the platform compatibility contract from active docs', () => {
-    const docsIndex = read('docs/index.html');
-    const agentsDoc = read('docs/agents.html');
-    const pluginSsot = read('docs/plugin-bundle-ssot.md');
+    const docsIndex = read('docs/site/index.html');
+    const agentsDoc = read('docs/site/agents.html');
+    const pluginSsot = read('docs/integrations/plugin-bundle-ssot.md');
 
     assert.match(docsIndex, /agentic-platform-compatibility\.md/i);
     assert.match(agentsDoc, /Agentic Platform Compatibility/i);

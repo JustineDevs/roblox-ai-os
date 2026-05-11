@@ -5,13 +5,13 @@
 
 - 包名：`@jstn-sdk/rcs`
 - 仓库：`https://github.com/JustineDevs/roblox-ai-os`
-- 入门： [../getting-started.html](../getting-started.html)
+- 入门： [../site/getting-started.html](../site/getting-started.html)
 - Skills 参考： [../skills.html](../skills.html)
 - 贡献者 Wiki： [../wiki/Home.md](../wiki/Home.md)
 - 路线图： [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - 架构： [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - 贡献指南： [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- 集成： [../integrations.html](../integrations.html)
+- 集成： [../site/integrations.html](../site/integrations.html)
 - 规范 README： [../../README.md](../../README.md)
 
 ## 规范的创作者工作流

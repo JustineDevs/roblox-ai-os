@@ -155,12 +155,12 @@ When editing `templates/AGENTS.md`, any tracked root `AGENTS.md`, or other root 
 
 ## Relationship to the guidance schema
 
-`docs/guidance-schema.md` defines the **section layout contract** for AGENTS and worker surfaces. This document defines the **behavioral wording contract** that should appear within those sections after the GPT-5.5 rollout.
+`docs/reference/guidance-schema.md` defines the **section layout contract** for AGENTS and worker surfaces. This document defines the **behavioral wording contract** that should appear within those sections after the GPT-5.5 rollout.
 
 Use both documents together:
 
-- `docs/guidance-schema.md` for structure
-- `docs/prompt-guidance-contract.md` for behavior
+- `docs/reference/guidance-schema.md` for structure
+- `docs/contracts/prompt-guidance-contract.md` for behavior
 
 ## Relationship to posture-aware routing
 
@@ -230,4 +230,4 @@ npm test
 - Implementation issue: internal prompt-guidance rollout issue `#2007`
 - Official source: [OpenAI GPT-5.5 prompt guidance](https://developers.openai.com/api/docs/guides/prompt-guidance)
 - Prior rollout history: internal rollout references `#608`, `#611`, `#612`
-- Guidance schema: `docs/guidance-schema.md`
+- Guidance schema: `docs/reference/guidance-schema.md`

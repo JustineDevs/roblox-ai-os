@@ -169,7 +169,7 @@ Those patterns do not represent the intended public identity of RCS.
 ## Reference Map
 
 - Main README: [README.md](./README.md)
-- Getting Started: [docs/getting-started.html](./docs/getting-started.html)
+- Getting Started: [docs/site/getting-started.html](./docs/site/getting-started.html)
 - Playground hub: [playground/README.md](./playground/README.md)
 - Workspace standard: [docs/reference/roblox-workspace-standard.md](./docs/reference/roblox-workspace-standard.md)
 - Live Studio compatibility: [docs/reference/robloxstudio-mcp-compatibility.md](./docs/reference/robloxstudio-mcp-compatibility.md)

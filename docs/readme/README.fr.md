@@ -5,13 +5,13 @@ Utilise les documents canoniques liés ci-dessous pour la surface produit actuel
 
 - Package : `@jstn-sdk/rcs`
 - Dépôt : `https://github.com/JustineDevs/roblox-ai-os`
-- Démarrage : [../getting-started.html](../getting-started.html)
+- Démarrage : [../site/getting-started.html](../site/getting-started.html)
 - Référence des skills : [../skills.html](../skills.html)
 - Wiki des contributeurs : [../wiki/Home.md](../wiki/Home.md)
 - Feuille de route : [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - Architecture : [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Contribution : [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- Intégrations : [../integrations.html](../integrations.html)
+- Intégrations : [../site/integrations.html](../site/integrations.html)
 - README canonique : [../../README.md](../../README.md)
 
 ## Workflow créateur canonique

@@ -46,8 +46,8 @@ function parseArgs(cwd: string): Options {
 
   const version = arg('--version') ?? parseVersionFromPackageJson(cwd);
   const date = arg('--date') ?? new Date().toISOString().slice(0, 10);
-  const templatePath = arg('--template') ?? 'docs/release-notes-template.md';
-  const outPath = arg('--out') ?? `docs/release-notes-v${version}.md`;
+  const templatePath = arg('--template') ?? 'docs/release/release-notes-template.md';
+  const outPath = arg('--out') ?? `docs/release/release-notes-v${version}.md`;
   const check = process.argv.includes('--check');
   return { version, date, templatePath, outPath, check };
 }

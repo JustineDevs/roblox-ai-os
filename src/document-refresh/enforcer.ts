@@ -40,8 +40,8 @@ export const DOCUMENT_REFRESH_EXEMPTION_PREFIX = "Document-refresh: not-needed |
 const RELEASE_COLLATERAL_GLOBS = [
   "CHANGELOG.md",
   "RELEASE_BODY.md",
-  "docs/release-notes-v0.1.0.md",
-  "docs/release-notes-v0.2.0.md",
+  "docs/release/release-notes-v0.1.0.md",
+  "docs/release/release-notes-v0.2.0.md",
   "docs/release-body-*.md",
   "docs/qa/release-readiness-*.md",
 ];

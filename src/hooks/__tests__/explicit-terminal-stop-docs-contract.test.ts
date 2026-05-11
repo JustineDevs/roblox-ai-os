@@ -16,7 +16,7 @@ describe("explicit terminal stop model docs contract", () => {
   });
 
   it("documents lifecycle precedence in the state model", () => {
-    const doc = loadSurface("docs/STATE_MODEL.md");
+    const doc = loadSurface("docs/reference/state-model.md");
     assert.match(doc, /Terminal lifecycle outcome compatibility/i);
     assert.match(doc, /`finished`/i);
     assert.match(doc, /`askuserQuestion`/i);
@@ -25,7 +25,7 @@ describe("explicit terminal stop model docs contract", () => {
   });
 
   it("keeps native hook docs aligned with lifecycle metadata precedence", () => {
-    const doc = loadSurface("docs/codex-native-hooks.md");
+    const doc = loadSurface("docs/guides/codex-native-hooks.md");
     assert.match(doc, /Explicit terminal stop model note/i);
     assert.match(doc, /prefer explicit lifecycle metadata over assistant-text heuristics/i);
     assert.match(doc, /legacy `blocked_on_user` still suppresses continuation/i);
@@ -34,7 +34,7 @@ describe("explicit terminal stop model docs contract", () => {
   });
 
   it("extends prompt guidance docs with the explicit terminal handoff rule", () => {
-    const doc = loadSurface("docs/prompt-guidance-contract.md");
+    const doc = loadSurface("docs/contracts/prompt-guidance-contract.md");
     assert.match(doc, /Active workflow terminal handoff contract/i);
     assert.match(doc, /name an explicit outcome such as `finished`, `blocked`, `failed`, `userinterlude`, or `askuserQuestion`/i);
     assert.match(doc, /should not end in permission-seeking softeners/i);

@@ -73,7 +73,7 @@ Current event vocabulary exposed to RCS plugins:
 RCS keeps this existing event vocabulary rather than exposing raw Codex hook names directly.
 That lets native Codex hooks and fallback/derived paths feed one shared plugin/runtime surface.
 
-For clawhip-oriented operational routing, see [Clawhip Event Contract](./clawhip-event-contract.md).
+For clawhip-oriented operational routing, see [Clawhip Event Contract](../contracts/clawhip-event-contract.md).
 
 Envelope fields include:
 

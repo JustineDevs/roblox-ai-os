@@ -1,17 +1,17 @@
-# OpenClaw 整合指南（提示詞調校在地化）
+# Hướng dẫn tích hợp OpenClaw (bản địa hóa tinh chỉnh prompt)
 
-> [← Back to Docs Home](./index.html) · [Integrations Landing](./integrations.html)
+> [← Back to Docs Home](../site/index.html) · [Integrations Landing](../site/integrations.html)
 
 **Language Switcher:** [English](./openclaw-integration.md) | [한국어](./openclaw-integration.ko.md) | [日本語](./openclaw-integration.ja.md) | [简体中文](./openclaw-integration.zh.md) | [繁體中文](./openclaw-integration.zh-TW.md) | [Tiếng Việt](./openclaw-integration.vi.md) | [Español](./openclaw-integration.es.md) | [Português](./openclaw-integration.pt.md) | [Русский](./openclaw-integration.ru.md) | [Türkçe](./openclaw-integration.tr.md) | [Deutsch](./openclaw-integration.de.md) | [Français](./openclaw-integration.fr.md) | [Italiano](./openclaw-integration.it.md) | [Українська](./openclaw-integration.uk.md)
 
 
-此頁為英文主文件中 **「Prompt tuning guide (concise + context-aware)」** 章節的在地化版本。
+Trang này bản địa hóa mục **“Prompt tuning guide (concise + context-aware)”** từ tài liệu tiếng Anh chính.
 
-完整整合文件（gateway、hooks、驗證）請參考 [English guide](./openclaw-integration.md)。
+Để xem tài liệu tích hợp đầy đủ (gateway, hook, xác minh), hãy xem [English guide](./openclaw-integration.md).
 
-## 提示詞調校（精簡 + 情境感知）
+## Tinh chỉnh prompt (ngắn gọn + nhận biết ngữ cảnh)
 
-## 提示詞模板編輯位置
+## Vị trí chỉnh sửa mẫu prompt
 
 - `notifications.openclaw.hooks["session-start"].instruction`
 - `notifications.openclaw.hooks["session-idle"].instruction`
@@ -19,18 +19,18 @@
 - `notifications.openclaw.hooks["stop"].instruction`
 - `notifications.openclaw.hooks["session-end"].instruction`
 
-## 建議的情境 Token
+## Token ngữ cảnh khuyến nghị
 
-- 建議固定包含：`{{sessionId}}`、`{{tmuxSession}}`
-- 依事件補充：`{{projectName}}`、`{{question}}`、`{{reason}}`
+- Luôn có: `{{sessionId}}`, `{{tmuxSession}}`
+- Theo sự kiện: `{{projectName}}`, `{{question}}`, `{{reason}}`
 
-## 詳細度（verbosity）策略
+## Chiến lược mức độ chi tiết (verbosity)
 
-- `minimal`：極短通知
-- `session`：精簡的作業情境（建議）
-- `verbose`：提供更完整的狀態/動作/風險資訊
+- `minimal`: thông báo rất ngắn
+- `session`: ngữ cảnh vận hành ngắn gọn (khuyến nghị)
+- `verbose`: nhiều ngữ cảnh hơn về trạng thái/hành động/rủi ro
 
-## 快速更新指令（jq）
+## Lệnh cập nhật nhanh (jq)
 
 ```bash
 CONFIG_FILE="$HOME/.codex/.rcs-config.json"

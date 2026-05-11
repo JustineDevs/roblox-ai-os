@@ -5,13 +5,13 @@ Aktualną powierzchnię produktu opisują kanoniczne dokumenty podlinkowane poni
 
 - Pakiet: `@jstn-sdk/rcs`
 - Repozytorium: `https://github.com/JustineDevs/roblox-ai-os`
-- Pierwsze kroki: [../getting-started.html](../getting-started.html)
+- Pierwsze kroki: [../site/getting-started.html](../site/getting-started.html)
 - Dokumentacja skills: [../skills.html](../skills.html)
 - Wiki dla współtwórców: [../wiki/Home.md](../wiki/Home.md)
 - Plan rozwoju: [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - Architektura: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Współtworzenie: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- Integracje: [../integrations.html](../integrations.html)
+- Integracje: [../site/integrations.html](../site/integrations.html)
 - Kanoniczne README: [../../README.md](../../README.md)
 
 ## Kanoniczny workflow twórcy

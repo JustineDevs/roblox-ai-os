@@ -64,7 +64,7 @@ Warning scope is intentionally narrow and rule-scoped:
 - **Commit path:** `PreToolUse` is Bash-only in this MVP and evaluates only
   inspectable `git commit` commands. It reads `git diff --cached --name-status`,
   so only staged changes count. Staged product docs such as
-  `docs/codex-native-hooks.md` can suppress a native-hook rule warning.
+  `docs/guides/codex-native-hooks.md` can suppress a native-hook rule warning.
   Rule-owned `.rcs/plans/**` and `.rcs/specs/**` targets suppress commit-path
   warnings only when they are tracked or force-staged despite `.rcs/` being
   gitignored. Local-only ignored planning files do not suppress commit warnings.

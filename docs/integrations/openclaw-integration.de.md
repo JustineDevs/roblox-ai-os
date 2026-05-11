@@ -1,17 +1,17 @@
-# Руководство по интеграции OpenClaw (локализованный тюнинг промптов)
+# OpenClaw-Integrationsleitfaden (lokalisierte Prompt-Optimierung)
 
-> [← Back to Docs Home](./index.html) · [Integrations Landing](./integrations.html)
+> [← Back to Docs Home](../site/index.html) · [Integrations Landing](../site/integrations.html)
 
 **Language Switcher:** [English](./openclaw-integration.md) | [한국어](./openclaw-integration.ko.md) | [日本語](./openclaw-integration.ja.md) | [简体中文](./openclaw-integration.zh.md) | [繁體中文](./openclaw-integration.zh-TW.md) | [Tiếng Việt](./openclaw-integration.vi.md) | [Español](./openclaw-integration.es.md) | [Português](./openclaw-integration.pt.md) | [Русский](./openclaw-integration.ru.md) | [Türkçe](./openclaw-integration.tr.md) | [Deutsch](./openclaw-integration.de.md) | [Français](./openclaw-integration.fr.md) | [Italiano](./openclaw-integration.it.md) | [Українська](./openclaw-integration.uk.md)
 
 
-Эта страница локализует раздел **“Prompt tuning guide (concise + context-aware)”** из основной англоязычной документации.
+Diese Seite lokalisiert den Abschnitt **„Prompt tuning guide (concise + context-aware)”** aus der englischen Hauptdokumentation.
 
-Полное руководство по интеграции (gateway, hooks, проверка) см. в [English guide](./openclaw-integration.md).
+Für die vollständige Integrationsdokumentation (Gateways, Hooks, Verifikation) siehe [English guide](./openclaw-integration.md).
 
-## Тюнинг промптов (кратко + с учетом контекста)
+## Prompt-Optimierung (prägnant + kontextbewusst)
 
-## Где редактировать шаблоны промптов
+## Wo Prompt-Vorlagen bearbeitet werden
 
 - `notifications.openclaw.hooks["session-start"].instruction`
 - `notifications.openclaw.hooks["session-idle"].instruction`
@@ -19,18 +19,18 @@
 - `notifications.openclaw.hooks["stop"].instruction`
 - `notifications.openclaw.hooks["session-end"].instruction`
 
-## Рекомендуемые контекстные токены
+## Empfohlene Kontext-Token
 
-- Всегда включать: `{{sessionId}}`, `{{tmuxSession}}`
-- По событию: `{{projectName}}`, `{{question}}`, `{{reason}}`
+- Immer: `{{sessionId}}`, `{{tmuxSession}}`
+- Ereignisabhängig: `{{projectName}}`, `{{question}}`, `{{reason}}`
 
-## Стратегия детализации (verbosity)
+## Ausführlichkeitsstrategie
 
-- `minimal`: очень короткие уведомления
-- `session`: сжатый операционный контекст (рекомендуется)
-- `verbose`: расширенный контекст статуса/действий/рисков
+- `minimal`: sehr kurze Signale
+- `session`: kompakter Betriebs-Kontext (empfohlen)
+- `verbose`: mehr Status-, Aktions- und Risikokontext
 
-## Быстрая команда обновления (jq)
+## Schnellupdate-Befehl (jq)
 
 ```bash
 CONFIG_FILE="$HOME/.codex/.rcs-config.json"

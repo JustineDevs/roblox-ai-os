@@ -5,13 +5,13 @@ Hãy dùng các tài liệu chuẩn liên kết bên dưới cho bề mặt sả
 
 - Gói: `@jstn-sdk/rcs`
 - Kho mã: `https://github.com/JustineDevs/roblox-ai-os`
-- Bắt đầu: [../getting-started.html](../getting-started.html)
+- Bắt đầu: [../site/getting-started.html](../site/getting-started.html)
 - Tham chiếu skills: [../skills.html](../skills.html)
 - Wiki cho người đóng góp: [../wiki/Home.md](../wiki/Home.md)
 - Lộ trình: [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - Kiến trúc: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Hướng dẫn đóng góp: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- Tích hợp: [../integrations.html](../integrations.html)
+- Tích hợp: [../site/integrations.html](../site/integrations.html)
 - README chuẩn: [../../README.md](../../README.md)
 
 ## Quy trình creator chuẩn

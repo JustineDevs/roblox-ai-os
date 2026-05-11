@@ -21,7 +21,7 @@ RCS is a Roblox Studio operating layer for [OpenAI Codex CLI](https://github.com
 
 **Package:** `@jstn-sdk/rcs`  
 **Repo:** `https://github.com/JustineDevs/roblox-ai-os`  
-**Docs:** [Getting Started](./docs/getting-started.html) · [Skills](./docs/skills.html) · [Agents](./docs/agents.html) · [Contributor wiki](./docs/wiki/Home.md) · [Integrations](./docs/integrations.html) · [Notification Gateway and OpenClaw guide](./docs/openclaw-integration.md) · [Agentic platform compatibility](./docs/reference/agentic-platform-compatibility.md) · [Cursor + RCS](./docs/reference/cursor-rcs-integration.md) · [MCP IDE presets](./docs/reference/mcp-capable-ide-presets.md)
+**Docs:** [Getting Started](./docs/site/getting-started.html) · [Skills](./docs/site/skills.html) · [Agents](./docs/site/agents.html) · [Contributor wiki](./docs/wiki/Home.md) · [Integrations](./docs/site/integrations.html) · [Notification Gateway and OpenClaw guide](./docs/integrations/openclaw-integration.md) · [Agentic platform compatibility](./docs/reference/agentic-platform-compatibility.md) · [Cursor + RCS](./docs/reference/cursor-rcs-integration.md) · [MCP IDE presets](./docs/reference/mcp-capable-ide-presets.md)
 
 > [!WARNING]
 > Recommended default: macOS or Linux with Codex CLI.
@@ -35,7 +35,7 @@ RCS separates **what we author once** (canonical `skills/`, prompts, catalog, te
 | Tier | Hosts | What you get today |
 |------|--------|-------------------|
 | **Tier 1 — Recommended** | **Codex CLI** on macOS or Linux with `rcs setup` | Full runtime: installed skills and prompts, managed native hooks, generated Codex agents where applicable, `.rcs/` state, and the normal `$brief` / `$forge` / `$crew` workflow surface. |
-| **Tier 2 — Reference delivery** | **Cursor**, **MCP-first editors**, **Claude-like** assistants (e.g. Claude Code) | Canonical Roblox creator **skills** and **AGENTS-style** orchestration stay in this repo as [SSOT](./docs/plugin-bundle-ssot.md). **`cursor`** and **`mcp-capable-ide`** ship **v0.2.0 reference docs** ([Cursor + RCS](./docs/reference/cursor-rcs-integration.md), [MCP presets](./docs/reference/mcp-capable-ide-presets.md)); **`claude-like`** remains manifest-**planned** until a similar reference ships—see [Agentic platform compatibility](./docs/reference/agentic-platform-compatibility.md). |
+| **Tier 2 — Reference delivery** | **Cursor**, **MCP-first editors**, **Claude-like** assistants (e.g. Claude Code) | Canonical Roblox creator **skills** and **AGENTS-style** orchestration stay in this repo as [SSOT](./docs/integrations/plugin-bundle-ssot.md). **`cursor`** and **`mcp-capable-ide`** ship **v0.2.0 reference docs** ([Cursor + RCS](./docs/reference/cursor-rcs-integration.md), [MCP presets](./docs/reference/mcp-capable-ide-presets.md)); **`claude-like`** remains manifest-**planned** until a similar reference ships—see [Agentic platform compatibility](./docs/reference/agentic-platform-compatibility.md). |
 | **Tier 3 — Adapters today** | **OpenClaw**, **Hermes** | RCS-owned **adapter** surfaces under [`src/adapt/`](./src/adapt/) for notifications, gateways, and observation—**not** a drop-in replacement for Tier 1 Codex runtime semantics. |
 
 **Windows vs CI:** GitHub Actions runs the primary Node test gate on **Linux**. A full local `npm test` on **native Windows** may still fail on path- or tool-specific tests unrelated to your feature work; prefer **Linux or WSL2** when verifying a release line, or run the same scoped commands your PR checks use.
@@ -404,7 +404,7 @@ For non-team sessions, native Codex hooks are now the canonical lifecycle surfac
 - `.rcs/hooks/*.mjs` = RCS plugin hooks
 - `rcs tmux-hook` / notify-hook / derived watcher = tmux + runtime fallback paths
 
-See [Codex native hook mapping](./docs/codex-native-hooks.md) for the current native / fallback matrix.
+See [Codex native hook mapping](./docs/guides/codex-native-hooks.md) for the current native / fallback matrix.
 
 
 ### Troubleshooting false-green readiness
@@ -424,7 +424,7 @@ rcs doctor --team
 
 Only use the forced team shutdown for a team you have confirmed is dead or intentionally abandoned.
 
-If `Shift+Enter` still submits instead of inserting a newline inside an RCS-managed tmux session, see [Troubleshooting execution readiness](./docs/troubleshooting.md#shiftenter-submits-instead-of-inserting-a-newline-in-tmux-backed-rcs-sessions). Current RCS already enables tmux extended-key forwarding around its own Codex launch paths, so a persistent failure is usually a tmux terminal-capability/discoverability problem rather than a net-new RCS feature gap.
+If `Shift+Enter` still submits instead of inserting a newline inside an RCS-managed tmux session, see [Troubleshooting execution readiness](./docs/guides/troubleshooting.md#shiftenter-submits-instead-of-inserting-a-newline-in-tmux-backed-rcs-sessions). Current RCS already enables tmux extended-key forwarding around its own Codex launch paths, so a persistent failure is usually a tmux terminal-capability/discoverability problem rather than a net-new RCS feature gap.
 
 ### Explore and sparkshell
 
@@ -486,19 +486,19 @@ If this happens, try:
 
 ## Documentation
 
-- [Getting Started](./docs/getting-started.html)
+- [Getting Started](./docs/site/getting-started.html)
 - [Demo guide](./DEMO.md)
-- [Wiki feature](./docs/wiki-feature.md)
+- [Wiki feature](./docs/wiki/wiki-feature.md)
 - [Contributor wiki home](./docs/wiki/Home.md)
 - [Contributor roadmap](./docs/wiki/Roadmap.md)
 - [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
-- [Agent catalog](./docs/agents.html)
+- [Agent catalog](./docs/site/agents.html)
 - [Multi-agent compatibility architecture](./docs/reference/multi-agent-compatibility-architecture.md)
-- [Skills reference](./docs/skills.html)
-- [Codex native hook mapping](./docs/codex-native-hooks.md)
-- [Integrations](./docs/integrations.html)
-- [Troubleshooting execution readiness](./docs/troubleshooting.md)
-- [Notification Gateway and OpenClaw guide](./docs/openclaw-integration.md)
+- [Skills reference](./docs/site/skills.html)
+- [Codex native hook mapping](./docs/guides/codex-native-hooks.md)
+- [Integrations](./docs/site/integrations.html)
+- [Troubleshooting execution readiness](./docs/guides/troubleshooting.md)
+- [Notification Gateway and OpenClaw guide](./docs/integrations/openclaw-integration.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Changelog](./CHANGELOG.md)
 

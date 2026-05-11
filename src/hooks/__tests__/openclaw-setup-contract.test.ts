@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const openclawIntegrationDoc = readFileSync(
-  join(__dirname, "../../../docs/openclaw-integration.md"),
+  join(__dirname, "../../../docs/integrations/openclaw-integration.md"),
   "utf-8",
 );
 const configureNotificationsSkill = readFileSync(

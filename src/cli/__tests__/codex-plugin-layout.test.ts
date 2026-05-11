@@ -287,8 +287,8 @@ describe('official Codex plugin layout', () => {
     const staleCachePath = '~/.codex/plugins/cache/omc/roblox-ai-os-creator-skills';
     const docsToCheck = [
       'README.md',
-      'docs/troubleshooting.md',
-      'docs/hooks-extension.md',
+      'docs/guides/troubleshooting.md',
+      'docs/guides/hooks-extension.md',
       'skills/doctor/SKILL.md',
       'skills/help/SKILL.md',
       'plugins/roblox-ai-os-creator-skills/skills/doctor/SKILL.md',

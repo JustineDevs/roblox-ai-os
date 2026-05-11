@@ -5,13 +5,13 @@ Usa la documentazione canonica collegata qui sotto per la superficie attuale del
 
 - Pacchetto: `@jstn-sdk/rcs`
 - Repository: `https://github.com/JustineDevs/roblox-ai-os`
-- Introduzione: [../getting-started.html](../getting-started.html)
+- Introduzione: [../site/getting-started.html](../site/getting-started.html)
 - Riferimento skills: [../skills.html](../skills.html)
 - Wiki dei contributori: [../wiki/Home.md](../wiki/Home.md)
 - Roadmap: [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - Architettura: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Contribuire: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- Integrazioni: [../integrations.html](../integrations.html)
+- Integrazioni: [../site/integrations.html](../site/integrations.html)
 - README canonico: [../../README.md](../../README.md)
 
 ## Flusso creator canonico

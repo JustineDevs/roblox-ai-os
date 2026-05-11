@@ -5,13 +5,13 @@ Nutze die unten verlinkten kanonischen Dokumente für die aktuelle Produktoberfl
 
 - Paket: `@jstn-sdk/rcs`
 - Repository: `https://github.com/JustineDevs/roblox-ai-os`
-- Einstieg: [../getting-started.html](../getting-started.html)
+- Einstieg: [../site/getting-started.html](../site/getting-started.html)
 - Skills-Referenz: [../skills.html](../skills.html)
 - Mitwirkenden-Wiki: [../wiki/Home.md](../wiki/Home.md)
 - Roadmap: [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - Architektur: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Mitwirken: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- Integrationen: [../integrations.html](../integrations.html)
+- Integrationen: [../site/integrations.html](../site/integrations.html)
 - Kanonische README: [../../README.md](../../README.md)
 
 ## Kanonischer Creator-Workflow

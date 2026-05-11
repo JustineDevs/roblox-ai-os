@@ -49,7 +49,7 @@ Current code recognizes these top-level `.rcs-config.json` keys:
 - `reply` supports `enabled`, `authorizedDiscordUserIds`, `pollIntervalMs`, `rateLimitPerMinute`, `maxMessageLength`, and `includePrefix`.
 - `notifications.openclaw` supports `enabled`, `gateways`, and `hooks`. Gateway entries are HTTP (`type`, `url`, `headers`, `method`, `timeout`) or command (`type`, `command`, `timeout`). Hook entries use `gateway`, `instruction`, and `enabled`.
 
-Use [`docs/openclaw-integration.md`](../openclaw-integration.md) for full notification/OpenClaw examples. Keep credentials in environment variables where possible.
+Use [`docs/integrations/openclaw-integration.md`](../integrations/openclaw-integration.md) for full notification/OpenClaw examples. Keep credentials in environment variables where possible.
 
 ## Supported model/env keys
 
@@ -252,7 +252,7 @@ If behavior does not match your config, first confirm whether you are in user or
 
 ## Related docs and source surfaces
 
-- Notification and OpenClaw config: [`docs/openclaw-integration.md`](../openclaw-integration.md)
+- Notification and OpenClaw config: [`docs/integrations/openclaw-integration.md`](../integrations/openclaw-integration.md)
 - Provider abstraction: [`docs/reference/llm-provider-abstraction.md`](./llm-provider-abstraction.md)
 - Project wiki config: [`docs/reference/project-wiki.md`](./project-wiki.md)
 - Model routing source: `src/config/models.ts`

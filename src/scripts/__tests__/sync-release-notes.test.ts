@@ -28,19 +28,19 @@ describe('sync-release-notes', () => {
   it('creates a versioned release-notes file from the template when missing', async () => {
     const root = await mkdtemp(join(tmpdir(), 'rcs-sync-release-notes-'));
     try {
-      await mkdir(join(root, 'docs'), { recursive: true });
-      await writeFile(join(root, 'docs', 'release-notes-template.md'), TEMPLATE);
+      await mkdir(join(root, 'docs', 'release'), { recursive: true });
+      await writeFile(join(root, 'docs', 'release', 'release-notes-template.md'), TEMPLATE);
 
       const result = syncReleaseNotes({
         version: '0.2.0',
         date: '2026-05-11',
-        templatePath: 'docs/release-notes-template.md',
-        outPath: 'docs/release-notes-v0.2.0.md',
+        templatePath: 'docs/release/release-notes-template.md',
+        outPath: 'docs/release/release-notes-v0.2.0.md',
         check: false,
       }, root);
 
       assert.equal(result.changed, true);
-      const output = await readFile(join(root, 'docs', 'release-notes-v0.2.0.md'), 'utf-8');
+      const output = await readFile(join(root, 'docs', 'release', 'release-notes-v0.2.0.md'), 'utf-8');
       assert.match(output, /Release Notes v0\.2\.0/);
       assert.match(output, /@jstn-sdk\/rcs@0\.2\.0/);
       assert.match(output, /2026-05-11/);
@@ -52,10 +52,10 @@ describe('sync-release-notes', () => {
   it('updates only the managed block while preserving handwritten body sections', async () => {
     const root = await mkdtemp(join(tmpdir(), 'rcs-sync-release-notes-update-'));
     try {
-      await mkdir(join(root, 'docs'), { recursive: true });
-      await writeFile(join(root, 'docs', 'release-notes-template.md'), TEMPLATE);
+      await mkdir(join(root, 'docs', 'release'), { recursive: true });
+      await writeFile(join(root, 'docs', 'release', 'release-notes-template.md'), TEMPLATE);
       await writeFile(
-        join(root, 'docs', 'release-notes-v0.2.0.md'),
+        join(root, 'docs', 'release', 'release-notes-v0.2.0.md'),
         `<!-- RCS:RELEASE-NOTES:START -->
 # Release Notes v0.1.0
 <!-- RCS:RELEASE-NOTES:END -->
@@ -69,13 +69,13 @@ Keep this handwritten summary.
       const result = syncReleaseNotes({
         version: '0.2.0',
         date: '2026-05-11',
-        templatePath: 'docs/release-notes-template.md',
-        outPath: 'docs/release-notes-v0.2.0.md',
+        templatePath: 'docs/release/release-notes-template.md',
+        outPath: 'docs/release/release-notes-v0.2.0.md',
         check: false,
       }, root);
 
       assert.equal(result.changed, true);
-      const output = await readFile(join(root, 'docs', 'release-notes-v0.2.0.md'), 'utf-8');
+      const output = await readFile(join(root, 'docs', 'release', 'release-notes-v0.2.0.md'), 'utf-8');
       assert.match(output, /Release Notes v0\.2\.0/);
       assert.match(output, /Keep this handwritten summary\./);
     } finally {
@@ -86,10 +86,10 @@ Keep this handwritten summary.
   it('fails in check mode when the versioned release note file is stale', async () => {
     const root = await mkdtemp(join(tmpdir(), 'rcs-sync-release-notes-check-'));
     try {
-      await mkdir(join(root, 'docs'), { recursive: true });
-      await writeFile(join(root, 'docs', 'release-notes-template.md'), TEMPLATE);
+      await mkdir(join(root, 'docs', 'release'), { recursive: true });
+      await writeFile(join(root, 'docs', 'release', 'release-notes-template.md'), TEMPLATE);
       await writeFile(
-        join(root, 'docs', 'release-notes-v0.2.0.md'),
+        join(root, 'docs', 'release', 'release-notes-v0.2.0.md'),
         `<!-- RCS:RELEASE-NOTES:START -->
 # Release Notes v0.1.0
 <!-- RCS:RELEASE-NOTES:END -->
@@ -100,8 +100,8 @@ Keep this handwritten summary.
         () => syncReleaseNotes({
           version: '0.2.0',
           date: '2026-05-11',
-          templatePath: 'docs/release-notes-template.md',
-          outPath: 'docs/release-notes-v0.2.0.md',
+          templatePath: 'docs/release/release-notes-template.md',
+          outPath: 'docs/release/release-notes-v0.2.0.md',
           check: true,
         }, root),
         /release_notes_sync_out_of_date:stale/,

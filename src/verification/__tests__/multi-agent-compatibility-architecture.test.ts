@@ -37,8 +37,8 @@ describe('multi-agent compatibility architecture', () => {
 
   it('keeps public docs linked to the architecture reference', () => {
     const readme = read('README.md');
-    const docsIndex = read('docs/index.html');
-    const agentsDoc = read('docs/agents.html');
+    const docsIndex = read('docs/site/index.html');
+    const agentsDoc = read('docs/site/agents.html');
 
     assert.match(readme, /Multi-agent compatibility architecture/i);
     assert.match(docsIndex, /multi-agent-compatibility-architecture\.md/i);

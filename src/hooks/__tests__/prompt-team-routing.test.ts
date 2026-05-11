@@ -50,14 +50,14 @@ for (const surface of listTrackedAgentSurfaces()) {
 
 describe('orchestration prompt contract docs', () => {
   it('documents mode-driven orchestration sharpness', () => {
-    const contract = loadSurface('docs/prompt-guidance-contract.md');
+    const contract = loadSurface('docs/contracts/prompt-guidance-contract.md');
     assert.match(contract, /Mode selection comes first/i);
     assert.match(contract, /Leader and worker responsibilities stay separate/i);
     assert.match(contract, /Output contract stays tight/i);
   });
 
   it('maps root guidance schema to mode selection and leader-worker split', () => {
-    const schema = loadSurface('docs/guidance-schema.md');
+    const schema = loadSurface('docs/reference/guidance-schema.md');
     assert.match(schema, /mode selection \+ delegation\/model-routing\/skills\/team sections \+ leader\/worker split/i);
     assert.match(schema, /choose one mode clearly/i);
   });

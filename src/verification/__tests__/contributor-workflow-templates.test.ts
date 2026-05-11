@@ -71,14 +71,14 @@ describe('contributor workflow templates', () => {
     }
 
     const readme = read('README.md');
-    const docsIndex = read('docs/index.html');
+    const docsIndex = read('docs/site/index.html');
     const wikiHome = read('docs/wiki/Home.md');
     const roadmap = read('docs/wiki/Roadmap.md');
 
     assert.match(readme, /Contributor wiki/i);
     assert.match(readme, /Good first issues and labels/i);
     assert.match(docsIndex, /Community and Contributors/);
-    assert.match(docsIndex, /\.\/wiki\/Home\.md/);
+    assert.match(docsIndex, /\.\.\/wiki\/Home\.md/);
     assert.match(wikiHome, /This is the contributor-facing wiki source/i);
     assert.match(roadmap, /Worldbuilding and design production skills/i);
     assert.match(roadmap, /Roblox monetization planner/i);

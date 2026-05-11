@@ -278,12 +278,12 @@ Missing required sections.
     const root = await mkdtemp(join(tmpdir(), 'rcs-generate-release-body-auto-template-'));
     try {
       await writeFile(join(root, 'RELEASE_BODY.md'), TEMPLATE);
-      await mkdir(join(root, 'docs'), { recursive: true });
-      await writeFile(join(root, 'docs', 'release-notes-v0.13.1.md'), TEMPLATE);
+      await mkdir(join(root, 'docs', 'release'), { recursive: true });
+      await writeFile(join(root, 'docs', 'release', 'release-notes-v0.13.1.md'), TEMPLATE);
 
       assert.equal(
         resolveReleaseTemplatePath(root, 'auto', 'v0.13.1'),
-        join(root, 'docs', 'release-notes-v0.13.1.md'),
+        join(root, 'docs', 'release', 'release-notes-v0.13.1.md'),
       );
       assert.equal(
         resolveReleaseTemplatePath(root, 'auto', 'v9.9.9'),

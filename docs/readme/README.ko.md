@@ -5,13 +5,13 @@
 
 - 패키지: `@jstn-sdk/rcs`
 - 저장소: `https://github.com/JustineDevs/roblox-ai-os`
-- 시작 가이드: [../getting-started.html](../getting-started.html)
+- 시작 가이드: [../site/getting-started.html](../site/getting-started.html)
 - 스킬 참고서: [../skills.html](../skills.html)
 - 기여자 위키: [../wiki/Home.md](../wiki/Home.md)
 - 로드맵: [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - 아키텍처: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - 기여 가이드: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- 통합 문서: [../integrations.html](../integrations.html)
+- 통합 문서: [../site/integrations.html](../site/integrations.html)
 - 정식 README: [../../README.md](../../README.md)
 
 ## 정식 크리에이터 워크플로우

@@ -26,7 +26,7 @@ describe("project wiki documentation contract", () => {
   });
 
   it("keeps native hooks documentation aligned with the wiki lifecycle split", () => {
-    const hooksDoc = loadSurface("docs/codex-native-hooks.md");
+    const hooksDoc = loadSurface("docs/guides/codex-native-hooks.md");
     assert.match(hooksDoc, /Storage.*`\.rcs\/wiki\/`/i);
     assert.match(hooksDoc, /SessionStart.*bounded wiki context/i);
     assert.match(hooksDoc, /SessionEnd.*runtime\/notify-path.*non-blocking/i);

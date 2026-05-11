@@ -1,17 +1,17 @@
-# OpenClaw Entegrasyon Kılavuzu (yerelleştirilmiş prompt ayarı)
+# Guia de integração OpenClaw (ajuste de prompts localizado)
 
-> [← Back to Docs Home](./index.html) · [Integrations Landing](./integrations.html)
+> [← Back to Docs Home](../site/index.html) · [Integrations Landing](../site/integrations.html)
 
 **Language Switcher:** [English](./openclaw-integration.md) | [한국어](./openclaw-integration.ko.md) | [日本語](./openclaw-integration.ja.md) | [简体中文](./openclaw-integration.zh.md) | [繁體中文](./openclaw-integration.zh-TW.md) | [Tiếng Việt](./openclaw-integration.vi.md) | [Español](./openclaw-integration.es.md) | [Português](./openclaw-integration.pt.md) | [Русский](./openclaw-integration.ru.md) | [Türkçe](./openclaw-integration.tr.md) | [Deutsch](./openclaw-integration.de.md) | [Français](./openclaw-integration.fr.md) | [Italiano](./openclaw-integration.it.md) | [Українська](./openclaw-integration.uk.md)
 
 
-Bu sayfa, İngilizce ana belgede yer alan **“Prompt tuning guide (concise + context-aware)”** bölümünün yerelleştirilmiş sürümüdür.
+Esta página localiza a seção **“Prompt tuning guide (concise + context-aware)”** da documentação principal em inglês.
 
-Tam entegrasyon dokümantasyonu (gateway, hook, doğrulama) için [English guide](./openclaw-integration.md) sayfasına bakın.
+Para a documentação completa de integração (gateways, hooks, verificação), veja o [English guide](./openclaw-integration.md).
 
-## Prompt ayarı (kısa + bağlam farkındalıklı)
+## Ajuste de prompts (conciso + sensível ao contexto)
 
-## Prompt şablonları nerede düzenlenir
+## Onde editar os templates de prompt
 
 - `notifications.openclaw.hooks["session-start"].instruction`
 - `notifications.openclaw.hooks["session-idle"].instruction`
@@ -19,18 +19,18 @@ Tam entegrasyon dokümantasyonu (gateway, hook, doğrulama) için [English guide
 - `notifications.openclaw.hooks["stop"].instruction`
 - `notifications.openclaw.hooks["session-end"].instruction`
 
-## Önerilen bağlam tokenları
+## Tokens de contexto recomendados
 
-- Her zaman: `{{sessionId}}`, `{{tmuxSession}}`
-- Olaya göre: `{{projectName}}`, `{{question}}`, `{{reason}}`
+- Sempre incluir: `{{sessionId}}`, `{{tmuxSession}}`
+- Conforme evento: `{{projectName}}`, `{{question}}`, `{{reason}}`
 
-## Ayrıntı (verbosity) stratejisi
+## Estratégia de verbosidade
 
-- `minimal`: çok kısa bildirimler
-- `session`: kısa operasyonel bağlam (önerilir)
-- `verbose`: daha fazla durum/aksiyon/risk bağlamı
+- `minimal`: avisos muito curtos
+- `session`: contexto operacional conciso (recomendado)
+- `verbose`: mais contexto de status/ação/risco
 
-## Hızlı güncelleme komutu (jq)
+## Comando rápido de atualização (jq)
 
 ```bash
 CONFIG_FILE="$HOME/.codex/.rcs-config.json"

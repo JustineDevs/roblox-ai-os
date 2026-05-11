@@ -5,13 +5,13 @@
 
 - 套件：`@jstn-sdk/rcs`
 - 儲存庫：`https://github.com/JustineDevs/roblox-ai-os`
-- 快速開始： [../getting-started.html](../getting-started.html)
+- 快速開始： [../site/getting-started.html](../site/getting-started.html)
 - Skills 參考： [../skills.html](../skills.html)
 - 貢獻者 Wiki： [../wiki/Home.md](../wiki/Home.md)
 - 路線圖： [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - 架構： [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - 貢獻指南： [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- 整合： [../integrations.html](../integrations.html)
+- 整合： [../site/integrations.html](../site/integrations.html)
 - 正規 README： [../../README.md](../../README.md)
 
 ## 正規創作者工作流程

@@ -5,13 +5,13 @@
 
 - Пакет: `@jstn-sdk/rcs`
 - Репозиторій: `https://github.com/JustineDevs/roblox-ai-os`
-- Початок роботи: [../getting-started.html](../getting-started.html)
+- Початок роботи: [../site/getting-started.html](../site/getting-started.html)
 - Довідник skills: [../skills.html](../skills.html)
 - Вікі для контриб'юторів: [../wiki/Home.md](../wiki/Home.md)
 - Дорожня карта: [../wiki/Roadmap.md](../wiki/Roadmap.md)
 - Архітектура: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
 - Посібник з внеску: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- Інтеграції: [../integrations.html](../integrations.html)
+- Інтеграції: [../site/integrations.html](../site/integrations.html)
 - Канонічний README: [../../README.md](../../README.md)
 
 ## Канонічний workflow для creator

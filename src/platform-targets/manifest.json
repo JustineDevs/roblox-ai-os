@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "manifestVersion": "2026.05.12.2",
+  "manifestVersion": "2026.05.12.3",
   "targets": [
     {
       "id": "codex-native",
@@ -126,7 +126,7 @@
         "docs/reference/agentic-platform-compatibility.md"
       ],
       "deliveryArtifacts": [
-        "docs/integrations.html",
+        "docs/site/integrations.html",
         "docs/reference/agentic-platform-compatibility.md",
         "docs/reference/mcp-capable-ide-presets.md"
       ],
@@ -149,7 +149,7 @@
       ],
       "deliveryArtifacts": [
         "src/adapt/openclaw.ts",
-        "docs/openclaw-integration.md",
+        "docs/integrations/openclaw-integration.md",
         "docs/reference/agentic-platform-compatibility.md"
       ],
       "notes": [

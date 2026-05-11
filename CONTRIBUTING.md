@@ -81,7 +81,7 @@ unset RCS_TEAM_WORKER RCS_TEAM_STATE_ROOT RCS_TEAM_LEADER_CWD RCS_TEAM_WORKER_CL
 
 ### Prompt guidance contract
 
-Before changing `AGENTS.md`, `templates/AGENTS.md`, `prompts/*.md`, or the generated `developer_instructions` text in `src/config/generator.ts`, read [`docs/prompt-guidance-contract.md`](./docs/prompt-guidance-contract.md).
+Before changing `AGENTS.md`, `templates/AGENTS.md`, `prompts/*.md`, or the generated `developer_instructions` text in `src/config/generator.ts`, read [`docs/contracts/prompt-guidance-contract.md`](./docs/contracts/prompt-guidance-contract.md).
 
 That document defines the GPT-5.4 behavior contract contributors should preserve across prompt surfaces and explains how it differs from posture-aware routing metadata.
 
@@ -104,14 +104,14 @@ Current mapped refresh examples:
 
 - Native hook behavior (`src/scripts/codex-native-hook.ts`,
   `src/scripts/codex-native-pre-post.ts`, `src/config/codex-hooks.ts`, and
-  related native-hook tests) should refresh `docs/codex-native-hooks.md` or a
+  related native-hook tests) should refresh `docs/guides/codex-native-hooks.md` or a
   native-hook-scoped planning/spec file.
 - Document-refresh enforcer behavior (`src/document-refresh/**`) should refresh
-  `docs/codex-native-hooks.md` or a document-refresh-scoped planning/spec file.
+  `docs/guides/codex-native-hooks.md` or a document-refresh-scoped planning/spec file.
 - CLI/operator behavior (`src/cli/**`) should refresh `README.md`,
-  `docs/getting-started.html`, or a relevant planning/spec file.
+  `docs/site/getting-started.html`, or a relevant planning/spec file.
 - Prompt-guidance behavior (`src/hooks/**` rule-owned guidance surfaces) should
-  refresh `docs/prompt-guidance-contract.md` or a relevant planning/spec file.
+  refresh `docs/contracts/prompt-guidance-contract.md` or a relevant planning/spec file.
 
 Commit-path warnings are Bash `git commit` scoped and read only the staged diff.
 Because `.rcs/` is gitignored, `.rcs/plans/**` and `.rcs/specs/**` count for
