@@ -217,7 +217,7 @@ RCS should be easy to understand, run, and improve.
 Contributor entry points:
 - [Contributor wiki](./docs/wiki/Home.md)
 - [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
-- [Roadmap](./docs/wiki/ROADMAP.md)
+- [Roadmap](./ROADMAP.md)
 - [Contributing](./CONTRIBUTING.md)
 
 Maintainer standards:
@@ -490,7 +490,7 @@ If this happens, try:
 - [Demo guide](./DEMO.md)
 - [Wiki feature](./docs/wiki/wiki-feature.md)
 - [Contributor wiki home](./docs/wiki/Home.md)
-- [Contributor roadmap](./docs/wiki/ROADMAP.md)
+- [Contributor roadmap](./ROADMAP.md)
 - [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
 - [Agent catalog](./docs/site/agents.html)
 - [Multi-agent compatibility architecture](./docs/reference/multi-agent-compatibility-architecture.md)
