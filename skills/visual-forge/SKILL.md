@@ -27,6 +27,7 @@ This is a workflow-composition skill. It composes existing skills and must not a
 
 - The user describes a desired creator HUD, menu, storefront, launcher page, or companion UI and wants implementation, not just design advice.
 - The user provides a live URL and wants a visual implementation or clone through measured Visual Verdict iteration.
+- This skill owns the migrated `$web-clone` use case for visual implementation work.
 - A generated raster mockup/reference image would make the target clearer.
 - The task needs pixel-level visual iteration with a pass/fail threshold.
 - The final result should leave reusable design tokens/components, not only a one-off screenshot match.
@@ -49,11 +50,12 @@ Before stack-specific choices, inspect local evidence:
 - screenshot/test tooling,
 - existing HUD/menu/panel components that should be reused.
 
-Do not hardcode React web assumptions, Tailwind, router concepts, or website-specific stacks unless the repository evidence actually supports an off-Studio surface.
+Do not hardcode React, Vue, Tailwind, router concepts, or website-specific stacks unless the repository evidence actually supports an off-Studio surface.
 
 ### 2. Establish the visual reference
 
 If external inspiration is used, capture or document that reference inside the visual-delivery artifacts and carry forward the relevant viewport, content-state, and interaction constraints. Do not invoke `$web-clone`; that standalone skill is hard-deprecated.
+Do not route new URL-driven website cloning work to `$web-clone`.
 
 Live URL reference artifacts must include:
 - source URL and permission/scope note,

@@ -30,6 +30,7 @@ If you want this running locally, do the upstream setup first:
 Use those upstream instructions for:
 - installing the Studio plugin
 - enabling/activating the Studio-side MCP lane
+- enabling **Allow HTTP Requests** in Roblox Studio when the upstream flow requires it
 - confirming the plugin or Studio MCP server shows connected
 - client-specific quick-connect or platform-specific path details
 
@@ -105,7 +106,7 @@ RCS does **not** auto-install or silently auto-enable this third-party MCP serve
 
 Reasons:
 - it depends on a separate Studio plugin
-- it needs HTTP enabled in Studio
+- it needs **Allow HTTP Requests** or the equivalent Studio-side HTTP setting enabled
 - it expands the live write surface into an open Studio session
 - creators should opt into that trust boundary deliberately
 
