@@ -74,10 +74,12 @@
     "crates/",
     "docs/",
     "skills/",
+    "!skills/.agents/**",
     "prompts/",
     "templates/",
     "!corpora/security/roblox-unsafe-script-corpus/**",
     "src/scripts/",
+    "!src/scripts/**/__tests__/**",
     "plugins/",
     ".agents/plugins/marketplace.json"
   ],

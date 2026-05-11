@@ -50,11 +50,11 @@ dependencies = [
 
 [[package]]
 name = "rcs-explore-harness"
-version = "0.1.0"
+version = "0.1.9"
 
 [[package]]
 name = "rcs-mux"
-version = "0.1.0"
+version = "0.1.9"
 dependencies = [
  "serde",
  "serde_json",
@@ -62,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "rcs-runtime"
-version = "0.1.0"
+version = "0.1.9"
 dependencies = [
  "rcs-mux",
  "rcs-runtime-core",
@@ -71,7 +71,7 @@ dependencies = [
 
 [[package]]
 name = "rcs-runtime-core"
-version = "0.1.0"
+version = "0.1.9"
 dependencies = [
  "fs2",
  "serde",
@@ -80,7 +80,7 @@ dependencies = [
 
 [[package]]
 name = "rcs-sparkshell"
-version = "0.1.0"
+version = "0.1.9"
 dependencies = [
  "rcs-mux",
 ]

@@ -1,9 +1,10 @@
-roblox-ai-os-creator-skills doctor
+RCS doctor
 ==================
 
 Resolved setup scope: user
 
   [CODEX_CLI_STATUS]
+Reinstall with: npm install -g @openai/codex@latest
   [OK] Node.js: <NODE_VERSION>
   [EXPLORE_HARNESS_STATUS]
   [OK] Codex home: <CODEX_HOME>
