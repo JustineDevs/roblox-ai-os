@@ -1,41 +1,41 @@
 # Roblox Creator Skills (RCS)
 
-This localized README is intentionally condensed for the strict v0.1.0 ship pass.
-Use the canonical checked-in docs below for the current product surface.
+Αυτό το τοπικοποιημένο README είναι σκόπιμα σύντομο.
+Χρησιμοποίησε τα κανονικά έγγραφα παρακάτω για την τρέχουσα επιφάνεια του προϊόντος.
 
-- Package: `@jstn-sdk/rcs`
-- Repository: `https://github.com/JustineDevs/roblox-ai-os`
-- Getting started: [../getting-started.html](../getting-started.html)
-- Skills reference: [../skills.html](../skills.html)
-- Integrations: [../integrations.html](../integrations.html)
-- Canonical README: [../../README.md](../../README.md)
+- Πακέτο: `@jstn-sdk/rcs`
+- Αποθετήριο: `https://github.com/JustineDevs/roblox-ai-os`
+- Ξεκίνημα: [../getting-started.html](../getting-started.html)
+- Αναφορά skills: [../skills.html](../skills.html)
+- Ενσωματώσεις: [../integrations.html](../integrations.html)
+- Κανονικό README: [../../README.md](../../README.md)
 
-## Canonical Creator Workflow
+## Κανονική ροή creator
 
 `$brief` -> `$blueprint` -> `$forge` / `$crew` -> `$autoforge`
 
-For Roblox implementation work, the mandatory pre-action gate applies before any code generation:
-- gather references
-- build understanding
-- standardize terms
-- design modular file tree architecture
-- only then implement
+Για εργασία υλοποίησης στο Roblox ισχύει το υποχρεωτικό pre-action gate πριν από οποιαδήποτε παραγωγή κώδικα:
+- συγκέντρωσε αναφορές
+- χτίσε κατανόηση
+- τυποποίησε την ορολογία
+- σχεδίασε αρθρωτή αρχιτεκτονική δέντρου αρχείων
+- και μόνο μετά υλοποίησε
 
-See:
+Δες:
 - [../../README.md](../../README.md)
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
-## Ownership
+## Ιδιοκτησία
 
-RCS is owned and maintained by [JustineDevs](https://github.com/JustineDevs) and [@JustineDevs](https://github.com/JustineDevs) for Roblox creator workflows.
+Το RCS ανήκει και συντηρείται από τους [JustineDevs](https://github.com/JustineDevs) και [@JustineDevs](https://github.com/JustineDevs) για Roblox creator workflows.
 
-## Acknowledgements
+## Ευχαριστίες
 
 - [OpenAI Codex CLI](https://github.com/openai/codex)
 - [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex)
 - [robloxstudio-mcp](https://github.com/boshyxd/robloxstudio-mcp)
 
-## License
+## Άδεια
 
 [MIT](https://opensource.org/licenses/MIT)

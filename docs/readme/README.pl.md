@@ -1,41 +1,41 @@
 # Roblox Creator Skills (RCS)
 
-This localized README is intentionally condensed for the strict v0.1.0 ship pass.
-Use the canonical checked-in docs below for the current product surface.
+To zlokalizowane README jest celowo zwięzłe.
+Aktualną powierzchnię produktu opisują kanoniczne dokumenty podlinkowane poniżej.
 
-- Package: `@jstn-sdk/rcs`
-- Repository: `https://github.com/JustineDevs/roblox-ai-os`
-- Getting started: [../getting-started.html](../getting-started.html)
-- Skills reference: [../skills.html](../skills.html)
-- Integrations: [../integrations.html](../integrations.html)
-- Canonical README: [../../README.md](../../README.md)
+- Pakiet: `@jstn-sdk/rcs`
+- Repozytorium: `https://github.com/JustineDevs/roblox-ai-os`
+- Pierwsze kroki: [../getting-started.html](../getting-started.html)
+- Dokumentacja skills: [../skills.html](../skills.html)
+- Integracje: [../integrations.html](../integrations.html)
+- Kanoniczne README: [../../README.md](../../README.md)
 
-## Canonical Creator Workflow
+## Kanoniczny workflow twórcy
 
 `$brief` -> `$blueprint` -> `$forge` / `$crew` -> `$autoforge`
 
-For Roblox implementation work, the mandatory pre-action gate applies before any code generation:
-- gather references
-- build understanding
-- standardize terms
-- design modular file tree architecture
-- only then implement
+Dla prac implementacyjnych Roblox obowiązkowa bramka pre-action ma zastosowanie przed jakimkolwiek generowaniem kodu:
+- zbierz materiały referencyjne
+- zbuduj zrozumienie
+- ujednolić terminologię
+- zaprojektuj modułową architekturę drzewa plików
+- dopiero potem wdrażaj
 
-See:
+Zobacz:
 - [../../README.md](../../README.md)
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
-## Ownership
+## Własność
 
-RCS is owned and maintained by [JustineDevs](https://github.com/JustineDevs) and [@JustineDevs](https://github.com/JustineDevs) for Roblox creator workflows.
+RCS należy do [JustineDevs](https://github.com/JustineDevs) i [@JustineDevs](https://github.com/JustineDevs) oraz jest przez nich utrzymywany dla workflow twórców Roblox.
 
-## Acknowledgements
+## Podziękowania
 
 - [OpenAI Codex CLI](https://github.com/openai/codex)
 - [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex)
 - [robloxstudio-mcp](https://github.com/boshyxd/robloxstudio-mcp)
 
-## License
+## Licencja
 
 [MIT](https://opensource.org/licenses/MIT)

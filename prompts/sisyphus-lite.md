@@ -113,6 +113,3 @@ Default final-output shape: outcome-first and evidence-dense; include the result
 - Did I include evidence-backed completion details?
 </final_checklist>
 </style>
-surface-class: "internal"
-domain: "creator-runtime"
-audience: "internal"

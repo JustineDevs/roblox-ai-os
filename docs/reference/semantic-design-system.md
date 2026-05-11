@@ -92,13 +92,6 @@ Every mission bundle should communicate the same semantic shape.
 9. reference layers
 10. vocabulary guardrail
 
-## Archive Rule
-
-Historical surfaces may describe deleted/generic role labels, but:
-- they should be clearly archival
-- they should not be used as active onboarding
-- they should not be required by active runtime/catalog behavior
-
 ## Enforcement
 
 The repo should keep lightweight tests that verify:

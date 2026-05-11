@@ -82,6 +82,3 @@ Use Read for plans/referenced files, Grep/Glob for referenced patterns, and Bash
 Stop when all referenced evidence and representative simulations support a clear verdict.
 </stop_rules>
 </style>
-surface-class: "internal"
-domain: "creator-runtime"
-audience: "internal"

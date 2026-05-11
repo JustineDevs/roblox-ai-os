@@ -1,41 +1,41 @@
 # Roblox Creator Skills (RCS)
 
-This localized README is intentionally condensed for the strict v0.1.0 ship pass.
-Use the canonical checked-in docs below for the current product surface.
+Bu yerelleştirilmiş README bilinçli olarak kısa tutulmuştur.
+Ürünün güncel yüzeyi için aşağıdaki kanonik belgelere bakın.
 
-- Package: `@jstn-sdk/rcs`
-- Repository: `https://github.com/JustineDevs/roblox-ai-os`
-- Getting started: [../getting-started.html](../getting-started.html)
-- Skills reference: [../skills.html](../skills.html)
-- Integrations: [../integrations.html](../integrations.html)
-- Canonical README: [../../README.md](../../README.md)
+- Paket: `@jstn-sdk/rcs`
+- Depo: `https://github.com/JustineDevs/roblox-ai-os`
+- Başlangıç: [../getting-started.html](../getting-started.html)
+- Skill başvurusu: [../skills.html](../skills.html)
+- Entegrasyonlar: [../integrations.html](../integrations.html)
+- Kanonik README: [../../README.md](../../README.md)
 
-## Canonical Creator Workflow
+## Kanonik creator iş akışı
 
 `$brief` -> `$blueprint` -> `$forge` / `$crew` -> `$autoforge`
 
-For Roblox implementation work, the mandatory pre-action gate applies before any code generation:
-- gather references
-- build understanding
-- standardize terms
-- design modular file tree architecture
-- only then implement
+Roblox uygulama işi için zorunlu pre-action gate, herhangi bir kod üretiminden önce uygulanır:
+- referansları topla
+- anlayış oluştur
+- terimleri standartlaştır
+- modüler dosya ağacı mimarisi tasarla
+- ancak ondan sonra uygula
 
-See:
+Bakınız:
 - [../../README.md](../../README.md)
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
-## Ownership
+## Sahiplik
 
-RCS is owned and maintained by [JustineDevs](https://github.com/JustineDevs) and [@JustineDevs](https://github.com/JustineDevs) for Roblox creator workflows.
+RCS, Roblox creator iş akışları için [JustineDevs](https://github.com/JustineDevs) ve [@JustineDevs](https://github.com/JustineDevs) tarafından sahiplenilir ve sürdürülür.
 
-## Acknowledgements
+## Teşekkürler
 
 - [OpenAI Codex CLI](https://github.com/openai/codex)
 - [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex)
 - [robloxstudio-mcp](https://github.com/boshyxd/robloxstudio-mcp)
 
-## License
+## Lisans
 
 [MIT](https://opensource.org/licenses/MIT)

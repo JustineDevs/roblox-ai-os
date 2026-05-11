@@ -21,6 +21,19 @@ describe('prompt guidance wave two contract', () => {
     assert.match(loadSurface('prompts/explore.md'), /answer is grounded/i);
   });
 
+  it('key prompts declare Roblox-native primary framing in the core identity/goal instead of only in trailing checklists', () => {
+    assert.match(loadSurface('prompts/architect.md'), /primary frame is Roblox-native system design/i);
+    assert.match(loadSurface('prompts/code-reviewer.md'), /primary frame is Roblox-specific/i);
+    assert.match(loadSurface('prompts/debugger.md'), /primary debugging frame is Roblox-native/i);
+    assert.match(loadSurface('prompts/executor.md'), /Default implementation frame for active product work/i);
+    assert.match(loadSurface('prompts/planner.md'), /primary planning frame is Roblox-native/i);
+    assert.match(loadSurface('prompts/security-reviewer.md'), /primary security frame is Roblox-native/i);
+    assert.match(loadSurface('prompts/test-engineer.md'), /primary test frame is Roblox-native/i);
+    assert.match(loadSurface('prompts/verifier.md'), /primary verification frame is Roblox-native/i);
+    assert.match(loadSurface('prompts/vision.md'), /primary visual-analysis frame.*Roblox-native/i);
+    assert.match(loadSurface('prompts/writer.md'), /primary documentation frame is Roblox-native/i);
+  });
+
   it('researcher encodes a docs-first technical research workflow', () => {
     const researcher = loadSurface('prompts/researcher.md');
     assert.match(researcher, /classify the request/i);

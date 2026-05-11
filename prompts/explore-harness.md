@@ -66,6 +66,3 @@ Use this shape:
 ## Next steps
 - optional follow-up or `Ready to proceed`
 </output_contract>
-surface-class: "internal"
-domain: "creator-runtime"
-audience: "internal"

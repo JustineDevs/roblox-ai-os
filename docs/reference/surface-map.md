@@ -114,18 +114,9 @@ Sources:
 | `prompts/writer.md` | `prompt` | `creator-runtime` | `internal` | writer |
 | `skills/worker/SKILL.md` | `skill` | `creator-runtime` | `internal` | worker |
 
-## Historical Surfaces
-
-| Path | Type | Domain | Audience | Surface |
-| --- | --- | --- | --- | --- |
-| `skills/forge-init/SKILL.md` | `skill` | `archive` | `archive` | forge-init |
-| `skills/swarm/SKILL.md` | `skill` | `archive` | `archive` | swarm |
-| `skills/web-clone/SKILL.md` | `skill` | `archive` | `archive` | web-clone |
-
 ## Additional Repo Lanes
 
 - `AGENTS.md` and `templates/AGENTS.md` remain the orchestration brain and guidance authority.
-- `docs/archive/` is the historical lane; archive content may describe removed surfaces but must not act as active onboarding.
 - `src/catalog/manifest.json`, `templates/catalog-manifest.json`, and `src/catalog/generated/public-catalog.json` are the catalog source/generated contract lane.
 - `dist/` is generated runtime output and should reflect the taxonomy, not redefine it.
 

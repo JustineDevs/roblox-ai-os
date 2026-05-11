@@ -1,41 +1,41 @@
 # Roblox Creator Skills (RCS)
 
-This localized README is intentionally condensed for the strict v0.1.0 ship pass.
-Use the canonical checked-in docs below for the current product surface.
+この翻訳版 README は意図的に簡潔にしています。
+現在の製品面については、下記の正規ドキュメントを参照してください。
 
-- Package: `@jstn-sdk/rcs`
-- Repository: `https://github.com/JustineDevs/roblox-ai-os`
-- Getting started: [../getting-started.html](../getting-started.html)
-- Skills reference: [../skills.html](../skills.html)
-- Integrations: [../integrations.html](../integrations.html)
-- Canonical README: [../../README.md](../../README.md)
+- パッケージ: `@jstn-sdk/rcs`
+- リポジトリ: `https://github.com/JustineDevs/roblox-ai-os`
+- はじめに: [../getting-started.html](../getting-started.html)
+- Skills リファレンス: [../skills.html](../skills.html)
+- 連携: [../integrations.html](../integrations.html)
+- 正規 README: [../../README.md](../../README.md)
 
-## Canonical Creator Workflow
+## 正規のクリエイターワークフロー
 
 `$brief` -> `$blueprint` -> `$forge` / `$crew` -> `$autoforge`
 
-For Roblox implementation work, the mandatory pre-action gate applies before any code generation:
-- gather references
-- build understanding
-- standardize terms
-- design modular file tree architecture
-- only then implement
+Roblox 実装作業では、コード生成の前に必須の pre-action gate を通す必要があります。
+- 参照資料を集める
+- 理解を構築する
+- 用語を標準化する
+- モジュール化されたファイルツリー設計を行う
+- その後に実装する
 
-See:
+参照:
 - [../../README.md](../../README.md)
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
 
-## Ownership
+## 所有者
 
-RCS is owned and maintained by [JustineDevs](https://github.com/JustineDevs) and [@JustineDevs](https://github.com/JustineDevs) for Roblox creator workflows.
+RCS は [JustineDevs](https://github.com/JustineDevs) と [@JustineDevs](https://github.com/JustineDevs) によって所有・保守されており、Roblox クリエイターワークフロー向けに提供されています。
 
-## Acknowledgements
+## 謝辞
 
 - [OpenAI Codex CLI](https://github.com/openai/codex)
 - [oh-my-codex](https://github.com/Yeachan-Heo/oh-my-codex)
 - [robloxstudio-mcp](https://github.com/boshyxd/robloxstudio-mcp)
 
-## License
+## ライセンス
 
 [MIT](https://opensource.org/licenses/MIT)

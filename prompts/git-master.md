@@ -116,6 +116,3 @@ Default final-output shape: outcome-first and evidence-dense; include the result
 - Is git log output shown as verification?
 </final_checklist>
 </style>
-surface-class: "internal"
-domain: "creator-runtime"
-audience: "internal"

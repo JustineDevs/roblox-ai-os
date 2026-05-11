@@ -102,5 +102,4 @@ Use these classifications consistently:
 - Active prompts/skills/missions should prefer this vocabulary.
 - Active prompts/skills/missions should expose taxonomy frontmatter so generated surface maps and validators can classify them consistently.
 - Generated surface-map output should stay synced with the active taxonomy layer.
-- Historical docs may mention removed or generic terms only as archive/reference context.
 - Tests may mention removed terms in negative assertions, migration guards, or compatibility fixtures, but not as active surface recommendations.

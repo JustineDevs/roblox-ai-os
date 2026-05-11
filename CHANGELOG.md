@@ -6,6 +6,24 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-05-11
+
+Documentation and prompt-surface hardening release for **`@jstn-sdk/rcs@0.1.7`**. This ship line removes the remaining archive lane, makes the demo guide fully Roblox-first, upgrades the internal prompt roles from “generic first, Roblox later” to Roblox-native primary framing, and replaces the fake localized README stubs with real localized bodies.
+
+### Summary
+
+- **Archive removed** — `docs/archive/` and the remaining historical readiness/report/issue/benchmark collateral are no longer part of the repository surface.
+- **Roblox-first demos** — `DEMO.md` now demonstrates the creator workflow, Creator Labs, workspace standard, optional live Studio MCP compatibility, and advanced team runtime without generic REST/task-management examples.
+- **Prompt strictness** — key internal prompts now declare Roblox-native primary framing in their identity/goal sections, and malformed duplicated prompt-tail metadata was cleaned up.
+- **Real localized READMEs** — localized README variants now contain actual language-specific content instead of English placeholder stubs.
+
+### Verification (this release line)
+
+- `npm run build`
+- `node --test dist/hooks/__tests__/prompt-guidance-contract.test.js dist/hooks/__tests__/prompt-guidance-wave-two.test.js dist/hooks/__tests__/surface-taxonomy-contract.test.js`
+- `node --test dist/hooks/__tests__/semantic-system-contract.test.js dist/hooks/__tests__/surface-taxonomy-contract.test.js dist/verification/__tests__/roblox-workspace-standard.test.js dist/verification/__tests__/robloxstudio-mcp-compatibility.test.js`
+- `node dist/scripts/surface-taxonomy.js`
+
 ## [0.1.6] - 2026-05-11
 
 Release-automation follow-up for **`@jstn-sdk/rcs@0.1.6`**. This ship line adds blunt latest-version triggers, binds automated npm publishing to the guarded `npm-publish` GitHub Actions environment, and finishes ownership/acknowledgement consistency on README surfaces.
