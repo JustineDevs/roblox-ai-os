@@ -7,6 +7,7 @@ Status: quarantined security-only corpus for exploit-awareness, anti-pattern det
 This repo keeps a quarantined Roblox script corpus under:
 
 - `corpora/security/roblox-unsafe-script-corpus/`
+- Root overview of all corpora: [`corpora/README.md`](../../corpora/README.md)
 
 It is **not** a normal implementation template library.
 
