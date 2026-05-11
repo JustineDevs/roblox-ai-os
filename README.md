@@ -21,7 +21,7 @@ RCS is a Roblox Studio operating layer for [OpenAI Codex CLI](https://github.com
 
 **Package:** `@jstn-sdk/rcs`  
 **Repo:** `https://github.com/JustineDevs/roblox-ai-os`  
-**Docs:** [Getting Started](./docs/getting-started.html) · [Skills](./docs/skills.html) · [Agents](./docs/agents.html) · [Integrations](./docs/integrations.html) · [Notification Gateway and OpenClaw guide](./docs/openclaw-integration.md)
+**Docs:** [Getting Started](./docs/getting-started.html) · [Skills](./docs/skills.html) · [Agents](./docs/agents.html) · [Contributor wiki](./docs/wiki/Home.md) · [Integrations](./docs/integrations.html) · [Notification Gateway and OpenClaw guide](./docs/openclaw-integration.md)
 
 > [!WARNING]
 > Recommended default: macOS or Linux with Codex CLI.
@@ -195,6 +195,26 @@ RCS is probably not for you if you want:
 - a generic web or SaaS development framework
 - a beginner-friendly Roblox Studio teaching product
 
+## Contributor onramp
+
+RCS should be easy to understand, run, and improve.
+
+Contributor entry points:
+- [Contributor wiki](./docs/wiki/Home.md)
+- [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
+- [Roadmap](./docs/wiki/Roadmap.md)
+- [Contributing](./CONTRIBUTING.md)
+
+Maintainer standards:
+- label small, safe tasks with `good first issue` and broader open tasks with `help wanted`
+- keep issues granular enough to finish without deep repo archaeology
+- accept docs, localization, QA, wiki, triage, and release-note contributions as first-class work
+- keep review and response loops respectful, fast, and actionable
+- acknowledge contributors in release notes, docs, or acknowledgements when their work lands
+- follow an All Contributors-style mindset: documentation, design, translation, QA, and triage work count too
+
+The contributor wiki is a public project surface. It is **not** the same as the local runtime wiki under `.rcs/wiki/`.
+
 ## A simple mental model
 
 RCS does **not** replace Codex.
@@ -206,6 +226,17 @@ It adds a better working layer around it:
 - **`.rcs/`** stores plans, logs, memory, and runtime state
 
 Most users should think of RCS as **better task routing + better workflow + better runtime**, not as a command surface to operate manually all day.
+
+## Multi-agent compatibility core
+
+RCS uses a registry-driven multi-agent architecture, but in this repo the core is split across:
+- native role definitions in `src/agents/definitions.ts`
+- catalog/install policy in `src/agents/policy.ts` and `src/catalog/manifest.json`
+- native Codex TOML generation in `src/agents/native-config.ts`
+- external adapter targets in `src/adapt/*`
+
+If you are changing that layer, use the architecture reference instead of assuming an external `src/agents.ts` example applies here:
+- [Multi-agent compatibility architecture](./docs/reference/multi-agent-compatibility-architecture.md)
 
 ## Sharp positioning
 
@@ -441,7 +472,11 @@ If this happens, try:
 - [Getting Started](./docs/getting-started.html)
 - [Demo guide](./DEMO.md)
 - [Wiki feature](./docs/wiki-feature.md)
+- [Contributor wiki home](./docs/wiki/Home.md)
+- [Contributor roadmap](./docs/wiki/Roadmap.md)
+- [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
 - [Agent catalog](./docs/agents.html)
+- [Multi-agent compatibility architecture](./docs/reference/multi-agent-compatibility-architecture.md)
 - [Skills reference](./docs/skills.html)
 - [Codex native hook mapping](./docs/codex-native-hooks.md)
 - [Integrations](./docs/integrations.html)

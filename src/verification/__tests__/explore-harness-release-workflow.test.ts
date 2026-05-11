@@ -39,9 +39,24 @@ describe('native release workflow', () => {
     assert.match(workflow, /Smoke Verify Native Assets/);
     assert.match(workflow, /Smoke Test Packed Global Install/);
     assert.match(workflow, /Publish npm Package/);
+    assert.match(workflow, /Publish GitHub Package/);
+    assert.match(workflow, /Create GitHub Release/);
     assert.match(workflow, /needs:\s*\[smoke-packed-install\]/);
     assert.match(workflow, /publish-npm:\s*\n(?:.*\n)*?\s+environment:\s*npm-publish/m);
     assert.match(workflow, /npm publish --access public --provenance/);
+    assert.match(workflow, /packages:\s*write/);
+    assert.match(workflow, /create-github-release:[\s\S]*generate-release-body\.js --template RELEASE_BODY\.md --out RELEASE_BODY\.generated\.md/);
+    assert.match(workflow, /create-github-release:[\s\S]*softprops\/action-gh-release@v3/);
+    assert.match(workflow, /create-github-release:[\s\S]*append_body:\s*true/);
+    assert.match(workflow, /create-github-release:[\s\S]*generate_release_notes:\s*true/);
+    assert.match(workflow, /create-github-release:[\s\S]*draft:\s*false/);
+    assert.match(workflow, /create-github-release:[\s\S]*prerelease:\s*false/);
+    assert.match(workflow, /create-github-release:[\s\S]*make_latest:\s*true/);
+    assert.match(workflow, /publish-native-assets:[\s\S]*needs:\s*\[build-native,\s*create-github-release\]/);
+    assert.match(workflow, /publish-github-packages:[\s\S]*registry-url:\s*https:\/\/npm\.pkg\.github\.com/);
+    assert.match(workflow, /publish-github-packages:[\s\S]*scope:\s*"@justinedevs"/);
+    assert.match(workflow, /publish-github-packages:[\s\S]*publish-github-package\.js --dry-run/);
+    assert.match(workflow, /publish-github-packages:[\s\S]*publish-github-package\.js/);
     assert.doesNotMatch(workflow, /Older Linux Runtime Proof/);
     assert.doesNotMatch(workflow, /node:20-bullseye/);
     assert.doesNotMatch(workflow, /docker run --rm/);
@@ -54,11 +69,29 @@ describe('native release workflow', () => {
 
     assert.match(workflow, /verify-version-sync:[\s\S]*Verify version sync against workspace crates[\s\S]*node --input-type=module/);
     assert.match(workflow, /publish-native-assets:[\s\S]*npm run build[\s\S]*node dist\/scripts\/generate-native-release-manifest\.js/);
-    assert.match(workflow, /publish-native-assets:[\s\S]*Generate release body[\s\S]*node dist\/scripts\/generate-release-body\.js --template RELEASE_BODY\.md --out RELEASE_BODY\.generated\.md/);
     assert.match(workflow, /body_path:\s*RELEASE_BODY\.generated\.md/);
     assert.match(workflow, /smoke-verify-native:[\s\S]*npm run build[\s\S]*node dist\/scripts\/verify-native-release-assets\.js/);
     assert.match(workflow, /smoke-packed-install:[\s\S]*npm run build[\s\S]*Smoke test packed install boot \+ core commands[\s\S]*npm run smoke:packed-install/);
     assert.match(workflow, /publish-npm:[\s\S]*Verify version sync against workspace crates[\s\S]*npm pack --dry-run/);
+  });
+
+  it('defines the official GitHub release notes template categories', () => {
+    const releaseTemplatePath = join(process.cwd(), '.github', 'release.yml');
+    assert.equal(existsSync(releaseTemplatePath), true, `missing release notes template: ${releaseTemplatePath}`);
+
+    const releaseTemplate = readFileSync(releaseTemplatePath, 'utf-8');
+    assert.match(releaseTemplate, /changelog:/);
+    assert.match(releaseTemplate, /exclude:/);
+    assert.match(releaseTemplate, /categories:/);
+    assert.match(releaseTemplate, /Roblox Creator Workflow/);
+    assert.match(releaseTemplate, /Runtime & CLI/);
+    assert.match(releaseTemplate, /MCP & Integrations/);
+    assert.match(releaseTemplate, /Verification & Quality/);
+    assert.match(releaseTemplate, /Docs & Localization/);
+    assert.match(releaseTemplate, /CI \/ Release \/ Packaging/);
+    assert.match(releaseTemplate, /Dependencies/);
+    assert.match(releaseTemplate, /change-template:\s*"- \$TITLE by @\$AUTHOR in #\$NUMBER"/);
+    assert.match(releaseTemplate, /template:\s*\|/);
   });
 
   it('keeps cargo-dist Linux targets aligned with musl-first plus glibc fallback assets', () => {

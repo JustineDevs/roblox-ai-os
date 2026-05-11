@@ -1,0 +1,36 @@
+- name: good first issue
+  color: "7057ff"
+  description: Small, self-contained task with clear acceptance criteria for new contributors.
+- name: help wanted
+  color: "008672"
+  description: Maintainers want outside help on this scoped issue.
+- name: docs
+  color: "0e8a16"
+  description: Documentation or onboarding surface.
+- name: localization
+  color: "1d76db"
+  description: Translation or locale-sync work.
+- name: wiki
+  color: "5319e7"
+  description: Contributor wiki or runtime wiki documentation surface.
+- name: contributor experience
+  color: "fbca04"
+  description: Setup, workflow, issue-template, or contributor ergonomics.
+- name: roadmap
+  color: "d4c5f9"
+  description: Roadmap planning or roadmap-linked implementation slice.
+- name: release
+  color: "b60205"
+  description: Release notes, packaging, GitHub Release, or publish workflow work.
+- name: monetization
+  color: "c2e0c6"
+  description: Roblox monetization planning or implementation surface.
+- name: retention
+  color: "bfd4f2"
+  description: Audience, replay, social hooks, or retention loops.
+- name: live ops
+  color: "f9d0c4"
+  description: Weekly update cadence, seasonal content, or event planning.
+- name: worldbuilding
+  color: "fef2c0"
+  description: Story, GDD, character, map, or design-production work.

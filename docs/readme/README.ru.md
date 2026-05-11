@@ -7,6 +7,10 @@
 - Репозиторий: `https://github.com/JustineDevs/roblox-ai-os`
 - Начало работы: [../getting-started.html](../getting-started.html)
 - Справочник skills: [../skills.html](../skills.html)
+- Вики для контрибьюторов: [../wiki/Home.md](../wiki/Home.md)
+- Дорожная карта: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Архитектура: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- Руководство по вкладу: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Интеграции: [../integrations.html](../integrations.html)
 - Канонический README: [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@
 Важное уточнение:
 - `rcs mcp-serve` обслуживает только **локальные MCP-серверы, принадлежащие RCS**
 - он **не** обслуживает `robloxstudio-mcp`
+
+## Вклад
+
+- Ищите issues с метками `good first issue` или `help wanted`.
+- Вклад в документацию, локализацию, QA и аккуратность релизов приветствуется.
+- Используйте вики для контрибьюторов и дорожную карту, чтобы держать scope небольшим и понятным.
+- Вики для контрибьюторов **не** совпадает с локальной runtime-вики в `.rcs/wiki/`.
 
 ## Владение
 

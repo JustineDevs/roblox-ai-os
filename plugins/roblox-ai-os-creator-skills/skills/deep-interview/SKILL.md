@@ -470,6 +470,3 @@ deep-interview -> blueprint -> autopilot
 </Advanced>
 
 Task: {{ARGUMENTS}}
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

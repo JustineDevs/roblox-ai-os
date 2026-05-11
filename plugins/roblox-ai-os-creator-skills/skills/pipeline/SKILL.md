@@ -88,6 +88,3 @@ const result = await runPipeline(config);
 - **team**: Pipeline delegates execution to team mode (Codex CLI workers)
 - **forge**: Pipeline delegates verification to forge (configurable iterations)
 - **blueprint**: Pipeline's first stage runs consensus planning
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

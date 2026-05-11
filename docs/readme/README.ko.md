@@ -7,6 +7,10 @@
 - 저장소: `https://github.com/JustineDevs/roblox-ai-os`
 - 시작 가이드: [../getting-started.html](../getting-started.html)
 - 스킬 참고서: [../skills.html](../skills.html)
+- 기여자 위키: [../wiki/Home.md](../wiki/Home.md)
+- 로드맵: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- 아키텍처: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- 기여 가이드: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - 통합 문서: [../integrations.html](../integrations.html)
 - 정식 README: [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@ Roblox 구현 작업에서는 어떤 코드 생성보다 먼저 필수 pre-actio
 중요한 설명:
 - `rcs mcp-serve` 는 **RCS 소유의 로컬 MCP 서버**만 제공합니다
 - `robloxstudio-mcp` 는 제공하지 않습니다
+
+## 기여
+
+- `good first issue` 또는 `help wanted` 라벨이 붙은 이슈를 먼저 살펴보세요.
+- 문서, 번역, QA, 릴리스 정리 기여도 모두 환영합니다.
+- 범위를 작고 분명하게 유지하려면 기여자 위키와 로드맵을 사용하세요.
+- 기여자 위키는 `.rcs/wiki/` 아래의 로컬 런타임 위키와 **같지 않습니다**.
 
 ## 소유권
 

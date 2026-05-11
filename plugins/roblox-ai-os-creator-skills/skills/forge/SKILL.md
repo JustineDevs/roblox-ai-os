@@ -188,6 +188,3 @@ $forge "Implement the approved trading system:
 - StarterGui trade UI only mirrors server-confirmed state
 - verify duplicate acceptance cannot double-grant items"
 ```
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

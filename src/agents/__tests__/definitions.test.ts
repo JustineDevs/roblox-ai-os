@@ -5,6 +5,9 @@ import {
   getAgent,
   getAgentNames,
   getAgentsByCategory,
+  getAgentsByPosture,
+  getAgentsByRoutingRole,
+  listAgents,
   type AgentDefinition,
 } from '../definitions.js';
 
@@ -46,6 +49,21 @@ describe('agents/definitions', () => {
       const agents = getAgentsByCategory(category);
       assert.ok(agents.every((agent) => agent.category === category));
     }
+  });
+
+  it('exposes stable facade helpers for posture and routing-role views', () => {
+    const listed = listAgents();
+    assert.equal(listed[0]?.name, 'analyst');
+    assert.equal(listed.at(-1)?.name, 'writer');
+
+    const fastLane = getAgentsByPosture('fast-lane');
+    assert.ok(fastLane.some((agent) => agent.name === 'explore'));
+    assert.ok(fastLane.every((agent) => agent.posture === 'fast-lane'));
+
+    const executors = getAgentsByRoutingRole('executor');
+    assert.ok(executors.some((agent) => agent.name === 'executor'));
+    assert.ok(executors.some((agent) => agent.name === 'team-executor'));
+    assert.ok(executors.every((agent) => agent.routingRole === 'executor'));
   });
 
   it('keeps the installable agent model split aligned with the RCS subagent matrix', () => {

@@ -165,6 +165,3 @@ Autopilot invents independent "Expansion", "QA", and "Validation" phases and tre
 Why bad: this bypasses the strict `$blueprint -> $forge -> $code-review` contract.
 </Bad>
 </Examples>
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

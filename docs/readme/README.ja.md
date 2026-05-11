@@ -7,6 +7,10 @@
 - リポジトリ: `https://github.com/JustineDevs/roblox-ai-os`
 - はじめに: [../getting-started.html](../getting-started.html)
 - Skills リファレンス: [../skills.html](../skills.html)
+- コントリビューター向けWiki: [../wiki/Home.md](../wiki/Home.md)
+- ロードマップ: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- アーキテクチャ: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- 貢献ガイド: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - 連携: [../integrations.html](../integrations.html)
 - 正規 README: [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@ Roblox 実装作業では、コード生成の前に必須の pre-action gate �
 重要な補足:
 - `rcs mcp-serve` は **RCS 所有のローカル MCP サーバー**のみを提供します
 - `robloxstudio-mcp` は **提供しません**
+
+## コントリビューション
+
+- `good first issue` または `help wanted` ラベルの issue を探してください。
+- ドキュメント、翻訳、QA、リリース整備への貢献も歓迎します。
+- スコープを小さく明確に保つため、コントリビューター向けWikiとロードマップを使ってください。
+- コントリビューター向けWikiは `.rcs/wiki/` のローカル runtime wiki とは**別物**です。
 
 ## 所有者
 

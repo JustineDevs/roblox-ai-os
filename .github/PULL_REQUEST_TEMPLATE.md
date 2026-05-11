@@ -42,6 +42,7 @@ If checked, summarize the Roblox-specific impact:
 - [ ] Canonical docs changed
 - [ ] Root `README.md` changed
 - [ ] Localized README files were reviewed/updated for locale domino effects
+- [ ] Contributor wiki / roadmap pages were reviewed/updated when contributor-facing guidance changed
 
 ## Release / compatibility impact
 

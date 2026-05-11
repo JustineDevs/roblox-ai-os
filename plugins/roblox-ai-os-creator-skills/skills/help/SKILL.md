@@ -77,6 +77,3 @@ Use:
 - `docs/reference/roblox-pre-action-protocol.md`
 - `templates/psychology/`
 - `templates/roblox/`
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

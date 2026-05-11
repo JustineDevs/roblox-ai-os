@@ -9,7 +9,7 @@ artifact-type: "skill"
 
 # Code Review Skill
 
-Conduct a thorough code review for quality, security, and maintainability with severity-rated feedback.
+Conduct a thorough code review for Roblox Studio, Luau, creator-runtime, plugin, and workflow changes with severity-rated feedback.
 
 ## When to Use
 
@@ -38,11 +38,11 @@ Delegates to the `code-reviewer` and `architect` agents in parallel for a two-la
    - Both lanes run in parallel and produce distinct outputs before final synthesis
 
 3. **Review Categories**
-   - **Security** - Hardcoded secrets, injection risks, XSS, CSRF
-   - **Code Quality** - Function size, complexity, nesting depth
-   - **Performance** - Algorithm efficiency, N+1 queries, caching
-   - **Best Practices** - Naming, documentation, error handling
-   - **Maintainability** - Duplication, coupling, testability
+   - **Roblox Security** - server authority, remote validation, replicated secrets/data exposure, DataStore/economy safety
+   - **Code Quality** - function size, complexity, nesting depth, cross-module clarity
+   - **Performance** - replication churn, avoidable UI rebuilds, hot-path inefficiency, heavy runtime loops
+   - **Best Practices** - naming, documentation, error handling, service placement
+   - **Maintainability** - duplication, coupling, testability, workflow boundary clarity
 
 4. **Severity Rating**
    - **CRITICAL** - Security vulnerability (must fix before merge)
@@ -291,6 +291,3 @@ Parallel code review across multiple files.
 - **Address CRITICAL/HIGH first** - Fix security and bugs immediately
 - **Consider context** - Some "issues" may be intentional trade-offs
 - **Learn from reviews** - Use feedback to improve coding practices
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

@@ -59,6 +59,3 @@ At session end, discoveries can be captured as `session-log-*` pages. Configure 
 ## Hard Constraints
 - No vector embeddings — query uses keyword + tag matching only
 - Wiki files remain local project state under `.rcs/wiki/`
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

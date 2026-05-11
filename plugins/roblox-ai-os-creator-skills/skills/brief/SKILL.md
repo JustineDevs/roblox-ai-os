@@ -29,6 +29,3 @@ Use the protocol in:
 Follow with:
 - `$brief:audience`
 - `$brief:motivation`
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

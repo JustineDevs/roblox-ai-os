@@ -7,6 +7,10 @@
 - Αποθετήριο: `https://github.com/JustineDevs/roblox-ai-os`
 - Ξεκίνημα: [../getting-started.html](../getting-started.html)
 - Αναφορά skills: [../skills.html](../skills.html)
+- Wiki συνεισφερόντων: [../wiki/Home.md](../wiki/Home.md)
+- Οδικός χάρτης: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Αρχιτεκτονική: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- Συνεισφορά: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Ενσωματώσεις: [../integrations.html](../integrations.html)
 - Κανονικό README: [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@
 Σημαντική διευκρίνιση:
 - το `rcs mcp-serve` εξυπηρετεί μόνο **τοπικούς MCP servers που ανήκουν στο RCS**
 - **δεν** εξυπηρετεί το `robloxstudio-mcp`
+
+## Συνεισφορές
+
+- Αναζήτησε issues με ετικέτες `good first issue` ή `help wanted`.
+- Οι συνεισφορές σε τεκμηρίωση, μεταφράσεις, QA και καθαρότητα release είναι ευπρόσδεκτες.
+- Χρησιμοποίησε το wiki συνεισφερόντων και τον οδικό χάρτη για να κρατάς το scope μικρό και σαφές.
+- Το wiki συνεισφερόντων **δεν** είναι το ίδιο με το τοπικό runtime wiki στο `.rcs/wiki/`.
 
 ## Ιδιοκτησία
 

@@ -235,9 +235,32 @@ export function getAgent(name: string): AgentDefinition | undefined {
   return AGENT_DEFINITIONS[name];
 }
 
+/** List all agent definitions in stable name order. */
+export function listAgents(): AgentDefinition[] {
+  return Object.keys(AGENT_DEFINITIONS)
+    .sort((left, right) => left.localeCompare(right))
+    .map((name) => AGENT_DEFINITIONS[name]!);
+}
+
 /** Get all agents in a category */
 export function getAgentsByCategory(category: AgentDefinition['category']): AgentDefinition[] {
   return Object.values(AGENT_DEFINITIONS).filter(a => a.category === category);
+}
+
+/** Get all agents that share a posture lane. */
+export function getAgentsByPosture(
+  posture: AgentDefinition['posture'],
+): AgentDefinition[] {
+  return Object.values(AGENT_DEFINITIONS).filter((agent) => agent.posture === posture);
+}
+
+/** Get all agents that share the same routing role. */
+export function getAgentsByRoutingRole(
+  routingRole: AgentDefinition['routingRole'],
+): AgentDefinition[] {
+  return Object.values(AGENT_DEFINITIONS).filter(
+    (agent) => agent.routingRole === routingRole,
+  );
 }
 
 /** Get all agent names */

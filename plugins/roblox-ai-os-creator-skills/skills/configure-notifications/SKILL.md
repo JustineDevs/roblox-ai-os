@@ -289,6 +289,3 @@ Show:
 - Whether explicit `notifications.openclaw` exists (and therefore overrides aliases)
 - Verbosity + idle cooldown + reply listener state
 - Config path (`~/.codex/.rcs-config.json`)
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

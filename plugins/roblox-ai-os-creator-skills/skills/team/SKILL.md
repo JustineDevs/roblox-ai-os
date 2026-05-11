@@ -511,6 +511,3 @@ Two cleanup paths exist and must not be confused:
 **Good:** The user changes only the output shape or downstream delivery step (for example `make a PR`). Preserve earlier non-conflicting workflow constraints and apply the update locally.
 
 **Bad:** The user says `continue`, and the workflow restarts discovery or stops before the missing verification/evidence is gathered.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

@@ -7,6 +7,10 @@
 - 儲存庫：`https://github.com/JustineDevs/roblox-ai-os`
 - 快速開始： [../getting-started.html](../getting-started.html)
 - Skills 參考： [../skills.html](../skills.html)
+- 貢獻者 Wiki： [../wiki/Home.md](../wiki/Home.md)
+- 路線圖： [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- 架構： [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- 貢獻指南： [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - 整合： [../integrations.html](../integrations.html)
 - 正規 README： [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@
 重要說明：
 - `rcs mcp-serve` 只服務 **RCS 自有的本機 MCP 伺服器**
 - 它 **不會** 服務 `robloxstudio-mcp`
+
+## 貢獻
+
+- 優先尋找帶有 `good first issue` 或 `help wanted` 標籤的 issue。
+- 文件、本地化、QA 與發佈整理類貢獻同樣歡迎。
+- 使用貢獻者 Wiki 與路線圖來保持範圍小且清楚。
+- 貢獻者 Wiki **不是** `.rcs/wiki/` 下的本地執行階段 Wiki。
 
 ## 擁有權
 

@@ -1,22 +1,23 @@
-> Release context: patch release for default Roblox reference MCP activation and clearer MCP activation guidance.
+> Release context: patch release for contributor workflow hardening, GitHub release/package clarity, and concrete cross-platform target manifests.
 
-# Roblox Creator Skills — `@jstn-sdk/rcs` v0.1.8
+# Roblox Creator Skills — `@jstn-sdk/rcs` v0.1.9
 
 ## Summary
 
-`v0.1.8` enables the GitMCP Roblox reference servers by default in the managed Codex config path, clarifies the MCP activation split for users, and adds the config/reference verification needed to keep that layer stable.
+`v0.1.9` adds a real contributor wiki and roadmap surface, formalizes GitHub Releases/GitHub Packages as separate release targets, and introduces a typed platform target manifest so RCS can describe concrete delivery and adapter lanes without pretending every agentic platform works like Codex.
 
 ## Highlights
 
-- **Default GitMCP Roblox references** — the managed config now includes `creator_docs`, `roblox_skills`, `devprod_docs`, and `roblox_scripts_corpus` through `npx mcp-remote https://gitmcp.io/...`.
-- **Clear activation model** — docs now explicitly recommend keeping first-party `rcs mcp-serve` and GitMCP Roblox references active by default, while leaving `robloxstudio-mcp` as the explicit manual live Studio bridge.
-- **Reference-layer enforcement** — config and verification tests now lock the Roblox external MCP reference layer into the repo’s setup and policy surface.
+- **Contributor onramp** — new `docs/wiki/` pages for contributor home, roadmap, good-first-issue guidance, and release playbook; issue/PR templates now route people there.
+- **GitHub release/package clarity** — workflow + tests now explicitly separate npmjs publishing, GitHub Packages publishing, and GitHub Release object creation, with official `.github/release.yml` notes categories.
+- **Concrete platform targets** — `src/platform-targets/manifest.json` now defines `codex-native`, `codex-plugin`, `claude-like`, `marketplace-bundle`, `adapter-openclaw`, and `adapter-hermes`.
 
 ## Verification
 
 - `npm run build`
-- `node --test dist/config/__tests__/roblox-reference-mcp.test.js dist/config/__tests__/generator-idempotent.test.js dist/verification/__tests__/roblox-mcp-reference-layer.test.js dist/verification/__tests__/robloxstudio-mcp-compatibility.test.js`
+- `node --test dist/verification/__tests__/contributor-workflow-templates.test.js dist/verification/__tests__/explore-harness-release-workflow.test.js dist/cli/__tests__/package-bin-contract.test.js`
+- `node --test dist/platform-targets/__tests__/manifest.test.js dist/verification/__tests__/agentic-platform-compatibility.test.js dist/verification/__tests__/multi-agent-compatibility-architecture.test.js dist/agents/__tests__/definitions.test.js dist/adapt/__tests__/foundation.test.js`
 
 ## Full notes
 
-See **[CHANGELOG.md](./CHANGELOG.md)** for the canonical **`[0.1.8]`** entry and release summary.
+See **[CHANGELOG.md](./CHANGELOG.md)** for the canonical **`[0.1.9]`** entry and release summary.

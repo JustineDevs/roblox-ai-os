@@ -23,6 +23,3 @@ Return:
 - fairness risks.
 
 Use `docs/reference/player-psychology-framework.md` as the framework source.
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

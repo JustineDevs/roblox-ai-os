@@ -7,6 +7,10 @@ Aktualną powierzchnię produktu opisują kanoniczne dokumenty podlinkowane poni
 - Repozytorium: `https://github.com/JustineDevs/roblox-ai-os`
 - Pierwsze kroki: [../getting-started.html](../getting-started.html)
 - Dokumentacja skills: [../skills.html](../skills.html)
+- Wiki dla współtwórców: [../wiki/Home.md](../wiki/Home.md)
+- Plan rozwoju: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Architektura: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- Współtworzenie: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Integracje: [../integrations.html](../integrations.html)
 - Kanoniczne README: [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@ Zalecany model:
 Ważne doprecyzowanie:
 - `rcs mcp-serve` obsługuje tylko **lokalne serwery MCP należące do RCS**
 - **nie** obsługuje `robloxstudio-mcp`
+
+## Wkład
+
+- Szukaj issues oznaczonych `good first issue` lub `help wanted`.
+- Wkład w dokumentację, lokalizację, QA i higienę wydań jest mile widziany.
+- Korzystaj z wiki współtwórców i planu rozwoju, aby utrzymywać mały i jasny zakres pracy.
+- Wiki współtwórców **nie** jest tym samym co lokalne wiki runtime w `.rcs/wiki/`.
 
 ## Własność
 

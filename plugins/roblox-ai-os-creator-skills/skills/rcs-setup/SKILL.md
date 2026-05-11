@@ -137,6 +137,3 @@ node bin/rcs.js doctor
 
 - If AGENTS.md was not overwritten during `--force`, stop active RCS session and rerun setup.
 - If AGENTS.md was not merged during `--merge-agents`, stop active RCS session and rerun setup.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

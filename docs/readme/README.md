@@ -44,6 +44,7 @@ The repository root keeps only the canonical `README.md` so the top level stays 
 * Treat `../../README.md` as the canonical source.
 * Add new README translations in this folder, not at the repository root.
 * Keep the language list synchronized between the canonical README and each localized variant.
+* Treat contributor-wiki, roadmap, onboarding, and MCP guidance changes in the root README as locale domino effects.
 * Keep relative links valid from `docs/readme/`.
 * Prefer updating existing translations instead of introducing duplicate files or alternate naming schemes.
 

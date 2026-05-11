@@ -21,6 +21,3 @@ Return a filled **Dopamine Loop Map** using `templates/psychology/dopamine-loop-
 - daily loop
 - weekly loop
 - comeback loop
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

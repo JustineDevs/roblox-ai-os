@@ -7,6 +7,10 @@ Utilise les documents canoniques liés ci-dessous pour la surface produit actuel
 - Dépôt : `https://github.com/JustineDevs/roblox-ai-os`
 - Démarrage : [../getting-started.html](../getting-started.html)
 - Référence des skills : [../skills.html](../skills.html)
+- Wiki des contributeurs : [../wiki/Home.md](../wiki/Home.md)
+- Feuille de route : [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Architecture : [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- Contribution : [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Intégrations : [../integrations.html](../integrations.html)
 - README canonique : [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@ Modèle recommandé :
 Clarification importante :
 - `rcs mcp-serve` ne sert que les **serveurs MCP locaux appartenant à RCS**
 - il ne sert **pas** `robloxstudio-mcp`
+
+## Contributions
+
+- Cherche des issues avec les labels `good first issue` ou `help wanted`.
+- Les contributions en documentation, localisation, QA et hygiène de release sont bienvenues.
+- Utilise le wiki contributeurs et la feuille de route pour garder un scope petit et clair.
+- Le wiki contributeurs **n’est pas** le même que le wiki runtime local dans `.rcs/wiki/`.
 
 ## Propriété
 

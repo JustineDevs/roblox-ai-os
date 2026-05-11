@@ -18,6 +18,3 @@ Generate a **Mastery Depth Spec**.
 - discovery moments
 - skill-expression rewards
 - feedback surfaces that make mastery legible
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

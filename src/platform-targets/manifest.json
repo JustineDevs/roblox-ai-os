@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "manifestVersion": "2026.05.11.1",
+  "targets": [
+    {
+      "id": "codex-native",
+      "displayName": "Codex Native Setup",
+      "lane": "delivery",
+      "status": "active",
+      "runtimeOwnership": "setup-owned",
+      "purpose": "Full RCS setup path for Codex with native agents, prompts, hooks, and runtime state.",
+      "canonicalSources": [
+        "skills/",
+        "prompts/",
+        "src/agents/definitions.ts",
+        "src/agents/native-config.ts",
+        "templates/AGENTS.md"
+      ],
+      "deliveryArtifacts": [
+        "src/cli/setup.ts",
+        "src/config/generator.ts",
+        "src/config/codex-hooks.ts"
+      ],
+      "notes": [
+        "Deepest-supported runtime lane today.",
+        "Owns generated .codex agents, prompts, hooks, and .rcs state wiring."
+      ]
+    },
+    {
+      "id": "codex-plugin",
+      "displayName": "Codex Plugin Bundle",
+      "lane": "delivery",
+      "status": "active",
+      "runtimeOwnership": "plugin-scoped",
+      "purpose": "Installable Codex plugin bundle for skill discovery plus plugin-scoped MCP/app metadata.",
+      "canonicalSources": [
+        "skills/",
+        "src/catalog/manifest.json",
+        "src/config/rcs-first-party-mcp.ts"
+      ],
+      "deliveryArtifacts": [
+        "plugins/roblox-ai-os-creator-skills/.codex-plugin/plugin.json",
+        "plugins/roblox-ai-os-creator-skills/.mcp.json",
+        "plugins/roblox-ai-os-creator-skills/.app.json",
+        ".agents/plugins/marketplace.json"
+      ],
+      "notes": [
+        "Plugin bundle is a delivery lane, not the full runtime setup.",
+        "Setup-owned prompts, native-agent TOMLs, and hooks remain outside the plugin manifest."
+      ]
+    },
+    {
+      "id": "claude-like",
+      "displayName": "Claude-like Platform",
+      "lane": "delivery",
+      "status": "planned",
+      "runtimeOwnership": "platform-owned",
+      "purpose": "Future delivery lane for platforms that can consume canonical skills/guidance but do not share Codex runtime semantics one-to-one.",
+      "canonicalSources": [
+        "skills/",
+        "templates/AGENTS.md",
+        "docs/reference/agentic-platform-compatibility.md"
+      ],
+      "deliveryArtifacts": [
+        "docs/reference/agentic-platform-compatibility.md"
+      ],
+      "notes": [
+        "Portable skills/guidance should come from canonical sources.",
+        "Setup-owned native agents and runtime hooks are not automatically portable one-to-one."
+      ]
+    },
+    {
+      "id": "marketplace-bundle",
+      "displayName": "Marketplace Bundle",
+      "lane": "delivery",
+      "status": "active",
+      "runtimeOwnership": "plugin-scoped",
+      "purpose": "Versioned marketplace-facing package lane emitted from canonical plugin and package metadata.",
+      "canonicalSources": [
+        "package.json",
+        "skills/",
+        "src/catalog/manifest.json"
+      ],
+      "deliveryArtifacts": [
+        ".agents/plugins/marketplace.json",
+        "plugins/roblox-ai-os-creator-skills/",
+        ".github/workflows/release.yml"
+      ],
+      "notes": [
+        "Marketplace packages are emitted artifacts, not second sources of truth.",
+        "Release and packaging workflows must keep this lane aligned with canonical package metadata."
+      ]
+    },
+    {
+      "id": "adapter-openclaw",
+      "displayName": "Adapter: OpenClaw",
+      "lane": "adapter",
+      "status": "active",
+      "runtimeOwnership": "adapter-owned",
+      "purpose": "RCS-owned adapter around OpenClaw notification, gateway, and lifecycle observation surfaces.",
+      "canonicalSources": [
+        "src/adapt/contracts.ts",
+        "src/adapt/registry.ts",
+        "src/openclaw/"
+      ],
+      "deliveryArtifacts": [
+        "src/adapt/openclaw.ts",
+        "docs/openclaw-integration.md",
+        "docs/reference/agentic-platform-compatibility.md"
+      ],
+      "notes": [
+        "Adapter writes stay under .rcs/adapters/openclaw/.",
+        "Local observation is supported without over-claiming remote runtime health."
+      ]
+    },
+    {
+      "id": "adapter-hermes",
+      "displayName": "Adapter: Hermes",
+      "lane": "adapter",
+      "status": "active",
+      "runtimeOwnership": "adapter-owned",
+      "purpose": "RCS-owned foundation adapter lane for Hermes ACP, gateway, and session-store observation.",
+      "canonicalSources": [
+        "src/adapt/contracts.ts",
+        "src/adapt/registry.ts",
+        "src/adapt/hermes.ts"
+      ],
+      "deliveryArtifacts": [
+        "src/adapt/hermes.ts",
+        "docs/reference/agentic-platform-compatibility.md"
+      ],
+      "notes": [
+        "Hermes currently ships as a foundation seam, not a full deep-control runtime.",
+        "Adapter ownership stays under .rcs/adapters/hermes/."
+      ]
+    }
+  ]
+}

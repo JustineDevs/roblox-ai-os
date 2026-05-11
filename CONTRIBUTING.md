@@ -22,6 +22,12 @@ rcs setup
 rcs doctor
 ```
 
+Contributor planning surfaces:
+
+- [Contributor wiki](./docs/wiki/Home.md)
+- [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
+- [Roadmap](./docs/wiki/Roadmap.md)
+
 ### Team/state coverage gate (issue #454)
 
 CI enforces minimum coverage for critical team orchestration modules:
@@ -116,7 +122,8 @@ Document-refresh: not-needed | <reason>
 2. Make focused changes.
 3. Run lint, build, and tests locally.
 4. If you change public docs, onboarding, workflow language, or `README.md`, review locale domino effects before opening the PR.
-5. Open a pull request targeting `dev` using the provided template. Use `main` only for maintainer-directed exceptions.
+5. If you are scoping work for newcomers, prefer `good first issue` or `help wanted` labels and keep the task granular.
+6. Open a pull request targeting `dev` using the provided template. Use `main` only for maintainer-directed exceptions.
 
 ## Commit style
 
@@ -145,6 +152,16 @@ docs: clarify setup steps for Codex CLI users
 - [ ] Active Roblox-facing surfaces avoid generic web/enterprise framing
 - [ ] GitHub issue / PR templates were used rather than free-form reports when applicable
 
+## Community expectations
+
+- Be responsive when contributors ask for clarification on scoped work.
+- Accept non-code contributions such as docs, localization, issue triage, QA, and release-note cleanup.
+- Keep newcomer tasks small enough to finish without hidden maintainership knowledge.
+- Use the contributor wiki and roadmap pages when redirecting contributors, instead of making them infer priorities from commit history.
+- Acknowledge contributors when their work lands, including docs and localization work.
+- Keep an All Contributors-style mindset: documentation, design, localization, QA, and triage contributions count as real project value.
+
 ## Reporting issues
 
 Use the GitHub issue templates for bug reports and feature requests, including reproduction steps and expected behavior.
+For contribution discovery, start with the contributor wiki and the labeled issue queue.

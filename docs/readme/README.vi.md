@@ -7,6 +7,10 @@ Hãy dùng các tài liệu chuẩn liên kết bên dưới cho bề mặt sả
 - Kho mã: `https://github.com/JustineDevs/roblox-ai-os`
 - Bắt đầu: [../getting-started.html](../getting-started.html)
 - Tham chiếu skills: [../skills.html](../skills.html)
+- Wiki cho người đóng góp: [../wiki/Home.md](../wiki/Home.md)
+- Lộ trình: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Kiến trúc: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- Hướng dẫn đóng góp: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Tích hợp: [../integrations.html](../integrations.html)
 - README chuẩn: [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@ Mô hình khuyến nghị:
 Làm rõ quan trọng:
 - `rcs mcp-serve` chỉ phục vụ **các máy chủ MCP cục bộ thuộc sở hữu của RCS**
 - nó **không** phục vụ `robloxstudio-mcp`
+
+## Đóng góp
+
+- Hãy tìm các issue có nhãn `good first issue` hoặc `help wanted`.
+- Các đóng góp về tài liệu, bản địa hóa, QA và vệ sinh release đều được chào đón.
+- Hãy dùng wiki dành cho người đóng góp và lộ trình để giữ phạm vi nhỏ và rõ ràng.
+- Wiki dành cho người đóng góp **không** giống với wiki runtime cục bộ trong `.rcs/wiki/`.
 
 ## Quyền sở hữu
 

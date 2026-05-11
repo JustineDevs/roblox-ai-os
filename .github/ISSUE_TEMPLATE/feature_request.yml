@@ -10,6 +10,7 @@ body:
         Use this form for real product or workflow improvements.
 
         RCS is Roblox-first. Feature requests should be framed around creator workflows, Roblox Studio, Luau, remotes, DataStore, plugin/tooling, or runtime/platform quality.
+        Check the contributor wiki and roadmap first when the request is broad or strategic.
   - type: textarea
     id: problem
     attributes:
@@ -66,5 +67,5 @@ body:
       options:
         - label: I confirmed this request matches the Roblox-first product direction
           required: true
-        - label: I searched existing issues and docs first
+        - label: I searched existing issues, docs, and roadmap/wiki pages first
           required: true

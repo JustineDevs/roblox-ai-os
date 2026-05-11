@@ -6,6 +6,30 @@ All notable changes to this project are documented in this file.
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-05-11
+
+Contributor-workflow, release-surface, and platform-compatibility follow-up for **`@jstn-sdk/rcs@0.1.9`**. This ship line adds a real contributor wiki + roadmap, official newcomer labels and label sync automation, a clean GitHub Releases/GitHub Packages contract, and a typed platform target manifest for concrete delivery/adapter lanes.
+
+### Summary
+
+- **Contributor onramp** — added `docs/wiki/` with contributor home, roadmap, good-first-issue guidance, and release playbook; updated README, docs home, issue templates, PR template, and localized READMEs to point at those surfaces.
+- **GitHub release/package hardening** — release automation now treats GitHub Releases, GitHub Packages, and npmjs as separate surfaces with explicit workflow/testing contracts and official `.github/release.yml` release-notes categories.
+- **Platform target manifest** — added a typed manifest for concrete lanes:
+  - `codex-native`
+  - `codex-plugin`
+  - `claude-like`
+  - `marketplace-bundle`
+  - `adapter-openclaw`
+  - `adapter-hermes`
+- **Architecture clarity** — added explicit docs for the actual multi-agent compatibility architecture used by RCS instead of leaving registry/adapter/policy structure implicit.
+
+### Verification (this release line)
+
+- `npm run build`
+- `node --test dist/verification/__tests__/contributor-workflow-templates.test.js dist/verification/__tests__/explore-harness-release-workflow.test.js dist/cli/__tests__/package-bin-contract.test.js`
+- `node --test dist/agents/__tests__/definitions.test.js dist/agents/__tests__/native-config.test.js dist/adapt/__tests__/foundation.test.js dist/scripts/__tests__/verify-native-agents.test.js dist/verification/__tests__/multi-agent-compatibility-architecture.test.js`
+- `node --test dist/platform-targets/__tests__/manifest.test.js dist/verification/__tests__/agentic-platform-compatibility.test.js dist/verification/__tests__/multi-agent-compatibility-architecture.test.js dist/agents/__tests__/definitions.test.js dist/adapt/__tests__/foundation.test.js`
+
 ## [0.1.8] - 2026-05-11
 
 MCP/reference-layer activation release for **`@jstn-sdk/rcs@0.1.8`**. This ship line enables the GitMCP Roblox reference servers by default in the managed Codex config path, documents the MCP activation split more clearly in the README and localized README files, and adds the supporting config/reference verification tests.

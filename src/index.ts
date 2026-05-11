@@ -14,6 +14,24 @@ export { setup } from './cli/setup.js';
 export { doctor } from './cli/doctor.js';
 export { version } from './cli/version.js';
 export { mergeConfig } from './config/generator.js';
-export { AGENT_DEFINITIONS, type AgentDefinition } from './agents/definitions.js';
+export {
+  AGENT_DEFINITIONS,
+  getAgent,
+  getAgentsByCategory,
+  getAgentsByPosture,
+  getAgentsByRoutingRole,
+  getAgentNames,
+  listAgents,
+  type AgentDefinition,
+} from './agents/definitions.js';
 export { generateAgentToml, installNativeAgentConfigs } from './agents/native-config.js';
+export { readPlatformTargetManifest } from './platform-targets/reader.js';
+export type {
+  PlatformTargetEntry,
+  PlatformTargetId,
+  PlatformTargetLane,
+  PlatformTargetManifest,
+  PlatformTargetStatus,
+  RuntimeOwnership,
+} from './platform-targets/schema.js';
 export { hudCommand } from './hud/index.js';

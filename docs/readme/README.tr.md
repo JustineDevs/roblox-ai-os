@@ -7,6 +7,10 @@ Bu yerelleştirilmiş README bilinçli olarak kısa tutulmuştur.
 - Depo: `https://github.com/JustineDevs/roblox-ai-os`
 - Başlangıç: [../getting-started.html](../getting-started.html)
 - Skill başvurusu: [../skills.html](../skills.html)
+- Katkıcı vikisi: [../wiki/Home.md](../wiki/Home.md)
+- Yol haritası: [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- Mimari: [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- Katkı rehberi: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - Entegrasyonlar: [../integrations.html](../integrations.html)
 - Kanonik README: [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@ Bakınız:
 Önemli açıklama:
 - `rcs mcp-serve` yalnızca **RCS’ye ait yerel MCP sunucularını** sunar
 - `robloxstudio-mcp` yi sunmaz
+
+## Katkılar
+
+- `good first issue` veya `help wanted` etiketli issue'ları arayın.
+- Dokümantasyon, yerelleştirme, QA ve sürüm temizliği katkıları memnuniyetle kabul edilir.
+- Kapsamı küçük ve net tutmak için katkıcı vikisini ve yol haritasını kullanın.
+- Katkıcı vikisi, `.rcs/wiki/` altındaki yerel runtime vikisi ile **aynı şey değildir**.
 
 ## Sahiplik
 

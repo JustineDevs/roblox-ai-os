@@ -179,6 +179,3 @@ OVERALL: [POSTURE] — ship / fix-first / block live
 **Good:** The user says `continue` after you already listed the next remote to trace; keep tracing until the chain is complete.
 
 **Bad:** The user says `continue` and you restart from “what is Roblox” instead of finishing the active exploit hypothesis.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

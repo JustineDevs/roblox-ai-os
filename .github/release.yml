@@ -1,0 +1,56 @@
+changelog:
+  exclude:
+    labels:
+      - skip-changelog
+      - internal
+      - no-release-notes
+  categories:
+    - title: Roblox Creator Workflow
+      labels:
+        - roblox
+        - creator-workflow
+        - luau
+        - studio
+    - title: Runtime & CLI
+      labels:
+        - cli
+        - runtime
+        - shell
+        - commands
+    - title: MCP & Integrations
+      labels:
+        - mcp
+        - integration
+        - plugin
+        - studio-bridge
+    - title: Verification & Quality
+      labels:
+        - qa
+        - verification
+        - test
+        - security
+    - title: Docs & Localization
+      labels:
+        - docs
+        - readme
+        - localization
+        - i18n
+    - title: CI / Release / Packaging
+      labels:
+        - ci
+        - release
+        - packaging
+        - github-packages
+    - title: Dependencies
+      labels:
+        - dependencies
+        - deps
+change-template: "- $TITLE by @$AUTHOR in #$NUMBER"
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  ## Full Changelog
+
+  $CONTRIBUTORS

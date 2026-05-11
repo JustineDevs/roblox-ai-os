@@ -1,5 +1,11 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Contributor wiki
+    url: https://github.com/JustineDevs/roblox-ai-os/blob/main/docs/wiki/Home.md
+    about: Start here for contribution paths, roadmap context, and newcomer-friendly issue guidance.
+  - name: Roadmap
+    url: https://github.com/JustineDevs/roblox-ai-os/blob/main/docs/wiki/Roadmap.md
+    about: Check the contributor-facing roadmap before filing broad feature ideas.
   - name: Questions and usage help
     url: https://github.com/JustineDevs/roblox-ai-os/tree/main/docs
     about: For Roblox Creator Skills usage questions, start with the checked-in RCS docs and guides.

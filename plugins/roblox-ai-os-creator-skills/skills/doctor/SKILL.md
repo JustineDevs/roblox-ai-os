@@ -241,6 +241,3 @@ rm -rf ~/.agents/skills
 
 After applying fixes, inform user:
 > Fixes applied. **Restart Codex CLI** for changes to take effect.
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

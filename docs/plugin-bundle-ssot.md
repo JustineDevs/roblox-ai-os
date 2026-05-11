@@ -2,6 +2,8 @@
 
 The repository keeps one canonical authoring surface for each plugin/setup asset type and treats `plugins/roblox-ai-os-creator-skills` as generated-or-verified plugin output.
 
+This plugin bundle is one **delivery lane**, not the whole cross-platform compatibility model. See [`docs/reference/agentic-platform-compatibility.md`](./reference/agentic-platform-compatibility.md) for the broader canonical-source -> delivery -> adapter model.
+
 ## Canonical roots
 
 - **Plugin skills:** root `skills/<name>/SKILL.md` is canonical. The plugin mirror at `plugins/roblox-ai-os-creator-skills/skills/<name>/` is refreshed by `npm run sync:plugin` and verified by `npm run verify:plugin-bundle`.

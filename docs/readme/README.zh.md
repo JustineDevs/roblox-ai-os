@@ -7,6 +7,10 @@
 - 仓库：`https://github.com/JustineDevs/roblox-ai-os`
 - 入门： [../getting-started.html](../getting-started.html)
 - Skills 参考： [../skills.html](../skills.html)
+- 贡献者 Wiki： [../wiki/Home.md](../wiki/Home.md)
+- 路线图： [../wiki/Roadmap.md](../wiki/Roadmap.md)
+- 架构： [../reference/multi-agent-compatibility-architecture.md](../reference/multi-agent-compatibility-architecture.md)
+- 贡献指南： [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
 - 集成： [../integrations.html](../integrations.html)
 - 规范 README： [../../README.md](../../README.md)
 
@@ -41,6 +45,13 @@
 重要说明：
 - `rcs mcp-serve` 只服务于 **RCS 自有的本地 MCP 服务器**
 - 它 **不会** 服务 `robloxstudio-mcp`
+
+## 贡献
+
+- 优先查找带有 `good first issue` 或 `help wanted` 标签的 issue。
+- 文档、本地化、QA 和发布整理类贡献同样受欢迎。
+- 使用贡献者 Wiki 和路线图来保持范围小且清晰。
+- 贡献者 Wiki **不是** `.rcs/wiki/` 下的本地运行时 Wiki。
 
 ## 所有权
 

@@ -9,7 +9,7 @@ artifact-type: "skill"
 
 # Visual Forge Skill
 
-Legacy compatibility surface. Public creator language should prefer **Visual Forge** concepts and `$forge` as the persistent implementation owner.
+Visual Forge is the visual-delivery lane for Roblox creator UI, HUD, and plugin work. `$forge` remains the persistent implementation owner when the work turns into a code-bearing completion loop.
 
 Use this skill when the user wants Codex to build or restyle Roblox creator UI through a compatibility visual-delivery loop: an approved generated reference, static reference, or captured inspiration baseline becomes the target, Forge implements, and Visual Verdict drives measured iteration rather than subjective description alone.
 
@@ -157,6 +157,3 @@ Do not make major design pivots unless explicitly requested."
 ```
 
 Task: {{ARGUMENTS}}
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

@@ -235,6 +235,3 @@ Need:
 - anti-duplication rules for queue join/leave
 - verification path for queue sync and teleport readiness"
 ```
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

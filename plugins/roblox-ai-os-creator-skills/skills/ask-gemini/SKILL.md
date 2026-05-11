@@ -63,6 +63,3 @@ Minimum artifact sections:
 5. Action items / next steps
 
 Task: {{ARGUMENTS}}
-surface-class: "operator"
-domain: "creator-runtime"
-audience: "operator"

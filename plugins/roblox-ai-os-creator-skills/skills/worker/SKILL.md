@@ -9,7 +9,7 @@ artifact-type: "skill"
 
 # Worker Skill
 
-> Legacy compatibility surface. Public creator language should prefer `crew` / coordinated execution terminology. This file remains the internal worker-runtime protocol surface for tmux-managed crew panes.
+> Internal worker-runtime surface. Active creator language should prefer `crew` / coordinated execution terminology. This file exists so tmux-managed crew panes follow one strict protocol.
 
 This skill is for a Codex session that was started as a coordinated crew worker pane under `rcs team` / `$team`.
 
@@ -110,6 +110,3 @@ Crew worker sessions should treat team state + CLI interop as the source of trut
 ## Shutdown
 
 If the crew lead sends a shutdown request, follow the shutdown inbox instructions exactly, write your shutdown ack file, then exit the Codex session.
-surface-class: "internal"
-domain: "creator-runtime"
-audience: "internal"

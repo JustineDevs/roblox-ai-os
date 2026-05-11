@@ -18,6 +18,3 @@ Generate a **Progression Ladder**.
 - unlock cadence
 - multiplier / prestige / rebirth logic where fit
 - clarity notes for first-session payoff
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

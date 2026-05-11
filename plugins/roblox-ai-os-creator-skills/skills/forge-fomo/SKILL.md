@@ -18,6 +18,3 @@ Generate a **Fair Urgency Review** for limited-time mechanics.
 - fairness guardrails
 - comeback or rerun path
 - anti-frustration notes
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"

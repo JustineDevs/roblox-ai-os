@@ -11,6 +11,7 @@ body:
 
         Use this form only for real defects in the current RCS product surface.
         For usage questions, setup confusion, or workflow help, use the docs/contact links instead of filing a bug.
+        If the bug is actually missing guidance, onboarding friction, or contributor confusion, prefer the contributor wiki / docs path first.
   - type: textarea
     id: summary
     attributes:
@@ -90,5 +91,5 @@ body:
           required: true
         - label: I ran a real execution smoke test when relevant (`codex login status` and `rcs exec ...`)
           required: false
-        - label: I searched existing issues before filing this bug
+        - label: I searched existing issues and relevant docs/wiki pages before filing this bug
           required: true

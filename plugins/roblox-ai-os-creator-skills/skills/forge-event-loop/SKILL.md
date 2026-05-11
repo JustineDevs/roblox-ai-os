@@ -17,6 +17,3 @@ Generate an **Event / FOMO Plan** using `templates/psychology/event-fomo-design-
 - include re-entry logic
 - include rerun policy
 - call out frustration risks
-surface-class: "canonical"
-domain: "creator-runtime"
-audience: "creator"
