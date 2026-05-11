@@ -46,7 +46,6 @@ Priority 1: canonical platform truth
 
 Priority 2: high-signal implementation references
 - `https://github.com/sentinelcore/roblox-skills`
-- `https://gitmcp.io/retpirato/Roblox-Scripts`
 - `https://gitmcp.io/sentinelcore/roblox-skills`
 - `https://github.com/greedychipmunk/agent-skills/tree/main/roblox-game-developer`
 - `https://github.com/omer-metin/skills-for-antigravity/tree/main/skills/roblox-development`
@@ -54,29 +53,42 @@ Priority 2: high-signal implementation references
 - `https://github.com/Corecii/Devprod`
 - `https://gitmcp.io/Corecii/Devprod`
 
-Priority 3: raw script and corpus support
+Priority 3: security-only anti-pattern corpora
 - `https://github.com/retpirato/Roblox-Scripts`
+- `https://gitmcp.io/retpirato/Roblox-Scripts`
 - `https://gitmcp.io/frosteen/Roblox_LUA_Weapon_Scripts`
 - `https://gitmcp.io/uhub/awesome-lua`
 - `https://gitmcp.io/LewisJEllis/awesome-lua`
 - `https://gitmcp.io/forhappy/awesome-lua`
 - `http://lua-users.org/wiki/SampleCode`
 
-Priority 3: dataset and corpus support
-- `https://datasets-server.huggingface.co/splits?dataset=jayras%2Froblox-luau-dataset`
-- `https://huggingface.co/datasets/bigcode/the-stack`
-- `https://huggingface.co/datasets/TorpedoSoftware/the-luau-stack`
+Priority 4: documentation-derived grounding and high-trust Luau datasets
+- `https://huggingface.co/datasets/Roblox/luau_corpus`
+- `https://huggingface.co/datasets/TorpedoSoftware/roblox-info-dump`
+
+Priority 5: Roblox evaluation datasets
+- `https://huggingface.co/datasets/TorpedoSoftware/RobloxQA-v1.0`
+- `https://huggingface.co/datasets/TorpedoSoftware/RobloxQA-OpenEnded-v1.0`
 - `https://datasets-server.huggingface.co/splits?dataset=TorpedoSoftware%2FRoblox-Luau-Reasoning-v1.0`
+
+Priority 6: weak or optional corpus support
+- `https://datasets-server.huggingface.co/splits?dataset=jayras%2Froblox-luau-dataset`
+- `https://huggingface.co/datasets/TorpedoSoftware/the-luau-stack`
+- `https://huggingface.co/datasets/bigcode/the-stack`
 - `https://huggingface.co/datasets/bartholomort/lua-obfuscator-corpus`
 
 Reference policy:
 - official Roblox docs define correctness
 - Roblox skill repos improve implementation awareness only
-- datasets are weak pattern support only
+- security/exploit corpora are for anti-pattern detection and threat awareness only
+- documentation-derived datasets are secondary grounding aids, not canonical truth
+- evaluation datasets are for capability measurement, not implementation authority
+- weak corpora are optional pattern support only
 
 Canonical reference-layer policy is documented in:
 - `docs/reference/roblox-mcp-reference-layer.md`
 - `templates/roblox/reference-sources.md`
+- `docs/security/roblox-unsafe-script-corpus.md`
 
 ## Phase 2: Understanding Synthesis
 

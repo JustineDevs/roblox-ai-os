@@ -74,7 +74,7 @@
     "skills/",
     "prompts/",
     "templates/",
-    "!templates/roblox-scripts/**",
+    "!corpora/security/roblox-unsafe-script-corpus/**",
     "src/scripts/",
     "plugins/",
     ".agents/plugins/marketplace.json"

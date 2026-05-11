@@ -104,15 +104,16 @@ At minimum, capture the smallest evidence that proves the change:
 
 Do not claim completion from static inspection alone when the behavior depends on runtime replication, remotes, or Studio-side state.
 
-## Lua Script Reference Layer
+## Roblox Unsafe Script Corpus
 
-This repo also carries a raw Lua-script corpus under `templates/roblox-scripts/`.
+This repo also carries a quarantined unsafe corpus under `corpora/security/roblox-unsafe-script-corpus/`.
 
-Treat that corpus as a **reference layer only**:
-- mine it for naming patterns, UI ideas, anti-pattern detection, and legacy idioms worth translating
-- never assume the scripts are production-safe or architecture-safe
-- never paste raw scripts into shipped code without rewriting them into Roblox-native, server-authoritative, repo-consistent structures
-- prefer first-party repo patterns, typed Luau, ModuleScripts, and approved creator architecture over raw script dumps
+Treat that corpus as a **security-only anti-pattern lane**:
+- use it to recognize exploit idioms, unsafe legacy patterns, and remote-code-loading smells
+- never assume the scripts are production-safe, trustworthy, or architecture-safe
+- never paste raw scripts into shipped code
+- prefer first-party repo patterns, typed Luau, ModuleScripts, and approved creator architecture over any raw corpus material
+- if a useful idea appears there, rewrite it from scratch into Roblox-native, server-authoritative, repo-consistent structures
 
 ## Visual iteration gate
 

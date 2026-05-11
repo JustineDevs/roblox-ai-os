@@ -217,7 +217,7 @@ describe('package bin contract', () => {
     const hiddenInternalSkillEntry = results[0]?.files?.find((file) =>
       file.path.startsWith('skills/.agents/') || file.path.startsWith('skills/.claude/'));
     const compiledTestEntry = results[0]?.files?.find((file) => file.path.includes('/__tests__/'));
-    const bulkyRobloxTemplateEntry = results[0]?.files?.find((file) => file.path.startsWith('templates/roblox-scripts/'));
+    const bulkyRobloxTemplateEntry = results[0]?.files?.find((file) => file.path.startsWith('corpora/security/roblox-unsafe-script-corpus/'));
     const promptEntry = results[0]?.files?.find((file) => file.path === 'prompts/executor.md');
     const templateEntry = results[0]?.files?.find((file) => file.path === 'templates/AGENTS.md');
     const postinstallEntry = results[0]?.files?.find((file) => file.path === 'src/scripts/postinstall-bootstrap.js');
@@ -265,7 +265,7 @@ describe('package bin contract', () => {
     assert.ok(rootForgeSkillEntry, 'expected npm pack output to keep canonical root skills');
     assert.equal(hiddenInternalSkillEntry, undefined, 'did not expect hidden internal skill payloads in package output');
     assert.equal(compiledTestEntry, undefined, 'did not expect compiled test output in package output');
-    assert.equal(bulkyRobloxTemplateEntry, undefined, 'did not expect bulky roblox script corpus in package output');
+    assert.equal(bulkyRobloxTemplateEntry, undefined, 'did not expect quarantined unsafe roblox script corpus in package output');
     assert.ok(promptEntry, 'expected npm pack output to keep prompts');
     assert.ok(templateEntry, 'expected npm pack output to keep templates');
     assert.ok(postinstallEntry, 'expected npm pack output to keep postinstall bootstrap script');

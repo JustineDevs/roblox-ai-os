@@ -33,10 +33,21 @@ describe('Roblox MCP reference layer', () => {
       'https://github.com/greedychipmunk/agent-skills/tree/main/roblox-game-developer',
       'https://github.com/omer-metin/skills-for-antigravity/tree/main/skills/roblox-development',
       'https://github.com/dig1t/skills',
+      'https://huggingface.co/datasets/Roblox/luau_corpus',
+      'https://huggingface.co/datasets/TorpedoSoftware/roblox-info-dump',
+      'https://huggingface.co/datasets/TorpedoSoftware/RobloxQA-v1.0',
+      'https://huggingface.co/datasets/TorpedoSoftware/RobloxQA-OpenEnded-v1.0',
+      'https://datasets-server.huggingface.co/splits?dataset=TorpedoSoftware%2FRoblox-Luau-Reasoning-v1.0',
+      'https://datasets-server.huggingface.co/splits?dataset=jayras%2Froblox-luau-dataset',
+      'https://huggingface.co/datasets/TorpedoSoftware/the-luau-stack',
     ]) {
       assert.match(doc, new RegExp(escapeRegex(url)));
       assert.match(template, new RegExp(escapeRegex(url)));
     }
+
+    assert.match(doc, /Tier 4: Documentation-derived grounding and high-trust Luau datasets/i);
+    assert.match(doc, /Tier 5: Roblox evaluation datasets/i);
+    assert.match(doc, /Tier 6: Weak or optional corpus support/i);
   });
 
   it('wires the pre-action protocol and docs index to the Roblox MCP reference layer', () => {
