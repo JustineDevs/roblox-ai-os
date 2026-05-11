@@ -19,7 +19,7 @@ Ecosystem reference release for **`@jstn-sdk/rcs@0.2.0`**. Ships documented **Cu
 - **Agentic compatibility doc** — posture updated for active vs planned lanes; verification tests assert new doc links.
 - **Corpora** — root [`corpora/README.md`](./corpora/README.md) expanded (quarantine, packaging, CI vs Windows).
 - **CI / compat** — [`doctor-contract` tests](./src/compat/__tests__/doctor-contract.test.ts) and fixtures aligned for Windows and legacy skill-root normalization.
-- **Release tooling** — `Cargo.toml` `[workspace.package].version` and root `package-lock.json` aligned with `package.json` so the RCS Release workflow **Verify version sync** job matches npm and Rust workspace versions.
+- **Release tooling** — `package.json`, workspace `Cargo.toml`, root `package-lock.json`, and `Cargo.lock` entries for workspace `rcs-*` crates stay on the same semver for the **Verify version sync** job; `RELEASE_BODY.md`, README maintainer guidance, Release Playbook sync example, and document-refresh release-note collateral paths updated for the `v0.2.0` line.
 
 ### Verification (this release line)
 

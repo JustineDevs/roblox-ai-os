@@ -221,6 +221,7 @@ Contributor entry points:
 - [Contributing](./CONTRIBUTING.md)
 
 Maintainer standards:
+- before tagging a release, keep **`package.json`**, **`Cargo.toml` `[workspace.package].version`**, root **`package-lock.json`**, and **`Cargo.lock`** entries for workspace `rcs-*` crates on the **same semver**; the RCS Release workflow verifies npm and Cargo workspace versions match
 - label small, safe tasks with `good first issue` and broader open tasks with `help wanted`
 - keep issues granular enough to finish without deep repo archaeology
 - accept docs, localization, QA, wiki, triage, and release-note contributions as first-class work

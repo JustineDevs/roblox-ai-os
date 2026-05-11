@@ -59,7 +59,7 @@ npm run sync:release-notes:check
 
 Notes:
 
-- `sync:release-notes` creates or refreshes the managed version/date block for the current versioned file such as `docs/release-notes-v0.1.9.md`
+- `sync:release-notes` creates or refreshes the managed version/date block for the current versioned file such as `docs/release-notes-v0.2.0.md`
 - `sync:release-notes:check` fails when that managed block is missing or stale
 
 ## Backfilling GitHub Releases for existing tags
