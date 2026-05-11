@@ -15,7 +15,9 @@ describe('platform target manifest', () => {
       'claude-like',
       'codex-native',
       'codex-plugin',
+      'cursor',
       'marketplace-bundle',
+      'mcp-capable-ide',
     ]);
   });
 
@@ -42,7 +44,9 @@ describe('platform target manifest', () => {
     assert.equal(byId.get('codex-native')?.lane, 'delivery');
     assert.equal(byId.get('codex-plugin')?.lane, 'delivery');
     assert.equal(byId.get('claude-like')?.lane, 'delivery');
+    assert.equal(byId.get('cursor')?.lane, 'delivery');
     assert.equal(byId.get('marketplace-bundle')?.lane, 'delivery');
+    assert.equal(byId.get('mcp-capable-ide')?.lane, 'delivery');
     assert.equal(byId.get('adapter-openclaw')?.lane, 'adapter');
     assert.equal(byId.get('adapter-hermes')?.lane, 'adapter');
   });

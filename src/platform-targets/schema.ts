@@ -2,7 +2,9 @@ export type PlatformTargetId =
   | 'codex-native'
   | 'codex-plugin'
   | 'claude-like'
+  | 'cursor'
   | 'marketplace-bundle'
+  | 'mcp-capable-ide'
   | 'adapter-openclaw'
   | 'adapter-hermes';
 
@@ -36,7 +38,9 @@ const TARGET_IDS = new Set<PlatformTargetId>([
   'codex-native',
   'codex-plugin',
   'claude-like',
+  'cursor',
   'marketplace-bundle',
+  'mcp-capable-ide',
   'adapter-openclaw',
   'adapter-hermes',
 ]);

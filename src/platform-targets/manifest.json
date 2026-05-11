@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "manifestVersion": "2026.05.11.1",
+  "manifestVersion": "2026.05.12.1",
   "targets": [
     {
       "id": "codex-native",
@@ -70,6 +70,26 @@
       ]
     },
     {
+      "id": "cursor",
+      "displayName": "Cursor IDE",
+      "lane": "delivery",
+      "status": "planned",
+      "runtimeOwnership": "platform-owned",
+      "purpose": "Future delivery lane for Cursor (rules, project skills, MCP clients) consuming canonical RCS skills and orchestration guidance without Codex-native runtime semantics.",
+      "canonicalSources": [
+        "skills/",
+        "templates/AGENTS.md",
+        "docs/reference/agentic-platform-compatibility.md"
+      ],
+      "deliveryArtifacts": [
+        "docs/reference/agentic-platform-compatibility.md"
+      ],
+      "notes": [
+        "Treat Cursor-specific rules or skill mirrors as emitted artifacts from canonical sources.",
+        "Do not fork SKILL.md content into a second editing surface; add an emitter or documented sync contract when this lane becomes active."
+      ]
+    },
+    {
       "id": "marketplace-bundle",
       "displayName": "Marketplace Bundle",
       "lane": "delivery",
@@ -89,6 +109,27 @@
       "notes": [
         "Marketplace packages are emitted artifacts, not second sources of truth.",
         "Release and packaging workflows must keep this lane aligned with canonical package metadata."
+      ]
+    },
+    {
+      "id": "mcp-capable-ide",
+      "displayName": "MCP-capable IDE / assistant",
+      "lane": "delivery",
+      "status": "planned",
+      "runtimeOwnership": "platform-owned",
+      "purpose": "Future delivery lane for editors and assistants that attach to RCS first-party MCP servers via stdio or marketplace wiring without the full Codex setup path.",
+      "canonicalSources": [
+        "src/config/rcs-first-party-mcp.ts",
+        "skills/",
+        "docs/reference/agentic-platform-compatibility.md"
+      ],
+      "deliveryArtifacts": [
+        "docs/integrations.html",
+        "docs/reference/agentic-platform-compatibility.md"
+      ],
+      "notes": [
+        "Hosts include any MCP client that can run rcs mcp-serve targets or consume published MCP manifests.",
+        "Boundary: MCP metadata is canonical in TypeScript generators; host-specific JSON is emitted, not hand-maintained in duplicate."
       ]
     },
     {

@@ -37,6 +37,8 @@ describe('agentic platform compatibility', () => {
     assert.match(doc, /marketplace-bundle/i);
     assert.match(doc, /adapter-openclaw/i);
     assert.match(doc, /adapter-hermes/i);
+    assert.match(doc, /cursor/i);
+    assert.match(doc, /mcp-capable-ide/i);
   });
 
   it('links the platform compatibility contract from active docs', () => {

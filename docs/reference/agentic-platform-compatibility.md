@@ -133,6 +133,8 @@ Today RCS is strongest in:
 
 It is **not yet** a finished universal emitter for every external agent platform.
 
+Planned delivery targets in the manifest (for example `cursor` and `mcp-capable-ide`) reserve names and boundaries for those hosts without claiming they are fully implemented today.
+
 That is intentional. The repo should grow by adding **clean adapters/delivery contracts**, not by duplicating the product into platform-specific silos.
 
 ## Concrete target lanes
@@ -142,6 +144,8 @@ The current platform target manifest defines these concrete lanes:
 - `codex-native`
 - `codex-plugin`
 - `claude-like`
+- `cursor` (planned delivery for Cursor rules/skills/MCP clients)
 - `marketplace-bundle`
+- `mcp-capable-ide` (planned delivery for MCP-attached editors and assistants)
 - `adapter-openclaw`
 - `adapter-hermes`
