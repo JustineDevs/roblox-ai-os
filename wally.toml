@@ -1,0 +1,18 @@
+[package]
+name = "justinedevs/roblox-ai-os-workspace"
+version = "0.1.0"
+license = "MIT"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+exclude = [
+  "dist/**",
+  "node_modules/**",
+  "target/**",
+  "templates/roblox-scripts/**"
+]
+
+[dependencies]
+
+[server-dependencies]
+
+[dev-dependencies]

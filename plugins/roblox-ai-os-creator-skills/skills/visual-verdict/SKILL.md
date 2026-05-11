@@ -1,6 +1,10 @@
 ---
 name: visual-verdict
 description: Structured visual QA verdict for screenshot-to-reference comparisons
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 <Purpose>
@@ -16,7 +20,7 @@ Use this skill to compare generated UI screenshots against one or more reference
 <Inputs>
 - `reference_images[]` (one or more image paths)
 - `generated_screenshot` (current output image)
-- Optional: `category_hint` (e.g., `hackernews`, `sns-feed`, `dashboard`)
+- Optional: `category_hint` (e.g., `hackernews`, `sns-feed`, `studio-widget`)
 </Inputs>
 
 <Output_Contract>
@@ -44,7 +48,7 @@ Rules:
 <Threshold_And_Loop>
 - Target pass threshold is **90+**.
 - If `score < 90`, continue editing and rerun `$visual-verdict` before any further code edits in the next iteration.
-- Persist the verdict in `.rcs/state/{scope}/ralph-progress.json` with both:
+- Persist the verdict in `.rcs/state/{scope}/forge-progress.json` with both:
   - numeric signal (`score`, threshold pass/fail)
   - qualitative signal (`reasoning`, `suggestions`, `next_actions`)
 </Threshold_And_Loop>
@@ -74,3 +78,6 @@ When mismatch diagnosis is hard:
 }
 ```
 </Example>
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

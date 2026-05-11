@@ -15,14 +15,26 @@ export const CANONICAL_WORKFLOW_SKILLS = [
   'autopilot',
   'autoresearch',
   'team',
-  'ralph',
+  'forge',
   'ultrawork',
   'ultraqa',
-  'ralplan',
+  'blueprint',
   'deep-interview',
 ] as const;
 
 export type CanonicalWorkflowSkill = (typeof CANONICAL_WORKFLOW_SKILLS)[number];
+
+export const PUBLIC_WORKFLOW_SKILL_ALIASES = {
+  autoforge: 'autopilot',
+  brief: 'deep-interview',
+  blueprint: 'blueprint',
+  crew: 'team',
+  forge: 'forge',
+  swarm: 'team',
+} as const satisfies Record<string, CanonicalWorkflowSkill>;
+
+export type PublicWorkflowSkillAlias = keyof typeof PUBLIC_WORKFLOW_SKILL_ALIASES;
+export type WorkflowSkillName = CanonicalWorkflowSkill | PublicWorkflowSkillAlias;
 
 export interface SkillActiveEntry {
   skill: string;
@@ -227,6 +239,17 @@ export function tracksCanonicalWorkflowSkill(mode: string): mode is CanonicalWor
   return (CANONICAL_WORKFLOW_SKILLS as readonly string[]).includes(mode);
 }
 
+export function resolveWorkflowModeForSkill(skill: string): CanonicalWorkflowSkill | null {
+  const normalized = safeString(skill).trim().toLowerCase();
+  if (!normalized) return null;
+  if (tracksCanonicalWorkflowSkill(normalized)) return normalized;
+  return PUBLIC_WORKFLOW_SKILL_ALIASES[normalized as PublicWorkflowSkillAlias] ?? null;
+}
+
+export function isWorkflowSkillName(skill: string): skill is WorkflowSkillName {
+  return resolveWorkflowModeForSkill(skill) !== null;
+}
+
 export async function syncCanonicalSkillStateForMode(options: SyncCanonicalSkillStateOptions): Promise<void> {
   const {
     cwd,
@@ -240,7 +263,8 @@ export async function syncCanonicalSkillStateForMode(options: SyncCanonicalSkill
     source = 'state-server',
   } = options;
 
-  if (!tracksCanonicalWorkflowSkill(mode)) return;
+  const canonicalMode = resolveWorkflowModeForSkill(mode);
+  if (!canonicalMode) return;
 
   const { rootPath, sessionPath } = getSkillActiveStatePaths(cwd, sessionId);
   const existingRoot = await readSkillActiveState(rootPath);
@@ -267,11 +291,12 @@ export async function syncCanonicalSkillStateForMode(options: SyncCanonicalSkill
     ? [...rootEntries, ...sessionOnlyEntries]
     : [...rootEntries];
 
-  if (active && isTrackedWorkflowMode(mode)) {
+  if (active && isTrackedWorkflowMode(canonicalMode)) {
     const currentWorkflowModes = visibleEntries
       .map((entry) => entry.skill)
-      .filter(isTrackedWorkflowMode);
-    assertWorkflowTransitionAllowed(currentWorkflowModes, mode, 'write');
+      .map((entry) => resolveWorkflowModeForSkill(entry))
+      .filter((entry): entry is CanonicalWorkflowSkill & string => entry !== null && isTrackedWorkflowMode(entry));
+    assertWorkflowTransitionAllowed(currentWorkflowModes, canonicalMode, 'write');
   }
 
   const applyEntriesToState = (
@@ -300,13 +325,13 @@ export async function syncCanonicalSkillStateForMode(options: SyncCanonicalSkill
   };
 
   if (normalizedSessionId) {
-    const nextSessionEntries = sessionOnlyEntries.filter((entry) => entry.skill !== mode);
+    const nextSessionEntries = sessionOnlyEntries.filter((entry) => entry.skill !== canonicalMode);
     if (active) {
       nextSessionEntries.push({
-        skill: mode,
+        skill: canonicalMode,
         phase: safeString(currentPhase).trim() || undefined,
         active: true,
-        activated_at: sessionOnlyEntries.find((entry) => entry.skill === mode)?.activated_at || nowIso,
+        activated_at: sessionOnlyEntries.find((entry) => entry.skill === canonicalMode)?.activated_at || nowIso,
         updated_at: nowIso,
         session_id: normalizedSessionId,
         thread_id: safeString(threadId).trim() || undefined,
@@ -315,33 +340,33 @@ export async function syncCanonicalSkillStateForMode(options: SyncCanonicalSkill
     }
 
     const nextRootEntries = rootEntries.filter((entry) => !(
-      entry.skill === mode
+      entry.skill === canonicalMode
       && safeString(entry.session_id).trim() === normalizedSessionId
     ));
 
     const nextSessionState = applyEntriesToState(
       existingSession ?? existingRoot,
       [...nextRootEntries, ...nextSessionEntries],
-      mode,
+      canonicalMode,
     );
     const nextRootState = nextRootEntries.length > 0
       ? applyEntriesToState(existingRoot, nextRootEntries, mode)
       : applyEntriesToState(
         existingSession ?? existingRoot,
         active ? nextSessionEntries : [],
-        mode,
+        canonicalMode,
       );
     await writeSkillActiveStateCopies(cwd, nextSessionState, sessionId, nextRootState);
     return;
   }
 
-  const nextRootEntries = rootEntries.filter((entry) => entry.skill !== mode);
+  const nextRootEntries = rootEntries.filter((entry) => entry.skill !== canonicalMode);
   if (active) {
     nextRootEntries.push({
-      skill: mode,
+      skill: canonicalMode,
       phase: safeString(currentPhase).trim() || undefined,
       active: true,
-      activated_at: rootEntries.find((entry) => entry.skill === mode)?.activated_at || nowIso,
+      activated_at: rootEntries.find((entry) => entry.skill === canonicalMode)?.activated_at || nowIso,
       updated_at: nowIso,
       session_id: undefined,
       thread_id: safeString(threadId).trim() || undefined,
@@ -349,7 +374,7 @@ export async function syncCanonicalSkillStateForMode(options: SyncCanonicalSkill
     });
   }
 
-  const nextRootState = applyEntriesToState(existingRoot, nextRootEntries, mode);
+  const nextRootState = applyEntriesToState(existingRoot, nextRootEntries, canonicalMode);
   await writeSkillActiveStateCopies(cwd, nextRootState, undefined, nextRootState);
 
   const sessionsDir = join(rcsStateDir(cwd), 'sessions');
@@ -376,7 +401,7 @@ export async function syncCanonicalSkillStateForMode(options: SyncCanonicalSkill
     const nextSessionState = applyEntriesToState(
       existingSessionState ?? existingRoot,
       nextSessionEntries,
-      nextSessionEntries[0]?.skill || mode,
+      nextSessionEntries[0]?.skill || canonicalMode,
     );
     await writeSkillActiveStateCopies(cwd, nextSessionState, sessionId, nextRootState);
   }

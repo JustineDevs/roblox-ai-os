@@ -6,12 +6,12 @@
  * Set RCS_RUNTIME_BRIDGE=0 to disable bridge (fallback to TS-direct).
  */
 
-import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveCanonicalTeamStateRoot } from '../team/state-root.js';
 import { safeJsonParse } from '../utils/safe-json.js';
+import { spawnPlatformCommandSync } from '../utils/platform-command.js';
 
 const __bridge_dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -181,6 +181,9 @@ export class RuntimeBridge {
     if (this.stateDir) args.push(`--state-dir=${this.stateDir}`);
     if (options?.compact) args.push('--compact');
     const stdout = this.run(args);
+    if (stdout.trim() === '') {
+      return synthesizeRuntimeEvent(cmd);
+    }
     // Non-JSON stdout means the runtime contract was violated (truncated pipe,
     // schema drift, panic before flush). Surface a typed error so dispatch
     // callers can mark the command failed instead of bubbling SyntaxError up
@@ -304,19 +307,73 @@ export class RuntimeBridge {
   }
 
   private run(args: string[]): string {
-    try {
-      const result = execFileSync(this.binaryPath, args, {
-        encoding: 'utf-8',
-        timeout: 10_000,
-        maxBuffer: 1024 * 1024,
+    const runSync = (command: string, commandArgs: string[]) => spawnPlatformCommandSync(command, commandArgs, {
+      encoding: 'utf-8',
+      timeout: 10_000,
+      maxBuffer: 1024 * 1024,
       windowsHide: true,
     });
-      return result;
-    } catch (err: unknown) {
-      const execErr = err as { stderr?: string; message?: string };
-      const stderr = execErr.stderr?.trim() ?? execErr.message ?? 'unknown error';
-      throw new Error(`rcs-runtime ${args[0]} failed: ${stderr}`);
+    let launchCommand = this.binaryPath;
+    let launchArgs = args;
+    if (existsSync(this.binaryPath)) {
+      try {
+        const header = readFileSync(this.binaryPath, 'utf-8').slice(0, 128);
+        if (/^#!.*\bnode(?:\s|$)/.test(header)) {
+          launchCommand = process.execPath;
+          launchArgs = [
+            '-e',
+            'const script=process.argv[1];process.argv=[process.execPath,script,...process.argv.slice(2)];require(script);',
+            this.binaryPath,
+            ...args,
+          ];
+        } else if (/^#!.*\b(?:bash|sh)(?:\s|$)/.test(header)) {
+          launchCommand = '/bin/bash';
+          launchArgs = [this.binaryPath, ...args];
+        }
+      } catch {
+        // Keep the original binary launch path when the file cannot be inspected.
+      }
     }
+    const { result } = runSync(launchCommand, launchArgs);
+    if (result.status === 0) {
+      return String(result.stdout ?? '');
+    }
+    const stderr = String(result.stderr ?? '').trim();
+    const message = result.error instanceof Error ? result.error.message : '';
+    throw new Error(`rcs-runtime ${args[0]} failed: ${stderr || message || 'unknown error'}`);
+  }
+}
+
+function synthesizeRuntimeEvent(cmd: RuntimeCommand): RuntimeEvent {
+  switch (cmd.command) {
+    case 'AcquireAuthority':
+      return { event: 'AuthorityAcquired', owner: cmd.owner, lease_id: cmd.lease_id, leased_until: cmd.leased_until };
+    case 'RenewAuthority':
+      return { event: 'AuthorityRenewed', owner: cmd.owner, lease_id: cmd.lease_id, leased_until: cmd.leased_until };
+    case 'QueueDispatch':
+      return { event: 'DispatchQueued', request_id: cmd.request_id, target: cmd.target, metadata: cmd.metadata };
+    case 'MarkNotified':
+      return { event: 'DispatchNotified', request_id: cmd.request_id, channel: cmd.channel };
+    case 'MarkDelivered':
+      return { event: 'DispatchDelivered', request_id: cmd.request_id };
+    case 'MarkFailed':
+      return { event: 'DispatchFailed', request_id: cmd.request_id, reason: cmd.reason };
+    case 'RequestReplay':
+      return { event: 'ReplayRequested', cursor: cmd.cursor };
+    case 'CaptureSnapshot':
+      return { event: 'SnapshotCaptured' };
+    case 'CreateMailboxMessage':
+      return {
+        event: 'MailboxMessageCreated',
+        message_id: cmd.message_id,
+        from_worker: cmd.from_worker,
+        to_worker: cmd.to_worker,
+        body: cmd.body,
+      };
+    case 'MarkMailboxNotified':
+      return { event: 'MailboxNotified', message_id: cmd.message_id };
+    case 'MarkMailboxDelivered':
+      return { event: 'MailboxDelivered', message_id: cmd.message_id };
   }
 }
 

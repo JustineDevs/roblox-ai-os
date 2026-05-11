@@ -1,6 +1,10 @@
 ---
 name: doctor
 description: Diagnose and fix Roblox Creator Skills installation issues
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Doctor Skill
@@ -237,3 +241,6 @@ rm -rf ~/.agents/skills
 
 After applying fixes, inform user:
 > Fixes applied. **Restart Codex CLI** for changes to take effect.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

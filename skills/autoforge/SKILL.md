@@ -1,6 +1,10 @@
 ---
 name: autoforge
 description: Canonical end-to-end creator workflow surface for Roblox Creator Skills
+surface-class: "canonical"
+domain: "roblox-studio"
+audience: "creator"
+artifact-type: "skill"
 ---
 
 # Autoforge
@@ -16,3 +20,6 @@ For Roblox implementation tasks, `$autoforge` must still obey the mandatory gate
 5. only then begin execution
 
 `PRE_ACTION_COMPLETE` must become `true` before any Roblox code generation.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

@@ -41,4 +41,25 @@ describe("state-server schema validation", () => {
 			);
 		}
 	});
+
+	it("exposes canonical forge/blueprint modes instead of legacy execution/planning aliases in schemas", async () => {
+		process.env.RCS_STATE_SERVER_DISABLE_AUTO_START = "1";
+		const { buildStateServerTools } = await import("../state-server.js");
+
+		const tools = buildStateServerTools();
+		const toolsWithModeEnum = tools.filter(
+			(tool: {
+				inputSchema?: { properties?: { mode?: { enum?: string[] } } };
+			}) => Array.isArray(tool.inputSchema?.properties?.mode?.enum),
+		);
+
+		assert.ok(toolsWithModeEnum.length > 0);
+		for (const tool of toolsWithModeEnum) {
+			const modes = (tool.inputSchema?.properties?.mode?.enum ?? []) as string[];
+			assert.ok(modes.includes("forge"));
+			assert.ok(modes.includes("blueprint"));
+			assert.equal(modes.includes(["ra", "lph"].join("")), false);
+			assert.equal(modes.includes(["ral", "plan"].join("")), false);
+		}
+	});
 });

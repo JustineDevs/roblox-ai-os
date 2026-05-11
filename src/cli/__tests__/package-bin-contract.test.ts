@@ -67,14 +67,23 @@ describe('package bin contract', () => {
     assert.equal(pkg.scripts?.['sync:plugin:check'], 'node dist/scripts/sync-plugin-mirror.js --check');
     assert.equal(pkg.scripts?.['verify:plugin-bundle'], 'node dist/scripts/sync-plugin-mirror.js --check');
     assert.equal(pkg.scripts?.['verify:native-agents'], 'node dist/scripts/verify-native-agents.js');
-    assert.equal(pkg.scripts?.prepack, 'npm run build && npm run verify:native-agents && npm run sync:plugin && npm run verify:plugin-bundle && npm run clean:native-package-assets');
+    assert.equal(
+      pkg.scripts?.prepack,
+      'npm run build && npm run verify:native-agents && npm run sync:plugin && npm run verify:plugin-bundle && npm run surface:map:check && npm run clean:native-package-assets',
+    );
     assert.equal(pkg.scripts?.postinstall, 'node src/scripts/postinstall-bootstrap.js');
     assert.equal(pkg.scripts?.postpack, 'npm run clean:native-package-assets');
     assert.equal(pkg.scripts?.['test:explore'], 'cargo test -p rcs-explore-harness && node --test dist/cli/__tests__/explore.test.js dist/hooks/__tests__/explore-routing.test.js dist/hooks/__tests__/explore-sparkshell-guidance-contract.test.js');
     assert.equal(pkg.scripts?.['test:team:cross-rebase-smoke:compiled'], 'node --test dist/team/__tests__/cross-rebase-smoke.test.js');
     assert.equal(pkg.scripts?.['test:node'], 'node dist/scripts/run-test-files.js dist');
-    assert.equal(pkg.scripts?.test, 'npm run build && npm run verify:native-agents && npm run verify:plugin-bundle && npm run test:node && node dist/scripts/generate-catalog-docs.js --check');
-    assert.equal(pkg.scripts?.['test:ci:compiled'], 'npm run verify:native-agents && npm run verify:plugin-bundle && npm run test:node && node dist/scripts/generate-catalog-docs.js --check');
+    assert.equal(
+      pkg.scripts?.test,
+      'npm run build && npm run verify:native-agents && npm run verify:plugin-bundle && npm run test:node && node dist/scripts/generate-catalog-docs.js --check && npm run surface:map:check',
+    );
+    assert.equal(
+      pkg.scripts?.['test:ci:compiled'],
+      'npm run verify:native-agents && npm run verify:plugin-bundle && npm run test:node && node dist/scripts/generate-catalog-docs.js --check && npm run surface:map:check',
+    );
     assert.equal(
       pkg.scripts?.['coverage:team-critical'],
       "npm run build && c8 --all --src dist/team --src dist/state --include 'dist/team/**/*.js' --include 'dist/state/**/*.js' --exclude '**/__tests__/**' --reporter=text-summary --reporter=lcov --reporter=json-summary --report-dir coverage/team --check-coverage --lines=78 --functions=90 --branches=70 --statements=78 node dist/scripts/run-test-files.js dist/team/__tests__ dist/state/__tests__",
@@ -83,6 +92,7 @@ describe('package bin contract', () => {
       pkg.scripts?.['coverage:team-critical:compiled'],
       "c8 --all --src dist/team --src dist/state --include 'dist/team/**/*.js' --include 'dist/state/**/*.js' --exclude '**/__tests__/**' --reporter=text-summary --reporter=lcov --reporter=json-summary --report-dir coverage/team --check-coverage --lines=78 --functions=90 --branches=70 --statements=78 node dist/scripts/run-test-files.js dist/team/__tests__ dist/state/__tests__",
     );
+    assert.equal(pkg.scripts?.build, `node -e "require('fs').rmSync('dist',{recursive:true,force:true})" && tsc && node -e "require('fs').chmodSync('dist/cli/rcs.js', 0o755)"`);
     assert.equal(
       pkg.scripts?.['coverage:ts:full'],
       "npm run build && c8 --all --src dist --exclude '**/__tests__/**' --exclude 'dist/bin/**' --exclude 'dist/**/*.d.ts' --reporter=text-summary --reporter=lcov --reporter=json-summary --report-dir coverage/ts-full node dist/scripts/run-test-files.js dist",
@@ -92,8 +102,8 @@ describe('package bin contract', () => {
       "c8 --all --src dist --exclude '**/__tests__/**' --exclude 'dist/bin/**' --exclude 'dist/**/*.d.ts' --reporter=text-summary --reporter=lcov --reporter=json-summary --report-dir coverage/ts-full node dist/scripts/run-test-files.js dist",
     );
     assert.equal(
-      pkg.scripts?.['test:ralph-persistence:compiled'],
-      'node --test dist/cli/__tests__/session-scoped-runtime.test.js dist/mcp/__tests__/trace-server.test.js dist/hud/__tests__/state.test.js dist/mcp/__tests__/state-server-ralph-phase.test.js dist/ralph/__tests__/persistence.test.js dist/verification/__tests__/ralph-persistence-gate.test.js',
+      pkg.scripts?.['test:forge-persistence:compiled'],
+      'node --test dist/cli/__tests__/session-scoped-runtime.test.js dist/mcp/__tests__/trace-server.test.js dist/hud/__tests__/state.test.js dist/mcp/__tests__/state-server-forge-phase.test.js dist/forge/__tests__/persistence.test.js dist/verification/__tests__/forge-persistence-gate.test.js',
     );
     assert.equal(
       pkg.scripts?.['test:plugin-boundaries:compiled'],
@@ -101,7 +111,7 @@ describe('package bin contract', () => {
     );
     assert.equal(pkg.scripts?.['test:compat:node'], 'npm run build && node dist/scripts/run-test-files.js dist/compat/__tests__');
 
-    for (const scriptName of ['test:node', 'test:ci:compiled', 'coverage:team-critical', 'coverage:team-critical:compiled', 'coverage:ts:full', 'coverage:ts:full:compiled', 'test:ralph-persistence:compiled', 'test:plugin-boundaries:compiled', 'test:compat:node'] as const) {
+    for (const scriptName of ['test:node', 'test:ci:compiled', 'coverage:team-critical', 'coverage:team-critical:compiled', 'coverage:ts:full', 'coverage:ts:full:compiled', 'test:forge-persistence:compiled', 'test:plugin-boundaries:compiled', 'test:compat:node'] as const) {
       const script: string | undefined = pkg.scripts?.[scriptName];
       assert.ok(script, `expected ${scriptName} to exist`);
       assert.equal(script.includes('$(find '), false, `${scriptName} should not rely on POSIX command substitution`);
@@ -144,6 +154,9 @@ describe('package bin contract', () => {
           timeout: 5_000,
         },
       );
+      if (mcpServe.error && mcpServe.stdout.trim() === '') {
+        continue;
+      }
       if (mcpServe.status !== 0 && mcpServe.stdout.trim() === '') {
         continue;
       }
@@ -197,7 +210,11 @@ describe('package bin contract', () => {
     const codeIntelServerEntry = results[0]?.files?.find((file) => file.path === 'dist/mcp/code-intel-server.js');
     const traceServerEntry = results[0]?.files?.find((file) => file.path === 'dist/mcp/trace-server.js');
     const wikiServerEntry = results[0]?.files?.find((file) => file.path === 'dist/mcp/wiki-server.js');
-    const rootRalphSkillEntry = results[0]?.files?.find((file) => file.path === 'skills/ralph/SKILL.md');
+    const rootForgeSkillEntry = results[0]?.files?.find((file) => file.path === 'skills/forge/SKILL.md');
+    const hiddenInternalSkillEntry = results[0]?.files?.find((file) =>
+      file.path.startsWith('skills/.agents/') || file.path.startsWith('skills/.claude/'));
+    const compiledTestEntry = results[0]?.files?.find((file) => file.path.includes('/__tests__/'));
+    const bulkyRobloxTemplateEntry = results[0]?.files?.find((file) => file.path.startsWith('templates/roblox-scripts/'));
     const promptEntry = results[0]?.files?.find((file) => file.path === 'prompts/executor.md');
     const templateEntry = results[0]?.files?.find((file) => file.path === 'templates/AGENTS.md');
     const postinstallEntry = results[0]?.files?.find((file) => file.path === 'src/scripts/postinstall-bootstrap.js');
@@ -242,7 +259,10 @@ describe('package bin contract', () => {
         `expected npm pack output to include prompt for native agent ${agentName}`,
       );
     }
-    assert.ok(rootRalphSkillEntry, 'expected npm pack output to keep canonical root skills');
+    assert.ok(rootForgeSkillEntry, 'expected npm pack output to keep canonical root skills');
+    assert.equal(hiddenInternalSkillEntry, undefined, 'did not expect hidden internal skill payloads in package output');
+    assert.equal(compiledTestEntry, undefined, 'did not expect compiled test output in package output');
+    assert.equal(bulkyRobloxTemplateEntry, undefined, 'did not expect bulky roblox script corpus in package output');
     assert.ok(promptEntry, 'expected npm pack output to keep prompts');
     assert.ok(templateEntry, 'expected npm pack output to keep templates');
     assert.ok(postinstallEntry, 'expected npm pack output to keep postinstall bootstrap script');

@@ -245,15 +245,15 @@ describe('state operations directory initialization', () => {
     }
   });
 
-  it('lists active modes from the explicit session scope without leaking a sibling Ralph session', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-state-ops-foreign-ralph-scope-'));
+  it('lists active modes from the explicit session scope without leaking a sibling Forge session', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-state-ops-foreign-forge-scope-'));
     try {
       const currentSessionDir = join(wd, '.rcs', 'state', 'sessions', 'sess-current');
       const foreignSessionDir = join(wd, '.rcs', 'state', 'sessions', 'sess-foreign');
       await mkdir(currentSessionDir, { recursive: true });
       await mkdir(foreignSessionDir, { recursive: true });
       await writeFile(
-        join(foreignSessionDir, 'ralph-state.json'),
+        join(foreignSessionDir, 'forge-state.json'),
         JSON.stringify({ active: true, current_phase: 'executing' }, null, 2),
       );
 
@@ -438,27 +438,27 @@ describe('state operations directory initialization', () => {
       const sessionDir = join(wd, '.rcs', 'state', 'sessions', 'sess-invalid');
       await mkdir(sessionDir, { recursive: true });
       await writeFile(
-        join(sessionDir, 'ralplan-state.json'),
-        JSON.stringify({ active: true, mode: 'ralplan', current_phase: 'planning' }, null, 2),
+        join(sessionDir, 'blueprint-state.json'),
+        JSON.stringify({ active: true, mode: 'blueprint', current_phase: 'planning' }, null, 2),
       );
 
       const denied = await executeStateOperation('state_write', {
         workingDirectory: wd,
         session_id: 'sess-invalid',
-        mode: 'ralph',
+        mode: 'forge',
         active: true,
         current_phase: 'definitely-invalid',
       });
 
       assert.equal(denied.isError, true);
-      assert.match(String((denied.payload as { error?: string }).error || ''), /ralph\.current_phase/i);
+      assert.match(String((denied.payload as { error?: string }).error || ''), /forge\.current_phase/i);
 
-      const ralplanState = JSON.parse(
-        await readFile(join(sessionDir, 'ralplan-state.json'), 'utf-8'),
+      const blueprintState = JSON.parse(
+        await readFile(join(sessionDir, 'blueprint-state.json'), 'utf-8'),
       ) as Record<string, unknown>;
-      assert.equal(ralplanState.active, true);
-      assert.equal(ralplanState.current_phase, 'planning');
-      assert.equal(existsSync(join(sessionDir, 'ralph-state.json')), false);
+      assert.equal(blueprintState.active, true);
+      assert.equal(blueprintState.current_phase, 'planning');
+      assert.equal(existsSync(join(sessionDir, 'forge-state.json')), false);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
@@ -473,7 +473,7 @@ describe('state operations directory initialization', () => {
       await mkdir(sessionDir, { recursive: true });
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({ session_id: sessionId }, null, 2));
       await writeFile(
-        join(stateDir, 'ralph-state.json'),
+        join(stateDir, 'forge-state.json'),
         JSON.stringify({
           active: true,
           current_phase: 'executing',
@@ -481,7 +481,7 @@ describe('state operations directory initialization', () => {
         }, null, 2),
       );
       await writeFile(
-        join(sessionDir, 'ralph-state.json'),
+        join(sessionDir, 'forge-state.json'),
         JSON.stringify({
           active: true,
           current_phase: 'executing',
@@ -491,7 +491,7 @@ describe('state operations directory initialization', () => {
 
       const writeResult = await executeStateOperation('state_write', {
         workingDirectory: wd,
-        mode: 'ralph',
+        mode: 'forge',
         state: {
           current_phase: 'verify',
         },
@@ -499,14 +499,14 @@ describe('state operations directory initialization', () => {
 
       assert.equal(writeResult.isError, undefined);
       const sessionState = JSON.parse(
-        await readFile(join(sessionDir, 'ralph-state.json'), 'utf-8'),
+        await readFile(join(sessionDir, 'forge-state.json'), 'utf-8'),
       ) as Record<string, unknown>;
       assert.equal(sessionState.active, true);
       assert.equal(sessionState.current_phase, 'verifying');
       assert.equal(sessionState.owner_rcs_session_id, sessionId);
 
       const rootState = JSON.parse(
-        await readFile(join(stateDir, 'ralph-state.json'), 'utf-8'),
+        await readFile(join(stateDir, 'forge-state.json'), 'utf-8'),
       ) as Record<string, unknown>;
       assert.equal(rootState.current_phase, 'executing');
       assert.equal(rootState.owner_rcs_session_id, 'stale-root-owner');

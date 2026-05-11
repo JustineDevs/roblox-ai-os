@@ -29,16 +29,16 @@ describe("mcpParityCommand", () => {
       await mcpParityCommand("state", [
         "state_write",
         "--input",
-        JSON.stringify({ mode: "ralph", active: true, current_phase: "executing", workingDirectory: cwd }),
+        JSON.stringify({ mode: "forge", active: true, current_phase: "executing", workingDirectory: cwd }),
         "--json",
       ]);
       const writeResult = JSON.parse(logs.pop() || "{}") as { path?: string };
-      assert.match(writeResult.path ?? "", /ralph-state\.json$/);
+      assert.match(writeResult.path ?? "", /forge-state\.json$/);
 
       await mcpParityCommand("state", [
         "state_read",
         "--input",
-        JSON.stringify({ mode: "ralph", workingDirectory: cwd }),
+        JSON.stringify({ mode: "forge", workingDirectory: cwd }),
         "--json",
       ]);
       const readResult = JSON.parse(logs.pop() || "{}") as { active?: boolean; current_phase?: string };
@@ -60,7 +60,7 @@ describe("mcpParityCommand", () => {
         "write",
         "--input",
         JSON.stringify({
-          mode: "ralph",
+          mode: "forge",
           active: true,
           current_phase: "executing",
           session_id: "session-fallback",
@@ -71,14 +71,14 @@ describe("mcpParityCommand", () => {
       const writeResult = JSON.parse(logs.pop() || "{}") as { path?: string };
       assert.equal(
         writeResult.path,
-        join(cwd, ".rcs", "state", "sessions", "session-fallback", "ralph-state.json"),
+        join(cwd, ".rcs", "state", "sessions", "session-fallback", "forge-state.json"),
       );
 
       await mcpParityCommand("state", [
         "read",
         "--input",
         JSON.stringify({
-          mode: "ralph",
+          mode: "forge",
           session_id: "session-fallback",
           workingDirectory: cwd,
         }),

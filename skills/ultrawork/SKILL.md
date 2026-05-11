@@ -1,25 +1,29 @@
 ---
 name: ultrawork
 description: Parallel execution engine for high-throughput task completion
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 <Purpose>
-Ultrawork is a parallel execution engine for high-throughput task completion. It is a component, not a standalone persistence mode: it provides parallelism, context discipline, and smart delegation guidance, but not Ralph's persistence loop, architect sign-off, or long-running completion guarantees.
+Ultrawork is a parallel execution engine for high-throughput task completion. It is a component, not a standalone persistence mode: it provides parallelism, context discipline, and smart delegation guidance, but not Forge's persistent completion loop, architect sign-off, or long-running completion guarantees.
 </Purpose>
 
 <Use_When>
 - Multiple independent tasks can run simultaneously
 - User says "ulw", "ultrawork", or explicitly wants parallel execution
 - Task benefits from concurrent execution plus lightweight evidence before wrap-up
-- You need a direct-tool lane plus optional background evidence lanes without entering Ralph
+- You need a direct-tool lane plus optional background evidence lanes without entering Forge
 </Use_When>
 
 <Do_Not_Use_When>
-- Task requires guaranteed completion with persistence, architect verification, or deslop/reverification -- use `ralph` instead (Ralph includes ultrawork)
-- Task requires a full autonomous pipeline -- use `autopilot` instead (autopilot includes Ralph which includes ultrawork)
+- Task requires guaranteed completion with persistence, architect verification, or deslop/reverification -- use `forge` instead (Forge includes ultrawork)
+- Task requires a full autonomous pipeline -- use `autoforge` / `autopilot` instead (Autoforge includes Forge which includes ultrawork)
 - There is only one sequential task with no parallelism opportunity -- execute directly or delegate to a single `executor`
-- The request is still in plan-consensus mode -- keep planning artifacts in `ralplan` until execution is explicitly authorized
-- User needs session persistence for resume -- use `ralph`, which adds persistence on top of ultrawork
+- The request is still in plan-consensus mode -- keep planning artifacts in `blueprint` until execution is explicitly authorized
+- User needs session persistence for resume -- use `forge`, which adds persistence on top of ultrawork
 </Do_Not_Use_When>
 
 <Why_This_Exists>
@@ -138,8 +142,8 @@ Why bad: No verification output, no acceptance evidence, and no manual QA note w
 </Examples>
 
 <Escalation_And_Stop_Conditions>
-- When ultrawork is invoked directly (not via Ralph), apply lightweight verification only -- build/typecheck passes when relevant, affected tests pass, and manual QA notes are captured when needed.
-- Ralph owns persistence, architect verification, deslop, and the full verified-completion promise. Do not claim those guarantees from direct ultrawork alone.
+- When ultrawork is invoked directly (not via Forge), apply lightweight verification only -- build/typecheck passes when relevant, affected tests pass, and manual QA notes are captured when needed.
+- Forge owns persistence, architect verification, deslop, and the full verified-completion promise. Do not claim those guarantees from direct ultrawork alone.
 - If a task fails repeatedly across retries, report the issue rather than retrying indefinitely.
 - Escalate to the user when tasks have unclear dependencies, conflicting requirements, or a materially branching acceptance target.
 </Escalation_And_Stop_Conditions>
@@ -159,17 +163,20 @@ Why bad: No verification output, no acceptance evidence, and no manual QA note w
 ## Relationship to Other Modes
 
 ```
-ralph (persistence + verified completion wrapper)
+forge (persistence + verified completion wrapper)
  \-- includes: ultrawork (this skill)
      \-- provides: high-throughput execution + lightweight evidence
 
-autopilot (autonomous execution)
- \-- includes: ralph
+autoforge / autopilot (autonomous execution)
+ \-- includes: forge
      \-- includes: ultrawork (this skill)
 
 ecomode (token efficiency)
  \-- modifies: ultrawork's model selection
 ```
 
-Ultrawork is the parallelism and execution-discipline layer. Ralph adds persistence, architect verification, deslop, and retry-until-done behavior. Autopilot adds the broader autonomous lifecycle pipeline. Ecomode adjusts ultrawork's model routing to favor cheaper models.
+Ultrawork is the parallelism and execution-discipline layer. Forge adds persistence, architect verification, deslop, and retry-until-done behavior. Autoforge adds the broader autonomous lifecycle pipeline. Ecomode adjusts ultrawork's model routing to favor cheaper models.
 </Advanced>
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

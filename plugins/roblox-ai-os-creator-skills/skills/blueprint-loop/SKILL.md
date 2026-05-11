@@ -1,6 +1,10 @@
 ---
 name: blueprint-loop
 description: Creator workflow for `$blueprint:loop`
+surface-class: "canonical"
+domain: "roblox-studio"
+audience: "creator"
+artifact-type: "skill"
 ---
 
 # Blueprint Loop
@@ -17,3 +21,6 @@ Return a filled **Dopamine Loop Map** using `templates/psychology/dopamine-loop-
 - daily loop
 - weekly loop
 - comeback loop
+surface-class: "canonical"
+domain: "creator-runtime"
+audience: "creator"

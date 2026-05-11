@@ -6,10 +6,10 @@ export const TRACKED_WORKFLOW_MODES = [
   'autopilot',
   'autoresearch',
   'team',
-  'ralph',
+  'forge',
   'ultrawork',
   'ultraqa',
-  'ralplan',
+  'blueprint',
   'deep-interview',
 ] as const;
 
@@ -18,29 +18,29 @@ export type WorkflowTransitionAction = 'activate' | 'start' | 'write';
 export type WorkflowTransitionKind = 'allow' | 'overlap' | 'auto-complete' | 'deny';
 
 const ALLOWED_OVERLAP_PAIRS = new Set([
-  'ralph|team',
+  'forge|team',
 ]);
 
 const AUTO_COMPLETE_TRANSITIONS = new Set([
-  'deep-interview->ralplan',
+  'deep-interview->blueprint',
   'deep-interview->autoresearch',
-  'ralplan->team',
-  'ralplan->ralph',
-  'ralplan->autopilot',
-  'ralplan->autoresearch',
-  'autopilot->ralplan',
+  'blueprint->team',
+  'blueprint->forge',
+  'blueprint->autopilot',
+  'blueprint->autoresearch',
+  'autopilot->blueprint',
 ]);
 
 const PLANNING_LIKE_MODES = new Set<TrackedWorkflowMode>([
   'deep-interview',
-  'ralplan',
+  'blueprint',
 ]);
 
 const EXECUTION_LIKE_MODES = new Set<TrackedWorkflowMode>([
   'autopilot',
   'autoresearch',
   'team',
-  'ralph',
+  'forge',
   'ultrawork',
   'ultraqa',
 ]);
@@ -52,8 +52,9 @@ function safeString(value: unknown): string {
 function normalizeTrackedModes(modes: Iterable<string>): TrackedWorkflowMode[] {
   const deduped = new Set<TrackedWorkflowMode>();
   for (const mode of modes) {
-    if (isTrackedWorkflowMode(mode)) {
-      deduped.add(mode);
+    const normalized = resolveTrackedWorkflowMode(mode);
+    if (normalized) {
+      deduped.add(normalized);
     }
   }
   return [...deduped];
@@ -85,9 +86,11 @@ function isRollbackTransition(
 }
 
 export function buildWorkflowTransitionMessage(
-  sourceMode: TrackedWorkflowMode,
-  requestedMode: TrackedWorkflowMode,
+  sourceModeInput: string,
+  requestedModeInput: string,
 ): string {
+  const sourceMode = resolveTrackedWorkflowMode(sourceModeInput) ?? sourceModeInput;
+  const requestedMode = resolveTrackedWorkflowMode(requestedModeInput) ?? requestedModeInput;
   return `mode transiting: ${sourceMode} -> ${requestedMode}`;
 }
 
@@ -113,10 +116,19 @@ export function isTrackedWorkflowMode(mode: string): mode is TrackedWorkflowMode
   return (TRACKED_WORKFLOW_MODES as readonly string[]).includes(mode);
 }
 
+export function resolveTrackedWorkflowMode(mode: string): TrackedWorkflowMode | null {
+  if (isTrackedWorkflowMode(mode)) return mode;
+  return null;
+}
+
 export function evaluateWorkflowTransition(
   currentActiveModes: Iterable<string>,
-  requestedMode: TrackedWorkflowMode,
+  requestedModeInput: string,
 ): WorkflowTransitionDecision {
+  const requestedMode = resolveTrackedWorkflowMode(requestedModeInput);
+  if (!requestedMode) {
+    throw new Error(`Unsupported workflow mode: ${requestedModeInput}`);
+  }
   const currentModes = normalizeTrackedModes(currentActiveModes);
 
   if (currentModes.includes(requestedMode)) {
@@ -180,7 +192,7 @@ export function evaluateWorkflowTransition(
 
 export function buildWorkflowTransitionError(
   currentActiveModes: Iterable<string>,
-  requestedMode: TrackedWorkflowMode,
+  requestedMode: string,
   action: WorkflowTransitionAction = 'activate',
 ): string {
   const decision = evaluateWorkflowTransition(currentActiveModes, requestedMode);
@@ -204,7 +216,7 @@ export function buildWorkflowTransitionError(
 
 export function assertWorkflowTransitionAllowed(
   currentActiveModes: Iterable<string>,
-  requestedMode: TrackedWorkflowMode,
+  requestedMode: string,
   action: WorkflowTransitionAction = 'activate',
 ): void {
   const decision = evaluateWorkflowTransition(currentActiveModes, requestedMode);

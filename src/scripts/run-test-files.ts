@@ -3,7 +3,7 @@ import { readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const DEFAULT_TEST_TIMEOUT_MS = 0;
-const DEFAULT_RUNNER_TIMEOUT_MS = 30 * 60 * 1_000;
+const DEFAULT_RUNNER_TIMEOUT_MS = 0;
 
 function collectTests(path: string, out: string[]): void {
   let stats;

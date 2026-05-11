@@ -1,30 +1,70 @@
-# Autoresearch pilot missions
+# Roblox creator mission contracts
 
-These mission bundles are **autoresearch-ready pilots** for this repo snapshot.
+This folder now holds Roblox-first mission bundles used to pressure-test creator workflows, design review, and implementation guidance against actual Studio concepts.
 
 Each mission directory contains:
-- `mission.md` — objective, scope, and expected deliverable
-- `sandbox.md` — evaluator contract plus safety/operating rules
+- `mission.md` — creator objective, target gameplay/system, and required deliverable
+- `sandbox.md` — bounded touchpoints, validation contract, and constraints
 
-Current pilots / examples:
-- `cli-discoverability-pilot/`
-- `security-path-traversal-pilot/`
-- `in-action-cat-shellout-demo/` — a small self-hosted RCS optimization demo that removes the autoresearch loop's manifest `cat` shell-out and proves the fix with a focused evaluator
+Semantic schema source:
+- `docs/reference/semantic-design-system.md`
+- `docs/reference/canonical-vocabulary.md`
 
-You can run the evaluators directly today:
+Current mission families:
+- `remote-contract-hardening/`
+- `profile-datastore-recovery/`
+- `gui-onboarding-clarity/`
+- `cross-server-party-flow/`
+- `liveops-reward-loop-balance/`
+
+These missions are intended to keep RCS grounded in:
+- Luau and ModuleScript structure
+- server/client ownership
+- remotes and replication
+- DataStore safety
+- GUI state flow
+- retention and live-ops creator decisions
+
+Mission semantic contract:
+- `mission.md` should express:
+  - frontmatter taxonomy (`surface-class`, `domain`, `audience`, `artifact-type`)
+  - Creator Outcome
+  - Player Outcome
+  - Deliverable
+  - Roblox Touchpoints
+  - Required Services
+  - Acceptance Signals
+  - Server-Authority Risks
+  - Anti-Patterns
+  - Forbidden Language
+  - Reference Layers
+  - Validation
+- `sandbox.md` should express:
+  - frontmatter taxonomy (`surface-class`, `domain`, `audience`, `artifact-type`)
+  - evaluation
+  - scope
+  - tightly scoped lab/playground path
+  - out-of-scope
+  - required services
+  - acceptance signals
+  - anti-patterns
+  - forbidden language
+  - reference layers
+  - vocabulary guardrail
+
+Reference layer:
+- `templates/roblox-scripts/` is a raw Lua-script corpus that can be used as a separate inspiration and anti-pattern layer.
+- Treat it as untrusted reference material, not drop-in production code.
+- Any borrowed idea must be rewritten into repo-native Roblox architecture before it counts as a valid mission solution.
+
+Run a focused evaluator directly:
 
 ```bash
-node scripts/eval-cli-discoverability.js
-node scripts/eval-security-path-traversal.js
-node scripts/eval-in-action-cat-shellout-demo.js
+node dist/scripts/eval/eval-remote-contract-hardening.js
+node dist/scripts/eval/eval-profile-datastore-recovery.js
+node dist/scripts/eval/eval-gui-onboarding-clarity.js
+node dist/scripts/eval/eval-cross-server-party-flow.js
+node dist/scripts/eval/eval-liveops-reward-loop-balance.js
 ```
 
-To see a real end-to-end run, launch:
-
-```bash
-rcs autoresearch missions/in-action-cat-shellout-demo
-```
-
-Then inspect `.rcs/logs/autoresearch/<run-id>/manifest.json`, `candidate.json`, and `iteration-ledger.json` to see the supervisor's keep/discard/stop decisions.
-
-These bundles are designed to be first-class `rcs autoresearch` missions rather than generic prose examples.
+These bundles are not generic research-showcase artifacts anymore. They are repository-native Roblox creator mission contracts.

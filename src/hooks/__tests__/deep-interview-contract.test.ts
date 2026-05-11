@@ -134,9 +134,9 @@ describe("deep-interview Ouroboros contract", () => {
 
 	it("includes contract-style execution bridge and no-direct-implementation guard", () => {
 		assert.match(deepInterviewSkill, /Execution Bridge/i);
-		assert.match(deepInterviewSkill, /\$ralplan/i);
+		assert.match(deepInterviewSkill, /\$blueprint/i);
 		assert.match(deepInterviewSkill, /\$autopilot/i);
-		assert.match(deepInterviewSkill, /\$ralph/i);
+		assert.match(deepInterviewSkill, /\$forge/i);
 		assert.match(deepInterviewSkill, /\$team/i);
 		assert.match(deepInterviewSkill, /Input Artifact/i);
 		assert.match(deepInterviewSkill, /Invocation/i);
@@ -212,7 +212,7 @@ describe("deep-interview Ouroboros contract", () => {
 			deepInterviewSkill,
 			/Which execution lane should own this once the interview is complete\?/i,
 		);
-		assert.match(deepInterviewSkill, /"value": "ralplan"/i);
+		assert.match(deepInterviewSkill, /"value": "blueprint"/i);
 		assert.match(deepInterviewSkill, /"value": "autopilot"/i);
 		assert.match(deepInterviewSkill, /"value": "refine"/i);
 		assert.match(
@@ -231,8 +231,8 @@ describe("deep-interview Ouroboros contract", () => {
 	it("locks canonical rcs question answer shapes for single and multi rounds", () => {
 		assert.match(deepInterviewSkill, /Canonical answer-shape reminders:/i);
 		assert.match(deepInterviewSkill, /"kind": "option"/i);
-		assert.match(deepInterviewSkill, /"value": "ralplan"/i);
-		assert.match(deepInterviewSkill, /"selected_values": \["ralplan"\]/i);
+		assert.match(deepInterviewSkill, /"value": "blueprint"/i);
+		assert.match(deepInterviewSkill, /"selected_values": \["blueprint"\]/i);
 		assert.match(deepInterviewSkill, /"kind": "multi"/i);
 		assert.match(
 			deepInterviewSkill,
@@ -268,7 +268,7 @@ describe("deep-interview Ouroboros contract", () => {
 		assert.match(deepInterviewSkill, /do not paste or forward the raw payload/i);
 		assert.match(deepInterviewSkill, /wait for the concise summary before ambiguity scoring, crystallizing artifacts, or any downstream execution handoff/i);
 		assert.match(deepInterviewSkill, /The oversized initial-context summary gate is blocking/i);
-		assert.match(deepInterviewSkill, /Do not score ambiguity, do not run readiness gates, and do not hand off to `\$ralplan`, `\$autopilot`, `\$ralph`, or `\$team` until that summary answer is captured/i);
+		assert.match(deepInterviewSkill, /Do not score ambiguity, do not run readiness gates, and do not hand off to `\$blueprint`, `\$autopilot`, `\$forge`, or `\$team` until that summary answer is captured/i);
 		assert.match(deepInterviewSkill, /goals, constraints, success criteria, non-goals, decision boundaries/i);
 	});
 

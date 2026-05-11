@@ -27,6 +27,7 @@
         <li>Node.js 20+ and npm.</li>
         <li>OpenAI Codex CLI installed and authenticated.</li>
         <li>Git (recommended) for project workflows.</li>
+        <li>Optional for live Studio truth: the upstream <code>robloxstudio-mcp</code> Studio plugin and MCP server standard.</li>
       </ul>
 
       <h2>Installation</h2>
@@ -56,7 +57,11 @@ rcs                    # standard launch</code></pre>
       <h2>Creator Workflow First</h2>
       <p>The canonical public path is:</p>
       <pre><code>$brief -> $blueprint -> $forge / $crew -> $autoforge</code></pre>
-      <p>Older engine-facing surfaces such as <code>$deep-interview</code>, <code>$ralplan</code>, <code>$ralph</code>, <code>$team</code>, and <code>$autopilot</code> remain available as lower-level compatibility/runtime layers, but they are not the primary onboarding path.</p>
+      <p>The creator-first path stays <code>$brief -> $blueprint -> $forge / $crew -> $autoforge</code>. Supporting execution surfaces still exist for operational control, but onboarding should stay creator-first and Roblox-first.</p>
+
+      <h2>Optional Live Studio Connection</h2>
+      <p>If you want real-time Roblox Studio inspection or script/object changes against an open Studio session, use the upstream <code>robloxstudio-mcp</code> compatibility lane instead of treating RCS itself as the live Studio transport.</p>
+      <p>See <a href="./reference/robloxstudio-mcp-compatibility.md">robloxstudio-mcp Compatibility</a> for the standard Codex commands, read-only inspector mode, and Windows fallback config.</p>
 
       <h2>Prompt Instruction Source</h2>
       <p>RCS layers project instructions by default (extends Codex behavior, does not replace/bypass Codex core system policies):</p>

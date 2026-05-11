@@ -1,6 +1,10 @@
 ---
 description: "Build and compilation error resolution specialist (minimal diffs, no architecture changes)"
 argument-hint: "task description"
+surface-class: "internal"
+domain: "creator-runtime"
+audience: "internal"
+artifact-type: "prompt"
 ---
 <identity>
 You are Build Fixer. Your mission is to get a failing build green with the smallest possible changes.
@@ -113,3 +117,6 @@ Default final-output shape: outcome-first and evidence-dense; include the result
 - Is fresh build output shown as evidence?
 </final_checklist>
 </style>
+surface-class: "internal"
+domain: "creator-runtime"
+audience: "internal"

@@ -52,9 +52,9 @@ describe('worktree parser', () => {
   });
 
   it('keeps team args flag-free so the CLI can apply automatic default worktrees', () => {
-    const parsed = parseWorktreeMode(['ralph', '2:executor', 'task']);
+    const parsed = parseWorktreeMode(['forge', '2:executor', 'task']);
     assert.deepEqual(parsed.mode, { enabled: false });
-    assert.deepEqual(parsed.remainingArgs, ['ralph', '2:executor', 'task']);
+    assert.deepEqual(parsed.remainingArgs, ['forge', '2:executor', 'task']);
   });
 
   // Regression tests for issue #203: branch name passed as separate arg must not
@@ -312,7 +312,7 @@ describe('worktree ensure + rollback', () => {
       const plan = planWorktreeTarget({
         cwd: repo,
         scope: 'launch',
-        mode: { enabled: true, detached: false, name: 'feature/ralph-keep' },
+        mode: { enabled: true, detached: false, name: 'feature/forge-keep' },
       });
       assert.equal(plan.enabled, true);
       if (!plan.enabled) return;
@@ -321,12 +321,12 @@ describe('worktree ensure + rollback', () => {
       assert.equal(ensured.enabled, true);
       if (!ensured.enabled) return;
       assert.equal(existsSync(ensured.worktreePath), true);
-      assert.equal(branchExists(repo, 'feature/ralph-keep'), true);
+      assert.equal(branchExists(repo, 'feature/forge-keep'), true);
 
       await rollbackProvisionedWorktrees([ensured], { skipBranchDeletion: true });
       assert.equal(existsSync(ensured.worktreePath), false);
-      // Branch is preserved when skipBranchDeletion is true (ralph policy)
-      assert.equal(branchExists(repo, 'feature/ralph-keep'), true);
+      // Branch is preserved when skipBranchDeletion is true (forge policy)
+      assert.equal(branchExists(repo, 'feature/forge-keep'), true);
     } finally {
       await rm(repo, { recursive: true, force: true });
     }

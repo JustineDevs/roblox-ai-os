@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "roblox-animations": {
+      "source": "sentinelcore/roblox-skills",
+      "sourceType": "github",
+      "skillPath": "roblox-animations/SKILL.md",
+      "computedHash": "561e6d4cbaf0d901eea4b4c04012d95963ff939e5458de059588aaaf35708165"
+    },
+    "roblox-datastores": {
+      "source": "sentinelcore/roblox-skills",
+      "sourceType": "github",
+      "skillPath": "roblox-datastores/SKILL.md",
+      "computedHash": "c488ae1c9cd6586cfdb57193d4e951373b17bcd3e6b3d41359a6ad8a19a3f9bc"
+    },
+    "roblox-gui": {
+      "source": "sentinelcore/roblox-skills",
+      "sourceType": "github",
+      "skillPath": "roblox-gui/SKILL.md",
+      "computedHash": "569b94cee959abba2a091b0524e5e0ea480f8d6065ab74d36737c5b7559de4a6"
+    },
+    "roblox-monetization": {
+      "source": "sentinelcore/roblox-skills",
+      "sourceType": "github",
+      "skillPath": "roblox-monetization/SKILL.md",
+      "computedHash": "2ef2f03b92340addeb4b56ce8cae651ab05eb884c21366c71a072d5f446fee76"
+    },
+    "roblox-performance": {
+      "source": "sentinelcore/roblox-skills",
+      "sourceType": "github",
+      "skillPath": "roblox-performance/SKILL.md",
+      "computedHash": "7f3418935a8ff931bc30fdd54484aa277e21c8d8eaf7a3713f0e9937051ffc7c"
+    },
+    "roblox-remote-events": {
+      "source": "sentinelcore/roblox-skills",
+      "sourceType": "github",
+      "skillPath": "roblox-remote-events/SKILL.md",
+      "computedHash": "e9a393c702de1b0d382b420cb26a914b951383331a31ae233897b8f5da2b4ade"
+    },
+    "roblox-security": {
+      "source": "sentinelcore/roblox-skills",
+      "sourceType": "github",
+      "skillPath": "roblox-security/SKILL.md",
+      "computedHash": "9044507630942b1b4ddeefccf482235f034c534024338ee4f3ce24da07bb0758"
+    }
+  }
+}

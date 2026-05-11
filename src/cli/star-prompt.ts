@@ -11,7 +11,7 @@ import { homedir } from 'os';
 import * as childProcess from 'child_process';
 import { createInterface } from 'readline/promises';
 
-const REPO = 'Yeachan-Heo/roblox-ai-os-creator-skills';
+const REPO = 'JustineDevs/roblox-ai-os';
 
 interface StarPromptState {
   prompted_at: string;
@@ -108,7 +108,7 @@ export async function maybePromptGithubStar(deps: MaybePromptGithubStarDeps = {}
   await markPromptedImpl();
 
   const askYesNoImpl = deps.askYesNoFn ?? askYesNo;
-  const approved = await askYesNoImpl('[rcs] Enjoying roblox-ai-os-creator-skills? Star it on GitHub? [Y/n] ');
+  const approved = await askYesNoImpl('[rcs] Enjoying RCS? Star it on GitHub? [Y/n] ');
   if (!approved) return;
 
   const starRepoImpl = deps.starRepoFn ?? starRepo;

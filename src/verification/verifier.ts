@@ -1,5 +1,5 @@
 /**
- * Verification Protocol for roblox-ai-os-creator-skills
+ * Verification Protocol for RCS
  *
  * Evidence-backed verification of task completion.
  * Sizing: small (low), standard (medium), large (high)
@@ -81,7 +81,7 @@ Report: PASS/FAIL with command output for each check.
 1. Run full type check across the project
 2. Run complete test suite
 3. Run linter across modified files
-4. Security review of changes (OWASP top 10)
+4. Security review of changes using the actual surface threat model (Roblox exploit/trust-boundary review for Luau experiences; OWASP/runtime review for web, CLI, or backend code)
 5. Performance impact assessment
 6. API compatibility check (if applicable)
 7. End-to-end verification of all affected features

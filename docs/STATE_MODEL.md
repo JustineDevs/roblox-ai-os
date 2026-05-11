@@ -11,7 +11,7 @@ Public creator workflow language should lead with:
 - `$crew`
 - `$autoforge`
 
-The mode identifiers described below (`deep-interview`, `ralplan`, `ralph`, `team`, `autopilot`, and related runtime names) are lower-level runtime identifiers retained for execution, compatibility, and diagnostics.
+The mode identifiers described below (`deep-interview`, `blueprint`, `forge`, `team`, `autopilot`, and related runtime names) are lower-level runtime identifiers retained for execution and diagnostics.
 
 ## Goals
 
@@ -31,8 +31,8 @@ Authoritative workflow state lives in per-mode files under `.rcs/state/`:
 
 Examples:
 
-- `.rcs/state/ralplan-state.json`
-- `.rcs/state/sessions/<session_id>/ralph-state.json`
+- `.rcs/state/blueprint-state.json`
+- `.rcs/state/sessions/<session_id>/forge-state.json`
 - `.rcs/state/team-state.json`
 
 These files determine whether a workflow mode is active, completed, cancelled, or failed. Those mode phases are not always identical to the user-facing terminal lifecycle vocabulary; see the explicit terminal lifecycle section below for that compatibility boundary.
@@ -144,7 +144,7 @@ The requested mode is added without completing the source mode.
 
 Examples:
 
-- `team + ralph`
+- `team + forge`
 - `ultrawork + <any tracked mode>`
 
 ### C. Allow with source auto-complete
@@ -153,11 +153,11 @@ The source mode is terminalized and the destination becomes active.
 
 Current allowlisted forward handoffs between lower-level runtime identifiers:
 
-- `deep-interview -> ralplan`
-- `ralplan -> team`
-- `ralplan -> ralph`
-- `ralplan -> autopilot`
-- `autopilot -> ralplan` when Autopilot's code-review phase is not clean
+- `deep-interview -> blueprint`
+- `blueprint -> team`
+- `blueprint -> forge`
+- `blueprint -> autopilot`
+- `autopilot -> blueprint` when Autopilot's code-review phase is not clean
 
 ### D. Deny
 
@@ -167,16 +167,16 @@ The requested transition is not allowed and no state is changed.
 
 | From | To | Result |
 |---|---|---|
-| `deep-interview` | `ralplan` | auto-complete `deep-interview`, start `ralplan` |
-| `ralplan` | `team` | auto-complete `ralplan`, start `team` |
-| `ralplan` | `ralph` | auto-complete `ralplan`, start `ralph` |
-| `ralplan` | `autopilot` | auto-complete `ralplan`, start `autopilot` |
-| `autopilot` | `ralplan` | auto-complete `autopilot`, start `ralplan` for review-driven loopback |
-| `team` | `ralph` | allowed overlap |
-| `ralph` | `team` | allowed overlap |
+| `deep-interview` | `blueprint` | auto-complete `deep-interview`, start `blueprint` |
+| `blueprint` | `team` | auto-complete `blueprint`, start `team` |
+| `blueprint` | `forge` | auto-complete `blueprint`, start `forge` |
+| `blueprint` | `autopilot` | auto-complete `blueprint`, start `autopilot` |
+| `autopilot` | `blueprint` | auto-complete `autopilot`, start `blueprint` for review-driven loopback |
+| `team` | `forge` | allowed overlap |
+| `forge` | `team` | allowed overlap |
 | `<any tracked mode>` | `ultrawork` | allowed overlap |
 | `ultrawork` | `<any tracked mode>` | allowed overlap |
-| execution-like mode | planning-like mode | denied rollback auto-complete, except the explicit `autopilot -> ralplan` review loopback |
+| execution-like mode | planning-like mode | denied rollback auto-complete, except the explicit `autopilot -> blueprint` review loopback |
 | anything else non-allowlisted | new conflicting mode | denied |
 
 ## Planning-like vs execution-like
@@ -184,13 +184,13 @@ The requested transition is not allowed and no state is changed.
 ### Planning-like runtime identifiers
 
 - `deep-interview`
-- `ralplan`
+- `blueprint`
 - `autoresearch`
 
 ### Execution-like runtime identifiers
 
 - `team`
-- `ralph`
+- `forge`
 - `autopilot`
 - `ultrawork`
 - `ultraqa`
@@ -206,14 +206,14 @@ A single prompt can explicitly invoke multiple contiguous lower-level runtime `$
 Example:
 
 ```text
-$ralplan $team $ralph ship this fix
+$blueprint $team $forge ship this fix
 ```
 
 Expected result:
 
-1. `ralplan` is recognized as the planning source
+1. `blueprint` is recognized as the planning source
 2. simultaneous execution follow-ups are deferred instead of auto-starting
-3. final active skill remains `ralplan`
+3. final active skill remains `blueprint`
 4. deferred execution skills are surfaced in native-hook output for traceability
 5. native hook output should describe all explicit skills, not only the primary one
 
@@ -222,7 +222,7 @@ Public creator-facing UX should still prefer the canonical creator workflow fami
 Recommended message shape:
 
 - detected keywords summary
-- deferred-skill summary, e.g. `planning preserved over simultaneous execution follow-up; deferred skills: team, ralph`
+- deferred-skill summary, e.g. `planning preserved over simultaneous execution follow-up; deferred skills: team, forge`
 - final active skill / initialized state summary
 - team runtime hint only when `team` is actually among the final active skills
 
@@ -243,7 +243,7 @@ These rules should remain true unless intentionally changed:
 
 - rollback to planning never auto-completes
 - non-allowlisted transitions remain blocked
-- `ultrawork` overlap-any must not weaken `ralplan-first` gating
+- `ultrawork` overlap-any must not weaken `blueprint-first` gating
 - native-hook output is a presentation layer over shared transition results, not a separate decision engine
 - compatibility sync must not resurrect completed source modes
 

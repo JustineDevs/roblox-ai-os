@@ -13,10 +13,10 @@ function emptyCtx(): HudRenderContext {
   return {
     version: null,
     gitBranch: null,
-    ralph: null,
+    forge: null,
     ultrawork: null,
     autopilot: null,
-    ralplan: null,
+    blueprint: null,
     deepInterview: null,
     autoresearch: null,
     ultraqa: null,

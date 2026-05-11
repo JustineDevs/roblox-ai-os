@@ -246,8 +246,11 @@ export async function enqueueDispatchRequest(
   deps.validateWorkerName(requestInput.to_worker);
 
   const queued = await deps.withDispatchLock(deps.teamName, deps.cwd, async () => {
-    const requests = deps.readBridgeDispatchRequestsOnly
+    const bridgeRequests = deps.readBridgeDispatchRequestsOnly
       ? await deps.readBridgeDispatchRequestsOnly(deps.teamName, deps.cwd)
+      : null;
+    const requests = bridgeRequests && bridgeRequests.length > 0
+      ? bridgeRequests
       : await deps.readDispatchRequests(deps.teamName, deps.cwd);
     const existing = requests.find((req) => equivalentPendingDispatch(req, requestInput));
     if (existing) return { request: existing, deduped: true };

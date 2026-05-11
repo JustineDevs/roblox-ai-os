@@ -93,6 +93,6 @@ This makes ownership constraints visible where workers actually operate instead 
 
 - Do not put a large opaque DAG heuristic block directly into `src/cli/team.ts`; keep a small preflight module seam.
 - Do not widen `TeamTask` with rich metadata unless state readers, API interop, and monitor snapshots are updated together.
-- Do not treat RALPLAN-suggested worker counts as CLI-explicit overrides.
+- Do not treat BLUEPRINT-suggested worker counts as CLI-explicit overrides.
 - Do not bypass claim-safety by directly writing in-progress/completed task state during preflight.
 - Do not launch workers before symbolic dependencies are remapped to concrete Team task IDs.

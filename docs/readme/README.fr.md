@@ -25,3 +25,16 @@ See:
 - [../../README.md](../../README.md)
 - [../skills.html](../skills.html)
 - [../reference/roblox-pre-action-protocol.md](../reference/roblox-pre-action-protocol.md)
+
+## Ownership
+
+RCS is owned and maintained by [JustineDevs](https://github.com/JustineDevs) and [@JustineDevs](https://github.com/JustineDevs) for Roblox creator workflows.
+
+## Acknowledgements
+
+- [OpenAI Codex CLI](https://github.com/openai/codex)
+- [robloxstudio-mcp](https://github.com/boshyxd/robloxstudio-mcp)
+
+## License
+
+[MIT](https://opensource.org/licenses/MIT)

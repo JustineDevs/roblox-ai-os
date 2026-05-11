@@ -87,7 +87,7 @@ describe('notify-hook session-scoped iteration updates', () => {
     }
   });
 
-  it('auto-expands active Ralph max_iterations by 10 when the run is still progressing', async () => {
+  it('auto-expands active Forge max_iterations by 10 when the run is still progressing', async () => {
     const wd = await mkdtemp(join(tmpdir(), 'rcs-notify-test-'));
     try {
       const stateDir = join(wd, '.rcs', 'state');
@@ -96,7 +96,7 @@ describe('notify-hook session-scoped iteration updates', () => {
       await mkdir(sessionScopedDir, { recursive: true });
 
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
-      await writeFile(join(sessionScopedDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionScopedDir, 'forge-state.json'), JSON.stringify({
         active: true,
         iteration: 1,
         max_iterations: 2,
@@ -113,7 +113,7 @@ describe('notify-hook session-scoped iteration updates', () => {
       });
       assert.equal(result.status, 0, result.stderr || result.stdout);
 
-      const updated = JSON.parse(await readFile(join(sessionScopedDir, 'ralph-state.json'), 'utf-8'));
+      const updated = JSON.parse(await readFile(join(sessionScopedDir, 'forge-state.json'), 'utf-8'));
       assert.equal(updated.iteration, 2);
       assert.equal(updated.active, true);
       assert.equal(updated.current_phase, 'executing');
@@ -128,7 +128,7 @@ describe('notify-hook session-scoped iteration updates', () => {
     }
   });
 
-  it('still marks non-Ralph modes complete when max_iterations is reached', async () => {
+  it('still marks non-Forge modes complete when max_iterations is reached', async () => {
     const wd = await mkdtemp(join(tmpdir(), 'rcs-notify-test-'));
     try {
       const stateDir = join(wd, '.rcs', 'state');
@@ -306,7 +306,7 @@ describe('notify-hook session-scoped iteration updates', () => {
       });
       assert.equal(result.status, 0, result.stderr || result.stdout);
 
-      const progressPath = join(wd, '.rcs', 'state', 'sessions', sessionId, 'ralph-progress.json');
+      const progressPath = join(wd, '.rcs', 'state', 'sessions', sessionId, 'forge-progress.json');
       assert.equal(existsSync(progressPath), true);
       const progress = JSON.parse(await readFile(progressPath, 'utf-8')) as {
         visual_feedback?: Array<{

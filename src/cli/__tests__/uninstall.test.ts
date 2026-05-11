@@ -460,7 +460,7 @@ describe('rcs uninstall', () => {
       await mkdir(join(rcsDir, 'state'), { recursive: true });
       await writeFile(join(rcsDir, 'setup-scope.json'), JSON.stringify({ scope: 'user' }));
       await writeFile(join(rcsDir, 'notepad.md'), '# notes');
-      await writeFile(join(rcsDir, 'state', 'ralph-state.json'), '{}');
+      await writeFile(join(rcsDir, 'state', 'forge-state.json'), '{}');
 
       const res = runRcsCli(wd, ['uninstall', '--keep-config', '--purge'], { HOME: home });
       if (shouldSkipForSpawnPermissions(res.error)) return;

@@ -72,7 +72,7 @@ const RCS_SEEDED_BEHAVIORAL_DEFAULTS_END_MARKER =
   "# End rcs seeded behavioral defaults";
 
 export const RCS_DEVELOPER_INSTRUCTIONS =
-  "You have RCS installed for Roblox AI OS (Creator) Skills. AGENTS.md is the orchestration brain and main control surface. Follow AGENTS.md for creator workflow routing, $name workflow invocation, and role-specialized subagents. Creator-facing aliases such as $brief, $blueprint, $forge, $crew, and $autoforge may layer over canonical engine workflows, but the execution substrate stays disciplined and evidence-first. Native subagents live in .codex/agents and may handle independent parallel subtasks within one Codex session or team pane. Skills load from .codex/skills, not native-agent TOMLs. Treat installed prompts as narrower execution surfaces under AGENTS.md authority.";
+  "You have RCS installed for Roblox AI OS (Creator) Skills. AGENTS.md is the orchestration brain and main control surface. Follow AGENTS.md for creator workflow routing, $name workflow invocation, and role-specialized subagents. The canonical creator workflows are $brief, $blueprint, $forge, $crew, and $autoforge. Lower-level runtime modes may still exist internally, but public execution should stay creator-facing, Roblox-native, disciplined, and evidence-first. Native subagents live in .codex/agents and may handle independent parallel subtasks within one Codex session or team pane. Skills load from .codex/skills, not native-agent TOMLs. Treat installed prompts as narrower execution surfaces under AGENTS.md authority.";
 const SHARED_MCP_REGISTRY_MARKER = "RCS Shared MCP Registry Sync";
 const SHARED_MCP_REGISTRY_END_MARKER =
   "# End RCS shared MCP registry sync";

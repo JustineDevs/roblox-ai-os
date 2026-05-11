@@ -102,7 +102,7 @@ describe('role-router', () => {
 
   describe('routeTaskToRole', () => {
     it('routes test-related tasks to test-engineer with high confidence', () => {
-      const result = routeTaskToRole('Write unit tests', 'Add jest test coverage for the auth module', 'team-exec', 'executor');
+      const result = routeTaskToRole('Write unit tests', 'Add jest test coverage for the currency service module', 'team-exec', 'executor');
       assert.equal(result.role, 'test-engineer');
       assert.equal(result.confidence, 'high');
     });
@@ -127,8 +127,8 @@ describe('role-router', () => {
 
     it('routes local file and symbol lookup tasks to explore', () => {
       const result = routeTaskToRole(
-        'Find auth refresh wiring',
-        'Map which files and symbols implement the local session refresh flow in this repo',
+        'Find RemoteEvent wiring',
+        'Map which files and symbols implement the inventory sync RemoteEvent flow in this repo',
         'team-exec',
         'executor',
       );
@@ -139,7 +139,7 @@ describe('role-router', () => {
     it('routes external official-doc research tasks to researcher', () => {
       const result = routeTaskToRole(
         'Research official docs',
-        'Check the official docs and version compatibility notes for the upstream auth SDK',
+        'Check the official docs and version compatibility notes for the Roblox DataStoreService API',
         'team-exec',
         'executor',
       );
@@ -215,7 +215,7 @@ describe('role-router', () => {
     });
 
     it('keeps implementation-heavy auth work on the implementation fallback lane', () => {
-      const result = routeTaskToRole('Implement auth session refresh', 'Add authentication refresh handling and authorization checks to the login flow', 'team-exec', 'executor');
+      const result = routeTaskToRole('Implement tool grants', 'Add authorization checks when granting tools after purchase plus server-side validation in the grant flow', 'team-exec', 'executor');
       assert.equal(result.role, 'executor');
       assert.equal(result.confidence, 'medium');
       assert.match(result.reason, /implementation/i);
@@ -223,7 +223,7 @@ describe('role-router', () => {
 
     it('does not route SDK replacement implementation work to dependency-expert', () => {
       const result = routeTaskToRole(
-        'Replace auth SDK integration',
+        'Replace telemetry SDK integration',
         'Implement the SDK replacement by updating client modules, wiring new API calls, and refactoring imports across the flow',
         'team-exec',
         'executor',
@@ -234,7 +234,7 @@ describe('role-router', () => {
     });
 
     it('routes refactoring tasks to code-simplifier', () => {
-      const result = routeTaskToRole('Refactor auth', 'Simplify and clean up the authentication module', 'team-exec', 'executor');
+      const result = routeTaskToRole('Refactor economy hooks', 'Simplify and clean up the duplicate MarketplaceService purchase listener module', 'team-exec', 'executor');
       assert.equal(result.role, 'code-simplifier');
       assert.equal(result.confidence, 'high');
     });

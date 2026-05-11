@@ -37,12 +37,11 @@ export interface ApprovedPlanContext {
 }
 
 export interface ApprovedExecutionLaunchHint extends ApprovedPlanContext {
-  mode: 'team' | 'ralph';
+  mode: 'team' | 'forge';
   command: string;
   task: string;
   workerCount?: number;
   agentType?: string;
-  linkedRalph?: boolean;
 }
 
 export interface LatestPlanningArtifactSelection {
@@ -313,15 +312,15 @@ type LaunchHintSelection =
   | { status: 'ambiguous' }
   | { status: 'unique'; match: RegExpMatchArray; task: string };
 
-function launchHintPattern(mode: 'team' | 'ralph'): RegExp {
+function launchHintPattern(mode: 'team' | 'forge'): RegExp {
   return mode === 'team'
-    ? /(?<command>(?:rcs\s+team|\$team)\s+(?<ralph>ralph\s+)?(?<count>\d+)(?::(?<role>[a-z][a-z0-9-]*))?\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi
-    : /(?<command>(?:rcs\s+ralph|\$ralph)\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi;
+    ? /(?<command>(?:rcs\s+team|\$team)\s+(?<count>\d+)(?::(?<role>[a-z][a-z0-9-]*))?\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi
+    : /(?<command>(?:rcs\s+forge|\$forge)\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi;
 }
 
 function collectLaunchHintMatches(
   content: string,
-  mode: 'team' | 'ralph',
+  mode: 'team' | 'forge',
 ): RegExpMatchArray[] {
   return [...content.matchAll(launchHintPattern(mode))];
 }
@@ -366,7 +365,7 @@ function selectLaunchHintMatch(
 
 export function readApprovedExecutionLaunchHintOutcome(
   cwd: string,
-  mode: 'team' | 'ralph',
+  mode: 'team' | 'forge',
   options: ApprovedExecutionLaunchHintReadOptions = {},
 ): ApprovedExecutionLaunchHintOutcome {
   const approvedPlan = readApprovedPlanText(cwd, options);
@@ -393,7 +392,6 @@ export function readApprovedExecutionLaunchHintOutcome(
         task: selected.task,
         workerCount,
         agentType: selected.match.groups.role || undefined,
-        linkedRalph: Boolean(selected.match.groups.ralph?.trim()),
         ...approvedPlan.context,
       },
     };
@@ -412,7 +410,7 @@ export function readApprovedExecutionLaunchHintOutcome(
 
 export function readApprovedExecutionLaunchHint(
   cwd: string,
-  mode: 'team' | 'ralph',
+  mode: 'team' | 'forge',
   options: ApprovedExecutionLaunchHintReadOptions = {},
 ): ApprovedExecutionLaunchHint | null {
   const outcome = readApprovedExecutionLaunchHintOutcome(cwd, mode, options);

@@ -1,6 +1,10 @@
 ---
 name: forge-event-loop
 description: Creator workflow for `$forge:event-loop`
+surface-class: "canonical"
+domain: "roblox-studio"
+audience: "creator"
+artifact-type: "skill"
 ---
 
 # Forge Event Loop
@@ -13,3 +17,6 @@ Generate an **Event / FOMO Plan** using `templates/psychology/event-fomo-design-
 - include re-entry logic
 - include rerun policy
 - call out frustration risks
+surface-class: "canonical"
+domain: "creator-runtime"
+audience: "creator"

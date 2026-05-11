@@ -1,9 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { chmod, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 
 function isolatedChildEnv(fakeBinDir: string): NodeJS.ProcessEnv {
@@ -20,6 +20,23 @@ function isolatedChildEnv(fakeBinDir: string): NodeJS.ProcessEnv {
   };
 }
 
+async function withPatchedEnv<T>(overrides: Record<string, string>, run: () => Promise<T>): Promise<T> {
+  const previous = new Map<string, string | undefined>();
+  for (const [key, value] of Object.entries(overrides)) {
+    previous.set(key, process.env[key]);
+    process.env[key] = value;
+  }
+  try {
+    return await run();
+  } finally {
+    for (const [key] of Object.entries(overrides)) {
+      const value = previous.get(key);
+      if (typeof value === 'string') process.env[key] = value;
+      else delete process.env[key];
+    }
+  }
+}
+
 function buildFakeTmux(tmuxLogPath: string): string {
   return `#!/usr/bin/env bash
 set -eu
@@ -28,7 +45,7 @@ exit 0
 `;
 }
 
-function runSendPaneInputInChild(params: {
+async function runSendPaneInputInChild(params: {
   fakeBinDir: string;
   moduleUrl: string;
   paneTarget: string;
@@ -36,49 +53,26 @@ function runSendPaneInputInChild(params: {
   submitKeyPresses: number;
   typePrompt: boolean;
 }) {
-  const payload = JSON.stringify({
-    paneTarget: params.paneTarget,
-    prompt: params.prompt,
-    submitKeyPresses: params.submitKeyPresses,
-    tmuxBin: join(params.fakeBinDir, 'tmux'),
-    typePrompt: params.typePrompt,
-  });
-  const script = `
-    const input = ${payload};
-    process.env.RCS_TEST_TMUX_BIN = input.tmuxBin;
-    process.env.PATH = ${JSON.stringify('__CHILD_PATH__')};
-    const { sendPaneInput } = await import(${JSON.stringify(params.moduleUrl)});
-    const result = await sendPaneInput(input);
-    process.stdout.write(JSON.stringify(result));
-  `.replace('__CHILD_PATH__', `${params.fakeBinDir}:${process.env.PATH ?? ''}`);
-  return spawnSync(process.execPath, ['--input-type=module', '-e', script], {
-    encoding: 'utf-8',
-    env: isolatedChildEnv(params.fakeBinDir),
+  return await withPatchedEnv(isolatedChildEnv(params.fakeBinDir) as Record<string, string>, async () => {
+    const { sendPaneInput } = await import(params.moduleUrl);
+    return await sendPaneInput({
+      paneTarget: params.paneTarget,
+      prompt: params.prompt,
+      submitKeyPresses: params.submitKeyPresses,
+      typePrompt: params.typePrompt,
+    });
   });
 }
 
-function runEvaluatePaneInjectionReadinessInChild(params: {
+async function runEvaluatePaneInjectionReadinessInChild(params: {
   fakeBinDir: string;
   moduleUrl: string;
   paneTarget: string;
   options?: Record<string, unknown>;
 }) {
-  const payload = JSON.stringify({
-    paneTarget: params.paneTarget,
-    options: params.options ?? {},
-    tmuxBin: join(params.fakeBinDir, 'tmux'),
-  });
-  const script = `
-    const input = ${payload};
-    process.env.RCS_TEST_TMUX_BIN = input.tmuxBin;
-    process.env.PATH = ${JSON.stringify('__CHILD_PATH__')};
-    const { evaluatePaneInjectionReadiness } = await import(${JSON.stringify(params.moduleUrl)});
-    const result = await evaluatePaneInjectionReadiness(input.paneTarget, input.options);
-    process.stdout.write(JSON.stringify(result));
-  `.replace('__CHILD_PATH__', `${params.fakeBinDir}:${process.env.PATH ?? ''}`);
-  return spawnSync(process.execPath, ['--input-type=module', '-e', script], {
-    encoding: 'utf-8',
-    env: isolatedChildEnv(params.fakeBinDir),
+  return await withPatchedEnv(isolatedChildEnv(params.fakeBinDir) as Record<string, string>, async () => {
+    const { evaluatePaneInjectionReadiness } = await import(params.moduleUrl);
+    return await evaluatePaneInjectionReadiness(params.paneTarget, params.options ?? {});
   });
 }
 
@@ -93,8 +87,8 @@ describe('notify-hook team tmux guard bridge', () => {
       await writeFile(join(fakeBinDir, 'tmux'), buildFakeTmux(tmuxLogPath));
       await chmod(join(fakeBinDir, 'tmux'), 0o755);
 
-      const moduleUrl = new URL('../../../dist/scripts/notify-hook/team-tmux-guard.js', import.meta.url).href;
-      const result = runSendPaneInputInChild({
+      const moduleUrl = pathToFileURL(join(process.cwd(), 'dist/scripts/notify-hook/team-tmux-guard.js')).href;
+      const result = await runSendPaneInputInChild({
         fakeBinDir,
         moduleUrl,
         paneTarget: '%42',
@@ -103,9 +97,7 @@ describe('notify-hook team tmux guard bridge', () => {
         typePrompt: false,
       });
 
-      assert.equal(result.status, 0, result.stderr);
-      assert.equal(result.error, undefined);
-      assert.match(result.stdout, /"ok":true/);
+      assert.equal(result.ok, true);
 
       const log = await readFile(tmuxLogPath, 'utf-8');
       assert.doesNotMatch(log, /-l/);
@@ -129,8 +121,8 @@ describe('notify-hook team tmux guard bridge', () => {
       await writeFile(join(fakeBinDir, 'tmux'), buildFakeTmux(tmuxLogPath));
       await chmod(join(fakeBinDir, 'tmux'), 0o755);
 
-      const moduleUrl = new URL('../../../dist/scripts/notify-hook/team-tmux-guard.js', import.meta.url).href;
-      const result = runSendPaneInputInChild({
+      const moduleUrl = pathToFileURL(join(process.cwd(), 'dist/scripts/notify-hook/team-tmux-guard.js')).href;
+      const result = await runSendPaneInputInChild({
         fakeBinDir,
         moduleUrl,
         paneTarget: '%42',
@@ -139,9 +131,7 @@ describe('notify-hook team tmux guard bridge', () => {
         typePrompt: true,
       });
 
-      assert.equal(result.status, 0, result.stderr);
-      assert.equal(result.error, undefined);
-      assert.match(result.stdout, /"ok":true/);
+      assert.equal(result.ok, true);
 
       const log = await readFile(tmuxLogPath, 'utf-8');
       assert.match(log, /send-keys -t %42 -l hello bridge/);
@@ -188,20 +178,17 @@ exit 0
       );
       await chmod(join(fakeBinDir, 'tmux'), 0o755);
 
-      const moduleUrl = new URL('../../../dist/scripts/notify-hook/team-tmux-guard.js', import.meta.url).href;
-      const result = runEvaluatePaneInjectionReadinessInChild({
+      const moduleUrl = pathToFileURL(join(process.cwd(), 'dist/scripts/notify-hook/team-tmux-guard.js')).href;
+      const result = await runEvaluatePaneInjectionReadinessInChild({
         fakeBinDir,
         moduleUrl,
         paneTarget: '%42',
       });
 
-      assert.equal(result.status, 0, result.stderr);
-      assert.equal(result.error, undefined);
-      const parsed = JSON.parse(result.stdout);
-      assert.equal(parsed.ok, false);
-      assert.equal(parsed.reason, 'pane_not_ready');
-      assert.equal(parsed.paneCurrentCommand, 'codex');
-      assert.match(parsed.paneCapture, /loading workspace state/);
+      assert.equal(result.ok, false);
+      assert.equal(result.reason, 'pane_not_ready');
+      assert.equal(result.paneCurrentCommand, 'codex');
+      assert.match(result.paneCapture, /loading workspace state/);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -242,21 +229,18 @@ exit 0
       );
       await chmod(join(fakeBinDir, 'tmux'), 0o755);
 
-      const moduleUrl = new URL('../../../dist/scripts/notify-hook/team-tmux-guard.js', import.meta.url).href;
-      const result = runEvaluatePaneInjectionReadinessInChild({
+      const moduleUrl = pathToFileURL(join(process.cwd(), 'dist/scripts/notify-hook/team-tmux-guard.js')).href;
+      const result = await runEvaluatePaneInjectionReadinessInChild({
         fakeBinDir,
         moduleUrl,
         paneTarget: '%42',
         options: { skipIfScrolling: true },
       });
 
-      assert.equal(result.status, 0, result.stderr);
-      assert.equal(result.error, undefined);
-      const parsed = JSON.parse(result.stdout);
-      assert.equal(parsed.ok, true);
-      assert.equal(parsed.reason, 'ok');
-      assert.equal(parsed.paneCurrentCommand, 'codex');
-      assert.equal(parsed.paneCapture, '');
+      assert.equal(result.ok, true);
+      assert.equal(result.reason, 'ok');
+      assert.equal(result.paneCurrentCommand, 'codex');
+      assert.equal(result.paneCapture, '');
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }

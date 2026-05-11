@@ -18,10 +18,10 @@ import { teamReadPhase as readTeamPhase } from '../team/team-ops.js';
 import { readUsableSessionState } from '../hooks/session.js';
 import { listActiveSkills, readVisibleSkillActiveState } from '../state/skill-active.js';
 import type {
-  RalphStateForHud,
+  ForgeStateForHud,
   UltraworkStateForHud,
   AutopilotStateForHud,
-  RalplanStateForHud,
+  BlueprintStateForHud,
   DeepInterviewStateForHud,
   AutoresearchStateForHud,
   UltraqaStateForHud,
@@ -76,6 +76,10 @@ function sanitizeOptionalString(value: unknown): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+function isSafeGitRemoteName(value: string | undefined): value is string {
+  return typeof value === 'string' && /^[A-Za-z0-9._/-]+$/.test(value);
+}
+
 export function normalizeHudConfig(raw: HudConfig | null | undefined): ResolvedHudConfig {
   const normalized: ResolvedHudConfig = {
     preset: DEFAULT_HUD_CONFIG.preset,
@@ -114,8 +118,8 @@ export function normalizeHudConfig(raw: HudConfig | null | undefined): ResolvedH
   return normalized;
 }
 
-export async function readRalphState(cwd: string): Promise<RalphStateForHud | null> {
-  const state = await readSessionAwareModeState<RalphStateForHud>(cwd, 'ralph');
+export async function readForgeState(cwd: string): Promise<ForgeStateForHud | null> {
+  const state = await readSessionAwareModeState<ForgeStateForHud>(cwd, 'forge');
   return state?.active ? state : null;
 }
 
@@ -129,8 +133,8 @@ export async function readAutopilotState(cwd: string): Promise<AutopilotStateFor
   return state?.active ? state : null;
 }
 
-export async function readRalplanState(cwd: string): Promise<RalplanStateForHud | null> {
-  const state = await readSessionAwareModeState<RalplanStateForHud>(cwd, 'ralplan');
+export async function readBlueprintState(cwd: string): Promise<BlueprintStateForHud | null> {
+  const state = await readSessionAwareModeState<BlueprintStateForHud>(cwd, 'blueprint');
   return state?.active ? state : null;
 }
 
@@ -204,7 +208,7 @@ export type GitRunner = (cwd: string, args: string[]) => string | null;
  * spawning console windows (conhost.exe flicker).  Falls back to execSync
  * for non-Windows platforms or unrecognised arguments.
  *
- * See: https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/1100
+ * See internal tracker issue #1100.
  */
 function runGit(cwd: string, args: string[]): string | null {
   if (process.platform === 'win32') {
@@ -304,7 +308,7 @@ function readRepoBasename(cwd: string, gitRunner: GitRunner): string | null {
 function resolveRepoLabel(cwd: string, config: ResolvedHudConfig, gitRunner: GitRunner): string | null {
   if (config.git.repoLabel) return config.git.repoLabel;
 
-  if (config.git.remoteName) {
+  if (isSafeGitRemoteName(config.git.remoteName)) {
     const repoFromConfiguredRemote = extractRepoName(readGitRemoteUrl(cwd, config.git.remoteName, gitRunner));
     if (repoFromConfiguredRemote) return repoFromConfiguredRemote;
   }
@@ -397,27 +401,27 @@ export async function readAllState(cwd: string, config: ResolvedHudConfig = DEFA
   const useCompatibilityFallback = canonicalSkillState == null;
 
   const [
-    ralphDetail,
+    forgeDetail,
     ultraworkDetail,
     autopilotDetail,
-    ralplanDetail,
+    blueprintDetail,
     deepInterviewDetail,
     autoresearchDetail,
     ultraqaDetail,
     teamDetail,
   ] = await Promise.all([
-    readSessionAwareModeState<RalphStateForHud>(cwd, 'ralph'),
+    readSessionAwareModeState<ForgeStateForHud>(cwd, 'forge'),
     readSessionAwareModeState<UltraworkStateForHud>(cwd, 'ultrawork'),
     readSessionAwareModeState<AutopilotStateForHud>(cwd, 'autopilot'),
-    readSessionAwareModeState<RalplanStateForHud>(cwd, 'ralplan'),
+    readSessionAwareModeState<BlueprintStateForHud>(cwd, 'blueprint'),
     readSessionAwareModeState<DeepInterviewRawState>(cwd, 'deep-interview'),
     readSessionAwareModeState<AutoresearchStateForHud>(cwd, 'autoresearch'),
     readSessionAwareModeState<UltraqaStateForHud>(cwd, 'ultraqa'),
     readSessionAwareModeState<TeamStateForHud>(cwd, 'team'),
   ]);
 
-  const ralph = canonicalSkills.has('ralph') || useCompatibilityFallback
-    ? (ralphDetail?.active === true ? mergePhase(ralphDetail, canonicalPhaseForSkill(canonicalSkills, 'ralph')) : null)
+  const forge = canonicalSkills.has('forge') || useCompatibilityFallback
+    ? (forgeDetail?.active === true ? mergePhase(forgeDetail, canonicalPhaseForSkill(canonicalSkills, 'forge')) : null)
     : null;
   const ultrawork = canonicalSkills.has('ultrawork') || useCompatibilityFallback
     ? mergePhase(ultraworkDetail?.active === true ? ultraworkDetail : null, canonicalPhaseForSkill(canonicalSkills, 'ultrawork'))
@@ -425,8 +429,8 @@ export async function readAllState(cwd: string, config: ResolvedHudConfig = DEFA
   const autopilot = canonicalSkills.has('autopilot') || useCompatibilityFallback
     ? mergePhase(autopilotDetail?.active === true ? autopilotDetail : null, canonicalPhaseForSkill(canonicalSkills, 'autopilot'))
     : null;
-  const ralplan = canonicalSkills.has('ralplan') || useCompatibilityFallback
-    ? mergePhase(ralplanDetail?.active === true ? ralplanDetail : null, canonicalPhaseForSkill(canonicalSkills, 'ralplan'))
+  const blueprint = canonicalSkills.has('blueprint') || useCompatibilityFallback
+    ? mergePhase(blueprintDetail?.active === true ? blueprintDetail : null, canonicalPhaseForSkill(canonicalSkills, 'blueprint'))
     : null;
   const deepInterview = canonicalSkills.has('deep-interview') || useCompatibilityFallback
     ? (() => {
@@ -470,10 +474,10 @@ export async function readAllState(cwd: string, config: ResolvedHudConfig = DEFA
   return {
     version,
     gitBranch,
-    ralph,
+    forge,
     ultrawork,
     autopilot,
-    ralplan,
+    blueprint,
     deepInterview,
     autoresearch,
     ultraqa,

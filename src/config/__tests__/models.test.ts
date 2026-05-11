@@ -115,10 +115,10 @@ describe('getModelForMode', () => {
   });
 
   it('resolves different modes independently', async () => {
-    await writeConfig({ models: { team: 'gpt-4.1', autopilot: 'o4-mini', ralph: 'gpt-5' } });
+    await writeConfig({ models: { team: 'gpt-4.1', autopilot: 'o4-mini', forge: 'gpt-5' } });
     assert.equal(getModelForMode('team'), 'gpt-4.1');
     assert.equal(getModelForMode('autopilot'), 'o4-mini');
-    assert.equal(getModelForMode('ralph'), 'gpt-5');
+    assert.equal(getModelForMode('forge'), 'gpt-5');
   });
 
   it('returns frontier default for invalid models section (array)', async () => {

@@ -1,6 +1,10 @@
 ---
 name: autoresearch
 description: Stateful validator-gated research loop with native-hook persistence
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Autoresearch
@@ -9,7 +13,7 @@ Autoresearch is the skill-first replacement for the deprecated `rcs autoresearch
 It keeps the useful measured-research loop, but it now runs as a native-hook stateful workflow instead of a direct CLI or tmux launch surface.
 
 ## Use when
-- You want a Ralph-ish persistent research loop
+- You want a Forge-like persistent research loop
 - The task should keep nudging until explicit validation evidence exists
 - You want init-time choice between script validation and prompt+architect validation
 
@@ -66,3 +70,6 @@ The completion artifact must include both an architect approval verdict and an o
 - No direct CLI launch.
 - No tmux split-pane launch.
 - No noop-count completion gate.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

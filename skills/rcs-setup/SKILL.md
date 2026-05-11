@@ -1,6 +1,10 @@
 ---
 name: rcs-setup
 description: Setup and configure Roblox Creator Skills using current CLI behavior
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # RCS Setup
@@ -52,7 +56,7 @@ Supported setup flags (current implementation):
 - `rcs setup` prompts for scope when no scope is provided and stdin/stdout are TTY. If `./.rcs/setup-scope.json` already exists, setup now summarizes the saved choices first and asks whether to keep them, review/change them, or reset and behave like a fresh setup run.
 - Non-interactive setup never blocks for this review prompt: it keeps deterministic CLI/persisted/default behavior for CI and scripted installs.
 - In `user` scope, `rcs setup` also prompts for skill delivery mode when no prior install mode is kept; installed plugin cache discovery makes plugin mode the default prompt/non-interactive choice.
-- Local project orchestration file is `./AGENTS.md` (project root).
+- Local project workflow contract file is `./AGENTS.md` (project root).
 - If `AGENTS.md` exists and neither `--force` nor `--merge-agents` is used, interactive TTY runs ask whether to overwrite. Non-interactive runs preserve the file.
 - Use `--merge-agents` to keep existing project guidance while allowing setup to refresh RCS-managed AGENTS sections and the generated model capability table idempotently.
 - Scope targets:
@@ -133,3 +137,6 @@ node bin/rcs.js doctor
 
 - If AGENTS.md was not overwritten during `--force`, stop active RCS session and rerun setup.
 - If AGENTS.md was not merged during `--merge-agents`, stop active RCS session and rerun setup.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

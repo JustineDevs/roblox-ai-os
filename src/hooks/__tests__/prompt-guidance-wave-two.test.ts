@@ -16,7 +16,6 @@ describe('prompt guidance wave two contract', () => {
     assert.match(loadSurface('prompts/debugger.md'), /diagnosis is grounded/i);
     assert.match(loadSurface('prompts/test-engineer.md'), /recommendation is grounded/i);
     assert.match(loadSurface('prompts/code-reviewer.md'), /review is grounded/i);
-    assert.match(loadSurface('prompts/quality-reviewer.md'), /review is grounded/i);
     assert.match(loadSurface('prompts/security-reviewer.md'), /security verdict is grounded/i);
     assert.match(loadSurface('prompts/researcher.md'), /answer is grounded/i);
     assert.match(loadSurface('prompts/explore.md'), /answer is grounded/i);

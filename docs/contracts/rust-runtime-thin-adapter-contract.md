@@ -28,7 +28,7 @@ Rust-authored compatibility views.
 |---|---|---|
 | `rcs team status` | `.rcs/state/team/<team>/config.json`, `manifest.v2.json`, `tasks/*.json`, `approvals/*.json`, `workers/*` | Manifest-backed team config is authoritative when both config and manifest exist. |
 | `rcs doctor --team` | `.rcs/state/team/<team>/config.json`, `manifest.v2.json`, `workers/*/status.json`, `workers/*/heartbeat.json`, `.rcs/state/hud-state.json` | Manifest-backed tmux/session identity is authoritative when both config and manifest exist. |
-| HUD readers | `.rcs/state/session.json`, `.rcs/state/sessions/<session>/team-state.json`, `.rcs/state/team-state.json`, `.rcs/state/ralph-state.json` | Session-scoped files are authoritative when a session is active; root files are compatibility fallback only. |
+| HUD readers | `.rcs/state/session.json`, `.rcs/state/sessions/<session>/team-state.json`, `.rcs/state/team-state.json`, `.rcs/state/forge-state.json` | Session-scoped files are authoritative when a session is active; root files are compatibility fallback only. |
 
 ## Rust-authored runtime files
 

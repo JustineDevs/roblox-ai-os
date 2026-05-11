@@ -87,8 +87,8 @@ describe('CLI session-scoped state parity', () => {
     }
   });
 
-  it('cancels linked ultrawork when Ralph is active', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-cli-ralph-link-'));
+  it('cancels linked ultrawork when Forge is active', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-cli-forge-link-'));
     try {
       const stateDir = join(wd, '.rcs', 'state');
       const sessionId = 'sess-link';
@@ -96,7 +96,7 @@ describe('CLI session-scoped state parity', () => {
       await mkdir(sessionDir, { recursive: true });
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
 
-      await writeFile(join(sessionDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionDir, 'forge-state.json'), JSON.stringify({
         active: true,
         iteration: 2,
         max_iterations: 10,
@@ -111,13 +111,13 @@ describe('CLI session-scoped state parity', () => {
 
       const cancelResult = runRcsCli(wd, 'cancel');
       assert.equal(cancelResult.status, 0, cancelResult.stderr || cancelResult.stdout);
-      assert.match(cancelResult.stdout, /Cancelled: ralph/);
+      assert.match(cancelResult.stdout, /Cancelled: forge/);
       assert.match(cancelResult.stdout, /Cancelled: ultrawork/);
 
-      const ralph = JSON.parse(await readFile(join(sessionDir, 'ralph-state.json'), 'utf-8'));
-      assert.equal(ralph.active, false);
-      assert.equal(ralph.current_phase, 'cancelled');
-      assert.ok(typeof ralph.completed_at === 'string');
+      const forge = JSON.parse(await readFile(join(sessionDir, 'forge-state.json'), 'utf-8'));
+      assert.equal(forge.active, false);
+      assert.equal(forge.current_phase, 'cancelled');
+      assert.ok(typeof forge.completed_at === 'string');
 
       const ultrawork = JSON.parse(await readFile(join(sessionDir, 'ultrawork-state.json'), 'utf-8'));
       assert.equal(ultrawork.active, false);
@@ -137,12 +137,12 @@ describe('CLI session-scoped state parity', () => {
       await mkdir(sessionB, { recursive: true });
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({ session_id: 'sessA' }));
 
-      await writeFile(join(sessionA, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionA, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         started_at: '2026-02-22T00:00:00.000Z',
       }));
-      await writeFile(join(sessionB, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionB, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         started_at: '2026-02-22T00:00:00.000Z',
@@ -150,10 +150,10 @@ describe('CLI session-scoped state parity', () => {
 
       const cancelResult = runRcsCli(wd, 'cancel');
       assert.equal(cancelResult.status, 0, cancelResult.stderr || cancelResult.stdout);
-      assert.match(cancelResult.stdout, /Cancelled: ralph/);
+      assert.match(cancelResult.stdout, /Cancelled: forge/);
 
-      const aState = JSON.parse(await readFile(join(sessionA, 'ralph-state.json'), 'utf-8'));
-      const bState = JSON.parse(await readFile(join(sessionB, 'ralph-state.json'), 'utf-8'));
+      const aState = JSON.parse(await readFile(join(sessionA, 'forge-state.json'), 'utf-8'));
+      const bState = JSON.parse(await readFile(join(sessionB, 'forge-state.json'), 'utf-8'));
       assert.equal(aState.active, false);
       assert.equal(aState.current_phase, 'cancelled');
       assert.equal(bState.active, true);

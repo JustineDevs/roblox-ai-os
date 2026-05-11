@@ -7,7 +7,7 @@ for (const surface of listTrackedAgentSurfaces()) {
     it('selects a single orchestration lane before execution', () => {
       assert.match(loadSurface(surface), /Choose the lane before acting/i);
       assert.match(loadSurface(surface), /\$deep-interview/i);
-      assert.match(loadSurface(surface), /\$ralplan/i);
+      assert.match(loadSurface(surface), /\$blueprint|\$blueprint/i);
       assert.match(loadSurface(surface), /\$team/i);
       assert.match(loadSurface(surface), /Solo execute/i);
     });

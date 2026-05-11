@@ -1,6 +1,10 @@
 ---
 name: build-fix
 description: Fix build and TypeScript errors with minimal changes
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Build Fix Skill
@@ -132,9 +136,9 @@ Combine with other skills for comprehensive fixing:
 ```
 Spawns multiple build-fixer agents in parallel for different files.
 
-**With Ralph:**
+**With Forge:**
 ```
-/ralph fix the build
+/forge fix the build
 ```
 Keeps trying until build passes, even if it takes multiple iterations.
 
@@ -143,3 +147,6 @@ Keeps trying until build passes, even if it takes multiple iterations.
 /team "debug build failures and fix type errors"
 ```
 Uses: explore → build-fixer → verifier workflow.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

@@ -1,6 +1,10 @@
 ---
 name: brief-motivation
 description: Creator workflow for `$brief:motivation`
+surface-class: "canonical"
+domain: "roblox-studio"
+audience: "creator"
+artifact-type: "skill"
 ---
 
 # Brief Motivation
@@ -20,3 +24,6 @@ Return a **Motivation Matrix** with:
 - Explain the dominant driver in one sentence.
 - Separate “good urgency” from manipulative pressure.
 - Prefer community when social play is naturally supported.
+surface-class: "canonical"
+domain: "creator-runtime"
+audience: "creator"

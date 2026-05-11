@@ -1,0 +1,10 @@
+std = "roblox"
+exclude = [
+  "templates/roblox-scripts/**",
+  "plugins/roblox-ai-os-creator-skills/**"
+]
+
+[rules]
+mixed_table = "allow"
+shadowing = "allow"
+unused_variable = "warn"

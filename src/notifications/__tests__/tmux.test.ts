@@ -293,7 +293,7 @@ describe('sanitizeTmuxAlertText', () => {
   it('drops metadata-only branch and HUD summary lines', () => {
     const raw = [
       'fix/issue-1525-post-stop-keyword-replay',
-      'fix/issue-1525-post-stop-keyword-replay | ralph:2/50 | turns:4 | session:1m | last:5s ago',
+      'fix/issue-1525-post-stop-keyword-replay | forge:2/50 | turns:4 | session:1m | last:5s ago',
       '[RCS#3] ultrawork active',
     ].join('\n');
 
@@ -302,7 +302,7 @@ describe('sanitizeTmuxAlertText', () => {
 
   it('preserves real failure lines even when they resemble alert keywords', () => {
     const raw = [
-      'fix/issue-1525-post-stop-keyword-replay | ralph:2/50 | turns:4 | session:1m | last:5s ago',
+      'fix/issue-1525-post-stop-keyword-replay | forge:2/50 | turns:4 | session:1m | last:5s ago',
       'stderr: Error: test suite failed',
     ].join('\n');
 
@@ -315,7 +315,7 @@ describe('sanitizeTmuxAlertText', () => {
   });
 
   it('drops metadata-only branch lines even when the branch name contains failure-like words', () => {
-    const raw = 'feature/error-repro | ralph:2/50 | turns:4 | session:1m | last:5s ago';
+    const raw = 'feature/error-repro | forge:2/50 | turns:4 | session:1m | last:5s ago';
     assert.equal(sanitizeTmuxAlertText(raw), undefined);
   });
 

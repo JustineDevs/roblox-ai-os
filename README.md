@@ -1,20 +1,34 @@
 # RCS - Roblox Creator Skills
 
-[![npm version](https://img.shields.io/npm/v/%40jstn-sdk%2Frcs)](https://www.npmjs.com/package/@jstn-sdk/rcs)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
+<p align="center">
+  <img src="./docs/readme/rcs-cover.svg" alt="RCS cover" width="1200" />
+</p>
 
-RCS is the Roblox Creator Skills runtime and workflow layer for [OpenAI Codex CLI](https://github.com/openai/codex). It is owned by **JustineDevs** and ships creator-oriented briefing, blueprinting, forging, crew orchestration, and psychology-aware design workflows on top of Codex.
+<p align="center">
+  <a href="https://www.roblox.com/create">
+    <img src="https://img.shields.io/badge/Roblox%20Studio-Creator%20Workflow-E2231A?style=for-the-badge&logo=roblox&logoColor=white" alt="Roblox Studio badge" />
+  </a>
+  <a href="https://github.com/JustineDevs/roblox-ai-os/stargazers">
+    <img src="https://img.shields.io/github/stars/JustineDevs/roblox-ai-os?style=for-the-badge&label=%E2%98%85&color=1A1D24" alt="Stars badge" />
+  </a>
+  <a href="https://github.com/JustineDevs/roblox-ai-os/forks">
+    <img src="https://img.shields.io/github/forks/JustineDevs/roblox-ai-os?style=for-the-badge&label=Forks&color=2B313C&logo=github" alt="Forks badge" />
+  </a>
+  <a href="https://www.npmjs.com/package/@jstn-sdk/rcs">
+    <img src="https://img.shields.io/npm/v/%40jstn-sdk%2Frcs?style=for-the-badge&label=Version&color=E2231A" alt="Version badge" />
+  </a>
+</p>
+
+RCS is a Roblox Studio operating layer for [OpenAI Codex CLI](https://github.com/openai/codex): it gives serious Roblox creators one disciplined workflow for briefing, planning, building, reviewing, and verifying creator work in Roblox-native terms. It is owned by **[@JustineDevs](https://github.com/JustineDevs)** and ships creator-oriented briefing, blueprinting, forging, crew execution, and psychology-aware design workflows on top of Codex.
 
 **Package:** `@jstn-sdk/rcs`  
 **Repo:** `https://github.com/JustineDevs/roblox-ai-os`  
-**Docs:** [Getting Started](./docs/getting-started.html) · [Skills](./docs/skills.html) · [Agents](./docs/agents.html) · [Integrations](./docs/integrations.html) · [OpenClaw guide](./docs/openclaw-integration.md)
+**Docs:** [Getting Started](./docs/getting-started.html) · [Skills](./docs/skills.html) · [Agents](./docs/agents.html) · [Integrations](./docs/integrations.html) · [Notification Gateway and OpenClaw guide](./docs/openclaw-integration.md)
 
-<table>
-<tr>
-<td><strong>🚨 CAUTION — RECOMMENDED DEFAULT ONLY: macOS or Linux with Codex CLI.</strong><br><br><strong>RCS is primarily designed and actively tuned for that path.</strong><br><strong>Native Windows and Codex App are not the default experience, may break or behave inconsistently, and currently receive less support.</strong></td>
-</tr>
-</table>
+> [!WARNING]
+> Recommended default: macOS or Linux with Codex CLI.
+> RCS is primarily designed and actively tuned for that path.
+> Native Windows and Codex App are not the default experience, may break or behave inconsistently, and currently receive less support.
 
 It keeps Codex as the execution engine and makes it easier to:
 - start a stronger Codex session by default
@@ -24,20 +38,79 @@ It keeps Codex as the execution engine and makes it easier to:
 - force Roblox work through a mandatory pre-action gate before any code generation or refactor
 - keep project guidance, plans, logs, and state in `.rcs/`
 
-## Recommended default flow
+## Strict setup
 
-If you want the default RCS experience, start here:
+> [!IMPORTANT]
+> Do this in order. Do not skip the smoke test.
+
+### Requirements
+
+- Node.js 20+
+- Codex CLI installed
+- Codex auth visible in the same shell/profile that will run RCS
+- `tmux` on macOS/Linux if you want the recommended durable runtime
+- `psmux` on native Windows only if you intentionally want the less-supported Windows team path
+
+### 1. Install Codex and RCS
 
 ```bash
 npm install -g @openai/codex @jstn-sdk/rcs
+```
+
+What it does:
+- installs Codex CLI
+- installs the RCS runtime/CLI layer
+- does **not** fully wire the local runtime yet
+
+### 2. Run setup
+
+```bash
+rcs setup
+```
+
+What it does:
+- installs prompts, skills, and AGENTS scaffolding
+- wires `.codex/config.toml`
+- installs RCS-managed native Codex hooks
+- keeps runtime state under `.rcs/`
+
+On a real RCS version bump, the global npm install prints an explicit reminder instead of auto-running setup. If you want npm update + setup refresh in one step later, use `rcs update`.
+
+### 3. Run doctor
+
+```bash
+rcs doctor
+```
+
+What it does:
+- checks that RCS files, hooks, config, and runtime prerequisites are present
+- catches bad local setup shape early
+- does **not** prove that Codex can make a real authenticated model call
+
+### 4. Run the real smoke test
+
+```bash
+codex login status
+rcs exec --skip-git-repo-check -C . "Reply with exactly RCS-EXEC-OK"
+```
+
+What it does:
+- `codex login status` confirms the active profile is authenticated
+- `rcs exec ...` proves the current shell/profile can actually complete a live Codex request
+- catches proxy/auth/base-URL/profile problems that `rcs doctor` alone cannot prove
+
+### 5. Launch RCS the recommended way
+
+```bash
 rcs --madmax --high
 ```
 
-On a real RCS version bump, the global npm install prints an explicit reminder instead of auto-running setup. When you're ready, run `rcs setup` manually or use `rcs update` to refresh the install and setup path together.
+What it does:
+- starts the main RCS runtime on the recommended strong path
+- on macOS/Linux with `tmux`, prefers the durable detached runtime/HUD path
+- gives you the normal creator workflow surface on top of Codex
 
-**Codex plugin install note:** this repo also ships an official Codex plugin layout at `plugins/roblox-ai-os-creator-skills` with marketplace metadata in `.agents/plugins/marketplace.json`. That plugin bundles the mirrored skill surface plus plugin-scoped companion metadata for MCP servers and apps. Native/runtime hooks still stay on the setup/runtime side rather than the installable plugin manifest. It is still **not** a replacement for `npm install -g @jstn-sdk/rcs` plus `rcs setup`: setup/runtime wiring remains a first-class part of the product surface. Legacy setup mode installs native agents/prompts, while plugin setup mode archives stale legacy prompt/native-agent files and keeps runtime wiring current.
-
-Then work normally inside Codex:
+### 6. Work through the canonical creator path
 
 ```text
 $brief "clarify the creator workflow change"
@@ -47,94 +120,40 @@ $crew "execute the approved plan in parallel"
 $autoforge "take a scoped creator workflow from brief to ship-ready outputs"
 ```
 
+What it does:
+- `$brief` clarifies the ask
+- `$blueprint` approves the plan
+- `$forge` carries one-owner execution to verified completion
+- `$crew` handles coordinated parallel execution
+- `$autoforge` runs the end-to-end creator flow with minimal supervision
+
 That is the main path.
-Before you treat the runtime as ready, run the quick-start smoke test below: `rcs doctor` verifies the install shape, while `rcs exec` proves the active Codex runtime can actually authenticate and complete a model call from the current environment.
-Start RCS strongly, clarify first when needed, approve the plan, then choose `$crew` for coordinated parallel execution or `$forge` for the persistent completion loop.
 
-## What RCS is for
+> [!NOTE]
+> This repo also ships an official Codex plugin layout at `plugins/roblox-ai-os-creator-skills` with marketplace metadata in `.agents/plugins/marketplace.json`.
+> That plugin bundles the mirrored skill surface plus plugin-scoped companion metadata for MCP servers and apps.
+> Native/runtime hooks still stay on the setup/runtime side rather than the installable plugin manifest.
+> It is still **not** a replacement for `npm install -g @jstn-sdk/rcs` plus `rcs setup`.
 
-Use RCS if you already like Codex and want a better day-to-day runtime around it:
-- a standard workflow built around `$brief`, `$blueprint`, `$crew`, and `$forge`
+## Who RCS is for
+
+Use RCS if you are:
+- a Roblox Studio developer building live experiences, gameplay systems, UI, persistence, remotes, or creator tooling
+- a technical Roblox creator who wants Codex to work through one stricter Roblox-native workflow instead of generic coding prompts
+- a plugin or tool author working on Studio-adjacent workflows
+- a small advanced team that wants structured AI coordination for creator work
+
+RCS is best for people who already like Codex but want:
+- one standard creator workflow built around `$brief`, `$blueprint`, `$crew`, `$forge`, and `$autoforge`
 - a structured player-psychology design layer for retention, motivation, social stickiness, and monetization fit
 - specialist roles and supporting skills when the task needs them
 - project guidance through scoped `AGENTS.md`
 - durable state under `.rcs/` for plans, logs, memory, and mode tracking
 
-If you want plain Codex with no extra workflow layer, you probably do not need RCS.
-
-## Quick start
-
-### Requirements
-
-- Node.js 20+
-- Codex CLI installed: `npm install -g @openai/codex`
-- Codex auth configured and visible in the same shell/profile that will run RCS
-- `tmux` on macOS/Linux if you want the recommended durable team runtime
-- `psmux` on native Windows only if you intentionally want the less-supported Windows team path
-
-### A good first session
-
-After install, check both boundaries:
-
-```bash
-rcs doctor
-codex login status
-rcs exec --skip-git-repo-check -C . "Reply with exactly RCS-EXEC-OK"
-```
-
-`rcs doctor` catches missing RCS files, hooks, and runtime prerequisites. The real smoke test catches auth, profile, and provider/base-URL problems that only appear when Codex performs an actual request.
-
-Launch RCS the recommended way:
-
-```bash
-rcs --madmax --high
-```
-
-On macOS/Linux interactive terminals with `tmux` available, this starts the
-leader in RCS-managed detached tmux by default so the HUD/runtime panes can be
-created and recovered.
-
-If you want a one-off launch with no RCS tmux/HUD management, use `--direct`:
-
-```bash
-rcs --direct --yolo
-```
-
-For a persistent shell/profile preference, set an environment policy:
-
-```bash
-RCS_LAUNCH_POLICY=direct rcs --yolo
-```
-
-Return to the auto/default behavior with:
-
-```bash
-unset RCS_LAUNCH_POLICY
-```
-
-CLI policy flags win over the environment, and the last CLI policy flag before
-`--` wins:
-
-```bash
-RCS_LAUNCH_POLICY=direct rcs --tmux --yolo
-```
-
-Use `RCS_LAUNCH_POLICY=direct|tmux|detached-tmux|auto`. This iteration only
-adds CLI and environment controls; it intentionally does not add a config-file
-setting. If you run `--direct` from inside an existing tmux pane, RCS will not
-create HUD splits, enable mouse mode, or wrap extended-key handling, but the
-process still runs inside that already-open terminal pane.
-
-Then try the canonical creator workflow:
-
-```text
-$brief "clarify the creator workflow change"
-$blueprint "approve the safest implementation path"
-$forge "carry the approved plan to completion"
-$crew "execute the approved plan in parallel"
-```
-
-Use `$crew` when the approved plan needs coordinated parallel work, `$forge` when one persistent owner should keep pushing to completion, and `$autoforge` when you want the end-to-end creator workflow with minimal supervision.
+RCS is probably not for you if you want:
+- plain Codex with no extra workflow layer
+- a generic web or SaaS development framework
+- a beginner-friendly Roblox Studio teaching product
 
 ## A simple mental model
 
@@ -148,22 +167,36 @@ It adds a better working layer around it:
 
 Most users should think of RCS as **better task routing + better workflow + better runtime**, not as a command surface to operate manually all day.
 
-## Start here if you are new
+## Sharp positioning
 
-1. Install or update RCS with `npm install -g @openai/codex @jstn-sdk/rcs`
-2. After install or real RCS version bumps, run `rcs setup` yourself when you're ready, or use `rcs update` when you also want npm to check for and install the latest build before refreshing setup
-3. Run `rcs doctor`
-4. Run a real execution smoke test: `codex login status` and `rcs exec --skip-git-repo-check -C . "Reply with exactly RCS-EXEC-OK"`
-5. Launch with `rcs --madmax --high`
-6. Use `$brief "..."` when the request or boundaries are still unclear
-7. Use `$blueprint "..."` to approve the plan and review tradeoffs
-8. Choose `$crew` for coordinated parallel execution or `$forge` for persistent completion loops
+RCS is the Roblox-native workflow and runtime layer for Codex CLI.
+
+It helps advanced Roblox creators move from creator brief -> approved blueprint -> verified implementation without drifting into generic web-app language, ungrounded code generation, or weak verification.
 
 ## Recommended workflow
 
 1. `$brief` — clarify scope when the request or boundaries are still vague.
 2. `$blueprint` — turn that clarified scope into an approved architecture and implementation plan.
 3. `$crew` or `$forge` — use `$crew` for coordinated parallel execution, or `$forge` when you want a persistent completion loop with one owner.
+
+## Launch policy notes
+
+On macOS/Linux interactive terminals with `tmux` available, `rcs --madmax --high` starts the leader in the RCS-managed detached tmux path by default so the HUD/runtime panes can be created and recovered.
+
+If you want a one-off launch with no RCS tmux/HUD management, use:
+
+```bash
+rcs --direct --yolo
+```
+
+For a persistent shell/profile preference:
+
+```bash
+RCS_LAUNCH_POLICY=direct rcs --yolo
+unset RCS_LAUNCH_POLICY
+```
+
+Use `RCS_LAUNCH_POLICY=direct|tmux|detached-tmux|auto`. CLI policy flags win over the environment, and the last CLI policy flag before `--` wins.
 
 ## Roblox Pre-Action Gate
 
@@ -249,13 +282,13 @@ Each driver is evaluated through player desire, mechanic patterns, UI feedback, 
 | `$autoforge "..."` | end-to-end creator workflow with minimal supervision |
 | `/skills` | browsing installed skills and supporting helpers |
 
-## Advanced / operator surfaces
+## Advanced creator operations
 
-These are useful, but they are not the main onboarding path.
+These are supporting operator interfaces, not the main onboarding path.
 
-### Lower-level team runtime
+### Coordinated execution
 
-Use the team runtime when you specifically need durable tmux/worktree coordination, not as the default way to begin using RCS. The public creator workflow remains `$brief -> $blueprint -> $forge / $crew -> $autoforge`. In Codex App or plain outside-tmux sessions, treat `rcs team` as a lower-level tmux-runtime shell surface rather than a directly available in-app workflow; launch RCS CLI from shell first if you actually want team execution.
+Use `rcs team` only when the approved creator plan genuinely needs durable tmux/worktree coordination. The default creator flow remains `$brief -> $blueprint -> $forge / $crew -> $autoforge`.
 
 ```bash
 rcs team 3:executor "fix the failing tests with verification"
@@ -335,9 +368,11 @@ rcs wiki lint --json
 rcs wiki refresh --json
 ```
 
-### Platform notes for the lower-level team runtime
+### Platform notes for coordinated execution
 
-`rcs team` works best on macOS/Linux with `tmux`.
+`rcs team` is a tmux runtime / CLI runtime surface and works best on macOS/Linux with `tmux`.
+From Codex App or outside tmux, treat `rcs team` as an attached-shell runtime rather than an in-process fallback.
+If the current surface is outside tmux or Codex App-native, `rcs team` is not directly available; launch RCS CLI from shell first.
 Native Windows remains a secondary path, and WSL2 is generally the better choice if you want a Windows-hosted setup.
 On native Windows, RCS accepts `psmux` as the tmux-compatible binary for the existing tmux-backed paths it already uses.
 
@@ -371,7 +406,7 @@ If this happens, try:
 - [Codex native hook mapping](./docs/codex-native-hooks.md)
 - [Integrations](./docs/integrations.html)
 - [Troubleshooting execution readiness](./docs/troubleshooting.md)
-- [OpenClaw / notification gateway guide](./docs/openclaw-integration.md)
+- [Notification Gateway and OpenClaw guide](./docs/openclaw-integration.md)
 - [Contributing](./CONTRIBUTING.md)
 - [Changelog](./CHANGELOG.md)
 
@@ -396,8 +431,13 @@ If this happens, try:
 
 ## Ownership
 
-RCS is owned and maintained by **JustineDevs** for Roblox creator workflows.
+RCS is owned and maintained by [JustineDevs](https://github.com/JustineDevs) for Roblox creator workflows.
+
+## Acknowledgements
+
+- [OpenAI Codex CLI](https://github.com/openai/codex) for the underlying agent runtime RCS is built on top of.
+- [robloxstudio-mcp](https://github.com/boshyxd/robloxstudio-mcp) for the optional live Roblox Studio MCP connection standard adopted as a compatibility lane in this project.
 
 ## License
 
-MIT
+[MIT](https://opensource.org/licenses/MIT)

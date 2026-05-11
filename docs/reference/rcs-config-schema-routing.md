@@ -2,7 +2,7 @@
 
 This page documents the `.rcs-config.json` keys that current RCS code recognizes, with extra detail for **model and environment routing**. Feature-owned settings such as notifications and OpenClaw remain documented near those features, but their supported key shapes are summarized here so this page can act as a safe schema map.
 
-This is a runtime/config reference. Keys such as `team`, `autopilot`, and `ralph` below refer to lower-level execution-mode identifiers, not the primary public creator workflow language. Public onboarding should still lead with `$brief`, `$blueprint`, `$forge`, `$crew`, and `$autoforge`.
+This is a runtime/config reference. Keys such as `team`, `autopilot`, and `forge` below refer to runtime execution-mode identifiers, not the primary public creator workflow language. Public onboarding should still lead with `$brief`, `$blueprint`, `$forge`, `$crew`, and `$autoforge`.
 
 Do not add or edit keys unless your installed RCS version recognizes them. Unknown keys are not a stable extension point, and malformed JSON or wrong-shaped sections may be ignored or may fail closed for the feature reading them.
 
@@ -93,7 +93,7 @@ Supported model-routing keys:
 | Key shape | Purpose |
 | --- | --- |
 | `default` | Fallback for `getModelForMode(mode)` when the requested mode has no explicit key. |
-| Any mode key, for example `team`, `autopilot`, `ralph` | Explicit model for that mode when code calls `getModelForMode("mode")`. |
+| Any mode key, for example `team`, `autopilot`, `forge` | Explicit model for that mode when code calls `getModelForMode("mode")`. |
 | `team_low_complexity` | Low-complexity team/spark model override. |
 | `team-low-complexity` | Alias for `team_low_complexity`. |
 | `teamLowComplexity` | Alias for `team_low_complexity`. |
@@ -153,8 +153,8 @@ Examples:
 | Role/category | Examples | Model class behavior |
 | --- | --- | --- |
 | Frontier orchestration | `planner`, `architect`, `critic`, `code-reviewer`, `security-reviewer`, `team-executor`, `vision` | Native-agent generation uses active `config.toml` root `model` first, then the main/frontier default fallback. |
-| Standard worker/review | `debugger`, `quality-reviewer`, `api-reviewer`, `performance-reviewer`, `dependency-expert`, `writer`, `researcher` | Uses the standard-lane default, which inherits main/frontier unless `RCS_DEFAULT_STANDARD_MODEL` is set. |
-| Fast/low-complexity | `explore`, `style-reviewer` | Uses the spark/low-complexity default. |
+| Standard worker/review | `debugger`, `code-reviewer`, `dependency-expert`, `writer`, `researcher`, `security-reviewer` | Uses the standard-lane default, which inherits main/frontier unless `RCS_DEFAULT_STANDARD_MODEL` is set. |
+| Fast/low-complexity | `explore`, `writer` | Uses the spark/low-complexity default. |
 | Executor special case | `executor` | Native-agent generation uses active `config.toml` root `model` first, then the main/frontier default fallback; team fallback routing keeps it on the frontier lane. |
 
 Team worker launches add another layer:
@@ -222,7 +222,7 @@ This keeps standard agents inheriting the frontier model by omitting `RCS_DEFAUL
     "default": "gpt-5.5",
     "team": "gpt-5.5",
     "autopilot": "gpt-5.5",
-    "ralph": "gpt-5.5",
+    "forge": "gpt-5.5",
     "team_low_complexity": "gpt-5.3-codex-spark"
   }
 }

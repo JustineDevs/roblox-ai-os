@@ -5,7 +5,7 @@
  */
 
 import type { HudRenderContext, HudPreset } from './types.js';
-import { green, yellow, cyan, dim, bold, getRalphColor, isColorEnabled, RESET } from './colors.js';
+import { green, yellow, cyan, dim, bold, getForgeColor, isColorEnabled, RESET } from './colors.js';
 import { HUD_TMUX_MAX_HEIGHT_LINES } from './constants.js';
 
 const SEP = dim(' | ');
@@ -56,17 +56,17 @@ function renderGitBranch(ctx: HudRenderContext): string | null {
   return cyan(gitBranch);
 }
 
-function renderRalph(ctx: HudRenderContext): string | null {
-  if (!ctx.ralph) return null;
-  const { iteration, max_iterations } = ctx.ralph;
+function renderForge(ctx: HudRenderContext): string | null {
+  if (!ctx.forge) return null;
+  const { iteration, max_iterations } = ctx.forge;
   if (!Number.isFinite(iteration) || !Number.isFinite(max_iterations)) {
-    return yellow('ralph');
+    return yellow('forge');
   }
   const safeIteration = iteration as number;
   const safeMaxIterations = max_iterations as number;
-  if (!isColorEnabled()) return `ralph:${safeIteration}/${safeMaxIterations}`;
-  const color = getRalphColor(safeIteration, safeMaxIterations);
-  return `${color}ralph:${safeIteration}/${safeMaxIterations}${RESET}`;
+  if (!isColorEnabled()) return `forge:${safeIteration}/${safeMaxIterations}`;
+  const color = getForgeColor(safeIteration, safeMaxIterations);
+  return `${color}forge:${safeIteration}/${safeMaxIterations}${RESET}`;
 }
 
 function renderUltrawork(ctx: HudRenderContext): string | null {
@@ -80,16 +80,16 @@ function renderAutopilot(ctx: HudRenderContext): string | null {
   return yellow(`autopilot:${phase}`);
 }
 
-function renderRalplan(ctx: HudRenderContext): string | null {
-  if (!ctx.ralplan) return null;
-  const iteration = ctx.ralplan.iteration;
-  const planningComplete = ctx.ralplan.planning_complete === true;
+function renderBlueprint(ctx: HudRenderContext): string | null {
+  if (!ctx.blueprint) return null;
+  const iteration = ctx.blueprint.iteration;
+  const planningComplete = ctx.blueprint.planning_complete === true;
   if (typeof iteration === 'number' && Number.isFinite(iteration)) {
     const max = planningComplete ? iteration : '?';
-    return cyan(`ralplan:${iteration}/${max}`);
+    return cyan(`blueprint:${iteration}/${max}`);
   }
-  const phase = sanitizeDynamicText(ctx.ralplan.current_phase || 'active') || 'active';
-  return cyan(`ralplan:${phase}`);
+  const phase = sanitizeDynamicText(ctx.blueprint.current_phase || 'active') || 'active';
+  return cyan(`blueprint:${phase}`);
 }
 
 function renderDeepInterview(ctx: HudRenderContext): string | null {
@@ -191,9 +191,9 @@ type ElementRenderer = (ctx: HudRenderContext) => string | null;
 
 const MINIMAL_ELEMENTS: ElementRenderer[] = [
   renderGitBranch,
-  renderRalph,
+  renderForge,
   renderUltrawork,
-  renderRalplan,
+  renderBlueprint,
   renderDeepInterview,
   renderAutoresearch,
   renderUltraqa,
@@ -203,10 +203,10 @@ const MINIMAL_ELEMENTS: ElementRenderer[] = [
 
 const FOCUSED_ELEMENTS: ElementRenderer[] = [
   renderGitBranch,
-  renderRalph,
+  renderForge,
   renderUltrawork,
   renderAutopilot,
-  renderRalplan,
+  renderBlueprint,
   renderDeepInterview,
   renderAutoresearch,
   renderUltraqa,
@@ -220,10 +220,10 @@ const FOCUSED_ELEMENTS: ElementRenderer[] = [
 
 const FULL_ELEMENTS: ElementRenderer[] = [
   renderGitBranch,
-  renderRalph,
+  renderForge,
   renderUltrawork,
   renderAutopilot,
-  renderRalplan,
+  renderBlueprint,
   renderDeepInterview,
   renderAutoresearch,
   renderUltraqa,

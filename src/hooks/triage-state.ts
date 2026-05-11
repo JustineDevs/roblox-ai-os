@@ -2,7 +2,7 @@
  * Triage State
  *
  * Session-scoped state helper for prompt-routing triage.
- * Independent of workflow mode state (ralph-state.json, skill-active-state.json, etc.).
+ * Independent of workflow mode state (forge-state.json, skill-active-state.json, etc.).
  *
  * File location:
  *   With session id : .rcs/state/sessions/<session_id>/prompt-routing-state.json

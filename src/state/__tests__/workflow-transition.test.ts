@@ -10,22 +10,22 @@ describe('workflow transition rules', () => {
   it('allows the approved overlap matrix and denies unsupported combinations', () => {
     const cases: Array<{
       current: string[];
-      requested: 'team' | 'ralph' | 'ultrawork' | 'autopilot' | 'autoresearch';
+      requested: 'team' | 'forge' | 'ultrawork' | 'autopilot' | 'autoresearch';
       allowed: boolean;
       resulting: string[];
     }> = [
       { current: [], requested: 'team', allowed: true, resulting: ['team'] },
-      { current: ['team'], requested: 'ralph', allowed: true, resulting: ['team', 'ralph'] },
-      { current: ['ralph'], requested: 'team', allowed: true, resulting: ['ralph', 'team'] },
+      { current: ['team'], requested: 'forge', allowed: true, resulting: ['team', 'forge'] },
+      { current: ['forge'], requested: 'team', allowed: true, resulting: ['forge', 'team'] },
       { current: ['team'], requested: 'ultrawork', allowed: true, resulting: ['team', 'ultrawork'] },
       { current: ['ultrawork'], requested: 'team', allowed: true, resulting: ['ultrawork', 'team'] },
-      { current: ['ralph'], requested: 'ultrawork', allowed: true, resulting: ['ralph', 'ultrawork'] },
-      { current: ['ultrawork'], requested: 'ralph', allowed: true, resulting: ['ultrawork', 'ralph'] },
+      { current: ['forge'], requested: 'ultrawork', allowed: true, resulting: ['forge', 'ultrawork'] },
+      { current: ['ultrawork'], requested: 'forge', allowed: true, resulting: ['ultrawork', 'forge'] },
       { current: ['autopilot'], requested: 'team', allowed: false, resulting: ['autopilot'] },
       { current: ['team'], requested: 'autopilot', allowed: false, resulting: ['team'] },
-      { current: ['autoresearch'], requested: 'ralph', allowed: false, resulting: ['autoresearch'] },
-      { current: ['team', 'ralph'], requested: 'ultrawork', allowed: true, resulting: ['team', 'ralph', 'ultrawork'] },
-      { current: ['team', 'ultrawork'], requested: 'ralph', allowed: true, resulting: ['team', 'ultrawork', 'ralph'] },
+      { current: ['autoresearch'], requested: 'forge', allowed: false, resulting: ['autoresearch'] },
+      { current: ['team', 'forge'], requested: 'ultrawork', allowed: true, resulting: ['team', 'forge', 'ultrawork'] },
+      { current: ['team', 'ultrawork'], requested: 'forge', allowed: true, resulting: ['team', 'ultrawork', 'forge'] },
     ];
 
     for (const testCase of cases) {
@@ -46,12 +46,12 @@ describe('workflow transition rules', () => {
   });
 
   it('returns auto-complete decisions for allowlisted forward transitions', () => {
-    const interviewToRalplan = evaluateWorkflowTransition(['deep-interview'], 'ralplan');
-    assert.equal(interviewToRalplan.allowed, true);
-    assert.equal(interviewToRalplan.kind, 'auto-complete');
-    assert.deepEqual(interviewToRalplan.autoCompleteModes, ['deep-interview']);
-    assert.deepEqual(interviewToRalplan.resultingModes, ['ralplan']);
-    assert.equal(interviewToRalplan.transitionMessage, 'mode transiting: deep-interview -> ralplan');
+    const interviewToBlueprint = evaluateWorkflowTransition(['deep-interview'], 'blueprint');
+    assert.equal(interviewToBlueprint.allowed, true);
+    assert.equal(interviewToBlueprint.kind, 'auto-complete');
+    assert.deepEqual(interviewToBlueprint.autoCompleteModes, ['deep-interview']);
+    assert.deepEqual(interviewToBlueprint.resultingModes, ['blueprint']);
+    assert.equal(interviewToBlueprint.transitionMessage, 'mode transiting: deep-interview -> blueprint');
 
     const interviewToAutoresearch = evaluateWorkflowTransition(['deep-interview'], 'autoresearch');
     assert.equal(interviewToAutoresearch.allowed, true);
@@ -60,40 +60,40 @@ describe('workflow transition rules', () => {
     assert.deepEqual(interviewToAutoresearch.resultingModes, ['autoresearch']);
     assert.equal(interviewToAutoresearch.transitionMessage, 'mode transiting: deep-interview -> autoresearch');
 
-    const ralplanToRalph = evaluateWorkflowTransition(['ralplan', 'ultrawork'], 'ralph');
-    assert.equal(ralplanToRalph.allowed, true);
-    assert.equal(ralplanToRalph.kind, 'auto-complete');
-    assert.deepEqual(ralplanToRalph.autoCompleteModes, ['ralplan']);
-    assert.deepEqual(ralplanToRalph.resultingModes, ['ultrawork', 'ralph']);
+    const blueprintToForge = evaluateWorkflowTransition(['blueprint', 'ultrawork'], 'forge');
+    assert.equal(blueprintToForge.allowed, true);
+    assert.equal(blueprintToForge.kind, 'auto-complete');
+    assert.deepEqual(blueprintToForge.autoCompleteModes, ['blueprint']);
+    assert.deepEqual(blueprintToForge.resultingModes, ['ultrawork', 'forge']);
 
-    const ralplanToAutoresearch = evaluateWorkflowTransition(['ralplan'], 'autoresearch');
-    assert.equal(ralplanToAutoresearch.allowed, true);
-    assert.equal(ralplanToAutoresearch.kind, 'auto-complete');
-    assert.deepEqual(ralplanToAutoresearch.autoCompleteModes, ['ralplan']);
-    assert.deepEqual(ralplanToAutoresearch.resultingModes, ['autoresearch']);
+    const blueprintToAutoresearch = evaluateWorkflowTransition(['blueprint'], 'autoresearch');
+    assert.equal(blueprintToAutoresearch.allowed, true);
+    assert.equal(blueprintToAutoresearch.kind, 'auto-complete');
+    assert.deepEqual(blueprintToAutoresearch.autoCompleteModes, ['blueprint']);
+    assert.deepEqual(blueprintToAutoresearch.resultingModes, ['autoresearch']);
   });
 
   it('builds rollback denial guidance for execution-to-planning transitions', () => {
-    const error = buildWorkflowTransitionError(['ralph'], 'ralplan', 'start');
+    const error = buildWorkflowTransitionError(['forge'], 'blueprint', 'start');
     assert.match(error, /Execution-to-planning rollback auto-complete is not allowed\./);
     assert.match(error, /First clear current state first and retry if this action is intended\./);
     assert.match(error, /Clear incompatible workflow state yourself via/);
   });
 
 
-  it('allows autopilot to return to ralplan for non-clean code-review cycles', () => {
-    const decision = evaluateWorkflowTransition(['autopilot'], 'ralplan');
+  it('allows autopilot to return to blueprint for non-clean code-review cycles', () => {
+    const decision = evaluateWorkflowTransition(['autopilot'], 'blueprint');
     assert.equal(decision.allowed, true);
     assert.equal(decision.kind, 'auto-complete');
     assert.deepEqual(decision.autoCompleteModes, ['autopilot']);
-    assert.deepEqual(decision.resultingModes, ['ralplan']);
-    assert.equal(decision.transitionMessage, 'mode transiting: autopilot -> ralplan');
+    assert.deepEqual(decision.resultingModes, ['blueprint']);
+    assert.equal(decision.transitionMessage, 'mode transiting: autopilot -> blueprint');
   });
 
   it('formats transition audit messages', () => {
     assert.equal(
-      buildWorkflowTransitionMessage('ralplan', 'ralph'),
-      'mode transiting: ralplan -> ralph',
+      buildWorkflowTransitionMessage('blueprint', 'forge'),
+      'mode transiting: blueprint -> forge',
     );
   });
 });

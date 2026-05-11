@@ -1,6 +1,10 @@
 ---
 name: brief-audience
 description: Creator workflow for `$brief:audience`
+surface-class: "canonical"
+domain: "roblox-studio"
+audience: "creator"
+artifact-type: "skill"
 ---
 
 # Brief Audience
@@ -17,3 +21,6 @@ Return a filled **Player Motivation Profile** using `templates/psychology/player
 - Name the primary fantasy before talking about features.
 - Call out likely session length and why the player comes back.
 - End with 3 audience risks or mismatches.
+surface-class: "canonical"
+domain: "creator-runtime"
+audience: "creator"

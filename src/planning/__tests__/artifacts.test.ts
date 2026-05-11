@@ -121,17 +121,17 @@ describe('planning artifacts', () => {
     await mkdir(specsDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-legacy.md'),
-      '# Legacy\n\nLaunch via rcs ralph "Execute legacy plan"\n',
+      '# Legacy\n\nLaunch via rcs forge "Execute legacy plan"\n',
     );
     await writeFile(join(plansDir, 'test-spec-legacy.md'), '# Legacy Test Spec\n');
     await writeFile(
       join(plansDir, 'prd-20260427T153000Z-alpha.md'),
-      '# Old Alpha\n\nLaunch via rcs ralph "Execute old alpha plan"\n',
+      '# Old Alpha\n\nLaunch via rcs forge "Execute old alpha plan"\n',
     );
     await writeFile(join(plansDir, 'test-spec-alpha.md'), '# Alpha Legacy Test Spec\n');
     await writeFile(
       join(plansDir, 'prd-20260427T153100Z-alpha.md'),
-      '# New Alpha\n\nLaunch via rcs ralph "Execute new alpha plan"\n',
+      '# New Alpha\n\nLaunch via rcs forge "Execute new alpha plan"\n',
     );
     await writeFile(join(plansDir, 'test-spec-20260427T153100Z-alpha.md'), '# Alpha Timestamped Test Spec\n');
     await writeFile(join(specsDir, 'deep-interview-alpha.md'), '# Alpha Legacy Deep Interview\n');
@@ -146,7 +146,7 @@ describe('planning artifacts', () => {
       join(specsDir, 'deep-interview-20260427T153100Z-alpha.md'),
     ]);
 
-    const hint = readApprovedExecutionLaunchHint(tempDir, 'ralph');
+    const hint = readApprovedExecutionLaunchHint(tempDir, 'forge');
     assert.ok(hint);
     assert.equal(hint?.task, 'Execute new alpha plan');
     assert.deepEqual(hint?.testSpecPaths, [join(plansDir, 'test-spec-20260427T153100Z-alpha.md')]);
@@ -164,7 +164,7 @@ describe('planning artifacts', () => {
     await mkdir(plansDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-alpha.md'),
-      '# Alpha\n\nLaunch via rcs ralph "Execute alpha"\n',
+      '# Alpha\n\nLaunch via rcs forge "Execute alpha"\n',
     );
     await writeFile(join(plansDir, 'test-spec-alpha.md'), '# Alpha Test Spec\n');
     await writeFile(join(plansDir, 'testspec-alpha.md'), '# Alpha Compatibility Test Spec\n');
@@ -177,7 +177,7 @@ describe('planning artifacts', () => {
       join(plansDir, 'testspec-alpha.md'),
     ]);
 
-    const hint = readApprovedExecutionLaunchHint(tempDir, 'ralph');
+    const hint = readApprovedExecutionLaunchHint(tempDir, 'forge');
     assert.ok(hint);
     assert.deepEqual(hint?.testSpecPaths, [
       join(plansDir, 'test-spec-alpha.md'),
@@ -190,7 +190,7 @@ describe('planning artifacts', () => {
     await mkdir(plansDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-20260427T153100Z-alpha.md'),
-      '# Alpha\n\nLaunch via rcs ralph "Execute alpha"\n',
+      '# Alpha\n\nLaunch via rcs forge "Execute alpha"\n',
     );
     await writeFile(join(plansDir, 'test-spec-alpha.md'), '# Alpha Legacy Test Spec\n');
 
@@ -201,7 +201,7 @@ describe('planning artifacts', () => {
     assert.equal(selection.prdPath, join(plansDir, 'prd-20260427T153100Z-alpha.md'));
     assert.deepEqual(selection.testSpecPaths, []);
 
-    assert.equal(readApprovedExecutionLaunchHint(tempDir, 'ralph'), null);
+    assert.equal(readApprovedExecutionLaunchHint(tempDir, 'forge'), null);
 
     const resolution = readTeamDagArtifactResolution(tempDir);
     assert.equal(resolution.source, 'none');
@@ -211,40 +211,40 @@ describe('planning artifacts', () => {
   });
 
 
-  it('parses $ralph aliases with single-quoted task text for approved launch hints', async () => {
+  it('parses $forge aliases with single-quoted task text for approved launch hints', async () => {
     const plansDir = join(tempDir, '.rcs', 'plans');
     const specsDir = join(tempDir, '.rcs', 'specs');
     await mkdir(plansDir, { recursive: true });
     await mkdir(specsDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-issue-1072.md'),
-      "# PRD\n\nLaunch via $ralph 'Execute approved issue 1072 plan'\n",
+      "# PRD\n\nLaunch via $forge 'Execute approved issue 1072 plan'\n",
     );
     await writeFile(join(plansDir, 'test-spec-issue-1072.md'), '# Test Spec\n');
     await writeFile(join(specsDir, 'deep-interview-issue-1072.md'), '# Deep Interview Spec\n');
 
-    const hint = readApprovedExecutionLaunchHint(tempDir, 'ralph');
+    const hint = readApprovedExecutionLaunchHint(tempDir, 'forge');
     assert.ok(hint);
-    assert.equal(hint?.command, "$ralph 'Execute approved issue 1072 plan'");
+    assert.equal(hint?.command, "$forge 'Execute approved issue 1072 plan'");
     assert.equal(hint?.task, 'Execute approved issue 1072 plan');
     assert.equal(hint?.sourcePath, join(plansDir, 'prd-issue-1072.md'));
     assert.deepEqual(hint?.testSpecPaths, [join(plansDir, 'test-spec-issue-1072.md')]);
     assert.deepEqual(hint?.deepInterviewSpecPaths, [join(specsDir, 'deep-interview-issue-1072.md')]);
   });
 
-  it('includes approved Ralph launch context with test and deep-interview artifacts', async () => {
+  it('includes approved Forge launch context with test and deep-interview artifacts', async () => {
     const plansDir = join(tempDir, '.rcs', 'plans');
     const specsDir = join(tempDir, '.rcs', 'specs');
     await mkdir(plansDir, { recursive: true });
     await mkdir(specsDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-issue-1072.md'),
-      '# PRD\n\nLaunch via rcs ralph "Execute approved issue 1072 plan"\n',
+      '# PRD\n\nLaunch via rcs forge "Execute approved issue 1072 plan"\n',
     );
     await writeFile(join(plansDir, 'test-spec-issue-1072.md'), '# Test Spec\n');
     await writeFile(join(specsDir, 'deep-interview-issue-1072.md'), '# Deep Interview Spec\n');
 
-    const hint = readApprovedExecutionLaunchHint(tempDir, 'ralph');
+    const hint = readApprovedExecutionLaunchHint(tempDir, 'forge');
     assert.ok(hint);
     assert.equal(hint?.task, 'Execute approved issue 1072 plan');
     assert.equal(hint?.sourcePath, join(plansDir, 'prd-issue-1072.md'));
@@ -259,18 +259,17 @@ describe('planning artifacts', () => {
     await mkdir(specsDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-issue-1142.md'),
-      "# PRD\n\nLaunch via $team ralph 4:debugger 'Execute approved issue 1142 plan'\n",
+      "# PRD\n\nLaunch via $team 4:debugger 'Execute approved issue 1142 plan'\n",
     );
     await writeFile(join(plansDir, 'test-spec-issue-1142.md'), '# Test Spec\n');
     await writeFile(join(specsDir, 'deep-interview-issue-1142.md'), '# Deep Interview Spec\n');
 
     const hint = readApprovedExecutionLaunchHint(tempDir, 'team');
     assert.ok(hint);
-    assert.equal(hint?.command, "$team ralph 4:debugger 'Execute approved issue 1142 plan'");
+    assert.equal(hint?.command, "$team 4:debugger 'Execute approved issue 1142 plan'");
     assert.equal(hint?.task, 'Execute approved issue 1142 plan');
     assert.equal(hint?.workerCount, 4);
     assert.equal(hint?.agentType, 'debugger');
-    assert.equal(hint?.linkedRalph, true);
     assert.equal(hint?.sourcePath, join(plansDir, 'prd-issue-1142.md'));
     assert.deepEqual(hint?.testSpecPaths, [join(plansDir, 'test-spec-issue-1142.md')]);
     assert.deepEqual(hint?.deepInterviewSpecPaths, [join(specsDir, 'deep-interview-issue-1142.md')]);
@@ -283,7 +282,7 @@ describe('planning artifacts', () => {
     await mkdir(specsDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-issue-1142.md'),
-      '# PRD\n\nLaunch via rcs team ralph 4:debugger "Execute approved issue 1142 plan"\n',
+      '# PRD\n\nLaunch via rcs team 4:debugger "Execute approved issue 1142 plan"\n',
     );
     await writeFile(join(plansDir, 'test-spec-issue-1142.md'), '# Test Spec\n');
     await writeFile(join(specsDir, 'deep-interview-issue-1142.md'), '# Deep Interview Spec\n');
@@ -293,7 +292,6 @@ describe('planning artifacts', () => {
     assert.equal(hint?.task, 'Execute approved issue 1142 plan');
     assert.equal(hint?.workerCount, 4);
     assert.equal(hint?.agentType, 'debugger');
-    assert.equal(hint?.linkedRalph, true);
     assert.equal(hint?.sourcePath, join(plansDir, 'prd-issue-1142.md'));
     assert.deepEqual(hint?.testSpecPaths, [join(plansDir, 'test-spec-issue-1142.md')]);
     assert.deepEqual(hint?.deepInterviewSpecPaths, [join(specsDir, 'deep-interview-issue-1142.md')]);
@@ -326,14 +324,14 @@ describe('planning artifacts', () => {
     const specsDir = join(tempDir, '.rcs', 'specs');
     await mkdir(plansDir, { recursive: true });
     await mkdir(specsDir, { recursive: true });
-    await writeFile(join(plansDir, 'prd-alpha.md'), '# Alpha\n\nLaunch via rcs ralph "Execute alpha"\n');
+    await writeFile(join(plansDir, 'prd-alpha.md'), '# Alpha\n\nLaunch via rcs forge "Execute alpha"\n');
     await writeFile(join(plansDir, 'test-spec-alpha.md'), '# Alpha Test Spec\n');
     await writeFile(join(specsDir, 'deep-interview-alpha.md'), '# Alpha Deep Interview\n');
-    await writeFile(join(plansDir, 'prd-zeta.md'), '# Zeta\n\nLaunch via rcs ralph "Execute zeta"\n');
+    await writeFile(join(plansDir, 'prd-zeta.md'), '# Zeta\n\nLaunch via rcs forge "Execute zeta"\n');
     await writeFile(join(plansDir, 'test-spec-zeta.md'), '# Zeta Test Spec\n');
     await writeFile(join(specsDir, 'deep-interview-zeta.md'), '# Zeta Deep Interview\n');
 
-    const hint = readApprovedExecutionLaunchHint(tempDir, 'ralph');
+    const hint = readApprovedExecutionLaunchHint(tempDir, 'forge');
     assert.ok(hint);
     assert.equal(hint?.task, 'Execute zeta');
     assert.equal(hint?.sourcePath, join(plansDir, 'prd-zeta.md'));
@@ -345,19 +343,19 @@ describe('planning artifacts', () => {
     const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     const alphaPrdPath = join(plansDir, 'prd-alpha.md');
-    await writeFile(alphaPrdPath, '# Alpha\n\nLaunch via rcs ralph "Execute alpha"\n');
+    await writeFile(alphaPrdPath, '# Alpha\n\nLaunch via rcs forge "Execute alpha"\n');
     await writeFile(join(plansDir, 'test-spec-alpha.md'), '# Alpha Test Spec\n');
-    await writeFile(join(plansDir, 'prd-zeta.md'), '# Zeta\n\nLaunch via rcs ralph "Execute zeta"\n');
+    await writeFile(join(plansDir, 'prd-zeta.md'), '# Zeta\n\nLaunch via rcs forge "Execute zeta"\n');
     await writeFile(join(plansDir, 'test-spec-zeta.md'), '# Zeta Test Spec\n');
 
-    const hint = readApprovedExecutionLaunchHint(tempDir, 'ralph', { prdPath: alphaPrdPath });
+    const hint = readApprovedExecutionLaunchHint(tempDir, 'forge', { prdPath: alphaPrdPath });
     assert.ok(hint);
     assert.equal(hint?.task, 'Execute alpha');
     assert.equal(hint?.sourcePath, alphaPrdPath);
     assert.deepEqual(hint?.testSpecPaths, [join(plansDir, 'test-spec-alpha.md')]);
   });
 
-  it('honors the requested Ralph task when a single plan lists multiple Ralph launch hints', async () => {
+  it('honors the requested Forge task when a single plan lists multiple Forge launch hints', async () => {
     const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
@@ -365,19 +363,19 @@ describe('planning artifacts', () => {
       [
         '# PRD',
         '',
-        'Launch via rcs ralph "Execute alpha"',
-        'Launch via rcs ralph "Execute beta"',
+        'Launch via rcs forge "Execute alpha"',
+        'Launch via rcs forge "Execute beta"',
       ].join('\n'),
     );
     await writeFile(join(plansDir, 'test-spec-issue-909.md'), '# Test Spec\n');
 
-    const hint = readApprovedExecutionLaunchHint(tempDir, 'ralph', { task: 'Execute alpha' });
+    const hint = readApprovedExecutionLaunchHint(tempDir, 'forge', { task: 'Execute alpha' });
     assert.ok(hint);
     assert.equal(hint?.task, 'Execute alpha');
-    assert.equal(hint?.command, 'rcs ralph "Execute alpha"');
+    assert.equal(hint?.command, 'rcs forge "Execute alpha"');
   });
 
-  it('fails closed for bare Ralph lookups when a single plan lists multiple Ralph launch hints', async () => {
+  it('fails closed for bare Forge lookups when a single plan lists multiple Forge launch hints', async () => {
     const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
@@ -385,13 +383,13 @@ describe('planning artifacts', () => {
       [
         '# PRD',
         '',
-        'Launch via rcs ralph "Execute alpha"',
-        'Launch via rcs ralph "Execute beta"',
+        'Launch via rcs forge "Execute alpha"',
+        'Launch via rcs forge "Execute beta"',
       ].join('\n'),
     );
     await writeFile(join(plansDir, 'test-spec-issue-909-bare.md'), '# Test Spec\n');
 
-    const hint = readApprovedExecutionLaunchHint(tempDir, 'ralph');
+    const hint = readApprovedExecutionLaunchHint(tempDir, 'forge');
     assert.equal(hint, null);
   });
 
@@ -443,7 +441,7 @@ describe('planning artifacts', () => {
     const plansDir = join(tempDir, '.rcs', 'plans');
     const sharedTask = 'Ship feature';
     const primaryCommand = `rcs team 2:executor ${JSON.stringify(sharedTask)}`;
-    const secondaryCommand = `$team ralph 5:debugger ${JSON.stringify(sharedTask)}`;
+    const secondaryCommand = `$team 5:debugger ${JSON.stringify(sharedTask)}`;
     const prdPath = join(plansDir, 'prd-issue-910-command.md');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
@@ -466,7 +464,6 @@ describe('planning artifacts', () => {
     assert.equal(hint?.command, primaryCommand);
     assert.equal(hint?.workerCount, 2);
     assert.equal(hint?.agentType, 'executor');
-    assert.equal(hint?.linkedRalph, false);
   });
 
   it('fails closed for bare team lookups when a single plan lists multiple team launch hints', async () => {
@@ -552,15 +549,15 @@ describe('planning artifacts', () => {
     await mkdir(plansDir, { recursive: true });
     await writeFile(
       join(plansDir, 'prd-inline.md'),
-      '# PRD\n\nLaunch via rcs ralph "Execute inline"\n\n## Approved Repository Context Summary\n\n- Reuse src/cli/ralph.ts.\n\n## Verification\nRun tests.\n',
+      '# PRD\n\nLaunch via rcs forge "Execute inline"\n\n## Approved Repository Context Summary\n\n- Reuse src/cli/forge.ts.\n\n## Verification\nRun tests.\n',
     );
     await writeFile(join(plansDir, 'test-spec-inline.md'), '# Inline Test Spec\n');
 
-    const hint = readApprovedExecutionLaunchHint(tempDir, 'ralph');
+    const hint = readApprovedExecutionLaunchHint(tempDir, 'forge');
 
     assert.ok(hint?.repositoryContextSummary);
     assert.equal(hint.repositoryContextSummary.sourcePath, join(plansDir, 'prd-inline.md'));
-    assert.equal(hint.repositoryContextSummary.content, '- Reuse src/cli/ralph.ts.');
+    assert.equal(hint.repositoryContextSummary.content, '- Reuse src/cli/forge.ts.');
   });
 
   it('surfaces deep-interview specs for downstream traceability', async () => {

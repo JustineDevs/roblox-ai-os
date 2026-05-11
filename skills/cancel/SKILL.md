@@ -1,6 +1,10 @@
 ---
 name: cancel
-description: Cancel any active RCS mode (autopilot, ralph, ultrawork, ecomode, ultraqa, swarm, ultrapilot, pipeline, team)
+description: Cancel any active RCS mode (autopilot, forge, ultrawork, ecomode, ultraqa, swarm, ultrapilot, pipeline, team)
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Cancel Skill
@@ -17,9 +21,9 @@ a last resort.
 
 Automatically detects which mode is active and cancels it:
 - **Autopilot**: Stops workflow, preserves progress for resume
-- **Ralph**: Stops persistence loop, clears linked ultrawork if applicable
+- **Forge**: Stops persistence loop, clears linked ultrawork if applicable
 - **Ultrawork**: Stops parallel execution (standalone or linked)
-- **Ecomode**: Stops token-efficient parallel execution (standalone or linked to ralph)
+- **Ecomode**: Stops token-efficient parallel execution (standalone or linked to forge)
 - **UltraQA**: Stops QA cycling workflow
 - **Swarm**: Stops coordinated agent swarm, releases claimed tasks
 - **Ultrapilot**: Stops parallel autopilot workers
@@ -42,22 +46,22 @@ Or say: "cancelomc", "stopomc"
 - Swarm is a shared SQLite/marker mode (`.rcs/state/swarm.db` / `.rcs/state/swarm-active.marker`) and is not session-scoped.
 - The default cleanup flow calls `state_clear` with the session id to remove only the matching session files; modes stay bound to their originating session.
 
-## Normative Ralph cancellation post-conditions (MUST)
+## Normative Forge cancellation post-conditions (MUST)
 
-For Ralph-targeted cancellation (standalone or linked), completion is defined by post-conditions:
+For Forge-targeted cancellation (standalone or linked), completion is defined by post-conditions:
 
-1. Target Ralph state is terminalized, not silently removed:
+1. Target Forge state is terminalized, not silently removed:
    - `active=false`
    - `current_phase='cancelled'`
    - `completed_at` is set (ISO timestamp)
-2. If Ralph is linked to Ultrawork or Ecomode in the same scope, that linked mode is also terminalized/non-active.
+2. If Forge is linked to Ultrawork or Ecomode in the same scope, that linked mode is also terminalized/non-active.
 4. Cancellation MUST remain scope-safe: no mutation of unrelated sessions.
 
-See: `docs/contracts/ralph-cancel-contract.md`.
+See: `docs/contracts/forge-cancel-contract.md`.
 
 Active modes are still cancelled in dependency order:
-1. Autopilot (includes linked ralph/ultraqa/ecomode cleanup)
-2. Ralph (cleans its linked ultrawork or ecomode)
+1. Autopilot (includes linked forge/ultraqa/ecomode cleanup)
+2. Forge (cleans its linked ultrawork or ecomode)
 3. Ultrawork (standalone)
 4. Ecomode (standalone)
 5. UltraQA (standalone)
@@ -67,11 +71,11 @@ Active modes are still cancelled in dependency order:
 9. Team (tmux-based)
 10. Plan Consensus (standalone)
 
-## Normative Ralph post-conditions (MUST)
+## Normative Forge post-conditions (MUST)
 
-When cancellation targets Ralph state in a scope, completion requires all of the following:
+When cancellation targets Forge state in a scope, completion requires all of the following:
 
-1. Ralph state is terminal in that same scope: `active=false`, `current_phase='cancelled'` (or linked terminal phase), and `completed_at` is set.
+1. Forge state is terminal in that same scope: `active=false`, `current_phase='cancelled'` (or linked terminal phase), and `completed_at` is set.
 2. Linked Ultrawork/Ecomode in the same scope is also terminal/non-active.
 4. Unrelated sessions are untouched.
 
@@ -97,9 +101,9 @@ Every `state_clear` command honors the `session_id` argument, so even force mode
 
 Legacy compatibility list (removed only under `--force`/`--all`):
 - `.rcs/state/autopilot-state.json`
-- `.rcs/state/ralph-state.json`
-- `.rcs/state/ralph-plan-state.json`
-- `.rcs/state/ralph-verification.json`
+- `.rcs/state/forge-state.json`
+- `.rcs/state/forge-plan-state.json`
+- `.rcs/state/forge-verification.json`
 - `.rcs/state/ultrawork-state.json`
 - `.rcs/state/ecomode-state.json`
 - `.rcs/state/ultraqa-state.json`
@@ -112,7 +116,7 @@ Legacy compatibility list (removed only under `--force`/`--all`):
 - `.rcs/state/ultrapilot-ownership.json`
 - `.rcs/state/pipeline-state.json`
 - `.rcs/state/plan-consensus.json`
-- `.rcs/state/ralplan-state.json`
+- `.rcs/state/blueprint-state.json`
 - `.rcs/state/boulder.json`
 - `.rcs/state/hud-state.json`
 - `.rcs/state/subagent-tracking.json`
@@ -140,9 +144,9 @@ fi
 
 The skill now relies on the session-aware state contract rather than hard-coded file paths:
 1. Call `state_list_active` to enumerate `.rcs/state/sessions/{sessionId}/…` and discover every active session.
-2. For each session id, call `state_get_status` to learn which mode is running (`autopilot`, `ralph`, `ultrawork`, etc.) and whether dependent modes exist.
+2. For each session id, call `state_get_status` to learn which mode is running (`autopilot`, `forge`, `ultrawork`, etc.) and whether dependent modes exist.
 3. If a `session_id` was supplied to `/cancel`, skip legacy fallback entirely and operate solely within that session path; otherwise, consult legacy files in `.rcs/state/*.json` only if the state tools report no active session. Swarm remains a shared SQLite/marker mode outside session scoping.
-4. Any cancellation logic in this doc mirrors the dependency order discovered via state tools (autopilot → ralph → …).
+4. Any cancellation logic in this doc mirrors the dependency order discovered via state tools (autopilot → forge → …).
 
 ### 3A. Force Mode (if --force or --all)
 
@@ -216,24 +220,24 @@ Team "{team_name}" cancelled:
 Call `cancelAutopilot()` from `src/hooks/autopilot/cancel.ts:27-78`:
 
 ```bash
-# Autopilot handles its own cleanup + ralph + ultraqa
+# Autopilot handles its own cleanup + forge + ultraqa
 # Just mark autopilot as inactive (preserves state for resume)
 if [[ -f .rcs/state/autopilot-state.json ]]; then
-  # Clean up ralph if active
-  if [[ -f .rcs/state/ralph-state.json ]]; then
-    RALPH_STATE=$(cat .rcs/state/ralph-state.json)
-    LINKED_UW=$(echo "$RALPH_STATE" | jq -r '.linked_ultrawork // false')
+  # Clean up forge if active
+  if [[ -f .rcs/state/forge-state.json ]]; then
+    FORGE_STATE=$(cat .rcs/state/forge-state.json)
+    LINKED_UW=$(echo "$FORGE_STATE" | jq -r '.linked_ultrawork // false')
 
     # Clean linked ultrawork first
     if [[ "$LINKED_UW" == "true" ]] && [[ -f .rcs/state/ultrawork-state.json ]]; then
       rm -f .rcs/state/ultrawork-state.json
-      echo "Cleaned up: ultrawork (linked to ralph)"
+      echo "Cleaned up: ultrawork (linked to forge)"
     fi
 
-    # Clean ralph
-    rm -f .rcs/state/ralph-state.json
-    rm -f .rcs/state/ralph-verification.json
-    echo "Cleaned up: ralph"
+    # Clean forge
+    rm -f .rcs/state/forge-state.json
+    rm -f .rcs/state/forge-verification.json
+    echo "Cleaned up: forge"
   fi
 
   # Clean up ultraqa if active
@@ -252,34 +256,34 @@ if [[ -f .rcs/state/autopilot-state.json ]]; then
 fi
 ```
 
-#### If Ralph Active (but not Autopilot)
+#### If Forge Active (but not Autopilot)
 
-Call `clearRalphState()` + `clearLinkedUltraworkState()` from `src/hooks/ralph-loop/index.ts:147-182`:
+Call `clearForgeState()` + `clearLinkedUltraworkState()` from the active Forge cleanup path:
 
 ```bash
-if [[ -f .rcs/state/ralph-state.json ]]; then
+if [[ -f .rcs/state/forge-state.json ]]; then
   # Check if ultrawork is linked
-  RALPH_STATE=$(cat .rcs/state/ralph-state.json)
-  LINKED_UW=$(echo "$RALPH_STATE" | jq -r '.linked_ultrawork // false')
+  FORGE_STATE=$(cat .rcs/state/forge-state.json)
+  LINKED_UW=$(echo "$FORGE_STATE" | jq -r '.linked_ultrawork // false')
 
   # Clean linked ultrawork first
   if [[ "$LINKED_UW" == "true" ]] && [[ -f .rcs/state/ultrawork-state.json ]]; then
     UW_STATE=$(cat .rcs/state/ultrawork-state.json)
-    UW_LINKED=$(echo "$UW_STATE" | jq -r '.linked_to_ralph // false')
+    UW_LINKED=$(echo "$UW_STATE" | jq -r '.linked_to_forge // false')
 
-    # Only clear if it was linked to ralph
+    # Only clear if it was linked to forge
     if [[ "$UW_LINKED" == "true" ]]; then
       rm -f .rcs/state/ultrawork-state.json
-      echo "Cleaned up: ultrawork (linked to ralph)"
+      echo "Cleaned up: ultrawork (linked to forge)"
     fi
   fi
 
-  # Clean ralph state
-  rm -f .rcs/state/ralph-state.json
-  rm -f .rcs/state/ralph-plan-state.json
-  rm -f .rcs/state/ralph-verification.json
+  # Clean forge state
+  rm -f .rcs/state/forge-state.json
+  rm -f .rcs/state/forge-plan-state.json
+  rm -f .rcs/state/forge-verification.json
 
-  echo "Ralph cancelled. Persistent mode deactivated."
+  echo "Forge cancelled. Persistent mode deactivated."
 fi
 ```
 
@@ -289,12 +293,12 @@ Call `deactivateUltrawork()` from `src/hooks/ultrawork/index.ts:150-173`:
 
 ```bash
 if [[ -f .rcs/state/ultrawork-state.json ]]; then
-  # Check if linked to ralph
+  # Check if linked to forge
   UW_STATE=$(cat .rcs/state/ultrawork-state.json)
-  LINKED=$(echo "$UW_STATE" | jq -r '.linked_to_ralph // false')
+  LINKED=$(echo "$UW_STATE" | jq -r '.linked_to_forge // false')
 
   if [[ "$LINKED" == "true" ]]; then
-    echo "Ultrawork is linked to Ralph. Use /cancel to cancel both."
+    echo "Ultrawork is linked to Forge. Use /cancel to cancel both."
     exit 1
   fi
 
@@ -323,7 +327,7 @@ echo "No active RCS modes detected."
 echo ""
 echo "Checked for:"
 echo "  - Autopilot (.rcs/state/autopilot-state.json)"
-echo "  - Ralph (.rcs/state/ralph-state.json)"
+echo "  - Forge (.rcs/state/forge-state.json)"
 echo "  - Ultrawork (.rcs/state/ultrawork-state.json)"
 echo "  - UltraQA (.rcs/state/ultraqa-state.json)"
 echo ""
@@ -334,8 +338,8 @@ echo "Use --force to clear all state files anyway."
 
 The cancel skill runs as follows:
 1. Parse the `--force` / `--all` flags, tracking whether cleanup should span every session or stay scoped to the current session id.
-2. Use `state_list_active` to enumerate known session ids and `state_get_status` to learn the active mode (`autopilot`, `ralph`, `ultrawork`, etc.) for each session.
-3. When operating in default mode, call `state_clear` with that session_id to remove only the session’s files, then run mode-specific cleanup (autopilot → ralph → …) based on the state tool signals.
+2. Use `state_list_active` to enumerate known session ids and `state_get_status` to learn the active mode (`autopilot`, `forge`, `ultrawork`, etc.) for each session.
+3. When operating in default mode, call `state_clear` with that session_id to remove only the session’s files, then run mode-specific cleanup (autopilot → forge → …) based on the state tool signals.
 4. In force mode, iterate every active session, call `state_clear` per session, then run a global `state_clear` without `session_id` to drop legacy files (`.rcs/state/*.json`, compatibility artifacts) and report success. Swarm remains a shared SQLite/marker mode outside session scoping.
 5. Team artifacts (`.rcs/state/team/*/`, tmux sessions matching `rcs-team-*`) remain best-effort cleanup items invoked during the legacy/global pass.
 
@@ -347,7 +351,7 @@ Mode-specific subsections below describe what extra cleanup each handler perform
 | Mode | Success Message |
 |------|-----------------|
 | Autopilot | "Autopilot cancelled at phase: {phase}. Progress preserved for resume." |
-| Ralph | "Ralph cancelled. Persistent mode deactivated." |
+| Forge | "Forge cancelled. Persistent mode deactivated." |
 | Ultrawork | "Ultrawork cancelled. Parallel execution mode deactivated." |
 | Ecomode | "Ecomode cancelled. Token-efficient execution mode deactivated." |
 | UltraQA | "UltraQA cancelled. QA cycling workflow stopped." |
@@ -364,7 +368,7 @@ Mode-specific subsections below describe what extra cleanup each handler perform
 | Mode | State Preserved | Resume Command |
 |------|-----------------|----------------|
 | Autopilot | Yes (phase, files, spec, plan, verdicts) | `/autopilot` |
-| Ralph | No | N/A |
+| Forge | No | N/A |
 | Ultrawork | No | N/A |
 | UltraQA | No | N/A |
 | Swarm | No | N/A |
@@ -374,8 +378,8 @@ Mode-specific subsections below describe what extra cleanup each handler perform
 
 ## Notes
 
-- **Dependency-aware**: Autopilot cancellation cleans up Ralph and UltraQA
-- **Link-aware**: Ralph cancellation cleans up linked Ultrawork or Ecomode
+- **Dependency-aware**: Autopilot cancellation cleans up Forge and UltraQA
+- **Link-aware**: Forge cancellation cleans up linked Ultrawork or Ecomode
 - **Safe**: Only clears linked Ultrawork, preserves standalone Ultrawork
 - **Local-only**: Clears state files in `.rcs/state/` directory
 - **Resume-friendly**: Autopilot state is preserved for seamless resume
@@ -397,3 +401,6 @@ rm -rf .rcs/state/team/                  # All team state
 # Kill all rcs-team-* tmux sessions
 tmux list-sessions -F '#{session_name}' 2>/dev/null | grep '^rcs-team-' | while read s; do tmux kill-session -t "$s" 2>/dev/null; done
 ```
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

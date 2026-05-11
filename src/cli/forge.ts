@@ -1,0 +1,337 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { startMode, updateModeState } from '../modes/base.js';
+import { readApprovedExecutionLaunchHint, type ApprovedExecutionLaunchHint } from '../planning/artifacts.js';
+import { ensureCanonicalForgeArtifacts } from '../forge/persistence.js';
+import {
+  buildFollowupStaffingPlan,
+  resolveAvailableAgentTypes,
+} from '../team/followup-planner.js';
+
+export const FORGE_HELP = `rcs forge - Launch Codex with forge persistence mode active
+
+Usage:
+  rcs forge [task text...]
+  rcs forge --prd "<task text>"
+  rcs forge [forge-options] [codex-args...] [task text...]
+
+Options:
+  --help, -h           Show this help message
+  --prd <task text>    PRD mode shortcut: mark the task text explicitly
+  --prd=<task text>    Same as --prd "<task text>"
+  --no-deslop          Skip the final ai-slop-cleaner pass
+
+PRD mode:
+  Forge initializes persistence artifacts in .rcs/ so PRD and progress
+  state can survive across Codex sessions. Provide task text either as
+  positional words or with --prd.
+  Prompt-side \`$forge\` activation is separate from this CLI entrypoint
+  and does not imply \`--prd\` or the PRD.json startup gate.
+
+Common patterns:
+  rcs forge "Fix flaky notify-hook tests"
+  rcs forge --prd "Ship release checklist automation"
+  rcs forge --model gpt-5 "Refactor state hydration"
+  rcs forge -- --task-with-leading-dash
+`;
+
+const VALUE_TAKING_FLAGS = new Set(['--model', '--provider', '--config', '-c', '-i', '--images-dir']);
+const FORGE_RCS_FLAGS = new Set(['--prd', '--no-deslop']);
+const FORGE_APPEND_ENV = 'RCS_FORGE_APPEND_INSTRUCTIONS_FILE';
+const REQUIRED_FORGE_PRD_JSON_PATH = '.rcs/prd.json';
+const COMPLETED_FORGE_STORY_STATUSES = new Set(['passed', 'complete', 'completed']);
+const APPROVED_FORGE_ARCHITECT_VERDICTS = new Set(['approve', 'approved']);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value != null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isStoryMarkedPassedOrCompleted(story: Record<string, unknown>): boolean {
+  if (story.passes === true) return true;
+  if (typeof story.status !== 'string') return false;
+  return COMPLETED_FORGE_STORY_STATUSES.has(story.status.trim().toLowerCase());
+}
+
+function hasApprovedArchitectValidation(story: Record<string, unknown>): boolean {
+  const candidates = [story.architect_validation, story.architectValidation, story.architect_review, story.architectReview];
+  for (const candidate of candidates) {
+    if (!isRecord(candidate)) continue;
+    if (candidate.approved === true) return true;
+    if (typeof candidate.verdict === 'string' && APPROVED_FORGE_ARCHITECT_VERDICTS.has(candidate.verdict.trim().toLowerCase())) {
+      return true;
+    }
+    if (typeof candidate.status === 'string' && APPROVED_FORGE_ARCHITECT_VERDICTS.has(candidate.status.trim().toLowerCase())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function describeStory(story: Record<string, unknown>, index: number): string {
+  const id = typeof story.id === 'string' && story.id.trim() !== '' ? story.id.trim() : null;
+  const title = typeof story.title === 'string' && story.title.trim() !== '' ? story.title.trim() : null;
+  if (id && title) return `${id} (${title})`;
+  if (id) return id;
+  if (title) return title;
+  return `story #${index + 1}`;
+}
+
+function readAndValidateRequiredForgePrdJson(cwd: string): void {
+  const requiredPath = join(cwd, REQUIRED_FORGE_PRD_JSON_PATH);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(requiredPath, 'utf-8'));
+  } catch (error) {
+    throw new Error(`[forge] Invalid PRD.json at ${REQUIRED_FORGE_PRD_JSON_PATH}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  if (!isRecord(parsed)) {
+    throw new Error(`[forge] Invalid PRD.json at ${REQUIRED_FORGE_PRD_JSON_PATH}: expected a JSON object.`);
+  }
+
+  if (parsed.userStories == null) return;
+  if (!Array.isArray(parsed.userStories)) {
+    throw new Error(`[forge] Invalid PRD.json at ${REQUIRED_FORGE_PRD_JSON_PATH}: userStories must be an array when present.`);
+  }
+
+  for (const [index, story] of parsed.userStories.entries()) {
+    if (!isRecord(story)) continue;
+    if (!isStoryMarkedPassedOrCompleted(story)) continue;
+    if (hasApprovedArchitectValidation(story)) continue;
+    throw new Error(`[forge] PRD.json ${describeStory(story, index)} is marked passed/completed without architect approval. Record architect_validation.verdict="approved" (or architect_review.verdict="approve") before running Forge.`);
+  }
+}
+
+export function isForgePrdMode(args: readonly string[]): boolean {
+  return args.some((arg) => arg === '--prd' || arg.startsWith('--prd='));
+}
+
+export function assertRequiredForgePrdJson(cwd: string, args: readonly string[]): void {
+  if (!isForgePrdMode(args)) return;
+
+  const requiredPath = join(cwd, REQUIRED_FORGE_PRD_JSON_PATH);
+  if (!existsSync(requiredPath)) {
+    throw new Error(`[forge] Missing required PRD.json at ${REQUIRED_FORGE_PRD_JSON_PATH}. Create the file before running \`rcs forge --prd ...\`.`);
+  }
+
+  readAndValidateRequiredForgePrdJson(cwd);
+}
+
+export function extractForgeTaskDescription(args: readonly string[], fallbackTask?: string): string {
+  const words: string[] = [];
+  let i = 0;
+  while (i < args.length) {
+    const token = args[i];
+    if (token === '--') {
+      for (let j = i + 1; j < args.length; j++) words.push(args[j]);
+      break;
+    }
+    if (token.startsWith('--') && token.includes('=')) { i++; continue; }
+    if (token.startsWith('-') && VALUE_TAKING_FLAGS.has(token)) { i += 2; continue; }
+    if (token.startsWith('-')) { i++; continue; }
+    words.push(token);
+    i++;
+  }
+  return words.join(' ') || fallbackTask || 'forge-cli-launch';
+}
+
+export function resolveApprovedForgeExecutionHint(
+  candidate: ApprovedExecutionLaunchHint | null,
+  explicitTask: string,
+): ApprovedExecutionLaunchHint | null {
+  if (!candidate) return null;
+  if (explicitTask === 'forge-cli-launch') {
+    return candidate;
+  }
+  return candidate.task.trim() === explicitTask.trim() ? candidate : null;
+}
+
+export function readMatchedApprovedForgeExecutionHint(
+  cwd: string,
+  explicitTask: string,
+): ApprovedExecutionLaunchHint | null {
+  return resolveApprovedForgeExecutionHint(
+    readApprovedExecutionLaunchHint(
+      cwd,
+      'forge',
+      explicitTask === 'forge-cli-launch' ? {} : { task: explicitTask },
+    ),
+    explicitTask,
+  );
+}
+
+function buildForgeApprovedContextLines(approvedHint: ApprovedExecutionLaunchHint | null): string[] {
+  if (!approvedHint) return [];
+  const lines = [
+    'Approved planning handoff context:',
+    `- approved plan: ${approvedHint.sourcePath}`,
+  ];
+  if (approvedHint.testSpecPaths.length > 0) {
+    lines.push(`- test specs: ${approvedHint.testSpecPaths.join(', ')}`);
+  }
+  if (approvedHint.deepInterviewSpecPaths.length > 0) {
+    lines.push(`- deep-interview specs: ${approvedHint.deepInterviewSpecPaths.join(', ')}`);
+    lines.push('- Carry forward the approved deep-interview requirements and constraints during Forge execution and final verification.');
+  }
+  if (approvedHint.repositoryContextSummary) {
+    lines.push(`- approved repository context summary: ${approvedHint.repositoryContextSummary.sourcePath}${approvedHint.repositoryContextSummary.truncated ? ' (bounded/truncated)' : ''}`);
+    lines.push('Approved repository context summary (bounded, inspectable):');
+    lines.push(approvedHint.repositoryContextSummary.content);
+  }
+  return lines;
+}
+
+export function normalizeForgeCliArgs(args: readonly string[]): string[] {
+  const normalized: string[] = [];
+  let i = 0;
+  while (i < args.length) {
+    const token = args[i];
+    if (token === '--prd') {
+      const next = args[i + 1];
+      if (next && next !== '--' && !next.startsWith('-')) {
+        normalized.push(next);
+        i += 2;
+        continue;
+      }
+      i++;
+      continue;
+    }
+    if (token.startsWith('--prd=')) {
+      const value = token.slice('--prd='.length);
+      if (value.length > 0) normalized.push(value);
+      i++;
+      continue;
+    }
+    normalized.push(token);
+    i++;
+  }
+  return normalized;
+}
+
+export function filterForgeCodexArgs(args: readonly string[]): string[] {
+  const filtered: string[] = [];
+  for (const token of args) {
+    if (FORGE_RCS_FLAGS.has(token.toLowerCase())) continue;
+    filtered.push(token);
+  }
+  return filtered;
+}
+
+interface ForgeSessionFiles {
+  instructionsPath: string;
+  changedFilesPath: string;
+}
+
+export function buildForgeChangedFilesSeedContents(): string {
+  return [
+    '# Forge changed files for the mandatory final ai-slop-cleaner pass',
+    '# Add one repo-relative path per line as Forge edits files during the session.',
+    '# Step 7.5 must keep ai-slop-cleaner strictly scoped to the paths listed here.',
+  ].join('\n');
+}
+
+export function buildForgeAppendInstructions(
+  task: string,
+  options: { changedFilesPath: string; noDeslop: boolean; approvedHint?: ApprovedExecutionLaunchHint | null },
+): string {
+  return [
+    '<forge_native_subagents>',
+    'You are in RCS Forge persistence mode.',
+    `Primary task: ${task}`,
+    'Parallelism guidance:',
+    '- Prefer Codex native subagents for independent parallel subtasks.',
+    '- Treat `.rcs/state/subagent-tracking.json` as the native subagent activity ledger for this session.',
+    '- Do not declare the task complete, and do not transition into final verification/completion, while active native subagent threads are still running.',
+    '- Before closing a verification wave, confirm that active native subagent threads have drained.',
+    ...buildForgeApprovedContextLines(options.approvedHint ?? null),
+    'Final deslop guidance:',
+    options.noDeslop
+      ? '- `--no-deslop` is active for this Forge run, so skip the mandatory ai-slop-cleaner final pass and use the latest successful pre-deslop verification evidence.'
+      : `- Step 7.5 must run roblox-ai-os-creator-skills:ai-slop-cleaner in standard mode on changed files only, using the repo-relative paths listed in \`${options.changedFilesPath}\`.`,
+    options.noDeslop
+      ? '- Do not run ai-slop-cleaner unless the user explicitly re-enables the deslop pass.'
+      : '- Keep the cleaner scope bounded to that file list; do not widen the pass to the full codebase or unrelated files.',
+    options.noDeslop
+      ? '- Step 7.6 stays satisfied by the latest successful pre-deslop verification evidence because this run opted out of the deslop pass.'
+      : '- Step 7.6 must rerun the current tests/build/lint verification after ai-slop-cleaner; if regression fails, roll back cleaner changes or fix and retry before completion.',
+    '</forge_native_subagents>',
+  ].join('\n');
+}
+
+async function writeForgeSessionFiles(
+  cwd: string,
+  task: string,
+  options: { noDeslop: boolean; approvedHint?: ApprovedExecutionLaunchHint | null },
+): Promise<ForgeSessionFiles> {
+  const dir = join(cwd, '.rcs', 'forge');
+  await mkdir(dir, { recursive: true });
+  const instructionsPath = join(dir, 'session-instructions.md');
+  const changedFilesPath = join(dir, 'changed-files.txt');
+  await writeFile(changedFilesPath, `${buildForgeChangedFilesSeedContents()}\n`);
+  await writeFile(
+    instructionsPath,
+    `${buildForgeAppendInstructions(task, { changedFilesPath: '.rcs/forge/changed-files.txt', noDeslop: options.noDeslop, approvedHint: options.approvedHint ?? null })}\n`,
+  );
+  return { instructionsPath, changedFilesPath: '.rcs/forge/changed-files.txt' };
+}
+
+export async function forgeCommand(args: string[]): Promise<void> {
+  const normalizedArgs = normalizeForgeCliArgs(args);
+  const cwd = process.cwd();
+  if (normalizedArgs[0] === '--help' || normalizedArgs[0] === '-h') {
+    console.log(FORGE_HELP);
+    return;
+  }
+  assertRequiredForgePrdJson(cwd, args);
+  const artifacts = await ensureCanonicalForgeArtifacts(cwd);
+  const explicitTask = extractForgeTaskDescription(normalizedArgs);
+  const approvedHint = readMatchedApprovedForgeExecutionHint(cwd, explicitTask);
+  const task = explicitTask === 'forge-cli-launch' ? approvedHint?.task ?? explicitTask : explicitTask;
+  const noDeslop = normalizedArgs.some((arg) => arg.toLowerCase() === '--no-deslop');
+  const availableAgentTypes = await resolveAvailableAgentTypes(cwd);
+  const staffingPlan = buildFollowupStaffingPlan('forge', task, availableAgentTypes);
+  await startMode('forge', task, 50);
+  const sessionFiles = await writeForgeSessionFiles(cwd, task, { noDeslop, approvedHint });
+  await updateModeState('forge', {
+    current_phase: 'starting',
+    canonical_progress_path: artifacts.canonicalProgressPath,
+    available_agent_types: availableAgentTypes,
+    staffing_summary: staffingPlan.staffingSummary,
+    staffing_allocations: staffingPlan.allocations,
+    native_subagents_enabled: true,
+    native_subagent_tracking_path: '.rcs/state/subagent-tracking.json',
+    native_subagent_policy: 'Parallel Codex subagents are allowed for independent work, but phase completion must wait for active native subagent threads to finish.',
+    deslop_enabled: !noDeslop,
+    deslop_opt_out: noDeslop,
+    deslop_changed_files_path: sessionFiles.changedFilesPath,
+    deslop_scope: 'changed-files-only',
+    approved_plan_path: approvedHint?.sourcePath,
+    approved_test_spec_paths: approvedHint?.testSpecPaths ?? [],
+    approved_deep_interview_spec_paths: approvedHint?.deepInterviewSpecPaths ?? [],
+    ...(artifacts.canonicalPrdPath ? { canonical_prd_path: artifacts.canonicalPrdPath } : {}),
+  });
+  if (artifacts.migratedPrd) {
+  console.log('[forge] Migrated legacy PRD -> ' + artifacts.canonicalPrdPath);
+  }
+  if (artifacts.migratedProgress) {
+  console.log('[forge] Migrated legacy progress -> ' + artifacts.canonicalProgressPath);
+  }
+  console.log('[forge] Forge persistence mode active. Launching Codex...');
+  console.log(`[forge] available_agent_types: ${staffingPlan.rosterSummary}`);
+  console.log(`[forge] staffing_plan: ${staffingPlan.staffingSummary}`);
+  const { launchWithHud } = await import('./index.js');
+  const codexArgsBase = filterForgeCodexArgs(normalizedArgs);
+  const codexArgs = explicitTask === 'forge-cli-launch' && approvedHint?.task
+    ? [...codexArgsBase, approvedHint.task]
+    : codexArgsBase;
+  const appendixPath = sessionFiles.instructionsPath;
+  const previousAppendixEnv = process.env[FORGE_APPEND_ENV];
+  process.env[FORGE_APPEND_ENV] = appendixPath;
+  try {
+    await launchWithHud(codexArgs);
+  } finally {
+    if (typeof previousAppendixEnv === 'string') process.env[FORGE_APPEND_ENV] = previousAppendixEnv;
+    else delete process.env[FORGE_APPEND_ENV];
+  }
+}

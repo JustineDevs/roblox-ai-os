@@ -60,6 +60,9 @@ export interface PublicCatalogContract {
 }
 
 export function toPublicCatalogContract(manifest: CatalogManifest): PublicCatalogContract {
+  const publicAgents = manifest.agents.filter(
+    (agent) => agent.status === 'active' || agent.status === 'internal',
+  );
   const aliases = manifest.skills
     .filter((s) => (s.status === 'alias' || s.status === 'merged') && typeof s.canonical === 'string')
     .map((s) => ({ name: s.name, canonical: s.canonical! }));
@@ -70,10 +73,15 @@ export function toPublicCatalogContract(manifest: CatalogManifest): PublicCatalo
   return {
     generatedAt: new Date().toISOString(),
     version: manifest.catalogVersion,
-    counts: summarizeCatalogCounts(manifest),
+    counts: {
+      skillCount: manifest.skills.length,
+      promptCount: publicAgents.length,
+      activeSkillCount: manifest.skills.filter((s) => s.status === 'active').length,
+      activeAgentCount: publicAgents.filter((a) => a.status === 'active').length,
+    },
     coreSkills: manifest.skills.filter((s) => s.core).map((s) => s.name),
     skills: manifest.skills,
-    agents: manifest.agents,
+    agents: publicAgents,
     aliases,
     internalHidden,
   };

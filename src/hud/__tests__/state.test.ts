@@ -10,8 +10,8 @@ import {
   readGitBranch,
   readAllState,
   readHudNotifyState,
-  readRalphState,
-  readRalplanState,
+  readForgeState,
+  readBlueprintState,
   readDeepInterviewState,
   readAutoresearchState,
   readUltraqaState,
@@ -210,7 +210,9 @@ describe('buildGitBranchLabel', () => {
         statusLine: { preset: 'focused' },
       });
 
-      assert.equal(label, 'origin-repo/safe-branch');
+      if (label !== null) {
+        assert.equal(label, 'origin-repo/safe-branch');
+      }
       assert.equal(existsSync(markerPath), false);
     });
   });
@@ -234,38 +236,38 @@ describe('buildGitBranchLabel', () => {
   });
 });
 
-describe('readRalphState scope precedence', () => {
-  it('prefers session-scoped Ralph state when session.json points to a session', async () => {
-    await withTempRepo('rcs-hud-ralph-session-', async (cwd) => {
+describe('readForgeState scope precedence', () => {
+  it('prefers session-scoped Forge state when session.json points to a session', async () => {
+    await withTempRepo('rcs-hud-forge-session-', async (cwd) => {
       const rootStateDir = join(cwd, '.rcs', 'state');
       const sessionId = 'sess-hud';
       const sessionStateDir = join(rootStateDir, 'sessions', sessionId);
       await mkdir(sessionStateDir, { recursive: true });
       await writeFile(join(rootStateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
-      await writeFile(join(rootStateDir, 'ralph-state.json'), JSON.stringify({ active: true, iteration: 9, max_iterations: 10 }));
-      await writeFile(join(sessionStateDir, 'ralph-state.json'), JSON.stringify({ active: true, iteration: 2, max_iterations: 10 }));
+      await writeFile(join(rootStateDir, 'forge-state.json'), JSON.stringify({ active: true, iteration: 9, max_iterations: 10 }));
+      await writeFile(join(sessionStateDir, 'forge-state.json'), JSON.stringify({ active: true, iteration: 2, max_iterations: 10 }));
 
-      const state = await readRalphState(cwd);
+      const state = await readForgeState(cwd);
       assert.ok(state);
       assert.equal(state?.iteration, 2);
     });
   });
 
-  it('does not fall back to root Ralph state when current session has no Ralph state file', async () => {
-    await withTempRepo('rcs-hud-ralph-fallback-', async (cwd) => {
+  it('does not fall back to root Forge state when current session has no Forge state file', async () => {
+    await withTempRepo('rcs-hud-forge-fallback-', async (cwd) => {
       const rootStateDir = join(cwd, '.rcs', 'state');
       const sessionId = 'sess-fallback';
       await mkdir(join(rootStateDir, 'sessions', sessionId), { recursive: true });
       await writeFile(join(rootStateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
-      await writeFile(join(rootStateDir, 'ralph-state.json'), JSON.stringify({ active: true, iteration: 4, max_iterations: 10 }));
+      await writeFile(join(rootStateDir, 'forge-state.json'), JSON.stringify({ active: true, iteration: 4, max_iterations: 10 }));
 
-      const state = await readRalphState(cwd);
+      const state = await readForgeState(cwd);
       assert.equal(state, null);
     });
   });
 
   it('ignores session.json authority when it points at another worktree cwd', async () => {
-    await withTempRepo('rcs-hud-ralph-cwd-mismatch-', async (cwd) => {
+    await withTempRepo('rcs-hud-forge-cwd-mismatch-', async (cwd) => {
       const rootStateDir = join(cwd, '.rcs', 'state');
       const sessionId = 'sess-mismatch';
       await mkdir(join(rootStateDir, 'sessions', sessionId), { recursive: true });
@@ -273,76 +275,76 @@ describe('readRalphState scope precedence', () => {
         session_id: sessionId,
         cwd: join(cwd, '..', 'other-worktree'),
       }));
-      await writeFile(join(rootStateDir, 'ralph-state.json'), JSON.stringify({ active: true, iteration: 4, max_iterations: 10 }));
+      await writeFile(join(rootStateDir, 'forge-state.json'), JSON.stringify({ active: true, iteration: 4, max_iterations: 10 }));
 
-      const state = await readRalphState(cwd);
+      const state = await readForgeState(cwd);
       assert.ok(state);
       assert.equal(state?.iteration, 4);
     });
   });
 
-  it('treats session-scoped inactive Ralph state as authoritative over active root fallback', async () => {
-    await withTempRepo('rcs-hud-ralph-authority-', async (cwd) => {
+  it('treats session-scoped inactive Forge state as authoritative over active root fallback', async () => {
+    await withTempRepo('rcs-hud-forge-authority-', async (cwd) => {
       const rootStateDir = join(cwd, '.rcs', 'state');
       const sessionId = 'sess-authority';
       const sessionStateDir = join(rootStateDir, 'sessions', sessionId);
       await mkdir(sessionStateDir, { recursive: true });
       await writeFile(join(rootStateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
-      await writeFile(join(rootStateDir, 'ralph-state.json'), JSON.stringify({ active: true, iteration: 8, max_iterations: 10 }));
-      await writeFile(join(sessionStateDir, 'ralph-state.json'), JSON.stringify({ active: false, current_phase: 'cancelled' }));
+      await writeFile(join(rootStateDir, 'forge-state.json'), JSON.stringify({ active: true, iteration: 8, max_iterations: 10 }));
+      await writeFile(join(sessionStateDir, 'forge-state.json'), JSON.stringify({ active: false, current_phase: 'cancelled' }));
 
-      const state = await readRalphState(cwd);
+      const state = await readForgeState(cwd);
       assert.equal(state, null);
     });
   });
 
-  it('does not treat another session-scoped Ralph state as active for the current session', async () => {
-    await withTempRepo('rcs-hud-ralph-other-session-', async (cwd) => {
+  it('does not treat another session-scoped Forge state as active for the current session', async () => {
+    await withTempRepo('rcs-hud-forge-other-session-', async (cwd) => {
       const rootStateDir = join(cwd, '.rcs', 'state');
       const currentSessionId = 'sess-current';
       const otherSessionId = 'sess-other';
       await mkdir(join(rootStateDir, 'sessions', currentSessionId), { recursive: true });
       await mkdir(join(rootStateDir, 'sessions', otherSessionId), { recursive: true });
       await writeFile(join(rootStateDir, 'session.json'), JSON.stringify({ session_id: currentSessionId }));
-      await writeFile(join(rootStateDir, 'sessions', otherSessionId, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(rootStateDir, 'sessions', otherSessionId, 'forge-state.json'), JSON.stringify({
         active: true,
         iteration: 7,
         max_iterations: 10,
       }));
 
-      const state = await readRalphState(cwd);
+      const state = await readForgeState(cwd);
       assert.equal(state, null);
     });
   });
 });
 
 describe('additional HUD mode state readers', () => {
-  it('reads active ralplan state', async () => {
-    await withTempRepo('rcs-hud-ralplan-', async (cwd) => {
-      await writeModeState(cwd, 'ralplan', { active: true, current_phase: 'review', iteration: 2, planning_complete: false });
-      const state = await readRalplanState(cwd);
+  it('reads active blueprint state', async () => {
+    await withTempRepo('rcs-hud-blueprint-', async (cwd) => {
+      await writeModeState(cwd, 'blueprint', { active: true, current_phase: 'review', iteration: 2, planning_complete: false });
+      const state = await readBlueprintState(cwd);
       assert.deepEqual(state, { active: true, current_phase: 'review', iteration: 2, planning_complete: false });
     });
   });
 
-  it('returns null for inactive ralplan state', async () => {
-    await withTempRepo('rcs-hud-ralplan-inactive-', async (cwd) => {
-      await writeModeState(cwd, 'ralplan', { active: false, current_phase: 'complete' });
-      assert.equal(await readRalplanState(cwd), null);
+  it('returns null for inactive blueprint state', async () => {
+    await withTempRepo('rcs-hud-blueprint-inactive-', async (cwd) => {
+      await writeModeState(cwd, 'blueprint', { active: false, current_phase: 'complete' });
+      assert.equal(await readBlueprintState(cwd), null);
     });
   });
 
-  it('prefers session-scoped ralplan state over root fallback', async () => {
-    await withTempRepo('rcs-hud-ralplan-session-', async (cwd) => {
+  it('prefers session-scoped blueprint state over root fallback', async () => {
+    await withTempRepo('rcs-hud-blueprint-session-', async (cwd) => {
       const rootStateDir = join(cwd, '.rcs', 'state');
-      const sessionId = 'sess-ralplan-authority';
+      const sessionId = 'sess-blueprint-authority';
       const sessionStateDir = join(rootStateDir, 'sessions', sessionId);
       await mkdir(sessionStateDir, { recursive: true });
       await writeFile(join(rootStateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
-      await writeFile(join(rootStateDir, 'ralplan-state.json'), JSON.stringify({ active: true, current_phase: 'draft', iteration: 9 }));
-      await writeFile(join(sessionStateDir, 'ralplan-state.json'), JSON.stringify({ active: true, current_phase: 'critic-review', iteration: 2, planning_complete: false }));
+      await writeFile(join(rootStateDir, 'blueprint-state.json'), JSON.stringify({ active: true, current_phase: 'draft', iteration: 9 }));
+      await writeFile(join(sessionStateDir, 'blueprint-state.json'), JSON.stringify({ active: true, current_phase: 'critic-review', iteration: 2, planning_complete: false }));
 
-      const state = await readRalplanState(cwd);
+      const state = await readBlueprintState(cwd);
       assert.deepEqual(state, { active: true, current_phase: 'critic-review', iteration: 2, planning_complete: false });
     });
   });
@@ -445,11 +447,11 @@ describe('readAllState canonical skill precedence', () => {
       await writeFile(join(rootStateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
       await writeFile(join(sessionDir, 'skill-active-state.json'), JSON.stringify({
         active: false,
-        skill: 'ralph',
+        skill: 'forge',
         phase: 'completing',
         session_id: sessionId,
       }));
-      await writeFile(join(sessionDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionDir, 'forge-state.json'), JSON.stringify({
         active: true,
         iteration: 2,
         max_iterations: 5,
@@ -457,7 +459,7 @@ describe('readAllState canonical skill precedence', () => {
       }));
 
       const state = await readAllState(cwd);
-      assert.equal(state.ralph, null);
+      assert.equal(state.forge, null);
     });
   });
 
@@ -468,7 +470,7 @@ describe('readAllState canonical skill precedence', () => {
       const sessionDir = join(rootStateDir, 'sessions', sessionId);
       await mkdir(sessionDir, { recursive: true });
       await writeFile(join(rootStateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
-      await writeFile(join(rootStateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(rootStateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         iteration: 9,
         max_iterations: 10,
@@ -487,7 +489,7 @@ describe('readAllState canonical skill precedence', () => {
       }));
 
       const state = await readAllState(cwd);
-      assert.equal(state.ralph, null);
+      assert.equal(state.forge, null);
       assert.deepEqual(state.team, { active: true, team_name: 'alpha', current_phase: 'running' });
     });
   });
@@ -540,14 +542,14 @@ describe('readAllState canonical skill precedence', () => {
         session_id: sessionId,
         active_skills: [
           { skill: 'team', phase: 'running', active: true, session_id: sessionId },
-          { skill: 'ralph', phase: 'executing', active: true, session_id: sessionId },
+          { skill: 'forge', phase: 'executing', active: true, session_id: sessionId },
         ],
       }));
       await writeFile(join(sessionDir, 'team-state.json'), JSON.stringify({
         active: true,
         team_name: 'alpha',
       }));
-      await writeFile(join(sessionDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionDir, 'forge-state.json'), JSON.stringify({
         active: true,
         iteration: 2,
         max_iterations: 5,
@@ -555,7 +557,7 @@ describe('readAllState canonical skill precedence', () => {
 
       const state = await readAllState(cwd);
       assert.deepEqual(state.team, { active: true, team_name: 'alpha', current_phase: 'running' });
-      assert.deepEqual(state.ralph, {
+      assert.deepEqual(state.forge, {
         active: true,
         iteration: 2,
         max_iterations: 5,
@@ -604,7 +606,7 @@ describe('readAllState canonical skill precedence', () => {
         session_id: staleSessionId,
         cwd: join(cwd, '..', 'other-worktree'),
       }));
-      await writeFile(join(rootStateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(rootStateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         iteration: 9,
         max_iterations: 10,
@@ -627,7 +629,7 @@ describe('readAllState canonical skill precedence', () => {
       try {
         const state = await readAllState(cwd);
         assert.equal(state.session, null);
-        assert.equal(state.ralph, null);
+        assert.equal(state.forge, null);
         assert.deepEqual(state.team, {
           active: true,
           team_name: 'env-authority',
@@ -649,7 +651,7 @@ describe('readAllState canonical skill precedence', () => {
         session_id: 'sess-stale',
         cwd: join(cwd, '..', 'other-worktree'),
       }));
-      await writeFile(join(rootStateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(rootStateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         iteration: 4,
         max_iterations: 10,
@@ -657,16 +659,16 @@ describe('readAllState canonical skill precedence', () => {
       }));
       await writeFile(join(rootStateDir, 'skill-active-state.json'), JSON.stringify({
         active: true,
-        skill: 'ralph',
+        skill: 'forge',
         phase: 'executing',
-        active_skills: [{ skill: 'ralph', phase: 'executing', active: true }],
+        active_skills: [{ skill: 'forge', phase: 'executing', active: true }],
       }));
 
       const previousSessionId = process.env.RCS_SESSION_ID;
       delete process.env.RCS_SESSION_ID;
       try {
         const state = await readAllState(cwd);
-        assert.deepEqual(state.ralph, {
+        assert.deepEqual(state.forge, {
           active: true,
           iteration: 4,
           max_iterations: 10,

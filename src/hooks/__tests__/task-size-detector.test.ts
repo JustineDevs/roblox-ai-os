@@ -73,7 +73,7 @@ describe('task-size-detector', () => {
     });
 
     it('returns null when no escape hatch', () => {
-      assert.equal(detectEscapeHatch('fix the authentication bug'), null);
+      assert.equal(detectEscapeHatch('fix the replication bug'), null);
     });
 
     it('returns null for partial prefix match', () => {
@@ -115,7 +115,7 @@ describe('task-size-detector', () => {
     });
 
     it('detects quick fix signal', () => {
-      assert.equal(hasSmallTaskSignals('quick fix for the login bug'), true);
+      assert.equal(hasSmallTaskSignals('quick fix for the teleport bug'), true);
     });
 
     it('detects whitespace signal', () => {
@@ -135,7 +135,7 @@ describe('task-size-detector', () => {
     });
 
     it('returns false for regular task', () => {
-      assert.equal(hasSmallTaskSignals('implement user authentication flow'), false);
+      assert.equal(hasSmallTaskSignals('implement ranked matchmaking progression flow'), false);
     });
 
     it('returns false for empty string', () => {
@@ -145,7 +145,7 @@ describe('task-size-detector', () => {
 
   describe('hasLargeTaskSignals', () => {
     it('detects architecture signal', () => {
-      assert.equal(hasLargeTaskSignals('redesign the architecture of the auth system'), true);
+      assert.equal(hasLargeTaskSignals('redesign the architecture of the matchmaking system'), true);
     });
 
     it('detects refactor signal', () => {
@@ -193,7 +193,7 @@ describe('task-size-detector', () => {
     });
 
     it('returns false for medium task', () => {
-      assert.equal(hasLargeTaskSignals('add error handling to the login handler'), false);
+      assert.equal(hasLargeTaskSignals('add error handling to the spawn handler'), false);
     });
 
     it('returns false for empty string', () => {
@@ -204,7 +204,7 @@ describe('task-size-detector', () => {
   describe('classifyTaskSize', () => {
     describe('escape hatch detection', () => {
       it('classifies as small when quick: prefix present', () => {
-        const result = classifyTaskSize('quick: refactor the entire auth system');
+        const result = classifyTaskSize('quick: refactor the entire matchmaking system');
         assert.equal(result.size, 'small');
         assert.equal(result.hasEscapeHatch, true);
         assert.equal(result.escapePrefixUsed, 'quick:');
@@ -234,7 +234,7 @@ describe('task-size-detector', () => {
       });
 
       it('classifies typo fix as small', () => {
-        const result = classifyTaskSize('fix a typo in the login error message');
+        const result = classifyTaskSize('fix a typo in the round end message');
         assert.equal(result.size, 'small');
       });
 
@@ -257,7 +257,7 @@ describe('task-size-detector', () => {
     describe('large task classification', () => {
       it('classifies prompt with large signals as large', () => {
         const result = classifyTaskSize(
-          'Refactor the authentication module to support OAuth2 and clean up the token management'
+          'Refactor the currency grant module to support idempotent ProcessReceipt handling and clean up the double-spend guards'
         );
         assert.equal(result.size, 'large');
       });
@@ -334,8 +334,8 @@ describe('task-size-detector', () => {
   });
 
   describe('isHeavyMode', () => {
-    it('returns true for ralph', () => {
-      assert.equal(isHeavyMode('ralph'), true);
+    it('returns true for forge', () => {
+      assert.equal(isHeavyMode('forge'), true);
     });
 
     it('returns true for autopilot', () => {
@@ -354,8 +354,8 @@ describe('task-size-detector', () => {
       assert.equal(isHeavyMode('swarm'), true);
     });
 
-    it('returns true for ralplan', () => {
-      assert.equal(isHeavyMode('ralplan'), true);
+    it('returns true for blueprint', () => {
+      assert.equal(isHeavyMode('blueprint'), true);
     });
 
     it('returns true for ccg', () => {
@@ -401,7 +401,7 @@ describe('task-size-detector', () => {
 
   describe('HEAVY_MODE_KEYWORDS set', () => {
     it('contains expected heavy modes', () => {
-      const expected = ['ralph', 'autopilot', 'team', 'ultrawork', 'swarm', 'ralplan', 'ccg'];
+      const expected = ['forge', 'autopilot', 'team', 'ultrawork', 'swarm', 'blueprint', 'ccg'];
       for (const mode of expected) {
         assert.ok(HEAVY_MODE_KEYWORDS.has(mode), `Expected HEAVY_MODE_KEYWORDS to contain "${mode}"`);
       }

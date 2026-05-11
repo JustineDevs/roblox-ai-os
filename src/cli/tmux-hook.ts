@@ -46,7 +46,7 @@ interface InitConfigResult {
 const DEFAULT_CONFIG: TmuxHookConfig = {
   enabled: true,
   target: { type: 'pane', value: '' },
-  allowed_modes: ['ralph', 'ultrawork', 'team'],
+  allowed_modes: ['forge', 'ultrawork', 'team'],
   cooldown_ms: 15000,
   max_injections_per_session: 200,
   prompt_template: 'Continue from current mode state. [RCS_TMUX_INJECT]',
@@ -269,6 +269,15 @@ function detectActivePaneFromList(): InitialTargetDetection | null {
 }
 
 function detectInitialTarget(): InitialTargetDetection | null {
+  const envPane = typeof process.env.TMUX_PANE === 'string' ? process.env.TMUX_PANE.trim() : '';
+  if (envPane) {
+    const session = runTmux(['display-message', '-p', '-t', envPane, '#S']);
+    return {
+      target: { type: 'pane', value: envPane },
+      sessionName: session.ok && session.stdout ? session.stdout : undefined,
+    };
+  }
+
   const canonicalPane = resolveCodexPane();
   if (canonicalPane) {
     const pane = runTmux(['display-message', '-p', '-t', canonicalPane, '#{pane_id}']);

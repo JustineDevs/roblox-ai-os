@@ -1,6 +1,10 @@
 ---
 name: analyze
 description: "Run read-only deep repository analysis and return a ranked synthesis with explicit confidence, concrete file references, and clear evidence-vs-inference boundaries. Use when a user says 'analyze', 'investigate', 'why does', 'what's causing', or needs grounded cross-file explanation before any changes are proposed."
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Analyze — Read-Only Deep Analysis
@@ -25,7 +29,7 @@ Examples:
 ## Do not use `$analyze` when
 
 - the user explicitly wants code edits, a fix, or execution — use the appropriate implementation lane instead
-- the user wants a new product plan or acceptance criteria — use `$plan` / `$ralplan`
+- the user wants a new product plan or acceptance criteria — use `$plan` / `$blueprint`
 - the request is a simple one-file fact lookup — read the file and answer directly
 - the request is purely about running the RCS tmux team runtime — use `$team` only when RCS runtime is active
 
@@ -87,7 +91,7 @@ Parallel exploration is allowed when it improves quality, but it must stay runti
 
 A good default split for complex analysis is:
 - one lane for primary code path / contracts
-- one lane for config / orchestration / generated surfaces
+- one lane for config / workflow / generated surfaces
 - one lane for tests / docs / secondary corroboration
 
 ## Execution policy
@@ -146,3 +150,6 @@ A good analyze response is:
 - concise for simple cases, broader only when the question truly needs it
 
 Task: {{ARGUMENTS}}
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

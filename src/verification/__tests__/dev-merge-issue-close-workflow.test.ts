@@ -24,7 +24,7 @@ describe('dev merge issue close workflow', () => {
     assert.equal(existsSync(workflowPath), true, `missing workflow: ${workflowPath}`);
 
     const workflow = readFileSync(workflowPath, 'utf-8');
-    assert.match(workflow, /name:\s*Dev Merge Issue Close/);
+    assert.match(workflow, /name:\s*RCS Dev Merge Issue Close/);
     assert.match(workflow, /pull_request_target:\s*\n\s*types:\s*\[closed\]/);
     assert.match(workflow, /issues:\s*write/);
     assert.match(workflow, /pull-requests:\s*read/);
@@ -40,9 +40,9 @@ describe('dev merge issue close workflow', () => {
     assert.deepEqual(
       collectLinkedLocalIssueNumbers({
         title: 'Fixes #1540, #1541',
-        body: 'Resolves Yeachan-Heo/roblox-ai-os-creator-skills#1542 and closes https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/1543',
-        owner: 'Yeachan-Heo',
-        repo: 'roblox-ai-os-creator-skills',
+        body: 'Resolves JustineDevs/roblox-ai-os#1542 and closes https://github.com/JustineDevs/roblox-ai-os/issues/1543',
+        owner: 'JustineDevs',
+        repo: 'roblox-ai-os',
       }),
       [1540, 1541, 1542, 1543],
     );
@@ -57,8 +57,8 @@ describe('dev merge issue close workflow', () => {
           'Fixes octo/example#1542',
           'Discussion says maybe close #1543 later.',
         ].join('\n'),
-        owner: 'Yeachan-Heo',
-        repo: 'roblox-ai-os-creator-skills',
+        owner: 'JustineDevs',
+        repo: 'roblox-ai-os',
       }),
       [],
     );
@@ -68,9 +68,9 @@ describe('dev merge issue close workflow', () => {
     assert.deepEqual(
       collectLinkedLocalIssueNumbers({
         title: 'Fixes #1540',
-        body: 'Closes #1540 and resolves Yeachan-Heo/roblox-ai-os-creator-skills#1540',
-        owner: 'Yeachan-Heo',
-        repo: 'roblox-ai-os-creator-skills',
+        body: 'Closes #1540 and resolves JustineDevs/roblox-ai-os#1540',
+        owner: 'JustineDevs',
+        repo: 'roblox-ai-os',
       }),
       [1540],
     );

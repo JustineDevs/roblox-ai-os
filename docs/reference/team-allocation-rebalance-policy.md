@@ -47,7 +47,7 @@ To keep the upgrade incremental and reversible, separate **signal collection** f
 
 ## Repo-aware DAG handoff seam
 
-The repo-aware RALPLAN -> Team handoff should enter before `startTeam()` and before worker inbox generation. Keep the decomposition gate as a bounded preflight module that returns normalized startup tasks, an effective worker count, and an inspectable metadata/report payload. Runtime dispatch should remain unchanged: workers still receive tasks through inboxes and must claim through the existing lifecycle APIs.
+The repo-aware BLUEPRINT -> Team handoff should enter before `startTeam()` and before worker inbox generation. Keep the decomposition gate as a bounded preflight module that returns normalized startup tasks, an effective worker count, and an inspectable metadata/report payload. Runtime dispatch should remain unchanged: workers still receive tasks through inboxes and must claim through the existing lifecycle APIs.
 
 Preflight allocation may use DAG `filePaths`, `domains`, `lane`, and symbolic dependency metadata to improve owner assignment, but only concrete runtime task IDs should reach `blocked_by` / `depends_on`. Rich metadata belongs in a decomposition report or manifest policy block unless the Team task schema intentionally supports it.
 

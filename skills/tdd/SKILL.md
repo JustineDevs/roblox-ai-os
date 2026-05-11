@@ -1,6 +1,10 @@
 ---
 name: tdd
 description: Test-Driven Development enforcement skill - write tests first, always
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # TDD Mode
@@ -104,3 +108,6 @@ Use `mcp__x__ask_codex` with `agent_role: "tdd-guide"`.
 If ToolSearch finds no MCP tools, fall back to the `test-engineer` agent.
 
 **Remember:** The discipline IS the value. Shortcuts destroy the benefit.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

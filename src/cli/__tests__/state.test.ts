@@ -15,12 +15,12 @@ describe('stateCommand', () => {
 
   it('emits a frozen compact JSON envelope when --json is set', async () => {
     const out: string[] = [];
-    await stateCommand(['read', '--input', '{"mode":"ralph"}', '--json'], {
+    await stateCommand(['read', '--input', '{"mode":"forge"}', '--json'], {
       stdout: (line) => out.push(line),
       stderr: () => undefined,
-      execute: async () => ({ payload: { exists: false, mode: 'ralph' } }),
+      execute: async () => ({ payload: { exists: false, mode: 'forge' } }),
     });
-    assert.deepEqual(out, ['{"exists":false,"mode":"ralph"}']);
+    assert.deepEqual(out, ['{"exists":false,"mode":"forge"}']);
   });
 
   it('writes errors to stderr and sets exitCode', async () => {
@@ -28,7 +28,7 @@ describe('stateCommand', () => {
     const previousExitCode = process.exitCode;
     try {
       process.exitCode = undefined;
-      await stateCommand(['clear', '--input', '{"mode":"ralph"}', '--json'], {
+      await stateCommand(['clear', '--input', '{"mode":"forge"}', '--json'], {
         stdout: () => undefined,
         stderr: (line) => err.push(line),
         execute: async () => ({ payload: { error: 'boom' }, isError: true }),

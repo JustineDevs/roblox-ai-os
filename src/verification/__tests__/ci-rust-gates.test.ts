@@ -43,10 +43,10 @@ describe('CI Rust gates', () => {
     assert.match(workflow, /name:\s*ci-dist-node20/);
     assert.match(workflow, /^  coverage-team-critical:\s*\n(?:.*\n)*?^\s+needs:\s*\[typecheck, build-dist\]/m);
     assert.match(workflow, /^  coverage-ts-full:\s*\n(?:.*\n)*?^\s+needs:\s*\[typecheck, build-dist\]/m);
-    assert.match(workflow, /^  ralph-persistence-gate:\s*\n(?:.*\n)*?^\s+needs:\s*\[typecheck, build-dist\]/m);
-    assert.match(workflow, /^  build:\s*\n(?:.*\n)*?^\s+needs:\s*\[rustfmt, clippy, lint, typecheck, build-dist, test, ralph-persistence-gate\]/m);
+    assert.match(workflow, /^  forge-persistence-gate:\s*\n(?:.*\n)*?^\s+needs:\s*\[typecheck, build-dist\]/m);
+    assert.match(workflow, /^  build:\s*\n(?:.*\n)*?^\s+needs:\s*\[rustfmt, clippy, lint, typecheck, build-dist, test, forge-persistence-gate\]/m);
 
-    for (const jobName of ['test', 'coverage-team-critical', 'coverage-ts-full', 'ralph-persistence-gate', 'build']) {
+    for (const jobName of ['test', 'coverage-team-critical', 'coverage-ts-full', 'forge-persistence-gate', 'build']) {
       assert.match(
         workflow,
         new RegExp(`^  ${jobName}:\\s*\\n(?:.*\\n)*?^\\s+- name:\\s*Download prebuilt dist artifact\\s*\\n\\s+uses:\\s*actions/download-artifact@v8`, 'm'),
@@ -80,7 +80,12 @@ describe('CI Rust gates', () => {
   it('marks rustfmt and clippy as required in the CI status gate', () => {
     const workflow = readCiWorkflow();
 
-    assert.match(workflow, /needs:\s*\[rustfmt, clippy, lint, typecheck, test, coverage-team-critical, coverage-ts-full, coverage-rust, ralph-persistence-gate, build\]/);
+    assert.match(workflow, /needs:\s*\[rustfmt, clippy, lint, typecheck, test, coverage-team-critical, coverage-ts-full, coverage-rust, forge-persistence-gate, build\]/);
+    assert.match(workflow, /Generate CI proof artifact/);
+    assert.match(workflow, /Upload final CI proof artifact/);
+    assert.match(workflow, /name:\s*final-ci-proof/);
+    assert.match(workflow, /ci-proof\/final-ci-proof\.md/);
+    assert.match(workflow, /ci-proof\/final-ci-proof\.json/);
     assert.match(workflow, /needs\.rustfmt\.result/);
     assert.match(workflow, /needs\.clippy\.result/);
     assert.match(workflow, /echo "  rustfmt: \$\{\{ needs\.rustfmt\.result \}\}"/);
@@ -100,7 +105,7 @@ describe('CI Rust gates', () => {
       'coverage-team-critical',
       'coverage-ts-full',
       'coverage-rust',
-      'ralph-persistence-gate',
+      'forge-persistence-gate',
       'build',
       'ci-status',
     ]) {

@@ -77,6 +77,10 @@ Before implementation, answer:
 - what assumptions are unsafe
 - what must be verified before code generation
 
+Canonical terminology must align with:
+- `docs/reference/canonical-vocabulary.md`
+- `docs/reference/semantic-design-system.md`
+
 ## Phase 3: Architecture First
 
 Before code, produce:

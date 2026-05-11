@@ -7,24 +7,24 @@ import { join } from 'node:path';
 import { readModeState, startMode } from '../base.js';
 
 describe('modes/base multi-state compatibility', () => {
-  it('allows the approved team + ralph overlap across root and session scopes', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-team-ralph-'));
+  it('allows the approved team + forge overlap across root and session scopes', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-team-forge-overlap-'));
     try {
       await startMode('team', 'coordinate execution', 5, wd);
       await writeFile(
         join(wd, '.rcs', 'state', 'session.json'),
-        JSON.stringify({ session_id: 'sess-team-ralph' }),
+        JSON.stringify({ session_id: 'sess-team-forge' }),
       );
 
-      await startMode('ralph', 'complete the approved plan', 5, wd);
+      await startMode('forge', 'complete the approved plan', 5, wd);
 
       assert.equal(existsSync(join(wd, '.rcs', 'state', 'team-state.json')), true);
       assert.equal(
-        existsSync(join(wd, '.rcs', 'state', 'sessions', 'sess-team-ralph', 'ralph-state.json')),
+        existsSync(join(wd, '.rcs', 'state', 'sessions', 'sess-team-forge', 'forge-state.json')),
         true,
       );
       assert.equal((await readModeState('team', wd))?.active, true);
-      assert.equal((await readModeState('ralph', wd))?.active, true);
+      assert.equal((await readModeState('forge', wd))?.active, true);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }

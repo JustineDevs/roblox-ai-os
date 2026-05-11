@@ -20,6 +20,8 @@ import { KEYWORD_TRIGGER_DEFINITIONS, compareKeywordMatches, type KeywordTrigger
 import {
   SKILL_ACTIVE_STATE_FILE,
   listActiveSkills,
+  normalizeSkillActiveState,
+  resolveWorkflowModeForSkill,
   writeSkillActiveStateCopies,
   type SkillActiveEntry,
 } from '../state/skill-active.js';
@@ -34,6 +36,7 @@ import {
   clearDeepInterviewQuestionObligation,
   type DeepInterviewQuestionEnforcementState,
 } from '../question/deep-interview.js';
+import { canonicalizeStateMode } from '../mcp/state-paths.js';
 
 export interface KeywordMatch {
   keyword: string;
@@ -51,7 +54,7 @@ function safeString(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
-export type SkillActivePhase = 'planning' | 'executing' | 'reviewing' | 'completing' | 'ralplan';
+export type SkillActivePhase = 'planning' | 'executing' | 'reviewing' | 'completing' | 'blueprint';
 
 export interface DeepInterviewInputLock {
   active: boolean;
@@ -106,7 +109,18 @@ export const DEEP_INTERVIEW_STATE_FILE = 'deep-interview-state.json';
 export const DEEP_INTERVIEW_BLOCKED_APPROVAL_INPUTS = ['yes', 'y', 'proceed', 'continue', 'ok', 'sure', 'go ahead', 'next i should'] as const;
 export const DEEP_INTERVIEW_INPUT_LOCK_MESSAGE = 'Deep interview is active; auto-approval shortcuts are blocked until the interview finishes.';
 
-type StatefulSkillMode = 'deep-interview' | 'autopilot' | 'ralph' | 'ralplan' | 'ultrawork' | 'ultraqa' | 'team' | 'autoresearch';
+type StatefulSkillMode =
+  | 'deep-interview'
+  | 'autopilot'
+  | 'ultrawork'
+  | 'ultraqa'
+  | 'team'
+  | 'autoresearch'
+  | 'brief'
+  | 'blueprint'
+  | 'forge'
+  | 'crew'
+  | 'autoforge';
 
 interface StatefulSkillSeedConfig {
   mode: StatefulSkillMode;
@@ -117,13 +131,13 @@ interface StatefulSkillSeedConfig {
 
 const PLANNING_LIKE_WORKFLOW_SKILLS = new Set<TrackedWorkflowMode>([
   'deep-interview',
-  'ralplan',
+  'blueprint',
 ]);
 
 const EXECUTION_LIKE_WORKFLOW_SKILLS = new Set<TrackedWorkflowMode>([
   'autopilot',
   'autoresearch',
-  'ralph',
+  'forge',
   'team',
   'ultrawork',
   'ultraqa',
@@ -131,10 +145,13 @@ const EXECUTION_LIKE_WORKFLOW_SKILLS = new Set<TrackedWorkflowMode>([
 
 const STATEFUL_SKILL_SEED_CONFIG: Record<StatefulSkillMode, StatefulSkillSeedConfig> = {
   'deep-interview': { mode: 'deep-interview', initialPhase: 'intent-first' },
-  autopilot: { mode: 'autopilot', initialPhase: 'ralplan', includeIteration: true },
+  autopilot: { mode: 'autopilot', initialPhase: 'blueprint', includeIteration: true },
   autoresearch: { mode: 'autoresearch', initialPhase: 'executing' },
-  ralph: { mode: 'ralph', initialPhase: 'starting', includeIteration: true },
-  ralplan: { mode: 'ralplan', initialPhase: 'planning' },
+  autoforge: { mode: 'autopilot', initialPhase: 'blueprint', includeIteration: true },
+  brief: { mode: 'deep-interview', initialPhase: 'intent-first' },
+  blueprint: { mode: 'blueprint', initialPhase: 'planning' },
+  crew: { mode: 'team', initialPhase: 'starting', scope: 'root' },
+  forge: { mode: 'forge', initialPhase: 'starting', includeIteration: true },
   team: { mode: 'team', initialPhase: 'starting', scope: 'root' },
   ultrawork: { mode: 'ultrawork', initialPhase: 'planning' },
   ultraqa: { mode: 'ultraqa', initialPhase: 'planning' },
@@ -188,8 +205,24 @@ function releaseDeepInterviewInputLock(
 
 async function readExistingSkillState(statePath: string): Promise<SkillActiveState | null> {
   try {
-    const raw = await readFile(statePath, 'utf-8');
-    return JSON.parse(raw) as SkillActiveState;
+    const raw = JSON.parse(await readFile(statePath, 'utf-8'));
+    const normalized = normalizeSkillActiveState(raw) as SkillActiveState | null;
+    if (!normalized) return null;
+
+    const normalizePhase = (phase: string | undefined): string | undefined => (
+      phase === 'blueprint' ? 'blueprint' : phase
+    );
+    const canonicalSkill = resolveWorkflowModeForSkill(normalized.skill) ?? normalized.skill;
+    return {
+      ...normalized,
+      skill: canonicalSkill,
+      phase: normalizePhase(normalized.phase) ?? normalized.phase,
+      active_skills: normalized.active_skills?.map((entry) => ({
+        ...entry,
+        skill: resolveWorkflowModeForSkill(entry.skill) ?? entry.skill,
+        phase: normalizePhase(entry.phase),
+      })),
+    };
   } catch {
     return null;
   }
@@ -313,16 +346,17 @@ function resolveSeedStateFilePath(
   absolutePath: string;
   relativePath: string;
 } {
+  const canonicalMode = canonicalizeStateMode(mode);
   if (scope !== 'root' && sessionId?.trim()) {
     return {
-      absolutePath: join(stateDir, 'sessions', sessionId, `${mode}-state.json`),
-      relativePath: `.rcs/state/sessions/${sessionId}/${mode}-state.json`,
+      absolutePath: join(stateDir, 'sessions', sessionId, `${canonicalMode}-state.json`),
+      relativePath: `.rcs/state/sessions/${sessionId}/${canonicalMode}-state.json`,
     };
   }
 
   return {
-    absolutePath: join(stateDir, `${mode}-state.json`),
-    relativePath: `.rcs/state/${mode}-state.json`,
+    absolutePath: join(stateDir, `${canonicalMode}-state.json`),
+    relativePath: `.rcs/state/${canonicalMode}-state.json`,
   };
 }
 
@@ -394,18 +428,20 @@ async function persistStatefulSkillSeedState(
     baseState.review_cycle = typeof existingModeState?.review_cycle === 'number' ? existingModeState.review_cycle : 0;
     baseState.state = {
       ...existingState,
-      phase_cycle: Array.isArray(existingState.phase_cycle) ? existingState.phase_cycle : ['ralplan', 'ralph', 'code-review'],
+      phase_cycle: Array.isArray(existingState.phase_cycle) ? existingState.phase_cycle : ['blueprint', 'forge', 'code-review'],
       handoff_artifacts: {
-        ralplan: null,
-        ralph: null,
+        blueprint: null,
+        forge: null,
         code_review: null,
         ...existingHandoffs,
       },
       review_verdict: Object.prototype.hasOwnProperty.call(existingState, 'review_verdict')
         ? existingState.review_verdict
         : null,
-      return_to_ralplan_reason: Object.prototype.hasOwnProperty.call(existingState, 'return_to_ralplan_reason')
-        ? existingState.return_to_ralplan_reason
+      return_to_blueprint_reason: Object.prototype.hasOwnProperty.call(existingState, 'return_to_blueprint_reason')
+        ? existingState.return_to_blueprint_reason
+        : Object.prototype.hasOwnProperty.call(existingState, 'return_to_blueprint_reason')
+          ? existingState.return_to_blueprint_reason
         : null,
     };
   }
@@ -443,9 +479,9 @@ const KEYWORD_MAP: Array<{ pattern: RegExp; skill: string; priority: number }> =
   priority: entry.priority,
 }));
 
-const KEYWORDS_REQUIRING_INTENT = new Set(['ralph', 'team', 'swarm', 'stop', 'abort', 'parallel', 'autoresearch']);
+const KEYWORDS_REQUIRING_INTENT = new Set(['team', 'swarm', 'stop', 'abort', 'parallel', 'autoresearch']);
 
-type IntentKeyword = 'ralph' | 'team' | 'swarm' | 'stop' | 'abort' | 'parallel' | 'autoresearch';
+type IntentKeyword = 'team' | 'swarm' | 'stop' | 'abort' | 'parallel' | 'autoresearch';
 
 const DEEP_INTERVIEW_ACTIVATION_PATTERNS: RegExp[] = [
   /(?:^|[^\w])\$(?:deep-interview)\b/i,
@@ -471,13 +507,6 @@ const DEEP_INTERVIEW_MANAGEMENT_MENTION_PATTERN = /\b(?:clear|cleanup|clean\s+up
  * CI output like "running 8 tests in parallel" does not trigger ultrawork.
  */
 const KEYWORD_INTENT_PATTERNS: Record<IntentKeyword, RegExp[]> = {
-  ralph: [
-    /(?:^|[^\w])\$(?:ralph)\b/i,
-    /\/prompts:ralph\b/i,
-    /\b(?:use|run|start|enable|launch|invoke|activate|resume|continue)\s+(?:a\s+|an\s+|the\s+)?ralph\b/i,
-    /^(?:please\s+)?ralph\s+(?:continue|resume|start|run|go|keep\s+going|ship|fix|implement|execute|verify|complete)\b/i,
-    /\bralph\s+(?:mode|workflow|loop)\b/i,
-  ],
   team: [
     /(?:^|[^\w])\$(?:team)\b/i,
     /\/prompts:team\b/i,
@@ -495,7 +524,7 @@ const KEYWORD_INTENT_PATTERNS: Record<IntentKeyword, RegExp[]> = {
     /\bcancelrcs\b/i,
     /(?:^|[^\w])\$(?:stop|cancel|abort)\b/i,
     /\/(?:cancel|stop|abort)\b/i,
-    /\bstop\s+(?:the\s+)?(?:agent|ralph|autopilot|team|ultrawork|execution|current\s+(?:mode|task|run))\b/i,
+    /\bstop\s+(?:the\s+)?(?:agent|autopilot|team|ultrawork|execution|current\s+(?:mode|task|run))\b/i,
     /\b(?:cancel|stop)\s+(?:the\s+)?(?:active|running|current)\s+(?:mode|task|run|execution)\b/i,
   ],
   abort: [
@@ -503,7 +532,7 @@ const KEYWORD_INTENT_PATTERNS: Record<IntentKeyword, RegExp[]> = {
     /\bcancelrcs\b/i,
     /(?:^|[^\w])\$(?:stop|cancel|abort)\b/i,
     /\/(?:cancel|stop|abort)\b/i,
-    /\babort\s+(?:the\s+)?(?:agent|ralph|autopilot|team|ultrawork|execution|current\s+(?:mode|task|run))\b/i,
+    /\babort\s+(?:the\s+)?(?:agent|autopilot|team|ultrawork|execution|current\s+(?:mode|task|run))\b/i,
   ],
   parallel: [
     /(?:^|[^\w])\$(?:parallel|ultrawork|ulw)\b/i,
@@ -699,7 +728,7 @@ function shouldReusePreviousSkillForContinuation(
   previous: SkillActiveState | null,
 ): boolean {
   const previousSkill = safeString(previous?.skill).trim();
-  if (!previousSkill || previous?.active !== true || !isTrackedWorkflowMode(previousSkill)) {
+  if (!previousSkill || previous?.active !== true || !resolveWorkflowModeForSkill(previousSkill)) {
     return false;
   }
 
@@ -713,7 +742,7 @@ function resolveContinuationKeywordMatch(
   fallbackMatch: KeywordMatch | null,
 ): KeywordMatch | null {
   const previousSkill = safeString(previous?.skill).trim();
-  if (!previousSkill || previous?.active !== true || !isTrackedWorkflowMode(previousSkill)) {
+  if (!previousSkill || previous?.active !== true || !resolveWorkflowModeForSkill(previousSkill)) {
     return fallbackMatch;
   }
 
@@ -734,7 +763,7 @@ function resolveContinuationKeywordMatch(
 
 function initialWorkflowPhaseForMode(mode: TrackedWorkflowMode): SkillActivePhase {
   if (mode === 'autoresearch') return 'executing';
-  if (mode === 'autopilot') return 'ralplan';
+  if (mode === 'autopilot') return 'blueprint';
   return 'planning';
 }
 
@@ -765,7 +794,7 @@ function selectRootSkillStateCopy(
 ): SkillActiveState | null | undefined {
   if (!sessionId) return nextState;
   if (previousRoot) return previousRoot;
-  if (nextState.skill === 'ralph') return null;
+  if (resolveWorkflowModeForSkill(nextState.skill) === 'forge') return null;
   return nextState;
 }
 
@@ -839,13 +868,22 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
     ? createDeepInterviewInputLock(nowIso, previous?.input_lock)
     : releaseDeepInterviewInputLock(previous?.input_lock, nowIso);
 
-  if (isTrackedWorkflowMode(match.skill)) {
+  const matchedWorkflowMode = resolveWorkflowModeForSkill(match.skill);
+  if (matchedWorkflowMode) {
     const normalizedInputText = normalizeWorkflowKeyboardTypos(input.text);
-    const workflowMatches = parseExplicitSkillInvocations(normalizedInputText).matches
-      .map((entry) => entry.skill)
-      .filter(isTrackedWorkflowMode);
+    const explicitWorkflowMatches = parseExplicitSkillInvocations(normalizedInputText).matches;
+    const workflowSkillLabels = new Map<TrackedWorkflowMode, string>();
+    for (const explicitMatch of explicitWorkflowMatches) {
+      const workflowMode = resolveWorkflowModeForSkill(explicitMatch.skill);
+      if (workflowMode && !workflowSkillLabels.has(workflowMode)) {
+        workflowSkillLabels.set(workflowMode, explicitMatch.skill);
+      }
+    }
+    const workflowMatches = explicitWorkflowMatches
+      .map((entry) => resolveWorkflowModeForSkill(entry.skill))
+      .filter((mode): mode is TrackedWorkflowMode => mode !== null);
     const { requestedSkills: requestedWorkflowSkills, deferredSkills } = resolveRequestedWorkflowSkills(
-      workflowMatches.length > 0 ? workflowMatches : [match.skill],
+      workflowMatches.length > 0 ? workflowMatches : [matchedWorkflowMode],
     );
 
     let nextWorkflowEntries = previousWorkflowEntries.map((entry) => ({ ...entry }));
@@ -862,7 +900,7 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
           active: previous?.active ?? nextWorkflowEntries.length > 0,
           skill: previous?.skill || match.skill,
           keyword: previous?.keyword || match.keyword,
-          phase: previous?.phase || initialWorkflowPhaseForMode(match.skill),
+          phase: previous?.phase || initialWorkflowPhaseForMode(matchedWorkflowMode),
           activated_at: previous?.activated_at || nowIso,
           updated_at: nowIso,
           source: 'keyword-detector',
@@ -902,11 +940,11 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
 
       const existingEntry = nextWorkflowEntries.find((entry) => entry.skill === requestedMode);
       if (existingEntry) {
-        existingEntry.phase = requestedMode === match.skill && !sameSkill
+        existingEntry.phase = requestedMode === matchedWorkflowMode && !sameSkill
           ? initialWorkflowPhaseForMode(requestedMode)
           : existingEntry.phase;
         existingEntry.active = true;
-        existingEntry.activated_at = requestedMode === match.skill
+        existingEntry.activated_at = requestedMode === matchedWorkflowMode
           ? (preserveActivatedAt ? existingEntry.activated_at || previous?.activated_at || nowIso : nowIso)
           : existingEntry.activated_at;
         existingEntry.updated_at = nowIso;
@@ -920,9 +958,9 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
         ...nextWorkflowEntries,
         {
           skill: requestedMode,
-          phase: requestedMode === match.skill ? initialWorkflowPhaseForMode(requestedMode) : undefined,
+          phase: requestedMode === matchedWorkflowMode ? initialWorkflowPhaseForMode(requestedMode) : undefined,
           active: true,
-          activated_at: requestedMode === match.skill && preserveActivatedAt
+          activated_at: requestedMode === matchedWorkflowMode && preserveActivatedAt
             ? previous?.activated_at
             : nowIso,
           updated_at: nowIso,
@@ -933,14 +971,17 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
       ];
     }
 
-    const primaryEntry = nextWorkflowEntries.find((entry) => entry.skill === match.skill) ?? nextWorkflowEntries[0];
-    const primarySkill = (primaryEntry?.skill || match.skill) as TrackedWorkflowMode;
+    const primaryEntry = nextWorkflowEntries.find((entry) => entry.skill === matchedWorkflowMode) ?? nextWorkflowEntries[0];
+    const primaryMode = primaryEntry?.skill && isTrackedWorkflowMode(primaryEntry.skill)
+      ? primaryEntry.skill
+      : matchedWorkflowMode;
+    const primarySkill = primaryMode;
     const workflowState: SkillActiveState = {
       version: 1,
       active: true,
       skill: primarySkill,
-      keyword: primarySkill === match.skill ? match.keyword : `$${primarySkill}`,
-      phase: primaryEntry?.phase || initialWorkflowPhaseForMode(primarySkill),
+      keyword: primaryMode === matchedWorkflowMode ? match.keyword : `$${primarySkill}`,
+      phase: primaryEntry?.phase || initialWorkflowPhaseForMode(matchedWorkflowMode),
       activated_at: primaryEntry?.activated_at || nowIso,
       updated_at: nowIso,
       source: 'keyword-detector',
@@ -963,7 +1004,7 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
           {
             ...workflowState,
             skill: requestedEntry.skill,
-            keyword: requestedEntry.skill === workflowState.skill ? workflowState.keyword : `$${requestedEntry.skill}`,
+            keyword: requestedEntry.skill === matchedWorkflowMode ? workflowState.keyword : `$${requestedEntry.skill}`,
             phase: requestedEntry.phase || workflowState.phase,
             activated_at: requestedEntry.activated_at || workflowState.activated_at,
             updated_at: requestedEntry.updated_at || workflowState.updated_at,
@@ -971,7 +1012,7 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
           nowIso,
           previous,
         );
-        if (requestedEntry.skill === workflowState.skill) {
+        if (requestedEntry.skill === matchedWorkflowMode) {
           nextState = {
             ...workflowState,
             initialized_mode: seeded.initialized_mode,
@@ -995,12 +1036,17 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
     return workflowState;
   }
 
+  const canonicalSkill = resolveWorkflowModeForSkill(match.skill) ?? match.skill;
+  const initialPhase = isTrackedWorkflowMode(canonicalSkill)
+    ? initialWorkflowPhaseForMode(canonicalSkill)
+    : 'planning';
+
   const state: SkillActiveState = {
     version: 1,
     active: true,
-    skill: match.skill,
+    skill: canonicalSkill,
     keyword: match.keyword,
-    phase: initialWorkflowPhaseForMode(match.skill as TrackedWorkflowMode),
+    phase: initialPhase,
     activated_at: preserveActivatedAt ? previous.activated_at : nowIso,
     updated_at: nowIso,
     source: 'keyword-detector',
@@ -1008,8 +1054,8 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
     thread_id: input.threadId,
     turn_id: input.turnId,
     active_skills: [{
-      skill: match.skill,
-      phase: initialWorkflowPhaseForMode(match.skill as TrackedWorkflowMode),
+      skill: canonicalSkill,
+      phase: initialPhase,
       active: true,
       activated_at: preserveActivatedAt ? previous?.activated_at : nowIso,
       updated_at: nowIso,
@@ -1047,18 +1093,18 @@ export async function recordSkillActivation(input: RecordSkillActivationInput): 
  */
 
 /**
- * Execution mode keywords subject to the ralplan-first gate.
+ * Execution mode keywords subject to the blueprint-first gate.
  * These modes spin up heavy orchestration and should not run on vague requests.
  */
 export const EXECUTION_GATE_KEYWORDS = new Set<string>([
-  'ralph',
+  'forge',
   'autopilot',
   'team',
   'ultrawork',
 ]);
 
 /**
- * Escape hatch prefixes that bypass the ralplan gate.
+ * Escape hatch prefixes that bypass the blueprint gate.
  */
 export const GATE_BYPASS_PREFIXES = ['force:', '!'];
 
@@ -1117,7 +1163,7 @@ export function isUnderspecifiedForExecution(text: string): boolean {
 
   // Strip mode keywords for effective word counting
   const stripped = trimmed
-    .replace(/\b(?:ralph|autopilot|team|ultrawork|ulw|swarm)\b/gi, '')
+    .replace(/\b(?:forge|autopilot|team|ultrawork|ulw|swarm)\b/gi, '')
     .trim();
   const effectiveWords = stripped.split(/\s+/).filter(w => w.length > 0).length;
 
@@ -1128,20 +1174,20 @@ export function isUnderspecifiedForExecution(text: string): boolean {
 }
 
 /**
- * Apply the ralplan-first gate: if execution keywords are present
- * but the prompt is underspecified, redirect to ralplan.
+ * Apply the blueprint-first gate: if execution keywords are present
+ * but the prompt is underspecified, redirect to blueprint.
  *
  * Returns the modified keyword list and gate metadata.
  */
-export interface ApplyRalplanGateOptions {
+export interface ApplyBlueprintGateOptions {
   cwd?: string;
   priorSkill?: string | null;
 }
 
-export function applyRalplanGate(
+export function applyBlueprintGate(
   keywords: string[],
   text: string,
-  options: ApplyRalplanGateOptions = {},
+  options: ApplyBlueprintGateOptions = {},
 ): { keywords: string[]; gateApplied: boolean; gatedKeywords: string[] } {
   if (keywords.length === 0) {
     return { keywords, gateApplied: false, gatedKeywords: [] };
@@ -1152,8 +1198,8 @@ export function applyRalplanGate(
     return { keywords, gateApplied: false, gatedKeywords: [] };
   }
 
-  // Don't gate if ralplan is already in the list
-  if (keywords.includes('ralplan')) {
+  // Don't gate if blueprint is already in the list
+  if (keywords.includes('blueprint')) {
     return { keywords, gateApplied: false, gatedKeywords: [] };
   }
 
@@ -1171,7 +1217,7 @@ export function applyRalplanGate(
   const planningComplete = isPlanningComplete(readPlanningArtifacts(options.cwd ?? process.cwd()));
   const shortFollowupBypasses = executionKeywords.filter((keyword) => {
     const normalizedKeyword = keyword === 'swarm' ? 'team' : keyword;
-    if (normalizedKeyword !== 'team' && normalizedKeyword !== 'ralph') return false;
+    if (normalizedKeyword !== 'team' && normalizedKeyword !== 'forge') return false;
     return isApprovedExecutionFollowupShortcut(
       normalizedKeyword as FollowupMode,
       text,
@@ -1185,10 +1231,10 @@ export function applyRalplanGate(
     return { keywords, gateApplied: false, gatedKeywords: [] };
   }
 
-  // Gate: replace execution keywords with ralplan
+  // Gate: replace execution keywords with blueprint
   const filtered = keywords.filter(k => !EXECUTION_GATE_KEYWORDS.has(k));
-  if (!filtered.includes('ralplan')) {
-    filtered.push('ralplan');
+  if (!filtered.includes('blueprint')) {
+    filtered.push('blueprint');
   }
 
   return { keywords: filtered, gateApplied: true, gatedKeywords: executionKeywords };
@@ -1210,7 +1256,7 @@ export interface TaskSizeFilterOptions {
 
 /**
  * Get all keywords with task-size-based filtering applied.
- * For small tasks, heavy orchestration modes (ralph/autopilot/team/ultrawork etc.)
+ * For small tasks, heavy execution modes (forge/autopilot/team/ultrawork etc.)
  * are suppressed to avoid over-orchestration.
  */
 export function getAllKeywordsWithSizeCheck(

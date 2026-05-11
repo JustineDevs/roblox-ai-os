@@ -1,0 +1,30 @@
+{
+  "name": "roblox-ai-os-workspace",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedFirst": {
+      "$path": "src/roblox/ReplicatedFirst"
+    },
+    "ReplicatedStorage": {
+      "$path": "src/roblox/ReplicatedStorage"
+    },
+    "ServerScriptService": {
+      "$path": "src/roblox/ServerScriptService"
+    },
+    "ServerStorage": {
+      "$path": "src/roblox/ServerStorage"
+    },
+    "StarterGui": {
+      "$path": "src/roblox/StarterGui"
+    },
+    "StarterPlayer": {
+      "$path": "src/roblox/StarterPlayer"
+    },
+    "TestService": {
+      "$path": "src/roblox/TestService"
+    },
+    "Workspace": {
+      "$path": "src/roblox/Workspace"
+    }
+  }
+}

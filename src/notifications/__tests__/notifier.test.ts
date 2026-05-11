@@ -152,9 +152,9 @@ describe('NotificationPayload type', () => {
       title: 'Test',
       message: 'msg',
       type: 'info',
-      mode: 'ralph',
+      mode: 'forge',
     };
-    assert.equal(payload.mode, 'ralph');
+    assert.equal(payload.mode, 'forge');
   });
 
   it('supports optional projectPath', () => {

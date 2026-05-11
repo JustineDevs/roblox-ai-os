@@ -481,7 +481,7 @@ describe('state-server directory initialization', () => {
           arguments: {
             workingDirectory: wd,
             session_id: 'sess-sync',
-            mode: 'ralph',
+            mode: 'forge',
             active: true,
             iteration: 1,
             max_iterations: 3,
@@ -495,7 +495,7 @@ describe('state-server directory initialization', () => {
         active_skills?: Array<{ skill: string; session_id?: string; activated_at?: string; updated_at?: string }>;
       };
       assert.deepEqual(canonical.active_skills, [{
-        skill: 'ralph',
+        skill: 'forge',
         phase: 'executing',
         active: true,
         activated_at: canonical.active_skills?.[0]?.activated_at,
@@ -509,7 +509,7 @@ describe('state-server directory initialization', () => {
           arguments: {
             workingDirectory: wd,
             session_id: 'sess-sync',
-            mode: 'ralph',
+            mode: 'forge',
           },
         },
       });
@@ -613,7 +613,7 @@ describe('state-server directory initialization', () => {
           arguments: {
             workingDirectory: wd,
             session_id: 'sess-overlap',
-            mode: 'ralph',
+            mode: 'forge',
             active: true,
             iteration: 1,
             max_iterations: 3,
@@ -626,7 +626,7 @@ describe('state-server directory initialization', () => {
       const canonical = JSON.parse(await readFile(canonicalPath, 'utf-8')) as {
         active_skills?: Array<{ skill: string }>;
       };
-      assert.deepEqual(canonical.active_skills?.map((entry) => entry.skill), ['team', 'ralph']);
+      assert.deepEqual(canonical.active_skills?.map((entry) => entry.skill), ['team', 'forge']);
 
       await handleStateToolCall({
         params: {
@@ -645,8 +645,8 @@ describe('state-server directory initialization', () => {
         active_skills?: Array<{ skill: string }>;
       };
       assert.equal(clearedCanonical.active, true);
-      assert.equal(clearedCanonical.skill, 'ralph');
-      assert.deepEqual(clearedCanonical.active_skills?.map((entry) => entry.skill), ['ralph']);
+      assert.equal(clearedCanonical.skill, 'forge');
+      assert.deepEqual(clearedCanonical.active_skills?.map((entry) => entry.skill), ['forge']);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
@@ -679,7 +679,7 @@ describe('state-server directory initialization', () => {
             session_id: 'sess-deny',
             mode: 'autopilot',
             active: true,
-            current_phase: 'ralplan',
+            current_phase: 'blueprint',
           },
         },
       });
@@ -726,7 +726,7 @@ describe('state-server directory initialization', () => {
           session_id: 'sess-canonical-deny',
           active_skills: [
             { skill: 'team', phase: 'running', active: true },
-            { skill: 'ralph', phase: 'executing', active: true, session_id: 'sess-canonical-deny' },
+            { skill: 'forge', phase: 'executing', active: true, session_id: 'sess-canonical-deny' },
           ],
         }, null, 2),
       );
@@ -818,7 +818,7 @@ describe('state-server directory initialization', () => {
           arguments: {
             workingDirectory: wd,
             session_id: 'sess-root-clear',
-            mode: 'ralph',
+            mode: 'forge',
             active: true,
             iteration: 1,
             max_iterations: 3,
@@ -843,17 +843,17 @@ describe('state-server directory initialization', () => {
           'utf-8',
         ),
       ) as { active_skills?: Array<{ skill: string }> };
-      assert.deepEqual(sessionCanonical.active_skills?.map((entry) => entry.skill), ['ralph']);
+      assert.deepEqual(sessionCanonical.active_skills?.map((entry) => entry.skill), ['forge']);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('preserves root-scoped team state when session-scoped ralph is added via state_write', async () => {
+  it('preserves root-scoped team state when session-scoped forge is added via state_write', async () => {
     process.env.RCS_STATE_SERVER_DISABLE_AUTO_START = '1';
     const { handleStateToolCall } = await import('../state-server.js');
 
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-state-server-team-ralph-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-state-server-team-forge-'));
     try {
       const teamWrite = await handleStateToolCall({
         params: {
@@ -868,13 +868,13 @@ describe('state-server directory initialization', () => {
       });
       assert.equal(teamWrite.isError, undefined);
 
-      const ralphWrite = await handleStateToolCall({
+      const forgeWrite = await handleStateToolCall({
         params: {
           name: 'state_write',
           arguments: {
             workingDirectory: wd,
-            session_id: 'sess-team-ralph',
-            mode: 'ralph',
+            session_id: 'sess-team-forge',
+            mode: 'forge',
             active: true,
             iteration: 1,
             max_iterations: 5,
@@ -882,7 +882,7 @@ describe('state-server directory initialization', () => {
           },
         },
       });
-      assert.equal(ralphWrite.isError, undefined);
+      assert.equal(forgeWrite.isError, undefined);
 
       const rootCanonical = JSON.parse(
         await readFile(join(wd, '.rcs', 'state', 'skill-active-state.json'), 'utf-8'),
@@ -898,7 +898,7 @@ describe('state-server directory initialization', () => {
 
       const sessionCanonical = JSON.parse(
         await readFile(
-          join(wd, '.rcs', 'state', 'sessions', 'sess-team-ralph', 'skill-active-state.json'),
+          join(wd, '.rcs', 'state', 'sessions', 'sess-team-forge', 'skill-active-state.json'),
           'utf-8',
         ),
       ) as { active_skills?: Array<{ skill: string; phase?: string; session_id?: string }> };
@@ -910,7 +910,7 @@ describe('state-server directory initialization', () => {
         })),
         [
           { skill: 'team', phase: 'running', session_id: undefined },
-          { skill: 'ralph', phase: 'executing', session_id: 'sess-team-ralph' },
+          { skill: 'forge', phase: 'executing', session_id: 'sess-team-forge' },
         ],
       );
     } finally {
@@ -976,7 +976,7 @@ describe('state-server directory initialization', () => {
     }
   });
 
-  it('auto-completes deep-interview when starting ralplan and returns transition messaging', async () => {
+  it('auto-completes deep-interview when starting blueprint and returns transition messaging', async () => {
     process.env.RCS_STATE_SERVER_DISABLE_AUTO_START = '1';
     const { handleStateToolCall } = await import('../state-server.js');
 
@@ -994,7 +994,7 @@ describe('state-server directory initialization', () => {
           arguments: {
             workingDirectory: wd,
             session_id: 'sess-handoff',
-            mode: 'ralplan',
+            mode: 'blueprint',
             active: true,
             current_phase: 'planning',
           },
@@ -1003,7 +1003,7 @@ describe('state-server directory initialization', () => {
 
       assert.equal(response.isError, undefined);
       const body = JSON.parse(response.content[0]?.text || '{}') as { transition?: string };
-      assert.equal(body.transition, 'mode transiting: deep-interview -> ralplan');
+      assert.equal(body.transition, 'mode transiting: deep-interview -> blueprint');
 
       const completed = JSON.parse(
         await readFile(join(wd, '.rcs', 'state', 'sessions', 'sess-handoff', 'deep-interview-state.json'), 'utf-8'),
@@ -1018,7 +1018,7 @@ describe('state-server directory initialization', () => {
       assert.equal(completed.current_phase, 'completed');
       assert.equal(typeof completed.completed_at, 'string');
       assert.equal(completed.run_outcome, 'finish');
-      assert.match(completed.auto_completed_reason || '', /mode transiting: deep-interview -> ralplan/);
+      assert.match(completed.auto_completed_reason || '', /mode transiting: deep-interview -> blueprint/);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
@@ -1036,7 +1036,7 @@ describe('state-server directory initialization', () => {
           arguments: {
             workingDirectory: wd,
             session_id: 'sess-rollback',
-            mode: 'ralph',
+            mode: 'forge',
             active: true,
             current_phase: 'executing',
           },
@@ -1049,7 +1049,7 @@ describe('state-server directory initialization', () => {
           arguments: {
             workingDirectory: wd,
             session_id: 'sess-rollback',
-            mode: 'ralplan',
+            mode: 'blueprint',
             active: true,
             current_phase: 'planning',
           },
@@ -1073,8 +1073,8 @@ describe('state-server directory initialization', () => {
     try {
       await mkdir(join(wd, '.rcs', 'state', 'sessions', 'sess-invalid'), { recursive: true });
       await writeFile(
-        join(wd, '.rcs', 'state', 'sessions', 'sess-invalid', 'ralplan-state.json'),
-        JSON.stringify({ active: true, mode: 'ralplan', current_phase: 'planning' }, null, 2),
+        join(wd, '.rcs', 'state', 'sessions', 'sess-invalid', 'blueprint-state.json'),
+        JSON.stringify({ active: true, mode: 'blueprint', current_phase: 'planning' }, null, 2),
       );
 
       const denied = await handleStateToolCall({
@@ -1083,7 +1083,7 @@ describe('state-server directory initialization', () => {
           arguments: {
             workingDirectory: wd,
             session_id: 'sess-invalid',
-            mode: 'ralph',
+            mode: 'forge',
             active: true,
             current_phase: 'definitely-invalid',
           },
@@ -1092,14 +1092,14 @@ describe('state-server directory initialization', () => {
 
       assert.equal(denied.isError, true);
       const body = JSON.parse(denied.content[0]?.text || '{}') as { error?: string };
-      assert.match(body.error || '', /ralph\.current_phase/i);
+      assert.match(body.error || '', /forge\.current_phase/i);
 
-      const ralplanState = JSON.parse(
-        await readFile(join(wd, '.rcs', 'state', 'sessions', 'sess-invalid', 'ralplan-state.json'), 'utf-8'),
+      const blueprintState = JSON.parse(
+        await readFile(join(wd, '.rcs', 'state', 'sessions', 'sess-invalid', 'blueprint-state.json'), 'utf-8'),
       ) as Record<string, unknown>;
-      assert.equal(ralplanState.active, true);
-      assert.equal(ralplanState.current_phase, 'planning');
-      assert.equal(existsSync(join(wd, '.rcs', 'state', 'sessions', 'sess-invalid', 'ralph-state.json')), false);
+      assert.equal(blueprintState.active, true);
+      assert.equal(blueprintState.current_phase, 'planning');
+      assert.equal(existsSync(join(wd, '.rcs', 'state', 'sessions', 'sess-invalid', 'forge-state.json')), false);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }

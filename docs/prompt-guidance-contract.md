@@ -1,10 +1,10 @@
 # GPT-5.5 Prompt Guidance Contract
 
-Status: contributor-facing contract for RCS prompt and orchestration surfaces.
+Status: contributor-facing contract for RCS prompt and workflow surfaces.
 
 ## Purpose
 
-This document explains the active **behavioral prompt contract** for RCS after Issue [#2007](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/2007): align prompt and instruction surfaces with OpenAI's official [GPT-5.5 prompt guidance](https://developers.openai.com/api/docs/guides/prompt-guidance) while preserving RCS product contracts.
+This document explains the active **behavioral prompt contract** for RCS: align prompt and instruction surfaces with OpenAI's official [GPT-5.5 prompt guidance](https://developers.openai.com/api/docs/guides/prompt-guidance) while preserving RCS product contracts.
 
 Use it when you edit any of these surfaces:
 
@@ -20,7 +20,7 @@ The current prompt sources in this repository live in **`prompts/*.md`** and **`
 
 The GPT-5.5 contract is distributed across:
 
-- orchestration surfaces: `templates/AGENTS.md` and any tracked project-root `AGENTS.md`
+- root workflow surfaces: `templates/AGENTS.md` and any tracked project-root `AGENTS.md`
 - shared fragments: `docs/prompt-guidance-fragments/*`
 - canonical XML-tagged subagent role prompts: `prompts/*.md`
 - workflow skills: `skills/*/SKILL.md`
@@ -72,7 +72,7 @@ Representative locations:
 | Surface | Evidence |
 |---|---|
 | shared fragments | `docs/prompt-guidance-fragments/core-operating-principles.md` |
-| root orchestration | `templates/AGENTS.md` |
+| root workflow | `templates/AGENTS.md` |
 | core roles | `prompts/executor.md`, `prompts/planner.md`, `prompts/verifier.md` |
 | contract tests | `src/hooks/prompt-guidance-contract.ts` and `src/hooks/__tests__/prompt-guidance-*.test.ts` |
 
@@ -88,7 +88,7 @@ Representative locations:
 
 | Surface | Evidence |
 |---|---|
-| root orchestration | `templates/AGENTS.md` |
+| root workflow | `templates/AGENTS.md` |
 | executor/planner/verifier fragments | `docs/prompt-guidance-fragments/*-constraints.md` |
 | core prompts | `prompts/executor.md`, `prompts/planner.md`, `prompts/verifier.md` |
 
@@ -129,7 +129,7 @@ Implementation plans should stay traceable: requirements, named files/resources/
 
 ## Absolute-language rule
 
-Use `MUST`, `NEVER`, `ALWAYS`, `only`, and similar absolute wording for true invariants: safety/security boundaries, side-effect constraints, required output fields, workflow state transitions, team/ralph gates, and product contracts. For judgment calls such as whether to search again, ask for clarification, or keep iterating, prefer decision rules and stop conditions.
+Use `MUST`, `NEVER`, `ALWAYS`, `only`, and similar absolute wording for true invariants: safety/security boundaries, side-effect constraints, required output fields, workflow state transitions, team/forge compatibility gates, and product contracts. For judgment calls such as whether to search again, ask for clarification, or keep iterating, prefer decision rules and stop conditions.
 
 ## Active workflow terminal handoff contract
 
@@ -144,11 +144,11 @@ Contributor rules:
 
 This rule is specific to active workflow handoffs. Normal explanatory conversation outside an active workflow may still be conversational, but workflow-owned terminal replies must make the lifecycle state explicit.
 
-## Orchestration sharpness rules for root AGENTS surfaces
+## Workflow sharpness rules for root AGENTS surfaces
 
-When editing `templates/AGENTS.md`, any tracked root `AGENTS.md`, or other root orchestration guidance, keep the orchestration contract mode-driven and terse:
+When editing `templates/AGENTS.md`, any tracked root `AGENTS.md`, or other root workflow guidance, keep the contract mode-driven and terse:
 
-1. **Mode selection comes first.** Distinguish between `$deep-interview`, `$ralplan`, `$team`, and direct solo execution instead of blending them into one generic flow.
+1. **Mode selection comes first.** Distinguish between `$deep-interview`, `$blueprint`, `$team`, and direct solo execution instead of blending them into one generic flow.
 2. **Leader and worker responsibilities stay separate.** Leaders choose the mode, own verification, and integrate work; workers execute assigned slices and report blockers upward.
 3. **Stop/escalate rules are explicit.** The prompt should say when to stop, when to escalate to the user, and when workers must escalate back to the leader.
 4. **Output contract stays tight.** Default progress/final updates should be compact: current mode, action/result, and evidence or blocker/next step. Avoid repeating full-plan rationale unless the risk or decision changed.
@@ -227,7 +227,7 @@ npm test
 
 ## References
 
-- Implementation issue: [#2007](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/2007)
+- Implementation issue: internal prompt-guidance rollout issue `#2007`
 - Official source: [OpenAI GPT-5.5 prompt guidance](https://developers.openai.com/api/docs/guides/prompt-guidance)
-- Prior rollout history: [#608](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/608), [#611](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/pull/611), [#612](https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/pull/612)
+- Prior rollout history: internal rollout references `#608`, `#611`, `#612`
 - Guidance schema: `docs/guidance-schema.md`

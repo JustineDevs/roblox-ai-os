@@ -2,8 +2,8 @@
  * HUD type definitions for roblox-ai-os-creator-skills
  */
 
-/** Ralph loop state for HUD display */
-export interface RalphStateForHud {
+/** Canonical Forge state for HUD display. */
+export interface ForgeStateForHud {
   active: boolean;
   iteration?: number;
   max_iterations?: number;
@@ -21,8 +21,8 @@ export interface AutopilotStateForHud {
   current_phase?: string;
 }
 
-/** Ralplan state for HUD display */
-export interface RalplanStateForHud {
+/** Canonical Blueprint state for HUD display. */
+export interface BlueprintStateForHud {
   active: boolean;
   current_phase?: string;
   iteration?: number;
@@ -85,10 +85,10 @@ export interface SessionStateForHud {
 export interface HudRenderContext {
   version: string | null;
   gitBranch: string | null;
-  ralph: RalphStateForHud | null;
+  forge: ForgeStateForHud | null;
   ultrawork: UltraworkStateForHud | null;
   autopilot: AutopilotStateForHud | null;
-  ralplan: RalplanStateForHud | null;
+  blueprint: BlueprintStateForHud | null;
   deepInterview: DeepInterviewStateForHud | null;
   autoresearch: AutoresearchStateForHud | null;
   ultraqa: UltraqaStateForHud | null;

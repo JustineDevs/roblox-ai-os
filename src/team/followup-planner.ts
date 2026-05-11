@@ -3,7 +3,7 @@ import { codexPromptsDir, packageRoot } from '../utils/paths.js';
 import { resolveAgentReasoningEffort, type TeamReasoningEffort } from './model-contract.js';
 import { listAvailableRoles, routeTaskToRole } from './role-router.js';
 
-export type FollowupMode = 'team' | 'ralph';
+export type FollowupMode = 'team' | 'forge';
 
 export interface FollowupAllocation {
   role: string;
@@ -55,9 +55,11 @@ const SHORT_TEAM_FOLLOWUP_PATTERNS: RegExp[] = [
   /^team(?:으로)?\s+해주세요$/i,
 ];
 
-const SHORT_RALPH_FOLLOWUP_PATTERNS: RegExp[] = [
-  /^ralph$/i,
-  /^ralph\s+please$/i,
+const SHORT_FORGE_FOLLOWUP_PATTERNS: RegExp[] = [
+  /^forge$/i,
+  /^forge\s+please$/i,
+  /^forge$/i,
+  /^forge\s+please$/i,
 ];
 
 function normalizeFollowupShortcutText(text: string): string {
@@ -69,9 +71,9 @@ export function isShortTeamFollowupRequest(text: string): boolean {
   return SHORT_TEAM_FOLLOWUP_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
-export function isShortRalphFollowupRequest(text: string): boolean {
+export function isShortForgeFollowupRequest(text: string): boolean {
   const normalized = normalizeFollowupShortcutText(text);
-  return SHORT_RALPH_FOLLOWUP_PATTERNS.some((pattern) => pattern.test(normalized));
+  return SHORT_FORGE_FOLLOWUP_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
 export function isApprovedExecutionFollowupShortcut(
@@ -80,10 +82,10 @@ export function isApprovedExecutionFollowupShortcut(
   context: ApprovedExecutionFollowupContext = {},
 ): boolean {
   if (context.planningComplete !== true) return false;
-  if (context.priorSkill && context.priorSkill.toLowerCase() !== 'ralplan') return false;
+  if (context.priorSkill && context.priorSkill.toLowerCase() !== 'blueprint') return false;
   return mode === 'team'
     ? isShortTeamFollowupRequest(text)
-    : isShortRalphFollowupRequest(text);
+    : isShortForgeFollowupRequest(text);
 }
 
 function defaultPromptDirs(projectRoot: string): string[] {
@@ -176,14 +178,14 @@ function buildLaunchHints(
     return {
       shellCommand: `rcs team ${recommendedHeadcount}:${fallbackRole} ${toQuotedCliArg(task)}`,
       skillCommand: `$team ${recommendedHeadcount}:${fallbackRole} ${toQuotedCliArg(task)}`,
-      rationale: 'Launch team directly when coordinated parallel delivery plus built-in verification lanes are sufficient without a separate linked Ralph launch.',
+      rationale: 'Launch team directly when coordinated parallel delivery plus built-in verification lanes are sufficient without a separate linked Forge launch.',
     };
   }
 
   return {
-    shellCommand: `rcs ralph ${toQuotedCliArg(task)}`,
-    skillCommand: `$ralph ${toQuotedCliArg(task)}`,
-    rationale: 'Launch Ralph directly when one persistent implementation + verification loop is sufficient without team coordination overhead.',
+    shellCommand: `rcs forge ${toQuotedCliArg(task)}`,
+    skillCommand: `$forge ${toQuotedCliArg(task)}`,
+    rationale: 'Launch Forge directly when one persistent implementation + verification loop is sufficient without team coordination overhead.',
   };
 }
 
@@ -198,13 +200,13 @@ function buildVerificationPlan(
       checkpoints: [
         'Launch via `rcs team ...` (or `$team ...`) so the team runtime owns both parallel delivery and coordinated verification.',
         `Keep ${qualityLane?.role ?? 'the verification lane'} focused on tests, regression coverage, and evidence capture before team shutdown.`,
-        'Escalate to a separate Ralph run only when a later manual follow-up still needs a persistent single-owner verification/fix loop.',
+        'Escalate to a separate Forge run only when a later manual follow-up still needs a persistent single-owner verification/fix loop.',
       ],
     };
   }
 
   return {
-    summary: 'Use Ralph as the persistent execution and verification owner: implementation happens first, then evidence/regression checks, then final sign-off.',
+    summary: 'Use Forge as the persistent execution and verification owner: implementation happens first, then evidence/regression checks, then final sign-off.',
     checkpoints: [
       'Run fresh verification commands before claiming completion.',
       'Keep the evidence/regression lane current with test/build output.',
@@ -285,7 +287,7 @@ export function buildFollowupStaffingPlan(
   const primaryRole = chooseAvailableRole(availableAgentTypes, [primaryRoute.role], fallbackRole);
   const qualityRole = chooseAvailableRole(
     availableAgentTypes,
-    ['test-engineer', 'verifier', 'quality-reviewer'],
+    ['test-engineer', 'verifier', 'code-reviewer'],
     primaryRole,
   );
   const allocations: FollowupAllocation[] = [];

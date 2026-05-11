@@ -336,7 +336,7 @@ exit 0
 `;
 }
 
-function buildManagedRalphTmux(
+function buildManagedForgeTmux(
   tmuxLogPath: string,
   options: {
     cwd: string;
@@ -1144,7 +1144,7 @@ describe('notify-fallback watcher', () => {
         mode: 'deep-interview',
         current_phase: 'deep-interview',
       }, null, 2));
-      await writeFile(join(wd, '.rcs', 'state', 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(wd, '.rcs', 'state', 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -1178,7 +1178,7 @@ describe('notify-fallback watcher', () => {
       assert.equal(result.status, 0, result.stderr || result.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      assert.doesNotMatch(tmuxLog, /Ralph loop active continue/);
+      assert.doesNotMatch(tmuxLog, /Forge loop active continue/);
       assert.doesNotMatch(tmuxLog, /Team dispatch-team:/);
       assert.doesNotMatch(tmuxLog, new RegExp(`${DEFAULT_AUTO_NUDGE_RESPONSE.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')} \\[RCS_TMUX_INJECT\\]`));
     } finally {
@@ -1214,7 +1214,7 @@ describe('notify-fallback watcher', () => {
           message: 'Deep interview is active; auto-approval shortcuts are blocked until the interview finishes.',
         },
       }, null, 2));
-      await writeFile(join(wd, '.rcs', 'state', 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(wd, '.rcs', 'state', 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -1248,7 +1248,7 @@ describe('notify-fallback watcher', () => {
       assert.equal(result.status, 0, result.stderr || result.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      assert.doesNotMatch(tmuxLog, /Ralph loop active continue/);
+      assert.doesNotMatch(tmuxLog, /Forge loop active continue/);
       assert.doesNotMatch(tmuxLog, /Team dispatch-team:/);
       assert.doesNotMatch(tmuxLog, new RegExp(`${DEFAULT_AUTO_NUDGE_RESPONSE.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')} \\[RCS_TMUX_INJECT\\]`));
     } finally {
@@ -2120,18 +2120,18 @@ exit 0
     }
   });
 
-  it('sends bounded periodic Ralph continue steer while Ralph state stays active', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-active-'));
+  it('sends bounded periodic Forge continue steer while Forge state stays active', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-active-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
     const statePath = join(stateDir, 'notify-fallback-state.json');
-    const sharedTimestampPath = join(stateDir, 'ralph-last-steer-at');
+    const sharedTimestampPath = join(stateDir, 'forge-last-steer-at');
     try {
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -2140,7 +2140,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(statePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2161,13 +2161,13 @@ exit 0
 
       const persistedAfterFirst = JSON.parse(await readFile(statePath, 'utf-8'));
       assert.match(
-        persistedAfterFirst.ralph_continue_steer?.last_sent_at ?? '',
+        persistedAfterFirst.forge_continue_steer?.last_sent_at ?? '',
         /^\d{4}-\d{2}-\d{2}T/,
         'successful steer should persist a round-trippable ISO last_sent_at',
       );
       assert.equal(
-        persistedAfterFirst.ralph_continue_steer?.cooldown_anchor_at,
-        persistedAfterFirst.ralph_continue_steer?.last_sent_at,
+        persistedAfterFirst.forge_continue_steer?.cooldown_anchor_at,
+        persistedAfterFirst.forge_continue_steer?.last_sent_at,
         'successful steer should advance the fallback cooldown anchor to the real send time',
       );
 
@@ -2179,13 +2179,13 @@ exit 0
       assert.equal(second.status, 0, second.stderr || second.stdout);
 
       const boundedLog = await readFile(tmuxLogPath, 'utf8');
-      let sends = boundedLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 1, 'cadence should suppress a second Ralph steer inside 60s');
+      let sends = boundedLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 1, 'cadence should suppress a second Forge steer inside 60s');
 
       const watcherState = JSON.parse(await readFile(statePath, 'utf-8'));
       const agedIso = new Date(Date.now() - 61_000).toISOString();
-      watcherState.ralph_continue_steer.last_sent_at = agedIso;
-      watcherState.ralph_continue_steer.shared_last_sent_at = agedIso;
+      watcherState.forge_continue_steer.last_sent_at = agedIso;
+      watcherState.forge_continue_steer.shared_last_sent_at = agedIso;
       await writeFile(statePath, JSON.stringify(watcherState, null, 2));
       await writeFile(sharedTimestampPath, `${agedIso}\n`);
 
@@ -2197,15 +2197,15 @@ exit 0
       assert.equal(third.status, 0, third.stderr || third.stdout);
 
       const finalLog = await readFile(tmuxLogPath, 'utf8');
-      sends = finalLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 2, 'Ralph steer should fire again once the 60s cadence elapses');
+      sends = finalLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 2, 'Forge steer should fire again once the 60s cadence elapses');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('suppresses Ralph continue steer when hud progress is still fresh after cooldown', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-progress-fresh-'));
+  it('suppresses Forge continue steer when hud progress is still fresh after cooldown', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-progress-fresh-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
@@ -2214,7 +2214,7 @@ exit 0
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -2223,7 +2223,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 5_000).toISOString(),
       }, null, 2));
       await writeFile(statePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2243,18 +2243,18 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
       assert.equal(sends.length, 0, 'fresh progress should suppress continue steer even after cooldown elapses');
 
       const watcherState = JSON.parse(await readFile(statePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'progress_fresh');
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'progress_fresh');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('still sends Ralph continue steer when hud progress is stale after cooldown', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-progress-stale-'));
+  it('still sends Forge continue steer when hud progress is stale after cooldown', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-progress-stale-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
@@ -2263,7 +2263,7 @@ exit 0
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -2272,7 +2272,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(statePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2292,18 +2292,18 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
       assert.equal(sends.length, 1, 'stale progress should still allow continue steer once cooldown elapses');
 
       const watcherState = JSON.parse(await readFile(statePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'sent');
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'sent');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('suppresses Ralph continue steer when session-scoped Ralph is stuck in stale starting phase', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-starting-stale-'));
+  it('suppresses Forge continue steer when session-scoped Forge is stuck in stale starting phase', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-starting-stale-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
     const stateDir = join(wd, '.rcs', 'state');
@@ -2315,7 +2315,7 @@ exit 0
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
       await writeSessionStart(wd, sessionId);
-      await writeFile(join(sessionStateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionStateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'starting',
         started_at: new Date(Date.now() - 180_000).toISOString(),
@@ -2325,7 +2325,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 180_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2345,18 +2345,18 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
       assert.equal(sends.length, 0, 'stale starting phase should suppress continue steer');
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'starting_stale');
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'starting_stale');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('suppresses Ralph continue steer while tracked native subagents are still active', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-subagents-active-'));
+  it('suppresses Forge continue steer while tracked native subagents are still active', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-subagents-active-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
@@ -2368,7 +2368,7 @@ exit 0
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
       await writeSessionStart(wd, fixtureSessionId);
-      await writeFile(join(stateDir, 'sessions', fixtureSessionId, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'sessions', fixtureSessionId, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -2379,7 +2379,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(statePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2397,7 +2397,7 @@ exit 0
                 first_seen_at: new Date(Date.now() - 30_000).toISOString(),
                 last_seen_at: new Date(Date.now() - 15_000).toISOString(),
                 turn_count: 1,
-                mode: 'ralph',
+                mode: 'forge',
               },
               'sub-thread-1': {
                 thread_id: 'sub-thread-1',
@@ -2405,7 +2405,7 @@ exit 0
                 first_seen_at: new Date(Date.now() - 30_000).toISOString(),
                 last_seen_at: new Date(Date.now() - 15_000).toISOString(),
                 turn_count: 1,
-                mode: 'ralph',
+                mode: 'forge',
               },
             },
           },
@@ -2427,20 +2427,20 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
       assert.equal(sends.length, 0, 'active native subagents should block fallback continue steer');
 
       const watcherState = JSON.parse(await readFile(statePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'subagents_active');
-      assert.equal(watcherState.ralph_continue_steer?.subagent_session_id, codexSessionId);
-      assert.deepEqual(watcherState.ralph_continue_steer?.active_subagent_thread_ids, ['sub-thread-1']);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'subagents_active');
+      assert.equal(watcherState.forge_continue_steer?.subagent_session_id, codexSessionId);
+      assert.deepEqual(watcherState.forge_continue_steer?.active_subagent_thread_ids, ['sub-thread-1']);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('fails closed when Ralph hud progress is missing or invalid', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-progress-guard-'));
+  it('fails closed when Forge hud progress is missing or invalid', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-progress-guard-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
@@ -2449,13 +2449,13 @@ exit 0
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
       }, null, 2));
       await writeFile(statePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           pane_id: '%7',
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
@@ -2475,8 +2475,8 @@ exit 0
       );
       assert.equal(missingRun.status, 0, missingRun.stderr || missingRun.stdout);
       let watcherState = JSON.parse(await readFile(statePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'progress_missing');
-      assert.equal(watcherState.ralph_continue_steer?.pane_id, '%42');
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'progress_missing');
+      assert.equal(watcherState.forge_continue_steer?.pane_id, '%42');
 
       await writeFile(join(stateDir, 'hud-state.json'), JSON.stringify({
         last_progress_at: 'not-a-date',
@@ -2488,19 +2488,19 @@ exit 0
       );
       assert.equal(invalidRun.status, 0, invalidRun.stderr || invalidRun.stdout);
       watcherState = JSON.parse(await readFile(statePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'progress_invalid');
-      assert.equal(watcherState.ralph_continue_steer?.pane_id, '%42');
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'progress_invalid');
+      assert.equal(watcherState.forge_continue_steer?.pane_id, '%42');
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
       assert.equal(sends.length, 0, 'missing or invalid progress should fail closed without sending steer');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('fails closed when active Ralph state has no bound tmux pane', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-pane-missing-'));
+  it('fails closed when active Forge state has no bound tmux pane', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-pane-missing-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
@@ -2509,7 +2509,7 @@ exit 0
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
       }, null, 2));
@@ -2517,7 +2517,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(statePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2537,26 +2537,26 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const watcherState = JSON.parse(await readFile(statePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'pane_missing');
-      assert.equal(watcherState.ralph_continue_steer?.pane_id, '');
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'pane_missing');
+      assert.equal(watcherState.forge_continue_steer?.pane_id, '');
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      assert.equal(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/.test(tmuxLog), false);
+      assert.equal(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/.test(tmuxLog), false);
       assert.equal(/display-message -p -t %42 #{pane_id}/.test(tmuxLog), false, 'watcher should not guess a pane when tmux_pane_id is missing');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('rebinds a stale-but-present session-scoped Ralph shell pane to the live pane before continue steer', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-rebind-stale-anchor-'));
+  it('rebinds a stale-but-present session-scoped Forge shell pane to the live pane before continue steer', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-rebind-stale-anchor-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
     const watcherStatePath = join(stateDir, 'notify-fallback-state.json');
-    const sessionId = 'sess-ralph-rebind';
+    const sessionId = 'sess-forge-rebind';
     const sessionStateDir = join(stateDir, 'sessions', sessionId);
-    const ralphStatePath = join(sessionStateDir, 'ralph-state.json');
+    const forgeStatePath = join(sessionStateDir, 'forge-state.json');
     const anchorPane = '%99';
     const livePane = '%42';
     try {
@@ -2566,7 +2566,7 @@ exit 0
       await writeSessionStart(wd, sessionId, { tmuxSessionName: managedSessionName });
       const sessionJson = JSON.parse(await readFile(join(wd, '.rcs', 'state', 'session.json'), 'utf-8'));
       assert.equal(sessionJson.tmux_session_name, managedSessionName);
-      await writeFakeTmuxExecutable(fakeBinDir, buildManagedRalphTmux(tmuxLogPath, {
+      await writeFakeTmuxExecutable(fakeBinDir, buildManagedForgeTmux(tmuxLogPath, {
         cwd: wd,
         managedSessionName,
         anchorPane,
@@ -2577,7 +2577,7 @@ exit 0
           { paneId: livePane, active: true, currentCommand: 'codex', startCommand: 'codex' },
         ],
       }));
-      await writeFile(ralphStatePath, JSON.stringify({
+      await writeFile(forgeStatePath, JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: anchorPane,
@@ -2586,7 +2586,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2609,36 +2609,36 @@ exit 0
       const watcherProbe = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
       const tmuxDebugLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
       assert.equal(
-        watcherProbe.ralph_continue_steer?.last_reason,
+        watcherProbe.forge_continue_steer?.last_reason,
         'sent',
-        `${JSON.stringify(watcherProbe.ralph_continue_steer ?? {})}\nTMUX_LOG:\n${tmuxDebugLog}`,
+        `${JSON.stringify(watcherProbe.forge_continue_steer ?? {})}\nTMUX_LOG:\n${tmuxDebugLog}`,
       );
 
-      const persistedRalph = JSON.parse(await readFile(ralphStatePath, 'utf-8'));
-      assert.equal(persistedRalph.tmux_pane_id, livePane);
-      assert.match(persistedRalph.tmux_pane_set_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
+      const persistedForge = JSON.parse(await readFile(forgeStatePath, 'utf-8'));
+      assert.equal(persistedForge.tmux_pane_id, livePane);
+      assert.match(persistedForge.tmux_pane_set_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'sent');
-      assert.equal(watcherState.ralph_continue_steer?.pane_id, livePane);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'sent');
+      assert.equal(watcherState.forge_continue_steer?.pane_id, livePane);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8');
-      assert.match(tmuxLog, /send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/);
-      assert.doesNotMatch(tmuxLog, /send-keys -t %99 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/);
+      assert.match(tmuxLog, /send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/);
+      assert.doesNotMatch(tmuxLog, /send-keys -t %99 -l Forge loop active continue \[RCS_TMUX_INJECT\]/);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('preserves newer Ralph state fields when a pane rebound happens after the state file advances', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-rebind-state-merge-'));
+  it('preserves newer Forge state fields when a pane rebound happens after the state file advances', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-rebind-state-merge-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
     const watcherStatePath = join(stateDir, 'notify-fallback-state.json');
-    const sessionId = 'sess-ralph-rebind-merge';
+    const sessionId = 'sess-forge-rebind-merge';
     const sessionStateDir = join(stateDir, 'sessions', sessionId);
-    const ralphStatePath = join(sessionStateDir, 'ralph-state.json');
+    const forgeStatePath = join(sessionStateDir, 'forge-state.json');
     const anchorPane = '%99';
     const livePane = '%42';
     try {
@@ -2697,7 +2697,7 @@ if [[ "$cmd" == "list-panes" ]]; then
     shift || true
   done
   if [[ "$target" == "${managedSessionName}" ]]; then
-    cat > "${ralphStatePath}" <<'JSON'
+    cat > "${forgeStatePath}" <<'JSON'
 {
   "active": true,
   "current_phase": "reviewing",
@@ -2721,7 +2721,7 @@ fi
 exit 0
 `;
       await writeFakeTmuxExecutable(fakeBinDir, fakeTmux);
-      await writeFile(ralphStatePath, JSON.stringify({
+      await writeFile(forgeStatePath, JSON.stringify({
         active: true,
         current_phase: 'executing',
         iteration: 1,
@@ -2732,7 +2732,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2751,26 +2751,26 @@ exit 0
       );
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
-      const persistedRalph = JSON.parse(await readFile(ralphStatePath, 'utf-8'));
-      assert.equal(persistedRalph.tmux_pane_id, livePane);
-      assert.equal(persistedRalph.current_phase, 'reviewing');
-      assert.equal(persistedRalph.iteration, 11);
-      assert.equal(persistedRalph.owner_codex_session_id, 'codex-updated-owner');
-      assert.match(persistedRalph.tmux_pane_set_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
+      const persistedForge = JSON.parse(await readFile(forgeStatePath, 'utf-8'));
+      assert.equal(persistedForge.tmux_pane_id, livePane);
+      assert.equal(persistedForge.current_phase, 'reviewing');
+      assert.equal(persistedForge.iteration, 11);
+      assert.equal(persistedForge.owner_codex_session_id, 'codex-updated-owner');
+      assert.match(persistedForge.tmux_pane_set_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('keeps the verified Ralph anchor pane when another codex pane is focused in the same managed session', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-keep-anchor-pane-'));
+  it('keeps the verified Forge anchor pane when another codex pane is focused in the same managed session', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-keep-anchor-pane-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
     const watcherStatePath = join(stateDir, 'notify-fallback-state.json');
-    const sessionId = 'sess-ralph-keep-anchor';
+    const sessionId = 'sess-forge-keep-anchor';
     const sessionStateDir = join(stateDir, 'sessions', sessionId);
-    const ralphStatePath = join(sessionStateDir, 'ralph-state.json');
+    const forgeStatePath = join(sessionStateDir, 'forge-state.json');
     const anchorPane = '%99';
     const livePane = '%42';
     try {
@@ -2778,7 +2778,7 @@ exit 0
       await mkdir(fakeBinDir, { recursive: true });
       const managedSessionName = buildTmuxSessionName(wd, sessionId);
       await writeSessionStart(wd, sessionId, { tmuxSessionName: managedSessionName });
-      await writeFakeTmuxExecutable(fakeBinDir, buildManagedRalphTmux(tmuxLogPath, {
+      await writeFakeTmuxExecutable(fakeBinDir, buildManagedForgeTmux(tmuxLogPath, {
         cwd: wd,
         managedSessionName,
         anchorPane,
@@ -2788,7 +2788,7 @@ exit 0
           { paneId: livePane, active: true, currentCommand: 'codex', startCommand: 'codex' },
         ],
       }));
-      await writeFile(ralphStatePath, JSON.stringify({
+      await writeFile(forgeStatePath, JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: anchorPane,
@@ -2797,7 +2797,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2816,31 +2816,31 @@ exit 0
       );
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
-      const persistedRalph = JSON.parse(await readFile(ralphStatePath, 'utf-8'));
-      assert.equal(persistedRalph.tmux_pane_id, anchorPane);
-      assert.equal(typeof persistedRalph.tmux_pane_set_at, 'undefined');
+      const persistedForge = JSON.parse(await readFile(forgeStatePath, 'utf-8'));
+      assert.equal(persistedForge.tmux_pane_id, anchorPane);
+      assert.equal(typeof persistedForge.tmux_pane_set_at, 'undefined');
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'sent');
-      assert.equal(watcherState.ralph_continue_steer?.pane_id, anchorPane);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'sent');
+      assert.equal(watcherState.forge_continue_steer?.pane_id, anchorPane);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8');
-      assert.match(tmuxLog, /send-keys -t %99 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/);
-      assert.doesNotMatch(tmuxLog, /send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/);
+      assert.match(tmuxLog, /send-keys -t %99 -l Forge loop active continue \[RCS_TMUX_INJECT\]/);
+      assert.doesNotMatch(tmuxLog, /send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
   it('rebinds a shell-degraded codex anchor to the live pane before continue steer', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-rebind-degraded-codex-anchor-'));
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-rebind-degraded-codex-anchor-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
     const watcherStatePath = join(stateDir, 'notify-fallback-state.json');
-    const sessionId = 'sess-ralph-degraded-codex-anchor';
+    const sessionId = 'sess-forge-degraded-codex-anchor';
     const sessionStateDir = join(stateDir, 'sessions', sessionId);
-    const ralphStatePath = join(sessionStateDir, 'ralph-state.json');
+    const forgeStatePath = join(sessionStateDir, 'forge-state.json');
     const anchorPane = '%99';
     const livePane = '%42';
     try {
@@ -2848,7 +2848,7 @@ exit 0
       await mkdir(fakeBinDir, { recursive: true });
       const managedSessionName = buildTmuxSessionName(wd, sessionId);
       await writeSessionStart(wd, sessionId, { tmuxSessionName: managedSessionName });
-      await writeFakeTmuxExecutable(fakeBinDir, buildManagedRalphTmux(tmuxLogPath, {
+      await writeFakeTmuxExecutable(fakeBinDir, buildManagedForgeTmux(tmuxLogPath, {
         cwd: wd,
         managedSessionName,
         anchorPane,
@@ -2858,7 +2858,7 @@ exit 0
           { paneId: livePane, active: false, currentCommand: 'codex', startCommand: 'codex' },
         ],
       }));
-      await writeFile(ralphStatePath, JSON.stringify({
+      await writeFile(forgeStatePath, JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: anchorPane,
@@ -2867,7 +2867,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2886,31 +2886,31 @@ exit 0
       );
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
-      const persistedRalph = JSON.parse(await readFile(ralphStatePath, 'utf-8'));
-      assert.equal(persistedRalph.tmux_pane_id, livePane);
-      assert.match(persistedRalph.tmux_pane_set_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
+      const persistedForge = JSON.parse(await readFile(forgeStatePath, 'utf-8'));
+      assert.equal(persistedForge.tmux_pane_id, livePane);
+      assert.match(persistedForge.tmux_pane_set_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'sent');
-      assert.equal(watcherState.ralph_continue_steer?.pane_id, livePane);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'sent');
+      assert.equal(watcherState.forge_continue_steer?.pane_id, livePane);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8');
-      assert.match(tmuxLog, /send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/);
-      assert.doesNotMatch(tmuxLog, /send-keys -t %99 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/);
+      assert.match(tmuxLog, /send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/);
+      assert.doesNotMatch(tmuxLog, /send-keys -t %99 -l Forge loop active continue \[RCS_TMUX_INJECT\]/);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('falls back to the current managed session pane when the stored Ralph pane anchor is dead', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-rebind-dead-anchor-'));
+  it('falls back to the current managed session pane when the stored Forge pane anchor is dead', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-rebind-dead-anchor-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
     const watcherStatePath = join(stateDir, 'notify-fallback-state.json');
-    const sessionId = 'sess-ralph-dead-anchor';
+    const sessionId = 'sess-forge-dead-anchor';
     const sessionStateDir = join(stateDir, 'sessions', sessionId);
-    const ralphStatePath = join(sessionStateDir, 'ralph-state.json');
+    const forgeStatePath = join(sessionStateDir, 'forge-state.json');
     const anchorPane = '%99';
     const livePane = '%42';
     try {
@@ -2918,7 +2918,7 @@ exit 0
       await mkdir(fakeBinDir, { recursive: true });
       await writeSessionStart(wd, sessionId);
       const managedSessionName = buildTmuxSessionName(wd, sessionId);
-      await writeFakeTmuxExecutable(fakeBinDir, buildManagedRalphTmux(tmuxLogPath, {
+      await writeFakeTmuxExecutable(fakeBinDir, buildManagedForgeTmux(tmuxLogPath, {
         cwd: wd,
         managedSessionName,
         anchorPane,
@@ -2929,7 +2929,7 @@ exit 0
         ],
         missingAnchor: true,
       }));
-      await writeFile(ralphStatePath, JSON.stringify({
+      await writeFile(forgeStatePath, JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: anchorPane,
@@ -2938,7 +2938,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -2957,26 +2957,26 @@ exit 0
       );
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
-      const persistedRalph = JSON.parse(await readFile(ralphStatePath, 'utf-8'));
-      assert.equal(persistedRalph.tmux_pane_id, livePane);
-      assert.match(persistedRalph.tmux_pane_set_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
+      const persistedForge = JSON.parse(await readFile(forgeStatePath, 'utf-8'));
+      assert.equal(persistedForge.tmux_pane_id, livePane);
+      assert.match(persistedForge.tmux_pane_set_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'sent');
-      assert.equal(watcherState.ralph_continue_steer?.pane_id, livePane);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'sent');
+      assert.equal(watcherState.forge_continue_steer?.pane_id, livePane);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8');
       assert.match(tmuxLog, /display-message -p -t %99 #S/);
-      assert.match(tmuxLog, /list-panes -s -t .*sess-ralph-dead-anchor/);
-      assert.match(tmuxLog, /send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/);
-      assert.doesNotMatch(tmuxLog, /send-keys -t %99 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/);
+      assert.match(tmuxLog, /list-panes -s -t .*sess-forge-dead-anchor/);
+      assert.match(tmuxLog, /send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/);
+      assert.doesNotMatch(tmuxLog, /send-keys -t %99 -l Forge loop active continue \[RCS_TMUX_INJECT\]/);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('sends the first Ralph continue steer immediately when persisted steer state is empty', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-startup-cooldown-'));
+  it('sends the first Forge continue steer immediately when persisted steer state is empty', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-startup-cooldown-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
@@ -2985,7 +2985,7 @@ exit 0
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -2994,7 +2994,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(statePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: '',
         },
       }, null, 2));
@@ -3014,19 +3014,19 @@ exit 0
       assert.equal(first.status, 0, first.stderr || first.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 1, 'empty startup state should send the first Ralph steer immediately once progress is stale');
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 1, 'empty startup state should send the first Forge steer immediately once progress is stale');
 
       const watcherState = JSON.parse(await readFile(statePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'sent');
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'sent');
       assert.match(
-        watcherState.ralph_continue_steer?.last_sent_at ?? '',
+        watcherState.forge_continue_steer?.last_sent_at ?? '',
         /^\d{4}-\d{2}-\d{2}T/,
         'first steer should persist a real send timestamp for active-state signaling',
       );
       assert.equal(
-        watcherState.ralph_continue_steer?.cooldown_anchor_at,
-        watcherState.ralph_continue_steer?.last_sent_at,
+        watcherState.forge_continue_steer?.cooldown_anchor_at,
+        watcherState.forge_continue_steer?.last_sent_at,
         'first steer should anchor subsequent cooldowns to the real send time',
       );
     } finally {
@@ -3035,7 +3035,7 @@ exit 0
   });
 
   it('falls back to an aged persisted cooldown anchor when last_sent_at is invalid', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-invalid-last-sent-'));
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-invalid-last-sent-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const stateDir = join(wd, '.rcs', 'state');
     const tmuxLogPath = join(wd, 'tmux.log');
@@ -3044,7 +3044,7 @@ exit 0
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -3053,7 +3053,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(statePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: 'not-a-date',
           cooldown_anchor_at: new Date(Date.now() - 61_000).toISOString(),
         },
@@ -3074,18 +3074,18 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
       assert.equal(sends.length, 1, 'invalid last_sent_at should fall back to the persisted cooldown anchor once 60s have elapsed');
 
       const watcherState = JSON.parse(await readFile(statePath, 'utf-8'));
       assert.match(
-        watcherState.ralph_continue_steer?.last_sent_at ?? '',
+        watcherState.forge_continue_steer?.last_sent_at ?? '',
         /^\d{4}-\d{2}-\d{2}T/,
         'successful fallback send should replace the invalid last_sent_at with a valid ISO timestamp',
       );
       assert.equal(
-        watcherState.ralph_continue_steer?.cooldown_anchor_at,
-        watcherState.ralph_continue_steer?.last_sent_at,
+        watcherState.forge_continue_steer?.cooldown_anchor_at,
+        watcherState.forge_continue_steer?.last_sent_at,
         'fallback send should also refresh the persisted cooldown anchor',
       );
     } finally {
@@ -3093,8 +3093,8 @@ exit 0
     }
   });
 
-  it('treats blocked_on_user as terminal so Ralph continue steer stays off', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-blocked-on-user-'));
+  it('treats blocked_on_user as terminal so Forge continue steer stays off', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-blocked-on-user-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
     const stateDir = join(wd, '.rcs', 'state');
@@ -3103,7 +3103,7 @@ exit 0
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: false,
         current_phase: 'blocked_on_user',
         completed_at: new Date().toISOString(),
@@ -3113,7 +3113,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -3133,29 +3133,29 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 0, 'blocked_on_user should suppress Ralph continue steer');
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 0, 'blocked_on_user should suppress Forge continue steer');
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.active, false);
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'terminal');
+      assert.equal(watcherState.forge_continue_steer?.active, false);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'terminal');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('stops Ralph continue steer immediately once Ralph state is terminal or cleared', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-terminal-'));
+  it('stops Forge continue steer immediately once Forge state is terminal or cleared', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-terminal-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
     const stateDir = join(wd, '.rcs', 'state');
     const watcherStatePath = join(stateDir, 'notify-fallback-state.json');
-    const ralphStatePath = join(stateDir, 'ralph-state.json');
+    const forgeStatePath = join(stateDir, 'forge-state.json');
     try {
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(ralphStatePath, JSON.stringify({
+      await writeFile(forgeStatePath, JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -3164,7 +3164,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -3184,12 +3184,12 @@ exit 0
       assert.equal(first.status, 0, first.stderr || first.stdout);
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      watcherState.ralph_continue_steer.last_sent_at = new Date(Date.now() - 61_000).toISOString();
+      watcherState.forge_continue_steer.last_sent_at = new Date(Date.now() - 61_000).toISOString();
       await writeFile(watcherStatePath, JSON.stringify(watcherState, null, 2));
       await writeFile(join(stateDir, 'hud-state.json'), JSON.stringify({
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
-      await writeFile(ralphStatePath, JSON.stringify({
+      await writeFile(forgeStatePath, JSON.stringify({
         active: false,
         current_phase: 'complete',
         completed_at: new Date().toISOString(),
@@ -3203,7 +3203,7 @@ exit 0
       );
       assert.equal(terminalRun.status, 0, terminalRun.stderr || terminalRun.stdout);
 
-      await rm(ralphStatePath, { force: true });
+      await rm(forgeStatePath, { force: true });
       const clearedRun = spawnSync(
         process.execPath,
         [watcherScript, '--once', '--cwd', wd, '--notify-script', notifyHook, '--poll-ms', '50'],
@@ -3212,14 +3212,14 @@ exit 0
       assert.equal(clearedRun.status, 0, clearedRun.stderr || clearedRun.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 1, 'terminal/cleared Ralph state must stop additional periodic steer sends');
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 1, 'terminal/cleared Forge state must stop additional periodic steer sends');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('treats a long-running starting phase as terminal so Ralph steer stops', async () => {
+  it('treats a long-running starting phase as terminal so Forge steer stops', async () => {
     const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-starting-phase-stale-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
@@ -3230,7 +3230,7 @@ exit 0
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'starting',
         started_at: staleStartedAt,
@@ -3240,7 +3240,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 5 * 60_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -3260,19 +3260,19 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 0, 'stale starting phase should block Ralph continue steer');
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 0, 'stale starting phase should block Forge continue steer');
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.active, false);
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'terminal');
+      assert.equal(watcherState.forge_continue_steer?.active, false);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'terminal');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('treats an explicit blocked_on_user run_outcome as terminal for Ralph continue steer', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-blocked-on-user-'));
+  it('treats an explicit blocked_on_user run_outcome as terminal for Forge continue steer', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-blocked-on-user-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
     const stateDir = join(wd, '.rcs', 'state');
@@ -3281,7 +3281,7 @@ exit 0
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         run_outcome: 'blocked_on_user',
@@ -3291,7 +3291,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 5 * 60_000).toISOString(),
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -3311,28 +3311,28 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 0, 'blocked_on_user should suppress Ralph continue steer');
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 0, 'blocked_on_user should suppress Forge continue steer');
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.active, false);
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'terminal');
+      assert.equal(watcherState.forge_continue_steer?.active, false);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'terminal');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('globally debounces Ralph continue steer across concurrent watcher instances', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-ralph-global-debounce-'));
+  it('globally debounces Forge continue steer across concurrent watcher instances', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-forge-global-debounce-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
     const stateDir = join(wd, '.rcs', 'state');
-    const sharedTimestampPath = join(stateDir, 'ralph-last-steer-at');
+    const sharedTimestampPath = join(stateDir, 'forge-last-steer-at');
     try {
       await mkdir(stateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -3341,7 +3341,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(join(stateDir, 'notify-fallback-state.json'), JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -3369,17 +3369,17 @@ exit 0
       assert.equal(second.exitCode, 0);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 1, 'shared timestamp + lock should allow only one concurrent Ralph steer send');
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 1, 'shared timestamp + lock should allow only one concurrent Forge steer send');
 
       const sharedTimestamp = (await readFile(sharedTimestampPath, 'utf-8')).trim();
       assert.match(sharedTimestamp, /^\d{4}-\d{2}-\d{2}T/, 'concurrent send winner should persist a shared cooldown timestamp');
 
       const watcherState = JSON.parse(await readFile(join(stateDir, 'notify-fallback-state.json'), 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.shared_timestamp_path, sharedTimestampPath);
-      assert.equal(watcherState.ralph_continue_steer?.shared_last_sent_at, sharedTimestamp);
+      assert.equal(watcherState.forge_continue_steer?.shared_timestamp_path, sharedTimestampPath);
+      assert.equal(watcherState.forge_continue_steer?.shared_last_sent_at, sharedTimestamp);
       assert.match(
-        watcherState.ralph_continue_steer?.last_reason ?? '',
+        watcherState.forge_continue_steer?.last_reason ?? '',
         /^(sent|global_cooldown|global_lock_busy)$/,
         'final watcher state should reflect either the winner or a globally throttled loser',
       );
@@ -3388,7 +3388,7 @@ exit 0
     }
   });
 
-  it('keeps team control-plane pumping when Ralph continue steer fails', async () => {
+  it('keeps team control-plane pumping when Forge continue steer fails', async () => {
     const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-control-plane-split-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
@@ -3398,7 +3398,7 @@ exit 0
       await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath, {
-        failSendKeysMatch: 'Ralph loop active continue',
+        failSendKeysMatch: 'Forge loop active continue',
       }));
 
       await initTeamState('dispatch-team', 'task', 'executor', 1, wd);
@@ -3408,7 +3408,7 @@ exit 0
         worker_index: 1,
         trigger_message: 'dispatch ping',
       }, wd);
-      await writeFile(join(wd, '.rcs', 'state', 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(wd, '.rcs', 'state', 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -3417,7 +3417,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(join(wd, '.rcs', 'state', 'notify-fallback-state.json'), JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -3443,8 +3443,8 @@ exit 0
       const watcherStatePath = join(wd, '.rcs', 'state', 'notify-fallback-state.json');
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
       assert.equal(watcherState.dispatch_drain?.run_count, 1);
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'send_failed');
-      assert.match(watcherState.ralph_continue_steer?.last_error ?? '', /send failed/i);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'send_failed');
+      assert.match(watcherState.forge_continue_steer?.last_error ?? '', /send failed/i);
       const tmuxLog = await readFile(tmuxLogPath, 'utf8');
       assert.match(tmuxLog, /send-keys -t .* -l dispatch ping/);
 
@@ -3452,10 +3452,10 @@ exit 0
       const logEntries = (await readFile(logPath, 'utf-8')).trim().split('\n').filter(Boolean).map((line) => JSON.parse(line));
       const drainEvent = logEntries.find((entry: { type?: string }) => entry.type === 'dispatch_drain_tick');
       assert.ok(drainEvent, 'expected dispatch_drain_tick log event');
-      const ralphFailureEvent = logEntries.find((entry: { type?: string; reason?: string }) => (
-        entry.type === 'ralph_continue_steer' && entry.reason === 'send_failed'
+      const forgeFailureEvent = logEntries.find((entry: { type?: string; reason?: string }) => (
+        entry.type === 'forge_continue_steer' && entry.reason === 'send_failed'
       ));
-      assert.ok(ralphFailureEvent, 'expected Ralph failure to be logged without aborting team control-plane pumping');
+      assert.ok(forgeFailureEvent, 'expected Forge failure to be logged without aborting team control-plane pumping');
     } finally {
       if (typeof previousRuntimeBridge === 'string') process.env.RCS_RUNTIME_BRIDGE = previousRuntimeBridge;
       else delete process.env.RCS_RUNTIME_BRIDGE;
@@ -3583,8 +3583,8 @@ exit 0
   });
 
 
-  it('ignores stale session-scoped Ralph state when the current session identity is stale', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-stale-session-ralph-'));
+  it('ignores stale session-scoped Forge state when the current session identity is stale', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-stale-session-forge-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
     const stateDir = join(wd, '.rcs', 'state');
@@ -3601,13 +3601,13 @@ exit 0
         cwd: wd,
         pid: Number.MAX_SAFE_INTEGER,
       }, null, 2));
-      await writeFile(join(sessionStateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionStateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -3627,19 +3627,19 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 0, 'stale current-session identity must block Ralph continue injection');
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 0, 'stale current-session identity must block Forge continue injection');
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.active, false);
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'stale_current_session');
+      assert.equal(watcherState.forge_continue_steer?.active, false);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'stale_current_session');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('ignores stale root Ralph state when the current session has not started Ralph', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-stale-root-ralph-'));
+  it('ignores stale root Forge state when the current session has not started Forge', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-stale-root-forge-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
     const stateDir = join(wd, '.rcs', 'state');
@@ -3650,13 +3650,13 @@ exit 0
       await mkdir(fakeBinDir, { recursive: true });
       await writeFakeTmuxExecutable(fakeBinDir, buildFakeTmux(tmuxLogPath));
       await writeSessionStart(wd, sessionId);
-      await writeFile(join(stateDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(stateDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
       }, null, 2));
       await writeFile(watcherStatePath, JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -3676,26 +3676,26 @@ exit 0
       assert.equal(run.status, 0, run.stderr || run.stdout);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf8').catch(() => '');
-      const sends = tmuxLog.match(/send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/g) || [];
-      assert.equal(sends.length, 0, 'fresh sessions must ignore stale root Ralph state');
+      const sends = tmuxLog.match(/send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/g) || [];
+      assert.equal(sends.length, 0, 'fresh sessions must ignore stale root Forge state');
 
       const watcherState = JSON.parse(await readFile(watcherStatePath, 'utf-8'));
-      assert.equal(watcherState.ralph_continue_steer?.active, false);
-      assert.equal(watcherState.ralph_continue_steer?.last_reason, 'blocked_by_current_session');
+      assert.equal(watcherState.forge_continue_steer?.active, false);
+      assert.equal(watcherState.forge_continue_steer?.last_reason, 'blocked_by_current_session');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('keeps ticking for active session-scoped Ralph after parent loss, then stops once Ralph is terminal', async () => {
-    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-parent-ralph-active-'));
-    const tempHome = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-parent-ralph-home-'));
+  it('keeps ticking for active session-scoped Forge after parent loss, then stops once Forge is terminal', async () => {
+    const wd = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-parent-forge-active-'));
+    const tempHome = await mkdtemp(join(safeTestTmpdir(), 'rcs-fallback-parent-forge-home-'));
     const fakeBinDir = join(wd, 'fake-bin');
     const tmuxLogPath = join(wd, 'tmux.log');
     const stateDir = join(wd, '.rcs', 'state');
-    const sessionId = 'sess-active-ralph';
+    const sessionId = 'sess-active-forge';
     const sessionStateDir = join(stateDir, 'sessions', sessionId);
-    const ralphStatePath = join(sessionStateDir, 'ralph-state.json');
+    const forgeStatePath = join(sessionStateDir, 'forge-state.json');
     const watcherScript = distScript('notify-fallback-watcher.js');
     const notifyHook = distScript('notify-hook.js');
     const logPath = join(wd, '.rcs', 'logs', `notify-fallback-${new Date().toISOString().split('T')[0]}.jsonl`);
@@ -3705,7 +3705,7 @@ exit 0
       await mkdir(sessionStateDir, { recursive: true });
       await mkdir(fakeBinDir, { recursive: true });
       await writeSessionStart(wd, sessionId);
-      await writeFile(ralphStatePath, JSON.stringify({
+      await writeFile(forgeStatePath, JSON.stringify({
         active: true,
         current_phase: 'executing',
         tmux_pane_id: '%42',
@@ -3714,7 +3714,7 @@ exit 0
         last_progress_at: new Date(Date.now() - 61_000).toISOString(),
       }, null, 2));
       await writeFile(join(stateDir, 'notify-fallback-state.json'), JSON.stringify({
-        ralph_continue_steer: {
+        forge_continue_steer: {
           last_sent_at: new Date(Date.now() - 61_000).toISOString(),
         },
       }, null, 2));
@@ -3751,12 +3751,12 @@ exit 0
 
       await waitFor(async () => {
         const tmuxLog = await readFile(tmuxLogPath, 'utf-8').catch(() => '');
-        return /send-keys -t %42 -l Ralph loop active continue \[RCS_TMUX_INJECT\]/.test(tmuxLog);
+        return /send-keys -t %42 -l Forge loop active continue \[RCS_TMUX_INJECT\]/.test(tmuxLog);
       }, 4000, 50);
 
-      assert.ok(isPidAlive(child.pid), 'expected watcher to stay alive while Ralph remains active');
+      assert.ok(isPidAlive(child.pid), 'expected watcher to stay alive while Forge remains active');
 
-      await writeFile(ralphStatePath, JSON.stringify({
+      await writeFile(forgeStatePath, JSON.stringify({
         active: false,
         current_phase: 'complete',
         completed_at: new Date().toISOString(),
@@ -3768,7 +3768,7 @@ exit 0
 
       const logEntries = (await readFile(logPath, 'utf-8')).trim().split('\n').filter(Boolean).map((line) => JSON.parse(line));
       assert.ok(logEntries.some((entry: { type?: string; reason?: string }) => (
-        entry.type === 'watcher_parent_guard' && entry.reason === 'parent_gone_deferred_for_active_ralph'
+        entry.type === 'watcher_parent_guard' && entry.reason === 'parent_gone_deferred_for_active_forge'
       )));
       assert.ok(logEntries.some((entry: { type?: string; reason?: string }) => (
         entry.type === 'watcher_stop' && entry.reason === 'parent_gone'

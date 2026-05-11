@@ -8,7 +8,6 @@ export const STATE_MODE_SEGMENT_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 const STATE_FILE_SUFFIX = '-state.json';
 const STATE_FILE_NAME_PATTERN = /^[A-Za-z0-9._-]{1,128}$/;
 const WORKDIR_ALLOWLIST_ENV = 'RCS_MCP_WORKDIR_ROOTS';
-
 export type StateFileScope = 'root' | 'session';
 
 export interface ModeStateFileRef {
@@ -48,8 +47,12 @@ export function validateStateModeSegment(mode: unknown): string {
   return normalized;
 }
 
+export function canonicalizeStateMode(mode: string): string {
+  return validateStateModeSegment(mode);
+}
+
 function getStateFilename(mode: string): string {
-  return `${validateStateModeSegment(mode)}${STATE_FILE_SUFFIX}`;
+  return `${canonicalizeStateMode(mode)}${STATE_FILE_SUFFIX}`;
 }
 
 export function validateStateFileName(fileName: unknown): string {

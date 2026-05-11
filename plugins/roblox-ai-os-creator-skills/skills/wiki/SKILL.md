@@ -2,6 +2,10 @@
 name: wiki
 description: Persistent markdown project wiki stored under .rcs/wiki with keyword search and lifecycle capture
 triggers: ["wiki add", "wiki lint", "wiki query", "wiki read", "wiki delete"]
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Wiki
@@ -12,12 +16,12 @@ Persistent, self-maintained markdown knowledge base for project and session know
 
 ### Ingest
 ```text
-wiki_ingest({ title: "Auth Architecture", content: "...", tags: ["auth", "architecture"], category: "architecture" })
+wiki_ingest({ title: "Economy & remotes", content: "...", tags: ["roblox", "security"], category: "architecture" })
 ```
 
 ### Query
 ```text
-wiki_query({ query: "authentication", tags: ["auth"], category: "architecture" })
+wiki_query({ query: "DataStore player profile", tags: ["roblox", "data"], category: "architecture" })
 ```
 
 ### Lint
@@ -33,7 +37,7 @@ wiki_add({ title: "Page Title", content: "...", tags: ["tag1"], category: "decis
 ### List / Read / Delete
 ```text
 wiki_list()
-wiki_read({ page: "auth-architecture" })
+wiki_read({ page: "economy-remotes" })
 wiki_delete({ page: "outdated-page" })
 wiki_refresh()
 ```
@@ -55,3 +59,6 @@ At session end, discoveries can be captured as `session-log-*` pages. Configure 
 ## Hard Constraints
 - No vector embeddings — query uses keyword + tag matching only
 - Wiki files remain local project state under `.rcs/wiki/`
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

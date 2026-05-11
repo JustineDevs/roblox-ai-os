@@ -132,21 +132,21 @@ describe('Pipeline Orchestrator', () => {
 
 
 
-    it('returns to ralplan when code-review is not clean', async () => {
+    it('returns to blueprint when code-review is not clean', async () => {
       const order: string[] = [];
       let reviewRuns = 0;
       const stages: PipelineStage[] = [
         {
-          name: 'ralplan',
+          name: 'blueprint',
           async run(): Promise<StageResult> {
-            order.push('ralplan');
+            order.push('blueprint');
             return { status: 'completed', artifacts: { plan: `cycle-${order.length}` }, duration_ms: 0 };
           },
         },
         {
-          name: 'ralph',
+          name: 'forge',
           async run(): Promise<StageResult> {
-            order.push('ralph');
+            order.push('forge');
             return { status: 'completed', artifacts: { implemented: true }, duration_ms: 0 };
           },
         },
@@ -164,7 +164,7 @@ describe('Pipeline Orchestrator', () => {
                   architectural_status: 'CLEAR',
                   clean,
                 },
-                return_to_ralplan_reason: clean ? null : 'Review requested a plan update.',
+                return_to_blueprint_reason: clean ? null : 'Review requested a plan update.',
               },
               duration_ms: 0,
             };
@@ -177,16 +177,16 @@ describe('Pipeline Orchestrator', () => {
         task: 'loop until review clean',
         stages,
         cwd: tempDir,
-        maxRalphIterations: 3,
+        maxForgeIterations: 3,
       });
 
       assert.equal(result.status, 'completed');
-      assert.deepEqual(order, ['ralplan', 'ralph', 'code-review', 'ralplan', 'ralph', 'code-review']);
+      assert.deepEqual(order, ['blueprint', 'forge', 'code-review', 'blueprint', 'forge', 'code-review']);
 
       const ext = await readPipelineState(tempDir);
       assert.equal(ext?.review_cycle, 1);
       assert.equal((ext?.review_verdict as { clean?: boolean } | undefined)?.clean, true);
-      assert.equal(ext?.return_to_ralplan_reason, null);
+      assert.equal(ext?.return_to_blueprint_reason, null);
       assert.ok(ext?.handoff_artifacts?.code_review);
       assert.equal(Object.prototype.hasOwnProperty.call(ext?.handoff_artifacts ?? {}, 'code-review'), false);
       assert.equal(Object.prototype.hasOwnProperty.call(ext?.handoff_artifacts ?? {}, 'review_verdict'), false);
@@ -194,8 +194,8 @@ describe('Pipeline Orchestrator', () => {
 
     it('fails after bounded non-clean code-review cycles', async () => {
       const stages: PipelineStage[] = [
-        makeStage('ralplan'),
-        makeStage('ralph'),
+        makeStage('blueprint'),
+        makeStage('forge'),
         makeStage('code-review', {
           artifacts: {
             review_verdict: {
@@ -203,7 +203,7 @@ describe('Pipeline Orchestrator', () => {
               architectural_status: 'WATCH',
               clean: false,
             },
-            return_to_ralplan_reason: 'Review still has findings.',
+            return_to_blueprint_reason: 'Review still has findings.',
           },
         }),
       ];
@@ -213,7 +213,7 @@ describe('Pipeline Orchestrator', () => {
         task: 'loop until bounded failure',
         stages,
         cwd: tempDir,
-        maxRalphIterations: 2,
+        maxForgeIterations: 2,
       });
 
       assert.equal(result.status, 'failed');
@@ -469,16 +469,16 @@ describe('Pipeline Orchestrator', () => {
       );
     });
 
-    it('rejects non-positive maxRalphIterations', async () => {
+    it('rejects non-positive maxForgeIterations', async () => {
       await assert.rejects(
         () => runPipeline({
           name: 'x',
           task: 'x',
           stages: [makeStage('a')],
           cwd: tempDir,
-          maxRalphIterations: 0,
+          maxForgeIterations: 0,
         }),
-        /maxRalphIterations must be a positive integer/,
+        /maxForgeIterations must be a positive integer/,
       );
     });
 
@@ -533,7 +533,7 @@ describe('Pipeline Orchestrator', () => {
           mode: 'autopilot',
           iteration: 1,
           max_iterations: 3,
-          current_phase: 'ralph',
+          current_phase: 'forge',
           pipeline_name: 'resume-test',
           started_at: new Date().toISOString(),
         }),
@@ -553,7 +553,7 @@ describe('Pipeline Orchestrator', () => {
         task: 'read task',
         stages: [makeStage('s1'), makeStage('s2')],
         cwd: tempDir,
-        maxRalphIterations: 5,
+        maxForgeIterations: 5,
         workerCount: 3,
         agentType: 'analyst',
       });
@@ -562,7 +562,7 @@ describe('Pipeline Orchestrator', () => {
       assert.ok(ext);
       assert.equal(ext.pipeline_name, 'read-test');
       assert.deepEqual(ext.pipeline_stages, ['s1', 's2']);
-      assert.equal(ext.pipeline_max_ralph_iterations, 5);
+      assert.equal(ext.pipeline_max_forge_iterations, 5);
       assert.equal(ext.pipeline_worker_count, 3);
       assert.equal(ext.pipeline_agent_type, 'analyst');
     });
@@ -580,30 +580,30 @@ describe('Pipeline Orchestrator', () => {
 
       assert.equal(config.name, 'autopilot');
       assert.equal(config.task, 'build feature X');
-      assert.equal(config.maxRalphIterations, 10);
+      assert.equal(config.maxForgeIterations, 10);
       assert.equal(config.workerCount, 2);
       assert.equal(config.agentType, 'executor');
-      assert.deepEqual(config.stages.map((stage) => stage.name), ['ralplan', 'ralph', 'code-review']);
+      assert.deepEqual(config.stages.map((stage) => stage.name), ['blueprint', 'forge', 'code-review']);
     });
 
 
 
     it('exposes strict default autopilot stages', () => {
-      assert.deepEqual(createStrictAutopilotStages().map((stage) => stage.name), ['ralplan', 'ralph', 'code-review']);
+      assert.deepEqual(createStrictAutopilotStages().map((stage) => stage.name), ['blueprint', 'forge', 'code-review']);
     });
 
     it('accepts custom overrides', () => {
       const stages = [makeStage('a'), makeStage('b')];
       const config = createAutopilotPipelineConfig('task', {
         stages,
-        maxRalphIterations: 20,
+        maxForgeIterations: 20,
         workerCount: 4,
         agentType: 'architect',
         cwd: '/tmp/test',
         sessionId: 'session-1',
       });
 
-      assert.equal(config.maxRalphIterations, 20);
+      assert.equal(config.maxForgeIterations, 20);
       assert.equal(config.workerCount, 4);
       assert.equal(config.agentType, 'architect');
       assert.equal(config.cwd, '/tmp/test');

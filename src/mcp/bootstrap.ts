@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { PassThrough } from 'node:stream';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { resolveRcsFirstPartyMcpEntrypointForPluginTarget } from '../config/rcs-first-party-mcp.js';
 
@@ -334,6 +335,7 @@ export function autoStartStdioMcpServer(
   }
 
   const transport = new StdioServerTransport();
+  const stdinLifecycleMirror = new PassThrough();
   let shuttingDown = false;
   const lifecycleDebugEnabled = env[LIFECYCLE_DEBUG_ENV] === '1';
   const lifecycleTiming = resolveLifecycleTimingConfig(env);
@@ -433,7 +435,11 @@ export function autoStartStdioMcpServer(
     if (duplicateSiblingWatchdog) {
       clearInterval(duplicateSiblingWatchdog);
     }
+    process.stdin.unpipe(stdinLifecycleMirror);
+    stdinLifecycleMirror.removeAllListeners();
+    stdinLifecycleMirror.destroy();
     process.stdin.off('data', handleStdinData);
+    process.stdin.off('pause', handleStdinPause);
     process.stdin.off('end', handleStdinEnd);
     process.stdin.off('close', handleStdinClose);
     process.off('SIGTERM', handleSigterm);
@@ -449,14 +455,31 @@ export function autoStartStdioMcpServer(
     process.exit(0);
   };
 
+  const scheduleStdinShutdown = (reason: 'stdin_end' | 'stdin_close') => {
+    if (shuttingDown) return;
+    if (lastTrafficAtMs === null) {
+      void shutdown(reason);
+      return;
+    }
+
+    // Once a real client has sent transport traffic, let the MCP transport own
+    // shutdown via `transport.onclose` so initialize/output can flush before
+    // the process exits.
+  };
   const handleStdinEnd = () => {
-    void shutdown('stdin_end');
+    scheduleStdinShutdown('stdin_end');
   };
   const handleStdinClose = () => {
-    void shutdown('stdin_close');
+    scheduleStdinShutdown('stdin_close');
   };
   const handleStdinData = () => {
     lastTrafficAtMs = Date.now();
+  };
+  const handleStdinPause = () => {
+    if (shuttingDown) return;
+    setImmediate(() => {
+      if (!shuttingDown) process.stdin.resume();
+    });
   };
   const handleSigterm = () => {
     void shutdown('sigterm');
@@ -465,11 +488,16 @@ export function autoStartStdioMcpServer(
     void shutdown('sigint');
   };
 
+  process.stdin.pipe(stdinLifecycleMirror);
+  stdinLifecycleMirror.once('end', handleStdinEnd);
+  stdinLifecycleMirror.once('close', handleStdinClose);
   process.stdin.on('data', handleStdinData);
+  process.stdin.on('pause', handleStdinPause);
   process.stdin.once('end', handleStdinEnd);
   process.stdin.once('close', handleStdinClose);
   process.once('SIGTERM', handleSigterm);
   process.once('SIGINT', handleSigint);
+  process.stdin.resume();
 
   // Funnel transport/client disconnects through the same idempotent shutdown path.
   transport.onclose = () => {
@@ -478,7 +506,11 @@ export function autoStartStdioMcpServer(
 
   server.connect(transport).catch((error) => {
     logLifecycle('server.connect failed', error);
+    process.stdin.unpipe(stdinLifecycleMirror);
+    stdinLifecycleMirror.removeAllListeners();
+    stdinLifecycleMirror.destroy();
     process.stdin.off('data', handleStdinData);
+    process.stdin.off('pause', handleStdinPause);
     process.stdin.off('end', handleStdinEnd);
     process.stdin.off('close', handleStdinClose);
     process.off('SIGTERM', handleSigterm);

@@ -13,32 +13,32 @@ describe('modes/base session-scoped persistence', () => {
       await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
       await writeFile(join(wd, '.rcs', 'state', 'session.json'), JSON.stringify({ session_id: 'sess-base-write' }));
 
-      await startMode('ralplan', 'write in session scope', 5, wd);
+      await startMode('blueprint', 'write in session scope', 5, wd);
 
-      const scopedPath = join(wd, '.rcs', 'state', 'sessions', 'sess-base-write', 'ralplan-state.json');
+      const scopedPath = join(wd, '.rcs', 'state', 'sessions', 'sess-base-write', 'blueprint-state.json');
       assert.equal(existsSync(scopedPath), true);
-      assert.equal(existsSync(join(wd, '.rcs', 'state', 'ralplan-state.json')), false);
+      assert.equal(existsSync(join(wd, '.rcs', 'state', 'blueprint-state.json')), false);
 
       const raw = JSON.parse(await readFile(scopedPath, 'utf-8')) as Record<string, unknown>;
-      assert.equal(raw.mode, 'ralplan');
+      assert.equal(raw.mode, 'blueprint');
       assert.equal(raw.current_phase, 'starting');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('persists owner_rcs_session_id for Ralph when session scope is active', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-session-ralph-owner-'));
+  it('persists owner_rcs_session_id for Forge when session scope is active', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-session-forge-owner-'));
     try {
       const stateDir = join(wd, '.rcs', 'state');
-      const sessionId = 'sess-ralph-owner';
+      const sessionId = 'sess-forge-owner';
       const sessionDir = join(stateDir, 'sessions', sessionId);
       await mkdir(sessionDir, { recursive: true });
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
 
-      await startMode('ralph', 'own this session', 5, wd);
+      await startMode('forge', 'own this session', 5, wd);
 
-      const scoped = JSON.parse(await readFile(join(sessionDir, 'ralph-state.json'), 'utf-8')) as Record<string, unknown>;
+      const scoped = JSON.parse(await readFile(join(sessionDir, 'forge-state.json'), 'utf-8')) as Record<string, unknown>;
       assert.equal(scoped.owner_rcs_session_id, sessionId);
       assert.equal(scoped.active, true);
     } finally {
@@ -54,16 +54,16 @@ describe('modes/base session-scoped persistence', () => {
       const sessionDir = join(stateDir, 'sessions', sessionId);
       await mkdir(sessionDir, { recursive: true });
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
-      await writeFile(join(stateDir, 'ralplan-state.json'), JSON.stringify({ active: true, current_phase: 'root-only', iteration: 9 }));
-      await writeFile(join(sessionDir, 'ralplan-state.json'), JSON.stringify({ active: true, current_phase: 'draft', iteration: 1 }));
+      await writeFile(join(stateDir, 'blueprint-state.json'), JSON.stringify({ active: true, current_phase: 'root-only', iteration: 9 }));
+      await writeFile(join(sessionDir, 'blueprint-state.json'), JSON.stringify({ active: true, current_phase: 'draft', iteration: 1 }));
 
-      const state = await readModeState('ralplan', wd);
+      const state = await readModeState('blueprint', wd);
       assert.equal(state?.current_phase, 'draft');
       assert.equal(state?.iteration, 1);
 
-      await updateModeState('ralplan', { current_phase: 'architect-review', iteration: 2 }, wd);
-      const scoped = JSON.parse(await readFile(join(sessionDir, 'ralplan-state.json'), 'utf-8')) as Record<string, unknown>;
-      const root = JSON.parse(await readFile(join(stateDir, 'ralplan-state.json'), 'utf-8')) as Record<string, unknown>;
+      await updateModeState('blueprint', { current_phase: 'architect-review', iteration: 2 }, wd);
+      const scoped = JSON.parse(await readFile(join(sessionDir, 'blueprint-state.json'), 'utf-8')) as Record<string, unknown>;
+      const root = JSON.parse(await readFile(join(stateDir, 'blueprint-state.json'), 'utf-8')) as Record<string, unknown>;
 
       assert.equal(scoped.current_phase, 'architect-review');
       assert.equal(scoped.iteration, 2);
@@ -74,15 +74,15 @@ describe('modes/base session-scoped persistence', () => {
     }
   });
 
-  it('allows an explicit Ralph start to overwrite an inactive current-session Ralph file', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-session-ralph-restart-'));
+  it('allows an explicit Forge start to overwrite an inactive current-session Forge file', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-session-forge-restart-'));
     try {
       const stateDir = join(wd, '.rcs', 'state');
-      const sessionId = 'sess-ralph-restart';
+      const sessionId = 'sess-forge-restart';
       const sessionDir = join(stateDir, 'sessions', sessionId);
       await mkdir(sessionDir, { recursive: true });
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({ session_id: sessionId }));
-      await writeFile(join(sessionDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionDir, 'forge-state.json'), JSON.stringify({
         active: false,
         iteration: 7,
         max_iterations: 10,
@@ -90,11 +90,11 @@ describe('modes/base session-scoped persistence', () => {
         completed_at: '2026-02-22T00:10:00.000Z',
       }));
 
-      await startMode('ralph', 'restart from current session', 5, wd);
+      await startMode('forge', 'restart from current session', 5, wd);
 
-      const scoped = JSON.parse(await readFile(join(sessionDir, 'ralph-state.json'), 'utf-8')) as Record<string, unknown>;
+      const scoped = JSON.parse(await readFile(join(sessionDir, 'forge-state.json'), 'utf-8')) as Record<string, unknown>;
       assert.equal(scoped.active, true);
-      assert.equal(scoped.mode, 'ralph');
+      assert.equal(scoped.mode, 'forge');
       assert.equal(scoped.iteration, 0);
       assert.equal(scoped.max_iterations, 5);
       assert.equal(scoped.current_phase, 'starting');

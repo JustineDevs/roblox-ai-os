@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import { describe, it, type TestContext } from 'node:test';
 import { isRealTmuxAvailable, tmuxSessionExists, withTempTmuxSession } from './tmux-test-fixture.js';
 
-function skipUnlessTmux(t: TestContext): void {
+function skipUnlessTmux(t: TestContext): boolean {
   if (!isRealTmuxAvailable()) {
     t.skip('tmux is not available in this environment');
+    return true;
   }
+  return false;
 }
 
 function runAmbientTmux(args: string[]): string {
@@ -35,7 +37,7 @@ function uniqueAmbientSessionName(): string {
 
 describe('withTempTmuxSession', () => {
   it('provides isolated tmux env and cleans up on success', async (t) => {
-    skipUnlessTmux(t);
+    if (skipUnlessTmux(t)) return;
     const ambientTmux = process.env.TMUX;
     const ambientTmuxPane = process.env.TMUX_PANE;
     let sessionName = '';
@@ -77,7 +79,7 @@ describe('withTempTmuxSession', () => {
   });
 
   it('cleans up when the callback throws', async (t) => {
-    skipUnlessTmux(t);
+    if (skipUnlessTmux(t)) return;
     let sessionName = '';
     let serverName = '';
 
@@ -94,7 +96,7 @@ describe('withTempTmuxSession', () => {
   });
 
   it('keeps ambient default-server sessions untouched by default', async (t) => {
-    skipUnlessTmux(t);
+    if (skipUnlessTmux(t)) return;
     const ambientSessionName = uniqueAmbientSessionName();
     const created = runAmbientTmux([
       'new-session',
@@ -124,7 +126,7 @@ describe('withTempTmuxSession', () => {
   });
 
   it('only uses the ambient server when a test explicitly opts in', async (t) => {
-    skipUnlessTmux(t);
+    if (skipUnlessTmux(t)) return;
     let sessionName = '';
 
     await withTempTmuxSession({ useAmbientServer: true }, async (fixture) => {

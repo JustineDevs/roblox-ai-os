@@ -303,7 +303,7 @@ describe('official Codex plugin layout', () => {
     const combinedDocs = await Promise.all(docsToCheck.map((docPath) => readFile(join(root, docPath), 'utf-8')));
     const combined = combinedDocs.join('\n');
     assert.match(combined, /plugins\/cache\/\$MARKETPLACE_NAME\/roblox-ai-os-creator-skills\/\$VERSION\//);
-    assert.match(combined, /not a replacement for `npm install -g roblox-ai-os-creator-skills` plus `rcs setup`/);
+    assert.match(combined, /not a replacement for `npm install -g @jstn-sdk\/rcs` plus `rcs setup`/);
     assert.match(combined, /legacy setup mode installs native agents\/prompts|plugin setup mode archives stale legacy prompt\/native-agent files/);
     assert.match(combined, /plugin-scoped companion metadata for MCP servers and apps/i);
     assert.match(combined, /hooks stay setup-owned|hooks remain setup-owned|native \.codex\/hooks\.json coverage/i);

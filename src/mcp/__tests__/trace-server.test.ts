@@ -17,7 +17,7 @@ describe('trace-server session-scoped mode discovery', () => {
       await mkdir(sessionDir, { recursive: true });
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({ session_id: 'sess1' }));
 
-      await writeFile(join(sessionDir, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionDir, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         started_at: '2020-01-01T00:00:00.000Z',
@@ -25,8 +25,8 @@ describe('trace-server session-scoped mode discovery', () => {
       }));
 
       const events = await readModeEvents(wd);
-      assert.ok(events.some((e: { event: string; mode: string }) => e.event === 'mode_start' && e.mode === 'ralph'));
-      assert.ok(events.some((e: { event: string; mode: string }) => e.event === 'mode_end' && e.mode === 'ralph'));
+      assert.ok(events.some((e: { event: string; mode: string }) => e.event === 'mode_start' && e.mode === 'forge'));
+      assert.ok(events.some((e: { event: string; mode: string }) => e.event === 'mode_end' && e.mode === 'forge'));
       assert.ok(events.every((e: { details?: { scope?: string } }) => e.details?.scope === 'session'));
     } finally {
       await rm(wd, { recursive: true, force: true });
@@ -46,12 +46,12 @@ describe('trace-server session-scoped mode discovery', () => {
       await mkdir(sessionB, { recursive: true });
       await writeFile(join(stateDir, 'session.json'), JSON.stringify({ session_id: 'sessA' }));
 
-      await writeFile(join(sessionA, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionA, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         started_at: '2020-01-01T00:00:00.000Z',
       }));
-      await writeFile(join(sessionB, 'ralph-state.json'), JSON.stringify({
+      await writeFile(join(sessionB, 'forge-state.json'), JSON.stringify({
         active: true,
         current_phase: 'executing',
         started_at: '2020-01-02T00:00:00.000Z',

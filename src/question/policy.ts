@@ -7,7 +7,7 @@ const BLOCKED_EXECUTION_SKILLS = new Set([
   'autopilot',
   'autoresearch',
   'team',
-  'ralph',
+  'forge',
   'ultrawork',
   'ultraqa',
 ]);

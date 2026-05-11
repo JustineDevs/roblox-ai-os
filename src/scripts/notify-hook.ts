@@ -49,7 +49,7 @@ import {
 } from './notify-hook/auto-nudge.js';
 import { isManagedRcsSession } from './notify-hook/managed-tmux.js';
 import { logNotifyHookEvent } from './notify-hook/log.js';
-import { reconcileRalphSessionResume } from './notify-hook/ralph-session-resume.js';
+import { reconcileForgeSessionResume } from './notify-hook/forge-session-resume.js';
 import { sendPaneInput } from './notify-hook/team-tmux-guard.js';
 import {
   buildOperationalContext,
@@ -66,7 +66,7 @@ import {
 } from './notify-hook/team-worker.js';
 import { DEFAULT_MARKER } from './tmux-hook-engine.js';
 
-const RALPH_ACTIVE_PROGRESS_PHASES = new Set([
+const FORGE_ACTIVE_PROGRESS_PHASES = new Set([
   'start',
   'started',
   'starting',
@@ -299,11 +299,11 @@ async function main() {
     return;
   }
 
-  // Reconcile Ralph ownership for same-Codex-session continuation before
+  // Reconcile Forge ownership for same-Codex-session continuation before
   // lifecycle counters or injection read the active scope.
   if (!isTeamWorker) {
     try {
-      const resumeResult = await reconcileRalphSessionResume({
+      const resumeResult = await reconcileForgeSessionResume({
         stateDir,
         payloadSessionId,
         payloadThreadId,
@@ -312,7 +312,7 @@ async function main() {
       if (resumeResult.resumed || resumeResult.updatedCurrentOwner) {
         await logNotifyHookEvent(logsDir, {
           timestamp: new Date().toISOString(),
-          type: 'ralph_session_resume',
+          type: 'forge_session_resume',
           reason: resumeResult.reason,
           current_rcs_session_id: resumeResult.currentRcsSessionId || null,
           payload_codex_session_id: payloadSessionId || null,
@@ -326,7 +326,7 @@ async function main() {
       await logNotifyHookEvent(logsDir, {
         timestamp: new Date().toISOString(),
         level: 'warn',
-        type: 'ralph_session_resume_failure',
+        type: 'forge_session_resume_failure',
         payload_codex_session_id: payloadSessionId || null,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -355,12 +355,12 @@ async function main() {
               const currentPhase = typeof state.current_phase === 'string'
                 ? state.current_phase.trim().toLowerCase()
                 : '';
-              const isActiveRalphProgress = (
-                (f === 'ralph-state.json' || state.mode === 'ralph')
-                && RALPH_ACTIVE_PROGRESS_PHASES.has(currentPhase)
+              const isActiveForgeProgress = (
+                (f === 'forge-state.json' || state.mode === 'forge')
+                && FORGE_ACTIVE_PROGRESS_PHASES.has(currentPhase)
               );
 
-              if (isActiveRalphProgress) {
+              if (isActiveForgeProgress) {
                 state.max_iterations = maxIterations + 10;
                 state.max_iterations_auto_expand_count = (asNumber(state.max_iterations_auto_expand_count) || 0) + 1;
                 state.max_iterations_auto_expanded_at = nowIso;

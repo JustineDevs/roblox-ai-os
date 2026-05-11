@@ -14,7 +14,7 @@ describe('execution-heavy skill guidance contract', () => {
     const content = loadSurface('skills/ultrawork/SKILL.md');
     assert.doesNotMatch(content, /@opencode-ai\/plugin|bun:sqlite|\.sisyphus/i);
     assert.doesNotMatch(content, /\boracle\b|\blibrarian\b|\bartistry\b|\bPrometheus\b/i);
-    assert.match(content, /Ralph owns persistence, architect verification, deslop, and the full verified-completion promise/i);
+    assert.match(content, /Forge owns persistence, architect verification, deslop, and the full verified-completion promise/i);
   });
 
   it('Roblox creator workflow skills enforce the pre-action gate before implementation', () => {

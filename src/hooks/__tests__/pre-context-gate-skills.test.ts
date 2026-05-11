@@ -6,8 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const ralplanSkill = readFileSync(
-  join(__dirname, '../../../skills/ralplan/SKILL.md'),
+const blueprintSkill = readFileSync(
+  join(__dirname, '../../../skills/blueprint/SKILL.md'),
   'utf-8',
 );
 const teamSkill = readFileSync(
@@ -18,16 +18,16 @@ const autopilotSkill = readFileSync(
   join(__dirname, '../../../skills/autopilot/SKILL.md'),
   'utf-8',
 );
-const ralphSkill = readFileSync(
-  join(__dirname, '../../../skills/ralph/SKILL.md'),
+const forgeSkill = readFileSync(
+  join(__dirname, '../../../skills/forge/SKILL.md'),
   'utf-8',
 );
 
 describe('pre-context gate guidance in planning/execution-heavy skills', () => {
-  it('ralplan documents required context snapshot intake', () => {
-    assert.match(ralplanSkill, /Pre-context Intake/i);
-    assert.match(ralplanSkill, /\.rcs\/context\/\{slug\}-\{timestamp\}\.md/);
-    assert.match(ralplanSkill, /\$deep-interview\s+--quick/i);
+  it('blueprint documents required context snapshot intake', () => {
+    assert.match(blueprintSkill, /Pre-context Intake/i);
+    assert.match(blueprintSkill, /\.rcs\/context\/\{slug\}-\{timestamp\}\.md/);
+    assert.match(blueprintSkill, /\$deep-interview\s+--quick/i);
   });
 
   it('team documents required context snapshot gate before launch', () => {
@@ -44,15 +44,15 @@ describe('pre-context gate guidance in planning/execution-heavy skills', () => {
     assert.match(autopilotSkill, /\$deep-interview\s+--quick/i);
   });
 
-  it('ralph documents required pre-context intake before execution loop', () => {
-    assert.match(ralphSkill, /Pre-context intake/i);
-    assert.match(ralphSkill, /\.rcs\/context\/\{task-slug\}-\{timestamp\}\.md/);
-    assert.match(ralphSkill, /\$deep-interview\s+--quick/i);
+  it('forge documents required pre-context intake before execution loop', () => {
+    assert.match(forgeSkill, /Pre-context intake/i);
+    assert.match(forgeSkill, /\.rcs\/context\/\{task-slug\}-\{timestamp\}\.md/);
+    assert.match(forgeSkill, /\$deep-interview\s+--quick/i);
   });
 
-  it('ralph documents state CLI retry guidance when the MCP channel is unavailable', () => {
-    assert.match(ralphSkill, /do \*\*not\*\* retry the same MCP call/i);
-    assert.match(ralphSkill, /rcs state write --input '<json>' --json/i);
-    assert.match(ralphSkill, /preserving `workingDirectory` and `session_id`/i);
+  it('forge documents state CLI retry guidance when the MCP channel is unavailable', () => {
+    assert.match(forgeSkill, /do \*\*not\*\* retry the same MCP call/i);
+    assert.match(forgeSkill, /rcs state write --input '<json>' --json/i);
+    assert.match(forgeSkill, /preserving `workingDirectory` and `session_id`/i);
   });
 });

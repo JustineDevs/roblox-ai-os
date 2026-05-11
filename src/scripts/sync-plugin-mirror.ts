@@ -127,8 +127,11 @@ async function assertRootSkillCatalogConsistency(
 	}
 
 	const rootEntries = await readdir(rootSkillsDir, { withFileTypes: true });
+	const canonicalRootSkillDirs = rootEntries
+		.filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
+		.map((entry) => entry.name);
 	const unlistedSkillDirs = rootEntries
-		.filter((entry) => entry.isDirectory())
+		.filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
 		.map((entry) => entry.name)
 		.filter(
 			(skillName) =>
@@ -145,9 +148,7 @@ async function assertRootSkillCatalogConsistency(
 		);
 	}
 
-	const nonInstallableRootSkillDirs = rootEntries
-		.filter((entry) => entry.isDirectory())
-		.map((entry) => entry.name)
+	const nonInstallableRootSkillDirs = canonicalRootSkillDirs
 		.filter((skillName) => {
 			if (expectedSkillNames.has(skillName)) return false;
 			const status = manifestByName.get(skillName)?.status;

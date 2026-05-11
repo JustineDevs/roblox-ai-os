@@ -91,7 +91,7 @@ rcs
 Then use role and workflow keywords:
 
 ```
-> $architect "analyze the authentication module"
+> $architect "review server authority for the new trading RemoteEvent surface"
 ```
 
 **Expected:** The architect agent analyzes code with file:line references, root cause diagnosis, and trade-off analysis.
@@ -399,24 +399,19 @@ Expected:
 
 ---
 
-## Demo 9: Autoresearch Showcase Hub
+## Demo 9: Roblox Creator Labs
 
-RCS now includes a lightweight research-showcase hub for reproducible autoresearch demos under `playground/README.md`.
+RCS now includes a Roblox-first creator lab hub under `playground/README.md`.
 
 Quick start:
 
 ```bash
-# list bundled showcase missions
-./scripts/run-autoresearch-showcase.sh --list
-
-# run one showcase
-./scripts/run-autoresearch-showcase.sh bayesopt
-
-# run several showcases back-to-back
-./scripts/run-autoresearch-showcase.sh rcs-self ml-tabular bayesopt
+node dist/scripts/eval/eval-remote-contract-hardening.js
+node dist/scripts/eval/eval-profile-datastore-recovery.js
+node dist/scripts/eval/eval-gui-onboarding-clarity.js
 ```
 
-See `playground/README.md` for the mission index, completed-result summaries, and repository-hygiene guidance.
+See `playground/README.md` for the lab index, mission mapping, and Roblox-specific repository guidance.
 
 ## Demo Script Reference
 

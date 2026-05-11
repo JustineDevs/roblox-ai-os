@@ -31,7 +31,7 @@ import {
 } from "../team/state.js";
 import { rcsNotepadPath, rcsProjectMemoryPath } from "../utils/paths.js";
 import { findGitLayout } from "../utils/git-layout.js";
-import { getStateFilePath, getStatePath } from "../mcp/state-paths.js";
+import { canonicalizeStateMode, getStateFilePath, getStatePath } from "../mcp/state-paths.js";
 import {
   detectKeywords,
   detectPrimaryKeyword,
@@ -108,7 +108,7 @@ export interface NativeHookDispatchResult {
 }
 
 const TERMINAL_MODE_PHASES = new Set(["complete", "completed", "failed", "cancelled"]);
-const SKILL_STOP_BLOCKERS = new Set(["ralplan"]);
+const SKILL_STOP_BLOCKERS = new Set(["blueprint"]);
 const TEAM_TERMINAL_TASK_STATUSES = new Set(["completed", "failed"]);
 const TEAM_WORKER_STOP_ACTIVE_STATES = new Set(["working", "blocked"]);
 const NATIVE_STOP_STATE_FILE = "native-stop-state.json";
@@ -440,12 +440,12 @@ async function readActiveAutoresearchState(
   return state;
 }
 
-interface ActiveRalphStopState {
+interface ActiveForgeStopState {
   state: Record<string, unknown>;
   path: string;
 }
 
-interface RalphStopOwnershipContext {
+interface ForgeStopOwnershipContext {
   sessionId: string;
   payloadSessionId: string;
   threadId: string;
@@ -453,7 +453,7 @@ interface RalphStopOwnershipContext {
   tmuxPaneId: string;
 }
 
-function isRalphStartingPhase(state: Record<string, unknown>): boolean {
+function isForgeStartingPhase(state: Record<string, unknown>): boolean {
   return safeString(state.current_phase ?? state.currentPhase).trim().toLowerCase() === "starting";
 }
 
@@ -461,9 +461,9 @@ function hasValue(values: string[], value: string): boolean {
   return value !== "" && values.some((candidate) => candidate === value);
 }
 
-function activeRalphStateMatchesStopOwner(
+function activeForgeStateMatchesStopOwner(
   state: Record<string, unknown>,
-  context: RalphStopOwnershipContext,
+  context: ForgeStopOwnershipContext,
 ): boolean {
   const ownerRcsSessionId = safeString(state.owner_rcs_session_id).trim();
   if (ownerRcsSessionId && ownerRcsSessionId !== context.sessionId) {
@@ -504,7 +504,7 @@ function shouldHonorCanonicalTerminalRunState(
 ): boolean {
   if (!runState) return false;
   const runMode = safeString(runState.mode).trim();
-  if (runMode && runMode !== mode) return false;
+  if (runMode && canonicalizeStateMode(runMode) !== canonicalizeStateMode(mode)) return false;
   return getRunContinuationSnapshot(runState)?.terminal === true;
 }
 
@@ -519,16 +519,16 @@ async function readCanonicalTerminalRunStateForStop(
   return shouldHonorCanonicalTerminalRunState(runRecord, mode) ? runRecord : null;
 }
 
-async function isVisibleRalphActiveForSession(cwd: string, sessionId: string): Promise<boolean> {
+async function isVisibleForgeActiveForSession(cwd: string, sessionId: string): Promise<boolean> {
   const canonicalState = await readVisibleSkillActiveState(cwd, sessionId);
   if (!canonicalState) return false;
   return listActiveSkills(canonicalState).some((entry) => (
-    entry.skill === "ralph"
+    canonicalizeStateMode(entry.skill) === "forge"
     && matchesSkillStopContext(entry, canonicalState, sessionId, "")
   ));
 }
 
-async function readActiveRalphState(
+async function readActiveForgeState(
   stateDir: string,
   preferredSessionId?: string,
   ownerContext?: {
@@ -536,7 +536,7 @@ async function readActiveRalphState(
     threadId?: string;
     tmuxPaneId?: string;
   },
-): Promise<ActiveRalphStopState | null> {
+): Promise<ActiveForgeStopState | null> {
   const cwd = resolve(stateDir, "..", "..");
   const [rawSessionInfo, usableSessionInfo] = await Promise.all([
     readSessionState(cwd),
@@ -552,29 +552,29 @@ async function readActiveRalphState(
     currentRcsSessionId,
   ].filter(Boolean))];
 
-  // Ralph Stop stays authoritative-scope-only once the Stop payload is session-bound.
+  // Forge Stop stays authoritative-scope-only once the Stop payload is session-bound.
   // That is intentionally stricter than generic state MCP reads: do not scan sibling
   // session scopes or fall back to root when a current/explicit session is in play.
   for (const sessionId of sessionCandidates) {
     if (staleCurrentSessionId && sessionId === staleCurrentSessionId) {
       continue;
     }
-    if (await readCanonicalTerminalRunStateForStop(cwd, sessionId, "ralph")) {
+    if (await readCanonicalTerminalRunStateForStop(cwd, sessionId, "forge")) {
       continue;
     }
-    const sessionScopedPath = getStateFilePath("ralph-state.json", cwd, sessionId);
+    const sessionScopedPath = getStateFilePath("forge-state.json", cwd, sessionId);
     const sessionScoped = await readJsonIfExists(sessionScopedPath);
     if (
       sessionScoped?.active === true
-      && isRalphStartingPhase(sessionScoped)
-      && !(await isVisibleRalphActiveForSession(cwd, sessionId))
+      && isForgeStartingPhase(sessionScoped)
+      && !(await isVisibleForgeActiveForSession(cwd, sessionId))
     ) {
       continue;
     }
     if (
       sessionScoped?.active === true
       && shouldContinueRun(sessionScoped)
-      && activeRalphStateMatchesStopOwner(sessionScoped, {
+      && activeForgeStateMatchesStopOwner(sessionScoped, {
         sessionId,
         payloadSessionId: safeString(ownerContext?.payloadSessionId).trim(),
         threadId: safeString(ownerContext?.threadId).trim(),
@@ -588,7 +588,7 @@ async function readActiveRalphState(
 
   if (sessionCandidates.length > 0) return null;
 
-  const directPath = join(stateDir, "ralph-state.json");
+  const directPath = join(stateDir, "forge-state.json");
   const direct = await readJsonIfExists(directPath);
   if (direct?.active === true && shouldContinueRun(direct)) {
     return { state: direct, path: directPath };
@@ -787,7 +787,7 @@ async function buildSessionStartContext(
   }
 
   const modeSummaries: string[] = [];
-  for (const mode of ["ralph", "autopilot", "ultrawork", "ultraqa", "ralplan", "deep-interview", "team"] as const) {
+  for (const mode of ["forge", "autopilot", "ultrawork", "ultraqa", "blueprint", "deep-interview", "team"] as const) {
     const state = await readJsonIfExists(getStatePath(mode, cwd, sessionId));
     if (state?.active !== true || !isNonTerminalPhase(state.current_phase)) continue;
     if (mode === "team") {
@@ -989,10 +989,10 @@ function resolveQuestionLeaderPaneHint(cwd: string, payload?: CodexHookPayload):
   const envSessionId = safeString(process.env.RCS_SESSION_ID || process.env.CODEX_SESSION_ID || process.env.SESSION_ID).trim();
   const sessionId = payloadSessionId || envSessionId;
   const candidatePaths = [
-    ...(sessionId ? [getStatePath('deep-interview', cwd, sessionId), getStatePath('ralplan', cwd, sessionId), getStatePath('ralph', cwd, sessionId)] : []),
+    ...(sessionId ? [getStatePath('deep-interview', cwd, sessionId), getStatePath('blueprint', cwd, sessionId), getStatePath('forge', cwd, sessionId)] : []),
     getStatePath('deep-interview', cwd),
-    getStatePath('ralplan', cwd),
-    getStatePath('ralph', cwd),
+    getStatePath('blueprint', cwd),
+    getStatePath('forge', cwd),
   ];
 
   for (const path of candidatePaths) {
@@ -1092,14 +1092,14 @@ function buildAdditionalContextMessage(
     ? skillState.deferred_skills
     : [];
   const teamDetected = activeSkills.includes("team");
-  const ralphPromptActivationNote = skillState?.initialized_mode === "ralph"
-    ? "Prompt-side `$ralph` activation seeds Ralph workflow state only; it does not invoke `rcs ralph`. Use `rcs ralph --prd ...` only when you explicitly want the PRD-gated CLI startup path."
+  const forgePromptActivationNote = skillState?.initialized_mode === "forge"
+    ? "Prompt-side `$forge` activation seeds Forge workflow state and the lower-level forge runtime state only; it does not invoke `rcs forge`. Use `rcs forge --prd ...` only when you explicitly want the PRD-gated CLI startup path."
     : null;
   const deepInterviewPromptActivationNote = skillState?.initialized_mode === "deep-interview"
     ? buildDeepInterviewQuestionBridgeInstruction(cwd, payload)
     : null;
   const ultraworkPromptActivationNote = skillState?.initialized_mode === "ultrawork"
-    ? "Ultrawork protocol: ground the task before editing, define pass/fail acceptance criteria, keep shared-file work local, and use direct-tool plus background evidence lanes only for truly independent work. Direct ultrawork provides lightweight verification only; Ralph owns persistence and the full verified-completion promise."
+    ? "Ultrawork protocol: ground the task before editing, define pass/fail acceptance criteria, keep shared-file work local, and use direct-tool plus background evidence lanes only for truly independent work. Direct ultrawork provides lightweight verification only; Forge owns persistence and the full verified-completion promise."
     : null;
   const combinedTransitionMessage = (() => {
     if (!skillState?.transition_message) return null;
@@ -1169,7 +1169,7 @@ function buildAdditionalContextMessage(
       `skill: ${skillState.initialized_mode} activated and initial state initialized at ${skillState.initialized_state_path}; write subsequent updates via rcs_state MCP.`,
       deepInterviewPromptActivationNote,
       ultraworkPromptActivationNote,
-      ralphPromptActivationNote,
+    forgePromptActivationNote,
       "Follow AGENTS.md routing and preserve workflow transition and planning-safety rules.",
     ].join(" ");
   }
@@ -1971,12 +1971,12 @@ async function buildStopHookOutput(
   const threadId = readPayloadThreadId(payload);
   const execFollowupOutput = await buildExecFollowupStopOutput(cwd, canonicalSessionId);
   if (execFollowupOutput) return execFollowupOutput;
-  const ralphState = await readActiveRalphState(stateDir, canonicalSessionId, {
+  const forgeState = await readActiveForgeState(stateDir, canonicalSessionId, {
     payloadSessionId: sessionId,
     threadId,
     tmuxPaneId: safeString(process.env.TMUX_PANE).trim(),
   });
-  if (!ralphState) {
+  if (!forgeState) {
     const autoresearchState = await readActiveAutoresearchState(cwd, canonicalSessionId);
     if (autoresearchState) {
       const completion = await readAutoresearchCompletionStatus(cwd, canonicalSessionId!.trim());
@@ -2169,16 +2169,16 @@ async function buildStopHookOutput(
     return null;
   }
 
-  const currentPhase = safeString(ralphState.state.current_phase).trim() || "executing";
-  const blockingPath = formatStopStatePath(cwd, ralphState.path);
-  const stopReason = `ralph_${currentPhase}`;
+  const currentPhase = safeString(forgeState.state.current_phase).trim() || "executing";
+  const blockingPath = formatStopStatePath(cwd, forgeState.path);
+  const stopReason = `forge_${currentPhase}`;
   const systemMessage =
-    `RCS Ralph is still active (phase: ${currentPhase}; state: ${blockingPath}); continue the task and gather fresh verification evidence before stopping.`;
+    `RCS Forge is still active (phase: ${currentPhase}; state: ${blockingPath}); continue the task and gather fresh verification evidence before stopping.`;
 
   return await returnPersistentStopBlock(
     payload,
     stateDir,
-    "ralph-stop",
+    "forge-stop",
     currentPhase,
     {
       decision: "block",

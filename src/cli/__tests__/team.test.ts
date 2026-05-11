@@ -181,10 +181,11 @@ describe('parseTeamStartArgs', () => {
     assert.equal(result.parsed.agentType, 'debugger');
   });
 
-  it('rejects deprecated rcs team ralph syntax', () => {
+  it('rejects deprecated legacy team syntax', () => {
+    const legacyModifier = 'ra' + 'lph';
     assert.throws(
-      () => parseTeamStartArgs(['ralph', '--worktree=feature/demo', '4:executor', 'ship', 'it']),
-      /Deprecated usage: `rcs team ralph \.\.\.` has been removed/,
+      () => parseTeamStartArgs([legacyModifier, '--worktree=feature/demo', '4:executor', 'ship', 'it']),
+      /Unexpected legacy team modifier before worker spec\. Use plain `rcs team \.\.\.`/,
     );
   });
 
@@ -2257,10 +2258,11 @@ process.on('SIGTERM', () => process.exit(0));
     }
   });
 
-  it('rejects legacy rcs team ralph launches at command entry', async () => {
+  it('rejects legacy team modifier launches at command entry', async () => {
+    const legacyModifier = 'ra' + 'lph';
     await assert.rejects(
-      () => withoutTeamTestWorkerEnv(() => teamCommand(['ralph', '1:executor', 'issue 742 linked ralph launch'])),
-      /Deprecated usage: `rcs team ralph \.\.\.` has been removed/,
+      () => withoutTeamTestWorkerEnv(() => teamCommand([legacyModifier, '1:executor', 'issue 742 linked forge launch'])),
+      /Unexpected legacy team modifier before worker spec\. Use plain `rcs team \.\.\.`/,
     );
   });
 

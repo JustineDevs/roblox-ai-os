@@ -225,12 +225,12 @@ export function classifyTaskSize(
  * These modes spin up multiple agents and are overkill for single-file/minor changes.
  */
 export const HEAVY_MODE_KEYWORDS = new Set([
-  'ralph',
+  'forge',
   'autopilot',
   'team',
   'ultrawork',
   'swarm',
-  'ralplan',
+  'blueprint',
   'ccg',
 ]);
 

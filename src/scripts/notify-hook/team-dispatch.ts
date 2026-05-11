@@ -1,12 +1,12 @@
 // @ts-nocheck
 import { appendFile, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'fs/promises';
-import { appendFileSync, existsSync, mkdirSync } from 'fs';
-import { execFileSync } from 'child_process';
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'node:url';
 import { safeString } from './utils.js';
 import { isBridgeEnabled, resolveBridgeStateDir, resolveRuntimeBinaryPath } from '../../runtime/bridge.js';
 import { appendTeamDeliveryLog } from '../../team/delivery-log.js';
+import { spawnPlatformCommandSync } from '../../utils/platform-command.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -31,11 +31,38 @@ function runtimeExec(command, stateDir, team) {
   if (!isBridgeEnabled()) return;
   try {
     const binaryPath = resolveRuntimeBinaryPath();
-    execFileSync(binaryPath, ['exec', JSON.stringify(command), `--state-dir=${stateDir}`], {
+    const launchArgs = ['exec', JSON.stringify(command), `--state-dir=${stateDir}`];
+    let launchCommand = binaryPath;
+    let spawnArgs = launchArgs;
+    if (existsSync(binaryPath)) {
+      try {
+        const header = readFileSync(binaryPath, 'utf-8').slice(0, 128);
+        if (/^#!.*\bnode(?:\s|$)/.test(header)) {
+          launchCommand = process.execPath;
+          spawnArgs = [
+            '-e',
+            'const script=process.argv[1];process.argv=[process.execPath,script,...process.argv.slice(2)];require(script);',
+            binaryPath,
+            ...launchArgs,
+          ];
+        } else if (/^#!.*\b(?:bash|sh)(?:\s|$)/.test(header)) {
+          launchCommand = '/bin/bash';
+          spawnArgs = [binaryPath, ...launchArgs];
+        }
+      } catch {
+        // Keep the original binary launch path when the file cannot be inspected.
+      }
+    }
+    const { result } = spawnPlatformCommandSync(launchCommand, spawnArgs, {
+      encoding: 'utf-8',
       timeout: 5000,
-      stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
     });
+    if (result.status !== 0) {
+      const stderr = safeString(result.stderr).trim();
+      if (stderr) throw new Error(stderr);
+      throw new Error(`failed (exit ${typeof result.status === 'number' ? result.status : 'unknown'})`);
+    }
   } catch (error) {
     recordBridgeFallback({
       stateDir,

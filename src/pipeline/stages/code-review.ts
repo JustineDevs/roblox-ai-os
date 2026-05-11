@@ -4,7 +4,7 @@
  * The stage produces a descriptor/instruction for the existing `$code-review`
  * skill and reports whether the latest review is clean. A non-clean review is
  * represented as `completed` with `clean: false` so Autopilot can return to
- * ralplan instead of treating review findings as infrastructure failure.
+ * blueprint instead of treating review findings as infrastructure failure.
  */
 
 import type { PipelineStage, StageContext, StageResult } from '../types.js';
@@ -24,7 +24,7 @@ export interface CodeReviewDescriptor {
   task: string;
   cwd: string;
   sessionId?: string;
-  ralphArtifacts: Record<string, unknown>;
+  forgeArtifacts: Record<string, unknown>;
   instruction: string;
 }
 
@@ -41,12 +41,12 @@ export function createCodeReviewStage(options: CodeReviewStageOptions = {}): Pip
 
     async run(ctx: StageContext): Promise<StageResult> {
       const startTime = Date.now();
-      const ralphArtifacts = ctx.artifacts.ralph as Record<string, unknown> | undefined;
+      const forgeArtifacts = ctx.artifacts.forge as Record<string, unknown> | undefined;
       const descriptor: CodeReviewDescriptor = {
         task: ctx.task,
         cwd: ctx.cwd,
         sessionId: ctx.sessionId,
-        ralphArtifacts: ralphArtifacts ?? {},
+        forgeArtifacts: forgeArtifacts ?? {},
         instruction: buildCodeReviewInstruction(ctx.task),
       };
       const hasReviewEvidence = options.recommendation !== undefined || options.architecturalStatus !== undefined;
@@ -58,8 +58,8 @@ export function createCodeReviewStage(options: CodeReviewStageOptions = {}): Pip
         architectural_status: architecturalStatus,
         clean,
         summary: options.summary ?? (hasReviewEvidence
-          ? (clean ? 'Review clean.' : 'Review returned findings; return to ralplan.')
-          : 'Code-review evidence missing; fail closed and return to ralplan.'),
+          ? (clean ? 'Review clean.' : 'Review returned findings; return to blueprint.')
+          : 'Code-review evidence missing; fail closed and return to blueprint.'),
       };
 
       return {
@@ -68,7 +68,7 @@ export function createCodeReviewStage(options: CodeReviewStageOptions = {}): Pip
           stage: 'code-review',
           codeReviewDescriptor: descriptor,
           review_verdict: verdict,
-          return_to_ralplan_reason: clean ? null : verdict.summary,
+          return_to_blueprint_reason: clean ? null : verdict.summary,
           instruction: descriptor.instruction,
         },
         duration_ms: Date.now() - startTime,

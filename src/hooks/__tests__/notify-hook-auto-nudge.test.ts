@@ -630,7 +630,7 @@ describe('notify-hook auto-nudge', () => {
       });
       await writeManagedSessionState(stateDir, cwd);
 
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), {
+      await writeJson(join(sessionStateDir, 'forge-state.json'), {
         active: true,
         tmux_pane_id: '%99',
       });
@@ -733,7 +733,7 @@ exit 0
       });
       await writeManagedSessionState(stateDir, cwd);
 
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), {
+      await writeJson(join(sessionStateDir, 'forge-state.json'), {
         active: true,
         tmux_pane_id: '%99',
       });
@@ -833,7 +833,7 @@ exit 0
       });
       await writeManagedSessionState(stateDir, cwd);
 
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), {
+      await writeJson(join(sessionStateDir, 'forge-state.json'), {
         active: true,
         tmux_pane_id: '%99',
       });
@@ -933,7 +933,7 @@ exit 0
       });
       await writeManagedSessionState(stateDir, cwd);
 
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), {
+      await writeJson(join(sessionStateDir, 'forge-state.json'), {
         active: true,
         tmux_pane_id: '%99',
       });
@@ -1033,7 +1033,7 @@ exit 0
       });
       await writeManagedSessionState(stateDir, cwd);
 
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), {
+      await writeJson(join(sessionStateDir, 'forge-state.json'), {
         active: true,
         tmux_pane_id: '%99',
       });
@@ -1197,7 +1197,7 @@ exit 0
       await writeJson(join(codexHome, '.rcs-config.json'), {
         autoNudge: { enabled: true, delaySec: 0, stallMs: 0 },
       });
-      await writeJson(join(workerStateRoot, 'ralph-state.json'), {
+      await writeJson(join(workerStateRoot, 'forge-state.json'), {
         active: true,
         tmux_pane_id: '%99',
       });
@@ -1893,7 +1893,7 @@ exit 0
         active: boolean;
       };
       assert.equal(skillState.skill, 'autopilot');
-      assert.equal(skillState.phase, 'ralplan');
+      assert.equal(skillState.phase, 'blueprint');
       assert.equal(skillState.active, true);
     });
   });

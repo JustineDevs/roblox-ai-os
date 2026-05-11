@@ -5,15 +5,16 @@
  */
 
 import { execFileSync } from "child_process";
+import { existsSync, readFileSync } from "fs";
 import { buildCapturePaneArgv } from "./tmux-detector.js";
-import { resolveTmuxBinaryForPlatform } from "../utils/platform-command.js";
+import { resolveTmuxBinaryForPlatform, spawnPlatformCommandSync } from "../utils/platform-command.js";
 
 const TMUX_PANE_TARGET_RE = /^%\d+$/;
 const DEFAULT_CAPTURE_LINES = 12;
 const MAX_CAPTURE_LINES = 2000;
 const ANSI_RE = /\x1b(?:[@-Z\\-_]|\[[0-9;]*[A-Za-z])/g;
 const RCS_METADATA_SEGMENT_RE = /^\[RCS(?:[#\]].*)?$/;
-const HUD_STATUS_SEGMENT_RE = /^(?:ralph:\d+\/(?:\d+|\?)|autopilot:[\w-]+|ralplan:(?:\d+\/(?:\d+|\?)|[\w-]+)|interview:[\w:-]+|research:[\w-]+|qa:[\w-]+|team:(?:\d+\s+workers|[\w.-]+)|ultrawork|turns:\d+|tokens:[\dkm.]+|quota:[\w%,.]+|session:[\dhms]+|last:\d+[smh](?:\s+ago)?|total-turns:\d+|tmux:[\w:.-]+)$/i;
+const HUD_STATUS_SEGMENT_RE = /^(?:forge:\d+\/(?:\d+|\?)|autopilot:[\w-]+|blueprint:(?:\d+\/(?:\d+|\?)|[\w-]+)|interview:[\w:-]+|research:[\w-]+|qa:[\w-]+|team:(?:\d+\s+workers|[\w.-]+)|ultrawork|turns:\d+|tokens:[\dkm.]+|quota:[\w%,.]+|session:[\dhms]+|last:\d+[smh](?:\s+ago)?|total-turns:\d+|tmux:[\w:.-]+)$/i;
 const BRANCH_METADATA_SEGMENT_RE = /^(?:(?:fix|feat|feature|chore|refactor|hotfix|release|docs|doc|test|tests|ci|build|perf|revert|bugfix|spike|wip)\/[A-Za-z0-9._/-]+|HEAD(?: -> [A-Za-z0-9._/-]+)?|detached)$/;
 
 function isMetadataOnlyTmuxSegment(segment: string): boolean {
@@ -58,12 +59,39 @@ function shouldUsePidFallback(): boolean {
 }
 
 function execTmux(args: string[]): string {
-  return execFileSync(resolveTmuxBinaryForPlatform() || "tmux", args, {
+  const tmuxBinary = resolveTmuxBinaryForPlatform() || "tmux";
+  let launchCommand = tmuxBinary;
+  let launchArgs = args;
+  if (existsSync(tmuxBinary)) {
+    try {
+      const header = readFileSync(tmuxBinary, "utf-8").slice(0, 128);
+      if (/^#!.*\b(?:bash|sh)(?:\s|$)/.test(header)) {
+        launchCommand = "/bin/bash";
+        launchArgs = [tmuxBinary, ...args];
+      } else if (/^#!.*\bnode(?:\s|$)/.test(header)) {
+        launchCommand = process.execPath;
+        launchArgs = [
+          "-e",
+          "const script=process.argv[1];process.argv=[process.execPath,script,...process.argv.slice(2)];require(script);",
+          tmuxBinary,
+          ...args,
+        ];
+      }
+    } catch {
+      // Keep direct launch when the helper cannot be inspected.
+    }
+  }
+
+  const { result } = spawnPlatformCommandSync(launchCommand, launchArgs, {
     encoding: "utf-8",
     timeout: 3000,
     stdio: ["pipe", "pipe", "pipe"],
     windowsHide: process.platform === "win32",
-  }).trim();
+  });
+  if (result.status !== 0) {
+    throw result.error ?? new Error(String(result.stderr || "tmux command failed"));
+  }
+  return String(result.stdout ?? "").trim();
 }
 
 /**
@@ -203,12 +231,16 @@ export function captureTmuxPaneWithLiveness(paneId?: string | null, lines: numbe
       return { content: null, live: false };
     }
 
-    const output = execFileSync(resolveTmuxBinaryForPlatform() || "tmux", buildCapturePaneArgv(target, clampedLines), {
+    const { result } = spawnPlatformCommandSync(resolveTmuxBinaryForPlatform() || "tmux", buildCapturePaneArgv(target, clampedLines), {
       encoding: "utf-8",
       timeout: 3000,
       stdio: ["pipe", "pipe", "pipe"],
       windowsHide: process.platform === "win32",
-    }).trim();
+    });
+    if (result.status !== 0) {
+      throw result.error ?? new Error(String(result.stderr || "tmux capture failed"));
+    }
+    const output = String(result.stdout ?? "").trim();
     return { content: output || null, live: true };
   } catch {
     return { content: null, live: false };

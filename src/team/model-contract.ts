@@ -16,7 +16,7 @@ const MODEL_PROVIDER_KEY = 'model_provider';
 const LOW_COMPLEXITY_AGENT_TYPES = new Set([
   'explore',
   'explorer',
-  'style-reviewer',
+  'writer-low',
 ]);
 
 // Canonical default only; effective low-complexity resolution flows through resolveTeamLowComplexityDefaultModel().
@@ -206,6 +206,8 @@ export function resolveTeamWorkerLaunchArgs(options: ResolveTeamWorkerLaunchArgs
 
 export function resolveAgentReasoningEffort(agentType?: string): TeamReasoningEffort | undefined {
   if (typeof agentType !== 'string' || agentType.trim() === '') return undefined;
+  const normalized = agentType.trim().toLowerCase();
+  if (normalized.endsWith('-low')) return 'low';
   return normalizeOptionalReasoning(getAgent(agentType)?.reasoningEffort);
 }
 

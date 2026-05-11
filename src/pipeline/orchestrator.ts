@@ -1,18 +1,18 @@
 /**
  * Pipeline Orchestrator for roblox-ai-os-creator-skills
  *
- * Sequences configurable stages (ralplan -> ralph -> code-review)
+ * Sequences configurable stages (blueprint -> forge -> code-review)
  * and persists state through the ModeState system.
  *
  * Mirrors OMC #1130 pipeline design with RCS-specific adaptations:
- * - Ralph iteration count is configurable
+ * - Forge iteration count is configurable
  * - Code review is the merge-readiness gate
- * - Non-clean review artifacts can drive a return to ralplan
+ * - Non-clean review artifacts can drive a return to blueprint
  */
 
 import { startMode, readModeState, updateModeState, cancelMode } from '../modes/base.js';
-import { createRalplanStage } from './stages/ralplan.js';
-import { createRalphStage } from './stages/ralph-verify.js';
+import { createBlueprintStage } from './stages/blueprint.js';
+import { createForgeStage } from './stages/forge-verify.js';
 import { createCodeReviewStage } from './stages/code-review.js';
 import { isNonCleanReviewVerdict } from './review-verdict.js';
 import type {
@@ -39,7 +39,7 @@ export async function runPipeline(config: PipelineConfig): Promise<PipelineResul
   validateConfig(config);
 
   const cwd = config.cwd ?? process.cwd();
-  const maxRalphIterations = config.maxRalphIterations ?? 10;
+  const maxForgeIterations = config.maxForgeIterations ?? 10;
   const workerCount = config.workerCount ?? 2;
   const agentType = config.agentType ?? 'executor';
   const startTime = Date.now();
@@ -52,12 +52,12 @@ export async function runPipeline(config: PipelineConfig): Promise<PipelineResul
     pipeline_stages: config.stages.map((s) => s.name),
     pipeline_stage_index: 0,
     pipeline_stage_results: {},
-    pipeline_max_ralph_iterations: maxRalphIterations,
+    pipeline_max_forge_iterations: maxForgeIterations,
     pipeline_worker_count: workerCount,
     pipeline_agent_type: agentType,
     review_cycle: 0,
     review_verdict: null,
-    return_to_ralplan_reason: null,
+    return_to_blueprint_reason: null,
     handoff_artifacts: {},
   };
 
@@ -143,8 +143,8 @@ export async function runPipeline(config: PipelineConfig): Promise<PipelineResul
 
     const resultArtifacts = result.artifacts as Record<string, unknown>;
     const reviewVerdict = stage.name === 'code-review' ? resultArtifacts.review_verdict : undefined;
-    const returnToRalplanReason = stage.name === 'code-review'
-      ? resultArtifacts.return_to_ralplan_reason as string | null | undefined
+    const returnToBlueprintReason = stage.name === 'code-review'
+      ? resultArtifacts.return_to_blueprint_reason as string | null | undefined
       : undefined;
     const reviewIsNotClean = stage.name === 'code-review'
       && result.status === 'completed'
@@ -152,7 +152,7 @@ export async function runPipeline(config: PipelineConfig): Promise<PipelineResul
 
     if (stage.name === 'code-review') {
       artifacts.review_verdict = reviewVerdict ?? null;
-      artifacts.return_to_ralplan_reason = returnToRalplanReason ?? null;
+      artifacts.return_to_blueprint_reason = returnToBlueprintReason ?? null;
     }
 
     if (reviewIsNotClean) {
@@ -163,11 +163,11 @@ export async function runPipeline(config: PipelineConfig): Promise<PipelineResul
 
     // Persist stage result
     await updateModeState(MODE_NAME, {
-      current_phase: reviewIsNotClean ? 'ralplan' : (result.status === 'completed' ? stage.name : `${stage.name}:${result.status}`),
+      current_phase: reviewIsNotClean ? 'blueprint' : (result.status === 'completed' ? stage.name : `${stage.name}:${result.status}`),
       handoff_artifacts: handoffArtifacts,
       ...(stage.name === 'code-review' ? {
         review_verdict: reviewVerdict,
-        return_to_ralplan_reason: returnToRalplanReason ?? null,
+        return_to_blueprint_reason: returnToBlueprintReason ?? null,
         review_cycle: reviewCycle,
       } : {}),
       pipeline_stage_index: reviewIsNotClean ? 0 : i,
@@ -196,9 +196,9 @@ export async function runPipeline(config: PipelineConfig): Promise<PipelineResul
     }
 
     if (reviewIsNotClean) {
-      if (reviewCycle >= maxRalphIterations) {
-        const error = returnToRalplanReason
-          ? `Code review was not clean after ${reviewCycle} cycle(s): ${returnToRalplanReason}`
+      if (reviewCycle >= maxForgeIterations) {
+        const error = returnToBlueprintReason
+          ? `Code review was not clean after ${reviewCycle} cycle(s): ${returnToBlueprintReason}`
           : `Code review was not clean after ${reviewCycle} cycle(s).`;
         const duration_ms = Date.now() - startTime;
 
@@ -220,7 +220,7 @@ export async function runPipeline(config: PipelineConfig): Promise<PipelineResul
       }
 
       if (config.onStageTransition) {
-        config.onStageTransition(stage.name, 'ralplan');
+        config.onStageTransition(stage.name, 'blueprint');
       }
       lastStageName = undefined;
       previousResult = result;
@@ -280,12 +280,12 @@ export async function readPipelineState(
     pipeline_stages: state.pipeline_stages as string[],
     pipeline_stage_index: state.pipeline_stage_index as number,
     pipeline_stage_results: state.pipeline_stage_results as Record<string, StageResult>,
-    pipeline_max_ralph_iterations: state.pipeline_max_ralph_iterations as number,
+    pipeline_max_forge_iterations: state.pipeline_max_forge_iterations as number,
     pipeline_worker_count: state.pipeline_worker_count as number,
     pipeline_agent_type: state.pipeline_agent_type as string,
     review_cycle: state.review_cycle as number | undefined,
     review_verdict: state.review_verdict,
-    return_to_ralplan_reason: state.return_to_ralplan_reason as string | null | undefined,
+    return_to_blueprint_reason: state.return_to_blueprint_reason as string | null | undefined,
     handoff_artifacts: state.handoff_artifacts as Record<string, unknown> | undefined,
   };
 }
@@ -336,9 +336,9 @@ function validateConfig(config: PipelineConfig): void {
     names.add(stage.name);
   }
 
-  if (config.maxRalphIterations != null) {
-    if (!Number.isInteger(config.maxRalphIterations) || config.maxRalphIterations <= 0) {
-      throw new Error('maxRalphIterations must be a positive integer');
+  if (config.maxForgeIterations != null) {
+    if (!Number.isInteger(config.maxForgeIterations) || config.maxForgeIterations <= 0) {
+      throw new Error('maxForgeIterations must be a positive integer');
     }
   }
 
@@ -356,7 +356,7 @@ function validateConfig(config: PipelineConfig): void {
 /**
  * Create the default autopilot pipeline configuration.
  *
- * Sequences: ralplan -> ralph -> code-review.
+ * Sequences: blueprint -> forge -> code-review.
  * This is the strict Autopilot loop required by the skill contract.
  */
 export function createAutopilotPipelineConfig(
@@ -364,7 +364,7 @@ export function createAutopilotPipelineConfig(
   options: {
     cwd?: string;
     sessionId?: string;
-    maxRalphIterations?: number;
+    maxForgeIterations?: number;
     workerCount?: number;
     agentType?: string;
     stages?: PipelineConfig['stages'];
@@ -377,7 +377,7 @@ export function createAutopilotPipelineConfig(
     stages: options.stages ?? createStrictAutopilotStages(),
     cwd: options.cwd,
     sessionId: options.sessionId,
-    maxRalphIterations: options.maxRalphIterations ?? 10,
+    maxForgeIterations: options.maxForgeIterations ?? 10,
     workerCount: options.workerCount ?? 2,
     agentType: options.agentType ?? 'executor',
     onStageTransition: options.onStageTransition,
@@ -385,5 +385,5 @@ export function createAutopilotPipelineConfig(
 }
 
 export function createStrictAutopilotStages(): PipelineConfig['stages'] {
-  return [createRalplanStage(), createRalphStage(), createCodeReviewStage()];
+  return [createBlueprintStage(), createForgeStage(), createCodeReviewStage()];
 }

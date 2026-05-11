@@ -1,69 +1,61 @@
 ---
 name: security-review
-description: Run a comprehensive security review on code
+description: Review Roblox experience security — Luau server authority, remotes, DataStore, economy, anti-exploit
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Security Review Skill
 
-Conduct a thorough security audit checking for OWASP Top 10 vulnerabilities, hardcoded secrets, and unsafe patterns.
+Review **Roblox Studio / Luau** experiences for **trust-boundary mistakes** and **exploit-friendly design**. Default to the **game-code** threat model first (Scripts, ModuleScripts, RemoteEvents, services), not enterprise web checklists. If the scoped target is RCS runtime code, Node tooling, or another off-Roblox surface, switch to the matching runtime/backend threat model instead of forcing Luau-only guidance.
 
 ## When to Use
 
-This skill activates when:
-- User requests "security review", "security audit"
-- After writing code that handles user input
-- After adding new API endpoints
-- After modifying authentication/authorization logic
-- Before deploying to production
-- After adding external dependencies
+- User asks for a **security review**, **exploit check**, or **anti-cheat pass** on a place or Luau codebase
+- After adding or changing **RemoteEvents**, **RemoteFunctions**, **BindableEvents** that cross the client–server boundary
+- After **economy** work (developer products, passes, `ProcessReceipt`, grants, currency)
+- After **DataStore / OrderedDataStore / MemoryStore** access patterns change
+- Before a **live** or high-traffic update when combat, trading, or progression is involved
 
 ## What It Does
 
 ## GPT-5.5 Guidance Alignment
 
-- Default to outcome-first progress and completion reporting: state the target result, evidence, validation status, and stop condition before adding process detail.
-- Treat newer user task updates as local overrides for the active workflow branch while preserving earlier non-conflicting constraints.
-- If correctness depends on additional inspection, retrieval, execution, or verification, keep using the relevant tools until the security review is grounded; stop once enough evidence exists.
-- Continue through clear, low-risk, reversible next steps automatically; ask only when the next step is materially branching, destructive, credentialed, external-production, or preference-dependent.
+- Default outcome-first: what you checked, what failed, severity, and what “fixed” means before process narration.
+- Use outcome-first framing for progress and completion reporting.
+- Treat newer user instructions as overrides for the active review thread when they do not conflict with earlier constraints.
+- Keep local overrides for the active workflow branch explicit when new evidence or user direction narrows the review scope.
+- Keep reading and tracing until findings are grounded in **actual scripts and remotes**, not generic categories.
 
-Delegates to the `security-reviewer` agent (THOROUGH tier) for deep security analysis:
+Delegates to the `security-reviewer` agent (THOROUGH tier) for a **Roblox-native** pass:
 
-1. **OWASP Top 10 Scan**
-   - A01: Broken Access Control
-   - A02: Cryptographic Failures
-   - A03: Injection (SQL, NoSQL, Command, XSS)
-   - A04: Insecure Design
-   - A05: Security Misconfiguration
-   - A06: Vulnerable and Outdated Components
-   - A07: Identification and Authentication Failures
-   - A08: Software and Data Integrity Failures
-   - A09: Security Logging and Monitoring Failures
-   - A10: Server-Side Request Forgery (SSRF)
+1. **Server authority**
+   - Economy, inventory, progression, bans, and moderation decisions run on the **server** only
+   - No security-sensitive branching on **client-only** state the server cannot corroborate
 
-2. **Secrets Detection**
-   - Hardcoded API keys
-   - Passwords in source code
-   - Private keys in repo
-   - Tokens and credentials
-   - Connection strings with secrets
+2. **Remote surface**
+   - Every **RemoteEvent** / **RemoteFunction** handler validates **types, ranges, and caller context** before mutating state
+   - Sensitive remotes are not spam-friendly (debounce, cooldowns, or server-side rate patterns where appropriate)
 
-3. **Input Validation**
-   - All user inputs sanitized
-   - SQL/NoSQL injection prevention
-   - Command injection prevention
-   - XSS prevention (output escaping)
-   - Path traversal prevention
+3. **Persistence**
+   - **DataStore** keys are scoped (e.g. per-player or per-shard); no cross-player reads/writes by mistake
+   - Retries, versioning, and failure paths do not corrupt progression or double-apply rewards
 
-4. **Authentication/Authorization**
-   - Proper password hashing (bcrypt, argon2)
-   - Session management security
-   - Access control enforcement
-   - JWT implementation security
+4. **Economy integrity**
+   - Purchase flows use **server-verified** patterns (`ProcessReceipt` / official APIs as applicable); grants are **idempotent** where duplicate delivery is possible
+   - No client-trusted “I bought it” flags for entitlement
 
-5. **Dependency Security**
-   - Run `npm audit` for known vulnerabilities
-   - Check for outdated dependencies
-   - Identify high-severity CVEs
+5. **Anti-exploit (gameplay systems)**
+   - Combat, movement, trading, and duping-prone flows assume **malicious clients**; validate timing, ownership, and state transitions server-side
+
+6. **Secrets and off-platform calls**
+   - **HttpService** / proxy keys and third-party tokens stay **server-only** and out of **ReplicatedStorage** / client scripts
+   - No API keys or shared secrets in place files committed to public repos
+
+7. **Privacy and platform rules (when relevant)**
+   - PolicyService / age-appropriate behavior, chat filtering, and data minimization for what you persist
 
 ## Agent Delegation
 
@@ -71,230 +63,122 @@ Delegates to the `security-reviewer` agent (THOROUGH tier) for deep security ana
 delegate(
   role="security-reviewer",
   tier="THOROUGH",
-  prompt="SECURITY REVIEW TASK
+  prompt="SECURITY REVIEW TASK (Roblox experience)
 
-Conduct comprehensive security audit of codebase.
+Scope: [e.g. ServerScriptService combat + ReplicatedStorage remotes + economy module]
 
-Scope: [specific files or entire codebase]
+Roblox checklist:
+1. Server authority for economy / progression / moderation
+2. RemoteEvent/RemoteFunction validation and abuse resistance
+3. DataStore keying, isolation, retries
+4. Purchase / entitlement verification and idempotent grants
+5. Anti-exploit posture for high-risk loops (combat, trade, currency)
+6. HttpService secrets only on server; nothing sensitive replicated to clients
 
-Security Checklist:
-1. OWASP Top 10 scan
-2. Hardcoded secrets detection
-3. Input validation review
-4. Authentication/authorization review
-5. Dependency vulnerability scan (npm audit)
-
-Output: Security review report with:
-- Summary of findings by severity (CRITICAL, HIGH, MEDIUM, LOW)
-- Specific file:line locations
-- CVE references where applicable
-- Remediation guidance for each issue
-- Overall security posture assessment"
+Output:
+- Findings by severity (CRITICAL, HIGH, MEDIUM, LOW) with Script path:line
+- Exploit sketch (short) and Luau-focused remediation
+- Overall posture for this place update"
 )
 ```
 
 ## External Model Consultation (Preferred)
 
-The security-reviewer agent SHOULD consult Codex for cross-validation.
+The security-reviewer agent SHOULD consult Codex for cross-validation on subtle remote or economy bugs.
 
 ### Protocol
-1. **Form your OWN security analysis FIRST** - Complete the review independently
-2. **Consult for validation** - Cross-check findings with Codex
-3. **Critically evaluate** - Never blindly adopt external findings
-4. **Graceful fallback** - Never block if tools unavailable
+
+1. Form your **own** Roblox-centric analysis first  
+2. Cross-check with Codex on high-severity items  
+3. Do not copy-paste external claims without matching them to your traced code paths  
 
 ### When to Consult
-- Authentication/authorization code
-- Cryptographic implementations
-- Input validation for untrusted data
-- High-risk vulnerability patterns
-- Production deployment code
+
+- New or high-risk **remote** or **economy** surfaces  
+- **DataStore** layout or migration that touches player-owned state  
+- Unusual **HttpService** integrations  
 
 ### When to Skip
-- Low-risk utility code
-- Well-audited patterns
-- Time-critical security assessments
-- Code with existing security tests
+
+- Purely cosmetic client UI with no authority implications  
+- Already-reviewed modules with no behavioral diff  
 
 ### Tool Usage
-Before first MCP tool use, call `ToolSearch("mcp")` to discover deferred MCP tools.
-Use `mcp__x__ask_codex` with `agent_role: "security-reviewer"`.
+
+Before first MCP tool use, call `ToolSearch("mcp")` to discover deferred MCP tools.  
+Use `mcp__x__ask_codex` with `agent_role: "security-reviewer"`.  
 If ToolSearch finds no MCP tools, fall back to the `security-reviewer` agent.
 
-**Note:** Security second opinions are high-value. Consider consulting for CRITICAL/HIGH findings.
-
-## Output Format
+## Output Format (example shape)
 
 ```
-SECURITY REVIEW REPORT
-======================
+SECURITY REVIEW REPORT — Roblox place
+=====================================
+Scope: ServerScriptService/Combat, ReplicatedStorage/Remotes, ServerScriptService/Economy
+Scan Date: ...
 
-Scope: Entire codebase (42 files scanned)
-Scan Date: 2026-01-24T14:30:00Z
-
-CRITICAL (2)
+CRITICAL (1)
 ------------
-1. src/api/auth.ts:89 - Hardcoded API Key
-   Finding: AWS API key hardcoded in source code
-   Impact: Credential exposure if code is public or leaked
-   Remediation: Move to environment variables, rotate key immediately
-   Reference: OWASP A02:2021 – Cryptographic Failures
+1. ServerScriptService/Combat/Damage.server.lua:112 — Client-chosen hit damage applied without server validation
+   Impact: Arbitrary damage / instakill exploits
+   Remediation: Recompute or clamp damage server-side from hit context you trust (position, weapon id, cooldowns)
 
-2. src/db/query.ts:45 - SQL Injection Vulnerability
-   Finding: User input concatenated directly into SQL query
-   Impact: Attacker can execute arbitrary SQL commands
-   Remediation: Use parameterized queries or ORM
-   Reference: OWASP A03:2021 – Injection
-
-HIGH (5)
---------
-3. src/auth/password.ts:22 - Weak Password Hashing
-   Finding: Passwords hashed with MD5 (cryptographically broken)
-   Impact: Passwords can be reversed via rainbow tables
-   Remediation: Use bcrypt or argon2 with appropriate work factor
-   Reference: OWASP A02:2021 – Cryptographic Failures
-
-4. src/components/UserInput.tsx:67 - XSS Vulnerability
-   Finding: User input rendered with dangerouslySetInnerHTML
-   Impact: Cross-site scripting attack vector
-   Remediation: Sanitize HTML or use safe rendering
-   Reference: OWASP A03:2021 – Injection (XSS)
-
-5. src/api/upload.ts:34 - Path Traversal Vulnerability
-   Finding: User-controlled filename used without validation
-   Impact: Attacker can read/write arbitrary files
-   Remediation: Validate and sanitize filenames, use allowlist
-   Reference: OWASP A01:2021 – Broken Access Control
-
-...
-
-MEDIUM (8)
-----------
-...
-
-LOW (12)
+HIGH (2)
 --------
 ...
 
-DEPENDENCY VULNERABILITIES
---------------------------
-Found 3 vulnerabilities via npm audit:
-
-CRITICAL: axios@0.21.0 - Server-Side Request Forgery (CVE-2021-3749)
-  Installed: axios@0.21.0
-  Fix: npm install axios@0.21.2
-
-HIGH: lodash@4.17.19 - Prototype Pollution (CVE-2020-8203)
-  Installed: lodash@4.17.19
-  Fix: npm install lodash@4.17.21
-
-...
-
-OVERALL ASSESSMENT
-------------------
-Security Posture: POOR (2 CRITICAL, 5 HIGH issues)
-
-Immediate Actions Required:
-1. Rotate exposed AWS API key
-2. Fix SQL injection in db/query.ts
-3. Upgrade password hashing to bcrypt
-4. Update vulnerable dependencies
-
-Recommendation: DO NOT DEPLOY until CRITICAL and HIGH issues resolved.
+OVERALL: [POSTURE] — ship / fix-first / block live
 ```
 
-## Security Checklist
+## Security Checklist (Roblox)
 
-The security-reviewer agent verifies:
-
-### Authentication & Authorization
-- [ ] Passwords hashed with strong algorithm (bcrypt/argon2)
-- [ ] Session tokens cryptographically random
-- [ ] JWT tokens properly signed and validated
-- [ ] Access control enforced on all protected resources
-- [ ] No authentication bypass vulnerabilities
-
-### Input Validation
-- [ ] All user inputs validated and sanitized
-- [ ] SQL queries use parameterization (no string concatenation)
-- [ ] NoSQL queries prevent injection
-- [ ] File uploads validated (type, size, content)
-- [ ] URLs validated to prevent SSRF
-
-### Output Encoding
-- [ ] HTML output escaped to prevent XSS
-- [ ] JSON responses properly encoded
-- [ ] No user data in error messages
-- [ ] Content-Security-Policy headers set
-
-### Secrets Management
-- [ ] No hardcoded API keys
-- [ ] No passwords in source code
-- [ ] No private keys in repo
-- [ ] Environment variables used for secrets
-- [ ] Secrets not logged or exposed in errors
-
-### Cryptography
-- [ ] Strong algorithms used (AES-256, RSA-2048+)
-- [ ] Proper key management
-- [ ] Random number generation cryptographically secure
-- [ ] TLS/HTTPS enforced for sensitive data
-
-### Dependencies
-- [ ] No known vulnerabilities in dependencies
-- [ ] Dependencies up to date
-- [ ] No CRITICAL or HIGH CVEs
-- [ ] Dependency sources verified
+- [ ] **Server authority:** sensitive rules never rely on `LocalScript` conclusions alone  
+- [ ] **Remotes:** validate every argument; reject garbage early  
+- [ ] **DataStore:** correct keyspace; no accidental cross-player leakage  
+- [ ] **Economy:** server-side verification; idempotent grants where needed  
+- [ ] **Anti-exploit:** high-risk loops assume cheaters  
+- [ ] **Secrets:** nothing credential-like under `ReplicatedStorage` or in client modules  
+- [ ] **HttpService:** keys and URLs only where the server runs them  
 
 ## Severity Definitions
 
-**CRITICAL** - Exploitable vulnerability with severe impact (data breach, RCE, credential theft)
-**HIGH** - Vulnerability requiring specific conditions but serious impact
-**MEDIUM** - Security weakness with limited impact or difficult exploitation
-**LOW** - Best practice violation or minor security concern
-
-## Remediation Priority
-
-1. **Rotate exposed secrets** - Immediate (within 1 hour)
-2. **Fix CRITICAL** - Urgent (within 24 hours)
-3. **Fix HIGH** - Important (within 1 week)
-4. **Fix MEDIUM** - Planned (within 1 month)
-5. **Fix LOW** - Backlog (when convenient)
-
-
-## Scenario Examples
-
-**Good:** The user says `continue` after the workflow already has a clear next step. Continue the current branch of work instead of restarting or re-asking the same question.
-
-**Good:** The user changes only the output shape or downstream delivery step (for example `make a PR`). Preserve earlier non-conflicting workflow constraints and apply the update locally.
-
-**Bad:** The user says `continue`, and the workflow restarts discovery or stops before the missing verification/evidence is gathered.
+**CRITICAL** — Trivial or likely remote exploit with large player impact (economy duping, unauthorized admin, mass grief)  
+**HIGH** — Exploitable with conditions; serious fairness or data impact  
+**MEDIUM** — Weaker exploit or limited blast radius  
+**LOW** — Hardening / clarity improvements  
 
 ## Use with Other Skills
 
 **With Team:**
-```
-/team "run security review on authentication module"
-```
-Uses: explore → security-reviewer → executor → security-reviewer (re-verify)
 
-**With Swarm:**
 ```
-/swarm 4:security-reviewer "audit all API endpoints"
+/team "run security review on server RemoteEvents and ProcessReceipt grants before publish"
 ```
-Parallel security review across multiple endpoints.
 
-**With Ralph:**
+**With Swarm (compatibility alias):**
+
 ```
-/ralph security-review then fix all issues
+/swarm 4:security-reviewer "parallel pass on combat + trading + datastore modules"
 ```
-Review, fix, re-review until all issues resolved.
+
+**With Forge:**
+
+```
+/forge security-review then fix CRITICAL/HIGH only
+```
 
 ## Best Practices
 
-- **Review early** - Security by design, not afterthought
-- **Review often** - Every major feature or API change
-- **Automate** - Run security scans in CI/CD pipeline
-- **Fix immediately** - Don't accumulate security debt
-- **Educate** - Learn from findings to prevent future issues
-- **Verify fixes** - Re-run security review after remediation
+- Review **before** wiring new remotes to economy or progression  
+- Prefer **small, auditable** server modules over giant client-driven state machines  
+- Re-review after any change to **grant**, **refund**, or **inventory** paths  
+- After fixes, re-run the same remote-level checks you used the first time  
+
+## Scenario Examples
+
+**Good:** The user says `continue` after you already listed the next remote to trace; keep tracing until the chain is complete.
+
+**Bad:** The user says `continue` and you restart from “what is Roblox” instead of finishing the active exploit hypothesis.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

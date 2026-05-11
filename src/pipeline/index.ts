@@ -1,8 +1,9 @@
 /**
  * Pipeline orchestrator for roblox-ai-os-creator-skills
  *
- * Configurable pipeline that sequences: ralplan -> ralph -> code-review.
- * This is the strict Autopilot loop; legacy team/ralph-verify adapters remain available.
+ * Configurable pipeline that sequences: blueprint -> forge -> code-review.
+ * This is the strict Autopilot loop; canonical stage ownership lives under
+ * blueprint -> forge -> code-review.
  *
  * @module pipeline
  */
@@ -24,11 +25,15 @@ export {
   runPipeline,
 } from './orchestrator.js';
 
-export { createRalplanStage } from './stages/ralplan.js';
-export type { CreateRalplanStageOptions } from './stages/ralplan.js';
+export { createBlueprintStage } from './stages/blueprint.js';
+export type { CreateBlueprintStageOptions } from './stages/blueprint.js';
 export { createTeamExecStage, buildTeamInstruction } from './stages/team-exec.js';
 export type { TeamExecStageOptions, TeamExecDescriptor } from './stages/team-exec.js';
-export { createRalphVerifyStage, createRalphStage, buildRalphInstruction } from './stages/ralph-verify.js';
-export type { RalphVerifyStageOptions, RalphVerifyDescriptor } from './stages/ralph-verify.js';
+export {
+  createForgeVerifyStage,
+  createForgeStage,
+  buildForgeInstruction,
+} from './stages/forge-verify.js';
+export type { ForgeVerifyStageOptions, ForgeVerifyDescriptor } from './stages/forge-verify.js';
 export { createCodeReviewStage, buildCodeReviewInstruction } from './stages/code-review.js';
 export type { CodeReviewStageOptions, CodeReviewDescriptor, CodeReviewVerdict } from './stages/code-review.js';

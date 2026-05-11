@@ -1,0 +1,308 @@
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import {
+  FORGE_HELP,
+  assertRequiredForgePrdJson,
+  buildForgeAppendInstructions,
+  buildForgeChangedFilesSeedContents,
+  extractForgeTaskDescription,
+  filterForgeCodexArgs,
+  isForgePrdMode,
+  normalizeForgeCliArgs,
+  readMatchedApprovedForgeExecutionHint,
+  resolveApprovedForgeExecutionHint,
+} from '../forge.js';
+import type { ApprovedExecutionLaunchHint } from '../../planning/artifacts.js';
+
+describe('extractForgeTaskDescription', () => {
+  it('returns plain task text from positional args', () => {
+    assert.equal(extractForgeTaskDescription(['fix', 'the', 'bug']), 'fix the bug');
+  });
+  it('returns default when args are empty', () => {
+    assert.equal(extractForgeTaskDescription([]), 'forge-cli-launch');
+  });
+  it('reuses approved launch hint task when no explicit task is supplied', () => {
+    assert.equal(extractForgeTaskDescription([], 'Execute approved issue 1072 plan'), 'Execute approved issue 1072 plan');
+  });
+  it('excludes --model value from task text', () => {
+    assert.equal(extractForgeTaskDescription(['--model', 'gpt-5', 'fix', 'the', 'bug']), 'fix the bug');
+  });
+  it('supports -- separator', () => {
+    assert.equal(extractForgeTaskDescription(['--model', 'gpt-5', '--', 'fix', '--weird-name']), 'fix --weird-name');
+  });
+});
+
+describe('resolveApprovedForgeExecutionHint', () => {
+  it('reuses the approved hint for follow-up launches without explicit task text', () => {
+    assert.equal(resolveApprovedForgeExecutionHint(approvedHint, 'forge-cli-launch'), approvedHint);
+  });
+
+  it('reuses the approved hint when the explicit task matches the approved handoff', () => {
+    assert.equal(resolveApprovedForgeExecutionHint(approvedHint, 'Execute approved issue 1072 plan'), approvedHint);
+  });
+
+  it('drops the approved hint for unrelated explicit Forge tasks', () => {
+    assert.equal(resolveApprovedForgeExecutionHint(approvedHint, 'Refactor unrelated queue handling'), null);
+  });
+});
+
+describe('readMatchedApprovedForgeExecutionHint', () => {
+  it('selects the matching approved Forge hint when a PRD lists multiple launch hints', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-forge-approved-handoff-'));
+    try {
+      await mkdir(join(cwd, '.rcs', 'plans'), { recursive: true });
+      await writeFile(
+        join(cwd, '.rcs', 'plans', 'prd-issue-909.md'),
+        [
+          '# PRD',
+          '',
+          'Launch via rcs forge "Execute alpha"',
+          'Launch via rcs forge "Execute beta"',
+        ].join('\n'),
+      );
+      await writeFile(join(cwd, '.rcs', 'plans', 'test-spec-issue-909.md'), '# Test Spec\n');
+
+      const hint = readMatchedApprovedForgeExecutionHint(cwd, 'Execute alpha');
+      assert.ok(hint);
+      assert.equal(hint?.task, 'Execute alpha');
+      assert.equal(hint?.command, 'rcs forge "Execute alpha"');
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('fails closed for bare Forge follow-up reuse when a PRD lists multiple Forge launch hints', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-forge-approved-handoff-'));
+    try {
+      await mkdir(join(cwd, '.rcs', 'plans'), { recursive: true });
+      await writeFile(
+        join(cwd, '.rcs', 'plans', 'prd-issue-909-bare.md'),
+        [
+          '# PRD',
+          '',
+          'Launch via rcs forge "Execute alpha"',
+          'Launch via rcs forge "Execute beta"',
+        ].join('\n'),
+      );
+      await writeFile(join(cwd, '.rcs', 'plans', 'test-spec-issue-909-bare.md'), '# Test Spec\n');
+
+      const hint = readMatchedApprovedForgeExecutionHint(cwd, 'forge-cli-launch');
+      assert.equal(hint, null);
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('isForgePrdMode', () => {
+  it('detects --prd flag usage', () => {
+    assert.equal(isForgePrdMode(['--prd', 'ship release checklist']), true);
+  });
+
+  it('detects --prd=value usage', () => {
+    assert.equal(isForgePrdMode(['--prd=ship release checklist']), true);
+  });
+
+  it('ignores non-prd Forge runs', () => {
+    assert.equal(isForgePrdMode(['fix', 'the', 'bug']), false);
+  });
+});
+
+describe('FORGE_HELP', () => {
+  it('clarifies that prompt-side $forge activation is separate from CLI --prd mode', () => {
+    assert.match(FORGE_HELP, /Prompt-side `\$forge` activation is separate from this/i);
+    assert.match(FORGE_HELP, /does not imply `--prd` or the PRD\.json startup gate/i);
+  });
+});
+
+describe('normalizeForgeCliArgs', () => {
+  it('converts --prd value into positional task text', () => {
+    assert.deepEqual(normalizeForgeCliArgs(['--prd', 'ship release checklist']), ['ship release checklist']);
+  });
+  it('converts --prd=value into positional task text', () => {
+    assert.deepEqual(normalizeForgeCliArgs(['--prd=fix the bug']), ['fix the bug']);
+  });
+  it('preserves other flags and args', () => {
+    assert.deepEqual(normalizeForgeCliArgs(['--model', 'gpt-5', '--prd', 'fix it']), ['--model', 'gpt-5', 'fix it']);
+  });
+});
+
+describe('filterForgeCodexArgs', () => {
+  it('consumes --prd so it is not forwarded to codex', () => {
+    assert.deepEqual(filterForgeCodexArgs(['--prd', 'build', 'todo', 'app']), ['build', 'todo', 'app']);
+  });
+  it('consumes --PRD case-insensitively', () => {
+    assert.deepEqual(filterForgeCodexArgs(['--PRD', '--model', 'gpt-5']), ['--model', 'gpt-5']);
+  });
+  it('preserves non-rcs flags', () => {
+    assert.deepEqual(filterForgeCodexArgs(['--model', 'gpt-5', '--yolo', 'fix', 'it']), ['--model', 'gpt-5', '--yolo', 'fix', 'it']);
+  });
+});
+
+
+const approvedHint: ApprovedExecutionLaunchHint = {
+  mode: 'forge',
+  command: 'rcs forge "Execute approved issue 1072 plan"',
+  task: 'Execute approved issue 1072 plan',
+  sourcePath: '.rcs/plans/prd-issue-1072.md',
+  testSpecPaths: ['.rcs/plans/test-spec-issue-1072.md'],
+  deepInterviewSpecPaths: ['.rcs/specs/deep-interview-issue-1072.md'],
+  repositoryContextSummary: {
+    sourcePath: '.rcs/plans/repo-context-issue-1072.md',
+    content: 'Key files: src/cli/forge.ts and src/planning/artifacts.ts',
+    truncated: false,
+  },
+};
+
+describe('assertRequiredForgePrdJson', () => {
+  it('throws when --prd mode starts without .rcs/prd.json', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-forge-prd-gate-'));
+    try {
+      assert.throws(
+        () => assertRequiredForgePrdJson(cwd, ['--prd', 'ship release checklist']),
+        /Missing required PRD\.json at \.rcs\/prd\.json/,
+      );
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('still requires legacy .rcs/prd.json even when canonical PRD markdown exists', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-forge-prd-gate-'));
+    try {
+      await mkdir(join(cwd, '.rcs', 'plans'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'plans', 'prd-existing.md'), '# Existing canonical PRD\n');
+
+      assert.throws(
+        () => assertRequiredForgePrdJson(cwd, ['--prd', 'ship release checklist']),
+        /Missing required PRD\.json at \.rcs\/prd\.json/,
+      );
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects completed stories without architect approval', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-forge-prd-gate-'));
+    try {
+      await mkdir(join(cwd, '.rcs'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'prd.json'), JSON.stringify({
+        project: 'Issue 1555',
+        userStories: [{
+          id: 'US-001',
+          title: 'Guard story completion',
+          passes: true,
+        }],
+      }, null, 2));
+
+      assert.throws(
+        () => assertRequiredForgePrdJson(cwd, ['--prd', 'ship release checklist']),
+        /marked passed\/completed without architect approval/,
+      );
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('allows completed stories with architect approval recorded', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-forge-prd-gate-'));
+    try {
+      await mkdir(join(cwd, '.rcs'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'prd.json'), JSON.stringify({
+        project: 'Issue 1555',
+        userStories: [{
+          id: 'US-001',
+          title: 'Guard story completion',
+          status: 'completed',
+          architect_review: { verdict: 'approve' },
+        }],
+      }, null, 2));
+
+      assert.doesNotThrow(() => assertRequiredForgePrdJson(cwd, ['--prd', 'ship release checklist']));
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('allows --prd mode when .rcs/prd.json exists', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-forge-prd-gate-'));
+    try {
+      await mkdir(join(cwd, '.rcs'), { recursive: true });
+      await writeFile(join(cwd, '.rcs', 'prd.json'), JSON.stringify({
+        project: 'Issue 1555',
+        userStories: [],
+      }, null, 2));
+
+      assert.doesNotThrow(() => assertRequiredForgePrdJson(cwd, ['--prd', 'ship release checklist']));
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('does not gate non-prd Forge runs', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-forge-prd-gate-'));
+    try {
+      assert.doesNotThrow(() => assertRequiredForgePrdJson(cwd, ['fix', 'the', 'bug']));
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('forge deslop launch wiring', () => {
+  it('consumes --no-deslop so it is not forwarded to codex', () => {
+    assert.deepEqual(filterForgeCodexArgs(['--no-deslop', '--model', 'gpt-5', 'fix', 'it']), ['--model', 'gpt-5', 'fix', 'it']);
+  });
+
+  it('documents changed-files-only deslop guidance by default', () => {
+    const instructions = buildForgeAppendInstructions('fix issue 920', {
+      changedFilesPath: '.rcs/forge/changed-files.txt',
+      noDeslop: false,
+      approvedHint: null,
+    });
+    assert.match(instructions, /ai-slop-cleaner/i);
+    assert.match(instructions, /changed files only/i);
+    assert.match(instructions, /\.rcs\/forge\/changed-files\.txt/);
+    assert.match(instructions, /standard mode/i);
+    assert.match(instructions, /rerun the current tests\/build\/lint verification/i);
+  });
+
+  it('documents the --no-deslop opt-out when enabled', () => {
+    const instructions = buildForgeAppendInstructions('fix issue 920', {
+      changedFilesPath: '.rcs/forge/changed-files.txt',
+      noDeslop: true,
+      approvedHint: null,
+    });
+    assert.match(instructions, /--no-deslop/);
+    assert.match(instructions, /skip the mandatory ai-slop-cleaner final pass/i);
+    assert.match(instructions, /latest successful pre-deslop verification evidence/i);
+  });
+
+
+
+  it('includes approved plan and deep-interview handoff context when available', () => {
+    const instructions = buildForgeAppendInstructions('Execute approved issue 1072 plan', {
+      changedFilesPath: '.rcs/forge/changed-files.txt',
+      noDeslop: false,
+      approvedHint,
+    });
+    assert.match(instructions, /Approved planning handoff context/i);
+    assert.match(instructions, /approved plan: \.rcs\/plans\/prd-issue-1072\.md/i);
+    assert.match(instructions, /test specs: \.rcs\/plans\/test-spec-issue-1072\.md/i);
+    assert.match(instructions, /deep-interview specs: \.rcs\/specs\/deep-interview-issue-1072\.md/i);
+    assert.match(instructions, /Carry forward the approved deep-interview requirements/i);
+    assert.match(instructions, /approved repository context summary: \.rcs\/plans\/repo-context-issue-1072\.md/i);
+    assert.match(instructions, /Key files: src\/cli\/forge\.ts and src\/planning\/artifacts\.ts/i);
+  });
+
+  it('seeds the changed-files artifact with bounded-scope guidance', () => {
+    const seed = buildForgeChangedFilesSeedContents();
+    assert.match(seed, /mandatory final ai-slop-cleaner pass/i);
+    assert.match(seed, /one repo-relative path per line/i);
+    assert.match(seed, /strictly scoped/i);
+    assert.match(seed, /Forge changed files/i);
+  });
+});

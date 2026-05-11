@@ -34,7 +34,6 @@
 | OMC Agent | RCS Status | Mechanism |
 |-----------|-----------|-----------|
 | analyst | DONE | prompts/analyst.md |
-| api-reviewer | DONE | prompts/api-reviewer.md |
 | architect | DONE | prompts/architect.md |
 | build-fixer | DONE | prompts/build-fixer.md |
 | code-reviewer | DONE | prompts/code-reviewer.md |
@@ -46,21 +45,12 @@
 | executor | DONE | prompts/executor.md |
 | explore | DONE | prompts/explore.md |
 | git-master | DONE | prompts/git-master.md |
-| information-architect | DONE | prompts/information-architect.md |
-| performance-reviewer | DONE | prompts/performance-reviewer.md |
 | planner | DONE | prompts/planner.md |
-| product-analyst | DONE | prompts/product-analyst.md |
-| product-manager | DONE | prompts/product-manager.md |
-| qa-tester | DONE | prompts/qa-tester.md |
-| quality-reviewer | DONE | prompts/quality-reviewer.md |
-| quality-strategist | DONE | prompts/quality-strategist.md |
 | researcher | DONE | prompts/researcher.md |
 | ~~deep-executor~~ | REMOVED (v0.5.0) | Routes to executor |
 | ~~scientist~~ | REMOVED (v0.5.0) | — |
 | security-reviewer | DONE | prompts/security-reviewer.md |
-| style-reviewer | DONE | prompts/style-reviewer.md |
 | test-engineer | DONE | prompts/test-engineer.md |
-| ux-researcher | DONE | prompts/ux-researcher.md |
 | verifier | DONE | prompts/verifier.md |
 | vision | DONE | prompts/vision.md |
 | writer | DONE | prompts/writer.md |
@@ -70,11 +60,11 @@
 | OMC Skill | RCS Status | Mechanism |
 |-----------|-----------|-----------|
 | autopilot | DONE | ~/.codex/skills/autopilot/SKILL.md |
-| ralph | DONE | ~/.codex/skills/ralph/SKILL.md |
+| forge | DONE | ~/.codex/skills/forge/SKILL.md |
 | ultrawork (`ulw` alias) | DONE | ~/.codex/skills/ultrawork/SKILL.md |
 | ecomode | DONE | ~/.codex/skills/ecomode/SKILL.md |
 | plan | DONE | ~/.codex/skills/plan/SKILL.md |
-| ralplan | DONE | ~/.codex/skills/ralplan/SKILL.md |
+| blueprint | DONE | ~/.codex/skills/blueprint/SKILL.md |
 | team | DONE | ~/.codex/skills/team/SKILL.md |
 | ~~pipeline~~ | REMOVED (v0.5.0) | — |
 | ultraqa | DONE | ~/.codex/skills/ultraqa/SKILL.md |
@@ -95,10 +85,9 @@
 | note | DONE | ~/.codex/skills/note/SKILL.md |
 | trace | DONE | ~/.codex/skills/trace/SKILL.md |
 | skill | DONE | ~/.codex/skills/skill/SKILL.md |
-| frontend-ui-ux | DONE | ~/.codex/skills/frontend-ui-ux/SKILL.md |
 | git-master | DONE | ~/.codex/skills/git-master/SKILL.md |
 | review | DONE | ~/.codex/skills/review/SKILL.md |
-| ralph-init | DONE | ~/.codex/skills/ralph-init/SKILL.md |
+| forge-init | DONE | ~/.codex/skills/forge-init/SKILL.md |
 | ~~release~~ | REMOVED (v0.5.0) | — |
 | rcs-setup | DONE | ~/.codex/skills/rcs-setup/SKILL.md |
 | configure-notifications | DONE | ~/.codex/skills/configure-notifications/SKILL.md |

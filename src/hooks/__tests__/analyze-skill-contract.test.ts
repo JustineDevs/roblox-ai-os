@@ -42,7 +42,7 @@ describe('analyze skill contract', () => {
     assert.match(analyzeSkill, /When parallelism helps, prefer \*\*native subagents by default\*\*/i);
     assert.match(analyzeSkill, /Keep parallel lanes bounded: each lane should answer a concrete sub-question or inspect a specific subsystem\./i);
     assert.match(analyzeSkill, /one lane for primary code path \/ contracts/i);
-    assert.match(analyzeSkill, /one lane for config \/ orchestration \/ generated surfaces/i);
+    assert.match(analyzeSkill, /one lane for config \/ workflow \/ generated surfaces/i);
     assert.match(analyzeSkill, /one lane for tests \/ docs \/ secondary corroboration/i);
     assert.match(analyzeSkill, /### Ranked synthesis/i);
     assert.match(analyzeSkill, /\| Rank \| Explanation \| Confidence \| Basis \|/i);

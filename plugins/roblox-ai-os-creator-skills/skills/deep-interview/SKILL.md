@@ -2,6 +2,10 @@
 name: deep-interview
 description: Socratic deep interview with mathematical ambiguity gating before execution
 argument-hint: "[--quick|--standard|--deep] [--autoresearch] <idea or vague description>"
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 <Purpose>
@@ -12,7 +16,7 @@ Deep Interview is an intent-first Socratic clarification loop before planning or
 - The request is broad, ambiguous, or missing concrete acceptance criteria
 - The user says "deep interview", "interview me", "ask me everything", "don't assume", or "ouroboros"
 - The user wants to avoid misaligned implementation from underspecified requirements
-- You need a requirements artifact before handing off to `ralplan`, `autopilot`, `ralph`, or `team`
+- You need a requirements artifact before handing off to `blueprint`, `autopilot`, `forge`, or `team`
 </Use_When>
 
 <Do_Not_Use_When>
@@ -124,7 +128,7 @@ If no flag is provided, use **Standard**.
 Repeat until ambiguity `<= threshold`, the pressure pass is complete, the readiness gates are explicit, the user exits with warning, or max rounds are reached.
 
 ### 2a) Generate next question
-If the initial context is oversized and no prompt-safe summary has been recorded yet, the next question must be only a summary request. Do not score ambiguity, do not run readiness gates, and do not hand off to `$ralplan`, `$autopilot`, `$ralph`, or `$team` until that summary answer is captured.
+If the initial context is oversized and no prompt-safe summary has been recorded yet, the next question must be only a summary request. Do not score ambiguity, do not run readiness gates, and do not hand off to `$blueprint`, `$autopilot`, `$forge`, or `$team` until that summary answer is captured.
 
 Use:
 - Original idea
@@ -184,7 +188,7 @@ Canonical bounded single-choice payload:
   "options": [
     {
       "label": "Plan first",
-      "value": "ralplan",
+      "value": "blueprint",
       "description": "Need architecture and test-shape review before execution"
     },
     {
@@ -239,9 +243,9 @@ Canonical answer-shape reminders:
 {
   "answer": {
     "kind": "option",
-    "value": "ralplan",
+    "value": "blueprint",
     "selected_labels": ["Plan first"],
-    "selected_values": ["ralplan"]
+    "selected_values": ["blueprint"]
   }
 }
 ```
@@ -298,13 +302,13 @@ When threshold is met (or user exits with warning / hard cap):
 
 1. Write interview transcript summary to:
    - `.rcs/interviews/{slug}-{timestamp}.md`  
-     (kept for ralph PRD compatibility)
+     (kept for Forge PRD compatibility)
 2. Write execution-ready spec to:
    - `.rcs/specs/deep-interview-{slug}.md`
 
 Spec should include:
 - Metadata (profile, rounds, final ambiguity, threshold, context type)
-- Context snapshot reference/path (for ralplan/team reuse)
+- Context snapshot reference/path (for blueprint/team reuse)
 - Prompt-safe initial-context summary when oversized context was provided, plus references to any full source documents
 - Clarity breakdown table
 - Intent (why the user wants this)
@@ -348,14 +352,14 @@ When the clarified task is specifically about `$autoresearch`, or the skill is i
 
 Present execution options after artifact generation using explicit handoff contracts. Treat the deep-interview spec as the current requirements source of truth and preserve intent, non-goals, decision boundaries, acceptance criteria, and any residual-risk warnings across the handoff.
 
-### 1. **`$ralplan` (Recommended)**
+### 1. **`$blueprint` (Recommended)**
 - **Input Artifact:** `.rcs/specs/deep-interview-{slug}.md` (optionally accompanied by the transcript/context snapshot for traceability)
 - **Invocation:** `$plan --consensus --direct <spec-path>`
 - **Consumer Behavior:** Treat the deep-interview spec as the requirements source of truth. Do not repeat the interview by default; refine architecture/feasibility around the clarified intent and boundaries instead.
 - **Skipped / Already-Satisfied Stages:** Requirements discovery, ambiguity clarification, and early intent-boundary elicitation
 - **Expected Output:** Canonical planning artifacts under `.rcs/plans/`, especially `prd-*.md` and `test-spec-*.md`
 - **Best When:** Requirements are clear enough to stop interviewing, but architectural validation / consensus planning is still desirable
-- **Next Recommended Step:** Use the approved planning artifacts with `$autopilot`, `$ralph`, or `$team` depending on the desired execution style
+- **Next Recommended Step:** Use the approved planning artifacts with `$autopilot`, `$forge`, or `$team` depending on the desired execution style
 
 ### 2. **`$autopilot`**
 - **Input Artifact:** `.rcs/specs/deep-interview-{slug}.md`
@@ -364,25 +368,25 @@ Present execution options after artifact generation using explicit handoff contr
 - **Skipped / Already-Satisfied Stages:** Initial requirement discovery and ambiguity reduction
 - **Expected Output:** Planning/execution progress, QA evidence, and validation artifacts produced by autopilot
 - **Best When:** The clarified spec is already strong enough for direct planning + execution without an additional consensus gate
-- **Next Recommended Step:** Continue through autopilot's execution/QA/validation flow; if coordination-heavy execution emerges, prefer a follow-up `$team` or `$ralph` lane as appropriate
+- **Next Recommended Step:** Continue through autoforge/autopilot's execution/QA/validation flow; if coordination-heavy execution emerges, prefer a follow-up `$team` or `$forge` lane as appropriate
 
-### 3. **`$ralph`**
+### 3. **`$forge`**
 - **Input Artifact:** `.rcs/specs/deep-interview-{slug}.md`
-- **Invocation:** `$ralph <spec-path>`
+- **Invocation:** `$forge <spec-path>`
 - **Consumer Behavior:** Use the spec's acceptance criteria and boundary constraints as the persistence target. Do not reopen requirements discovery unless the user explicitly asks to refine further.
 - **Skipped / Already-Satisfied Stages:** Requirement interview, ambiguity clarification, and initial scope-definition work
 - **Expected Output:** Iterative execution progress and verification evidence tracked against the clarified criteria
 - **Best When:** The task benefits from persistent sequential completion pressure and the user wants execution to keep moving until the criteria are satisfied or a real blocker exists
-- **Next Recommended Step:** Continue Ralph's persistence loop; if work expands into coordination-heavy lanes, hand off to `$team` and keep Ralph for verification continuity
+- **Next Recommended Step:** Continue Forge's persistence loop; if work expands into coordination-heavy lanes, hand off to `$team` and keep Forge for verification continuity
 
 ### 4. **`$team`**
 - **Input Artifact:** `.rcs/specs/deep-interview-{slug}.md`
 - **Invocation:** `$team <spec-path>`
 - **Consumer Behavior:** Treat the spec as shared execution context for coordinated parallel work. Preserve the clarified intent, non-goals, decision boundaries, and acceptance criteria as common lane constraints.
 - **Skipped / Already-Satisfied Stages:** Requirement clarification and early ambiguity reduction
-- **Expected Output:** Coordinated multi-agent execution against the shared spec, with evidence that can later feed a Ralph verification pass when appropriate
+- **Expected Output:** Coordinated multi-agent execution against the shared spec, with evidence that can later feed a Forge verification pass when appropriate
 - **Best When:** The task is large, multi-lane, or blocker-sensitive enough to justify coordinated parallel execution instead of a single persistent loop
-- **Next Recommended Step:** Follow the team verification path when the coordinated execution phase finishes; escalate to a separate Ralph loop only when a later persistent verification/fix owner is still needed
+- **Next Recommended Step:** Follow the team verification path when the coordinated execution phase finishes; escalate to a separate Forge loop only when a later persistent verification/fix owner is still needed
 
 ### 5. **Refine further**
 - **Input Artifact:** Existing transcript, context snapshot, and current spec draft
@@ -431,7 +435,7 @@ Present execution options after artifact generation using explicit handoff contr
 - [ ] Transcript written to `.rcs/interviews/{slug}-{timestamp}.md`
 - [ ] Spec written to `.rcs/specs/deep-interview-{slug}.md`
 - [ ] Brownfield questions use evidence-backed confirmation when applicable
-- [ ] Handoff options provided (`$ralplan`, `$autopilot`, `$ralph`, `$team`)
+- [ ] Handoff options provided (`$blueprint`, `$autopilot`, `$forge`, `$team`)
 - [ ] No direct implementation performed in this mode
 </Final_Checklist>
 
@@ -457,12 +461,15 @@ If interrupted, rerun `$deep-interview`. Resume from persisted mode state via `s
 ## Recommended 3-Stage Pipeline
 
 ```
-deep-interview -> ralplan -> autopilot
+deep-interview -> blueprint -> autopilot
 ```
 
 - Stage 1 (deep-interview): clarity gate
-- Stage 2 (ralplan): feasibility + architecture gate
+- Stage 2 (blueprint): feasibility + architecture gate
 - Stage 3 (autopilot): execution + QA + validation gate
 </Advanced>
 
 Task: {{ARGUMENTS}}
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

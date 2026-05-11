@@ -1,6 +1,10 @@
 ---
 name: ultraqa
 description: QA cycling workflow - test, verify, fix, repeat until goal met
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # UltraQA Skill
@@ -15,7 +19,7 @@ Use the shared workflow guidance pattern: outcome-first framing, concise visible
 
 You are now in **ULTRAQA** mode - an autonomous QA cycling workflow that runs until your quality goal is met.
 
-**Cycle**: qa-tester → architect verification → fix → repeat
+**Cycle**: test-engineer → architect verification → fix → repeat
 
 ## Goal Parsing
 
@@ -41,9 +45,9 @@ If no structured goal provided, interpret the argument as a custom goal.
    - `--lint`: Run the project's lint command
    - `--typecheck`: Run the project's type check command
    - `--custom`: Run appropriate command and check for pattern
-   - `--interactive`: Use qa-tester for interactive CLI/service testing:
+   - `--interactive`: Use test-engineer for interactive runtime testing:
      ```
-     delegate(role="qa-tester", tier="STANDARD", task="TEST:
+     delegate(role="test-engineer", tier="STANDARD", task="TEST:
      Goal: [describe what to verify]
      Service: [how to start]
      Test cases: [specific scenarios to verify]")
@@ -141,3 +145,6 @@ Use MCP state cleanup rather than deleting files directly.
 ---
 
 Begin ULTRAQA cycling now. Parse the goal and start cycle 1.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

@@ -45,13 +45,13 @@ async function maybePersistRuntimeVisualFeedback({ cwd, output, sessionId }: any
   if (candidates.length === 0) return;
 
   const { buildVisualLoopFeedback } = await import('../../visual/verdict.js');
-  const { recordRalphVisualFeedback } = await import('../../ralph/persistence.js');
+  const { recordForgeVisualFeedback } = await import('../../forge/persistence.js');
 
   for (const candidate of candidates) {
     try {
       const parsed = JSON.parse(candidate);
       const feedback = buildVisualLoopFeedback(parsed);
-      await recordRalphVisualFeedback(cwd, feedback, sessionId || undefined);
+      await recordForgeVisualFeedback(cwd, feedback, sessionId || undefined);
       return;
     } catch {
       // Try next candidate
@@ -90,7 +90,7 @@ export async function maybePersistVisualVerdict({ cwd, payload, stateDir, logsDi
   );
   if (!output) return;
 
-  // Runtime visual feedback (JSON/fenced JSON) for ralph-progress persistence.
+  // Runtime visual feedback (JSON/fenced JSON) for forge-progress persistence.
   // Non-fatal and observable via warn-level structured logging.
   try {
     await maybePersistRuntimeVisualFeedback({ cwd, output, sessionId });

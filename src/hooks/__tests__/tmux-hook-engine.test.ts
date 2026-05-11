@@ -74,12 +74,12 @@ describe('normalizeTmuxHookConfig', () => {
 
 describe('pickActiveMode', () => {
   it('chooses by allowed mode order', () => {
-    const mode = pickActiveMode(['team', 'ralph'], ['ralph', 'team']);
-    assert.equal(mode, 'ralph');
+    const mode = pickActiveMode(['team', 'forge'], ['forge', 'team']);
+    assert.equal(mode, 'forge');
   });
 
   it('returns null when no allowed mode is active', () => {
-    const mode = pickActiveMode(['autopilot'], ['ralph', 'team']);
+    const mode = pickActiveMode(['autopilot'], ['forge', 'team']);
     assert.equal(mode, null);
   });
 });
@@ -88,7 +88,7 @@ describe('evaluateInjectionGuards', () => {
   const validConfig = normalizeTmuxHookConfig({
     enabled: true,
     target: { type: 'session', value: 'rcs' },
-    allowed_modes: ['ralph'],
+    allowed_modes: ['forge'],
     cooldown_ms: 1000,
     max_injections_per_session: 2,
     prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -101,7 +101,7 @@ describe('evaluateInjectionGuards', () => {
     const cfg = { ...validConfig, enabled: false };
     const guard = evaluateInjectionGuards({
       config: cfg,
-      mode: 'ralph',
+      mode: 'forge',
       sourceText: '',
       assistantMessage: '',
       threadId: 'th',
@@ -117,7 +117,7 @@ describe('evaluateInjectionGuards', () => {
   it('blocks input marker loop', () => {
     const guard = evaluateInjectionGuards({
       config: validConfig,
-      mode: 'ralph',
+      mode: 'forge',
       sourceText: `continue ${validConfig.marker}`,
       assistantMessage: '',
       threadId: 'th',
@@ -136,7 +136,7 @@ describe('evaluateInjectionGuards', () => {
         enabled: true,
         target: { type: 'pane', value: 'replace-with-tmux-pane-id' },
       }),
-      mode: 'ralph',
+      mode: 'forge',
       sourceText: '',
       assistantMessage: '',
       threadId: 'th',
@@ -152,7 +152,7 @@ describe('evaluateInjectionGuards', () => {
   it('blocks duplicates and cooldown and session cap', () => {
     const initial = evaluateInjectionGuards({
       config: validConfig,
-      mode: 'ralph',
+      mode: 'forge',
       sourceText: 'hello',
       assistantMessage: '',
       threadId: 'th',
@@ -166,7 +166,7 @@ describe('evaluateInjectionGuards', () => {
 
     const duplicate = evaluateInjectionGuards({
       config: validConfig,
-      mode: 'ralph',
+      mode: 'forge',
       sourceText: 'hello',
       assistantMessage: '',
       threadId: 'th',
@@ -180,7 +180,7 @@ describe('evaluateInjectionGuards', () => {
 
     const cooldown = evaluateInjectionGuards({
       config: validConfig,
-      mode: 'ralph',
+      mode: 'forge',
       sourceText: 'hello2',
       assistantMessage: '',
       threadId: 'th',
@@ -195,7 +195,7 @@ describe('evaluateInjectionGuards', () => {
 
     const sessionCap = evaluateInjectionGuards({
       config: validConfig,
-      mode: 'ralph',
+      mode: 'forge',
       sourceText: 'hello3',
       assistantMessage: '',
       threadId: 'th',
@@ -211,7 +211,7 @@ describe('evaluateInjectionGuards', () => {
   it('supports legacy session_counts when pane_counts is absent', () => {
     const legacyCap = evaluateInjectionGuards({
       config: validConfig,
-      mode: 'ralph',
+      mode: 'forge',
       sourceText: 'legacy',
       assistantMessage: '',
       threadId: 'th',
@@ -403,6 +403,7 @@ describe('resolveCodexPane', () => {
     const fakeTmuxPath = join(fakeBinDir, 'tmux');
     const previousPath = process.env.PATH;
     const previousTmuxPane = process.env.TMUX_PANE;
+    const previousTestTmuxBin = process.env.RCS_TEST_TMUX_BIN;
 
     try {
       await writeFile(fakeTmuxPath, `#!/usr/bin/env bash
@@ -443,12 +444,15 @@ exit 1
 `);
       await chmod(fakeTmuxPath, 0o755);
       process.env.PATH = `${fakeBinDir}:${previousPath || ''}`;
+      process.env.RCS_TEST_TMUX_BIN = fakeTmuxPath;
       process.env.TMUX_PANE = '%2';
 
       assert.equal(resolveCodexPane(), '%42');
     } finally {
       if (typeof previousPath === 'string') process.env.PATH = previousPath;
       else delete process.env.PATH;
+      if (typeof previousTestTmuxBin === 'string') process.env.RCS_TEST_TMUX_BIN = previousTestTmuxBin;
+      else delete process.env.RCS_TEST_TMUX_BIN;
       if (typeof previousTmuxPane === 'string') process.env.TMUX_PANE = previousTmuxPane;
       else delete process.env.TMUX_PANE;
       await rm(fakeBinDir, { recursive: true, force: true });

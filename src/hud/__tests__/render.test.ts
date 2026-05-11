@@ -23,10 +23,10 @@ function emptyCtx(): HudRenderContext {
   return {
     version: null,
     gitBranch: null,
-    ralph: null,
+    forge: null,
     ultrawork: null,
     autopilot: null,
-    ralplan: null,
+    blueprint: null,
     deepInterview: null,
     autoresearch: null,
     ultraqa: null,
@@ -95,25 +95,25 @@ describe('renderHud – gitBranch', () => {
   });
 });
 
-// ── Ralph ─────────────────────────────────────────────────────────────────────
+// ── Forge ─────────────────────────────────────────────────────────────────────
 
-describe('renderHud – ralph', () => {
-  it('renders ralph iteration info', () => {
-    const ctx = { ...emptyCtx(), ralph: { active: true, iteration: 3, max_iterations: 10 } };
+describe('renderHud – forge', () => {
+  it('renders forge iteration info', () => {
+    const ctx = { ...emptyCtx(), forge: { active: true, iteration: 3, max_iterations: 10 } };
     const result = renderHud(ctx, 'focused');
-    assert.ok(result.includes('ralph:3/10'));
+    assert.ok(result.includes('forge:3/10'));
   });
 
-  it('falls back to a bare label when Ralph counters are unavailable', () => {
-    const ctx = { ...emptyCtx(), ralph: { active: true } };
+  it('falls back to a bare label when forge counters are unavailable', () => {
+    const ctx = { ...emptyCtx(), forge: { active: true } };
     const result = stripSgr(renderHud(ctx, 'focused'));
-    assert.ok(result.includes('ralph'));
-    assert.equal(result.includes('ralph:'), false);
+    assert.ok(result.includes('forge'));
+    assert.equal(result.includes('forge:'), false);
   });
 
-  it('omits ralph when null', () => {
+  it('omits forge when null', () => {
     const result = renderHud(emptyCtx(), 'focused');
-    assert.ok(!result.includes('ralph'));
+    assert.ok(!result.includes('forge'));
   });
 });
 
@@ -153,19 +153,19 @@ describe('renderHud – autopilot', () => {
   });
 });
 
-// ── Ralplan ───────────────────────────────────────────────────────────────────
+// ── Blueprint ────────────────────────────────────────────────────────────────
 
-describe('renderHud – ralplan', () => {
-  it('renders ralplan with the current phase', () => {
-    const ctx = { ...emptyCtx(), ralplan: { active: true, current_phase: 'review' } };
+describe('renderHud – blueprint', () => {
+  it('renders blueprint with the current phase', () => {
+    const ctx = { ...emptyCtx(), blueprint: { active: true, current_phase: 'review' } };
     const result = renderHud(ctx, 'focused');
-    assert.ok(result.includes(`${CYAN}ralplan:review${RESET}`));
+    assert.ok(result.includes(`${CYAN}blueprint:review${RESET}`));
   });
 
-  it('renders iteration display when ralplan iteration is present', () => {
-    const ctx = { ...emptyCtx(), ralplan: { active: true, iteration: 2, planning_complete: false } };
+  it('renders iteration display when blueprint iteration is present', () => {
+    const ctx = { ...emptyCtx(), blueprint: { active: true, iteration: 2, planning_complete: false } };
     const result = renderHud(ctx, 'focused');
-    assert.ok(result.includes(`${CYAN}ralplan:2/?${RESET}`));
+    assert.ok(result.includes(`${CYAN}blueprint:2/?${RESET}`));
   });
 });
 
@@ -519,13 +519,13 @@ describe('renderHud – total turns (full preset)', () => {
 // ── Presets ───────────────────────────────────────────────────────────────────
 
 describe('renderHud – presets', () => {
-  it('minimal preset includes gitBranch, ralph, ultrawork, team, turns', () => {
+  it('minimal preset includes gitBranch, forge, ultrawork, team, turns', () => {
     const ctx = {
       ...emptyCtx(),
       gitBranch: 'feat/x',
-      ralph: { active: true, iteration: 1, max_iterations: 5 },
+      forge: { active: true, iteration: 1, max_iterations: 5 },
       ultrawork: { active: true },
-      ralplan: { active: true, current_phase: 'draft' },
+      blueprint: { active: true, current_phase: 'draft' },
       deepInterview: { active: true, current_phase: 'intent-first' },
       autoresearch: { active: true, current_phase: 'running' },
       ultraqa: { active: true, current_phase: 'qa' },
@@ -534,9 +534,9 @@ describe('renderHud – presets', () => {
     };
     const result = renderHud(ctx, 'minimal');
     assert.ok(result.includes('feat/x'));
-    assert.ok(result.includes('ralph:1/5'));
+    assert.ok(result.includes('forge:1/5'));
     assert.ok(result.includes('ultrawork'));
-    assert.ok(result.includes('ralplan:draft'));
+    assert.ok(result.includes('blueprint:draft'));
     assert.ok(result.includes('interview:intent-first'));
     assert.ok(result.includes('research:running'));
     assert.ok(result.includes('qa:qa'));
@@ -585,7 +585,7 @@ describe('renderHud – separator', () => {
     const ctx = {
       ...emptyCtx(),
       gitBranch: 'main',
-      ralph: { active: true, iteration: 2, max_iterations: 10 },
+      forge: { active: true, iteration: 2, max_iterations: 10 },
     };
     const result = renderHud(ctx, 'focused');
     // SEP = dim(' | ') = '\x1b[2m | \x1b[0m'
@@ -604,7 +604,7 @@ describe('renderHud – wrapping', () => {
     const ctx = {
       ...emptyCtx(),
       gitBranch: 'feature/very-long-branch-name',
-      ralph: { active: true, iteration: 3, max_iterations: 10 },
+      forge: { active: true, iteration: 3, max_iterations: 10 },
       ultrawork: { active: true },
       metrics: { session_turns: 12, total_turns: 12, last_activity: new Date().toISOString() },
       session: { session_id: 'sess-wrap-1', started_at: new Date().toISOString() },
@@ -619,10 +619,10 @@ describe('renderHud – wrapping', () => {
     const ctx = {
       ...emptyCtx(),
       gitBranch: 'feature/very-long-branch-name',
-      ralph: { active: true, iteration: 3, max_iterations: 10 },
+      forge: { active: true, iteration: 3, max_iterations: 10 },
       ultrawork: { active: true },
       autopilot: { active: true, current_phase: 'planning' },
-      ralplan: { active: true, current_phase: 'review' },
+      blueprint: { active: true, current_phase: 'review' },
       deepInterview: { active: true, current_phase: 'intent-first' },
       autoresearch: { active: true, current_phase: 'running' },
       ultraqa: { active: true, current_phase: 'diagnose' },
@@ -653,7 +653,7 @@ describe('renderHud – sanitization', () => {
       ...emptyCtx(),
       gitBranch: injected,
       autopilot: { active: true, current_phase: injected },
-      ralplan: { active: true, current_phase: injected },
+      blueprint: { active: true, current_phase: injected },
       deepInterview: { active: true, current_phase: injected, input_lock_active: true },
       autoresearch: { active: true, current_phase: injected },
       ultraqa: { active: true, current_phase: injected },

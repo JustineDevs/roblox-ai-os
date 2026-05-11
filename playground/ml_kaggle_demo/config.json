@@ -1,9 +1,0 @@
-{
-  "model": "logistic_regression",
-  "params": {
-    "C": 1.0,
-    "max_iter": 5000,
-    "solver": "lbfgs",
-    "random_state": 42
-  }
-}

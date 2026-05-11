@@ -5,9 +5,9 @@ import { basename, dirname, join } from 'path';
 import { tmpdir } from 'os';
 import { existsSync } from 'fs';
 import type { StageContext } from '../types.js';
-import { createRalplanStage } from '../stages/ralplan.js';
+import { createBlueprintStage } from '../stages/blueprint.js';
 import { createTeamExecStage, buildTeamInstruction } from '../stages/team-exec.js';
-import { createRalphVerifyStage, createRalphStage, buildRalphInstruction } from '../stages/ralph-verify.js';
+import { createForgeVerifyStage, createForgeStage, buildForgeInstruction } from '../stages/forge-verify.js';
 import { createCodeReviewStage, buildCodeReviewInstruction } from '../stages/code-review.js';
 import { buildFollowupStaffingPlan } from '../../team/followup-planner.js';
 import { packageRoot } from '../../utils/paths.js';
@@ -49,29 +49,29 @@ function escapeRegExp(value: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// RALPLAN stage tests
+// BLUEPRINT stage tests
 // ---------------------------------------------------------------------------
 
-describe('RALPLAN Stage', () => {
+describe('Blueprint Stage', () => {
   beforeEach(async () => { await setup(); });
   afterEach(async () => { await cleanup(); });
 
   it('creates a stage with the correct name', () => {
-    const stage = createRalplanStage();
-    assert.equal(stage.name, 'ralplan');
+    const stage = createBlueprintStage();
+    assert.equal(stage.name, 'blueprint');
   });
 
   it('runs successfully and produces artifacts', async () => {
-    const stage = createRalplanStage();
+    const stage = createBlueprintStage();
     const result = await stage.run(makeCtx());
 
     assert.equal(result.status, 'completed');
-    assert.equal((result.artifacts as Record<string, unknown>).stage, 'ralplan');
+    assert.equal((result.artifacts as Record<string, unknown>).stage, 'blueprint');
     assert.ok((result.artifacts as Record<string, unknown>).instruction);
   });
 
   it('canSkip returns false when no plans directory exists', () => {
-    const stage = createRalplanStage();
+    const stage = createBlueprintStage();
     assert.equal(stage.canSkip!(makeCtx()), false);
   });
 
@@ -79,7 +79,7 @@ describe('RALPLAN Stage', () => {
     const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
 
-    const stage = createRalplanStage();
+    const stage = createBlueprintStage();
     assert.equal(stage.canSkip!(makeCtx()), false);
   });
 
@@ -88,7 +88,7 @@ describe('RALPLAN Stage', () => {
     await mkdir(plansDir, { recursive: true });
     await writeFile(join(plansDir, 'prd-my-feature.md'), '# Plan\n');
 
-    const stage = createRalplanStage();
+    const stage = createBlueprintStage();
     assert.equal(stage.canSkip!(makeCtx()), false);
   });
 
@@ -98,7 +98,7 @@ describe('RALPLAN Stage', () => {
     await writeFile(join(plansDir, 'prd-my-feature.md'), '# Plan\n');
     await writeFile(join(plansDir, 'test-spec-my-feature.md'), '# Test Spec\n');
 
-    const stage = createRalplanStage();
+    const stage = createBlueprintStage();
     assert.equal(stage.canSkip!(makeCtx()), true);
   });
 
@@ -108,10 +108,10 @@ describe('RALPLAN Stage', () => {
     await writeFile(join(plansDir, 'prd-my-feature.md'), '# Plan\n');
     await writeFile(join(plansDir, 'test-spec-my-feature.md'), '# Test Spec\n');
 
-    const stage = createRalplanStage();
+    const stage = createBlueprintStage();
     assert.equal(stage.canSkip!(makeCtx({
       artifacts: {
-        return_to_ralplan_reason: 'Review requested a plan update.',
+        return_to_blueprint_reason: 'Review requested a plan update.',
         review_verdict: { recommendation: 'REQUEST CHANGES', architectural_status: 'CLEAR', clean: false },
       },
     })), false);
@@ -123,23 +123,23 @@ describe('RALPLAN Stage', () => {
     await writeFile(join(plansDir, 'prd-my-feature.md'), '# Plan\n');
     await writeFile(join(plansDir, 'test-spec-my-feature.md'), '# Test Spec\n');
 
-    const stage = createRalplanStage();
+    const stage = createBlueprintStage();
     assert.equal(stage.canSkip!(makeCtx({
       artifacts: {
         'code-review': {
           review_verdict: { recommendation: 'COMMENT', architectural_status: 'CLEAR', clean: true },
-          return_to_ralplan_reason: null,
+          return_to_blueprint_reason: null,
         },
       },
     })), false);
   });
 
-  it('surfaces deep-interview specs in ralplan artifacts for downstream traceability', async () => {
+  it('surfaces deep-interview specs in blueprint artifacts for downstream traceability', async () => {
     const specsDir = join(tempDir, '.rcs', 'specs');
     await mkdir(specsDir, { recursive: true });
     await writeFile(join(specsDir, 'deep-interview-my-feature.md'), '# Deep Interview Spec\n');
 
-    const stage = createRalplanStage();
+    const stage = createBlueprintStage();
     const result = await stage.run(makeCtx());
     const artifacts = result.artifacts as Record<string, unknown>;
 
@@ -147,8 +147,8 @@ describe('RALPLAN Stage', () => {
     assert.equal(artifacts.planningComplete, false);
   });
 
-  it('can execute a real ralplan runtime when an executor is provided', async () => {
-    const stage = createRalplanStage({
+  it('can execute a real blueprint runtime when an executor is provided', async () => {
+    const stage = createBlueprintStage({
       executor: {
         async draft() {
           const plansDir = join(tempDir, '.rcs', 'plans');
@@ -167,7 +167,7 @@ describe('RALPLAN Stage', () => {
       },
     });
 
-    const result = await stage.run(makeCtx({ task: 'live ralplan run' }));
+    const result = await stage.run(makeCtx({ task: 'live blueprint run' }));
     const artifacts = result.artifacts as Record<string, unknown>;
 
     assert.equal(result.status, 'completed');
@@ -182,7 +182,7 @@ describe('RALPLAN Stage', () => {
     await mkdir(plansDir, { recursive: true });
     await writeFile(join(plansDir, 'autopilot-spec.md'), '# Spec\n');
 
-    const stage = createRalplanStage();
+    const stage = createBlueprintStage();
     assert.equal(stage.canSkip!(makeCtx()), false);
   });
 });
@@ -240,10 +240,10 @@ describe('Team Exec Stage', () => {
       const result = await stage.run(makeCtx({
         task: 'original request task',
         artifacts: {
-          ralplan: {
+          blueprint: {
             task: 'original request task',
             data: 'plan-content',
-            stage: 'ralplan',
+            stage: 'blueprint',
             latestPlanPath: join('.rcs', 'plans', 'prd-zeta.md'),
           },
         },
@@ -281,9 +281,9 @@ describe('Team Exec Stage', () => {
         cwd: relativeCwd,
         task: 'original request task',
         artifacts: {
-          ralplan: {
+          blueprint: {
             task: 'original request task',
-            stage: 'ralplan',
+            stage: 'blueprint',
             latestPlanPath: join(relativeCwd, '.rcs', 'plans', 'prd-zeta.md'),
           },
         },
@@ -315,9 +315,9 @@ describe('Team Exec Stage', () => {
         cwd: relativeCwd,
         task: 'original request task',
         artifacts: {
-          ralplan: {
+          blueprint: {
             task: 'original request task',
-            stage: 'ralplan',
+            stage: 'blueprint',
             latestPlanPath: join('..', relativeCwd, '.rcs', 'plans', 'prd-zeta.md'),
           },
         },
@@ -344,9 +344,9 @@ describe('Team Exec Stage', () => {
     const result = await stage.run(makeCtx({
       task: 'original request task',
       artifacts: {
-        ralplan: {
+        blueprint: {
           task: 'original request task',
-          stage: 'ralplan',
+          stage: 'blueprint',
           latestPlanPath: join('.rcs', 'plans', 'prd-zeta.md'),
         },
       },
@@ -376,9 +376,9 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     const result = await stage.run(makeCtx({
       task: 'original request task',
       artifacts: {
-        ralplan: {
+        blueprint: {
           task: 'original request task',
-          stage: 'ralplan',
+          stage: 'blueprint',
           latestPlanPath: join('.rcs', 'plans', 'prd-zeta.md'),
         },
       },
@@ -392,7 +392,7 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     assert.ok(instruction.includes(JSON.stringify(expectedTask)));
   });
 
-  it('derives the team-exec task from the latest ralplan draft when numeric PRD slugs sort lexically out of order', async () => {
+  it('derives the team-exec task from the latest blueprint draft when numeric PRD slugs sort lexically out of order', async () => {
     const plansDir = join(tempDir, '.rcs', 'plans');
     await mkdir(plansDir, { recursive: true });
     await writeFile(
@@ -410,9 +410,9 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     const result = await stage.run(makeCtx({
       task: 'original request task',
       artifacts: {
-        ralplan: {
+        blueprint: {
           task: 'original request task',
-          stage: 'ralplan',
+          stage: 'blueprint',
           latestPlanPath: join('.rcs', 'plans', 'prd-issue-10.md'),
           drafts: [
             { planPath: join('.rcs', 'plans', 'prd-issue-9.md') },
@@ -446,10 +446,10 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     const result = await stage.run(makeCtx({
       task: 'original request task',
       artifacts: {
-        ralplan: {
+        blueprint: {
           task: 'original request task',
           data: 'plan-content',
-          stage: 'ralplan',
+          stage: 'blueprint',
           latestPlanPath: stalePrdPath,
         },
       },
@@ -460,15 +460,15 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     assert.deepEqual(result.artifacts, {});
   });
 
-  it('keeps structural ralplan handoffs on the generic task path', async () => {
+  it('keeps structural blueprint handoffs on the generic task path', async () => {
     const stage = createTeamExecStage();
     const result = await stage.run(makeCtx({
       task: 'structural pipeline task',
       artifacts: {
-        ralplan: {
+        blueprint: {
           task: 'structural pipeline task',
           data: 'plan-content',
-          stage: 'ralplan',
+          stage: 'blueprint',
           plansDir: join(tempDir, '.rcs', 'plans'),
           specsDir: join(tempDir, '.rcs', 'specs'),
           prdPaths: [],
@@ -500,9 +500,9 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     const result = await stage.run(makeCtx({
       task: 'generic pipeline task',
       artifacts: {
-        ralplan: {
+        blueprint: {
           task: 'generic pipeline task',
-          stage: 'ralplan',
+          stage: 'blueprint',
           prdPaths: [join(plansDir, 'prd-zeta.md')],
           testSpecPaths: [join(plansDir, 'test-spec-zeta.md')],
           planningComplete: true,
@@ -528,9 +528,9 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     const result = await stage.run(makeCtx({
       task: 'original request task',
       artifacts: {
-        ralplan: {
+        blueprint: {
           task: 'original request task',
-          stage: 'ralplan',
+          stage: 'blueprint',
           latestPlanPath: prdPath,
         },
       },
@@ -559,9 +559,9 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     const result = await stage.run(makeCtx({
       task: 'original request task',
       artifacts: {
-        ralplan: {
+        blueprint: {
           task: 'original request task',
-          stage: 'ralplan',
+          stage: 'blueprint',
           latestPlanPath: prdPath,
         },
       },
@@ -571,7 +571,7 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
     assert.match(result.error ?? '', /team_exec_approved_handoff_ambiguous:/);
   });
 
-  it('falls back to raw task when no ralplan artifacts exist', async () => {
+  it('falls back to raw task when no blueprint artifacts exist', async () => {
     const stage = createTeamExecStage();
     const result = await stage.run(makeCtx({ task: 'raw task description' }));
 
@@ -740,20 +740,20 @@ Launch via $team 2:executor 'Fix C:\\tmp and keep \n literal'
 });
 
 // ---------------------------------------------------------------------------
-// Ralph verify stage tests
+// Forge verify stage tests
 // ---------------------------------------------------------------------------
 
-describe('Ralph Verify Stage', () => {
+describe('Forge Verify Stage', () => {
   beforeEach(async () => { await setup(); });
   afterEach(async () => { await cleanup(); });
 
   it('creates a stage with the correct name', () => {
-    const stage = createRalphVerifyStage();
-    assert.equal(stage.name, 'ralph-verify');
+    const stage = createForgeVerifyStage();
+    assert.equal(stage.name, 'forge-verify');
   });
 
   it('uses default max iterations of 10', async () => {
-    const stage = createRalphVerifyStage();
+    const stage = createForgeVerifyStage();
     const result = await stage.run(makeCtx());
 
     assert.equal(result.status, 'completed');
@@ -762,7 +762,7 @@ describe('Ralph Verify Stage', () => {
   });
 
   it('respects custom max iterations', async () => {
-    const stage = createRalphVerifyStage({ maxIterations: 25 });
+    const stage = createForgeVerifyStage({ maxIterations: 25 });
     const result = await stage.run(makeCtx());
 
     const arts = result.artifacts as Record<string, unknown>;
@@ -770,7 +770,7 @@ describe('Ralph Verify Stage', () => {
   });
 
   it('includes team-exec artifacts in verification context', async () => {
-    const stage = createRalphVerifyStage();
+    const stage = createForgeVerifyStage();
     const ctx = makeCtx({
       artifacts: {
         'team-exec': { teamDescriptor: { task: 'completed work' } },
@@ -785,11 +785,11 @@ describe('Ralph Verify Stage', () => {
     assert.equal(typeof (descriptor.staffingPlan as Record<string, unknown>).staffingSummary, 'string');
   });
 
-  it('preserves legacy verification context precedence over ralplan artifacts', async () => {
-    const stage = createRalphVerifyStage();
+  it('preserves legacy verification context precedence over blueprint artifacts', async () => {
+    const stage = createForgeVerifyStage();
     const result = await stage.run(makeCtx({
       artifacts: {
-        ralplan: { plan: 'approved plan' },
+        blueprint: { plan: 'approved plan' },
         'team-exec': { teamDescriptor: { task: 'completed work' } },
       },
     }));
@@ -798,10 +798,10 @@ describe('Ralph Verify Stage', () => {
     assert.deepEqual(descriptor.executionArtifacts, { teamDescriptor: { task: 'completed work' } });
   });
 
-  describe('buildRalphInstruction', () => {
+  describe('buildForgeInstruction', () => {
     it('includes max iterations in instruction', () => {
-      const staffingPlan = buildFollowupStaffingPlan('ralph', 'verify feature', ['architect', 'executor', 'test-engineer']);
-      const instruction = buildRalphInstruction({
+      const staffingPlan = buildFollowupStaffingPlan('forge', 'verify feature', ['architect', 'executor', 'test-engineer']);
+      const instruction = buildForgeInstruction({
         task: 'verify feature',
         maxIterations: 15,
         cwd: '/tmp',
@@ -811,7 +811,7 @@ describe('Ralph Verify Stage', () => {
       });
 
       assert.match(instruction, /max_iterations=15/);
-      assert.match(instruction, /^rcs ralph /);
+      assert.match(instruction, /^rcs forge /);
       assert.match(instruction, /verify feature/);
       assert.match(instruction, /staffing=/);
       assert.match(instruction, /verify=/);
@@ -819,8 +819,8 @@ describe('Ralph Verify Stage', () => {
 
     it('still emits a launch instruction for long task descriptions', () => {
       const longTask = 'b'.repeat(500);
-      const staffingPlan = buildFollowupStaffingPlan('ralph', longTask, ['architect', 'executor', 'test-engineer']);
-      const instruction = buildRalphInstruction({
+      const staffingPlan = buildFollowupStaffingPlan('forge', longTask, ['architect', 'executor', 'test-engineer']);
+      const instruction = buildForgeInstruction({
         task: longTask,
         maxIterations: 10,
         cwd: '/tmp',
@@ -829,7 +829,7 @@ describe('Ralph Verify Stage', () => {
         executionArtifacts: {},
       });
 
-      assert.match(instruction, /^rcs ralph /);
+      assert.match(instruction, /^rcs forge /);
       assert.match(instruction, /staffing=/);
     });
   });
@@ -840,18 +840,18 @@ describe('Ralph Verify Stage', () => {
 // Strict Autopilot stage tests
 // ---------------------------------------------------------------------------
 
-describe('Strict Autopilot Ralph Stage', () => {
+describe('Strict Autopilot Forge Stage', () => {
   beforeEach(async () => { await setup(); });
   afterEach(async () => { await cleanup(); });
 
-  it('uses the strict phase name ralph', () => {
-    assert.equal(createRalphStage().name, 'ralph');
+  it('uses the strict phase name forge', () => {
+    assert.equal(createForgeStage().name, 'forge');
   });
 
-  it('uses ralplan artifacts as the primary strict ralph execution input', async () => {
-    const result = await createRalphStage().run(makeCtx({
+  it('uses blueprint artifacts as the primary strict forge execution input', async () => {
+    const result = await createForgeStage().run(makeCtx({
       artifacts: {
-        ralplan: { plan: 'approved plan' },
+        blueprint: { plan: 'approved plan' },
         'team-exec': { teamDescriptor: { task: 'legacy work' } },
       },
     }));
@@ -868,34 +868,34 @@ describe('Code Review Stage', () => {
   it('creates a strict code-review stage that fails closed without review evidence', async () => {
     const stage = createCodeReviewStage();
     assert.equal(stage.name, 'code-review');
-    const result = await stage.run(makeCtx({ artifacts: { ralph: { tests: 'passed' } } }));
+    const result = await stage.run(makeCtx({ artifacts: { forge: { tests: 'passed' } } }));
     const artifacts = result.artifacts as Record<string, unknown>;
     const verdict = artifacts.review_verdict as Record<string, unknown>;
     assert.equal(result.status, 'completed');
     assert.equal(verdict.clean, false);
     assert.equal(verdict.recommendation, 'REQUEST CHANGES');
     assert.equal(verdict.architectural_status, 'BLOCK');
-    assert.equal(artifacts.return_to_ralplan_reason, 'Code-review evidence missing; fail closed and return to ralplan.');
+    assert.equal(artifacts.return_to_blueprint_reason, 'Code-review evidence missing; fail closed and return to blueprint.');
   });
 
   it('marks explicit approve and clear review evidence as clean', async () => {
     const stage = createCodeReviewStage({ recommendation: 'APPROVE', architecturalStatus: 'CLEAR' });
-    const result = await stage.run(makeCtx({ artifacts: { ralph: { tests: 'passed' } } }));
+    const result = await stage.run(makeCtx({ artifacts: { forge: { tests: 'passed' } } }));
     const artifacts = result.artifacts as Record<string, unknown>;
     const verdict = artifacts.review_verdict as Record<string, unknown>;
     assert.equal(verdict.clean, true);
     assert.equal(verdict.recommendation, 'APPROVE');
     assert.equal(verdict.architectural_status, 'CLEAR');
-    assert.equal(artifacts.return_to_ralplan_reason, null);
+    assert.equal(artifacts.return_to_blueprint_reason, null);
   });
 
-  it('marks non-clean review as return-to-ralplan input', async () => {
+  it('marks non-clean review as return-to-blueprint input', async () => {
     const stage = createCodeReviewStage({ recommendation: 'REQUEST CHANGES', architecturalStatus: 'BLOCK', summary: 'fix review findings' });
     const result = await stage.run(makeCtx());
     const artifacts = result.artifacts as Record<string, unknown>;
     const verdict = artifacts.review_verdict as Record<string, unknown>;
     assert.equal(verdict.clean, false);
-    assert.equal(artifacts.return_to_ralplan_reason, 'fix review findings');
+    assert.equal(artifacts.return_to_blueprint_reason, 'fix review findings');
   });
 
   it('builds a code-review instruction', () => {

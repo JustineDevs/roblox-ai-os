@@ -1,6 +1,10 @@
 ---
 name: ask-gemini
 description: Ask Gemini via local CLI and capture a reusable artifact
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Ask Gemini (Local CLI)
@@ -59,3 +63,6 @@ Minimum artifact sections:
 5. Action items / next steps
 
 Task: {{ARGUMENTS}}
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

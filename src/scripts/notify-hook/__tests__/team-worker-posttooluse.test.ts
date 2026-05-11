@@ -1,12 +1,26 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { chmod, mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { handleTeamWorkerPostToolUseSuccess, teamWorkerPostToolUseInternals } from '../team-worker-posttooluse.js';
 import { readTeamEvents } from '../../../team/state/events.js';
+
+function execFileSyncCompat(command: string, args: string[], options: Parameters<typeof execFileSync>[2] = {}): string {
+  const result = spawnSync(command, args, {
+    encoding: 'utf-8',
+    ...options,
+  });
+  if (result.status !== 0 && !result.error) {
+    throw new Error(String(result.stderr || `spawnSync ${command} failed`));
+  }
+  if (result.status !== 0 && result.error) {
+    throw result.error;
+  }
+  return String(result.stdout ?? '');
+}
 
 async function initWorkerFixture(): Promise<{ cwd: string; stateRoot: string; env: NodeJS.ProcessEnv }> {
   const cwd = await mkdtemp(join(tmpdir(), 'rcs-posttooluse-worker-'));
@@ -57,7 +71,7 @@ describe('handleTeamWorkerPostToolUseSuccess', () => {
     assert.ok(result.checkpointCommit);
     assert.deepEqual(result.operationKinds, ['auto_checkpoint', 'worker_clean_rebase', 'leader_integration_attempt']);
 
-    const log = execFileSync('git', ['log', '-1', '--pretty=%s'], { cwd: fixture.cwd, encoding: 'utf-8' }).trim();
+    const log = execFileSyncCompat('git', ['log', '-1', '--pretty=%s'], { cwd: fixture.cwd }).trim();
     assert.equal(log, 'rcs(team): auto-checkpoint worker-1');
 
     const events = await readTeamEvents('demo-team', fixture.cwd, { type: 'worker_integration_attempt_requested' });
@@ -83,11 +97,11 @@ describe('handleTeamWorkerPostToolUseSuccess', () => {
 
   it('records noop without creating a checkpoint commit', async () => {
     const fixture = await initWorkerFixture();
-    const before = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: fixture.cwd, encoding: 'utf-8' }).trim();
+    const before = execFileSyncCompat('git', ['rev-parse', 'HEAD'], { cwd: fixture.cwd }).trim();
 
     const result = await handleTeamWorkerPostToolUseSuccess(successPayload, fixture.cwd, fixture.env);
 
-    const after = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: fixture.cwd, encoding: 'utf-8' }).trim();
+    const after = execFileSyncCompat('git', ['rev-parse', 'HEAD'], { cwd: fixture.cwd }).trim();
     assert.equal(result.status, 'noop');
     assert.equal(result.checkpointCommit, null);
     assert.equal(after, before);
@@ -109,9 +123,9 @@ describe('handleTeamWorkerPostToolUseSuccess', () => {
     await writeFile(join(fixture.cwd, 'feature.txt'), 'feature\n', 'utf-8');
 
     const first = await handleTeamWorkerPostToolUseSuccess(successPayload, fixture.cwd, fixture.env);
-    const headAfterFirst = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: fixture.cwd, encoding: 'utf-8' }).trim();
+    const headAfterFirst = execFileSyncCompat('git', ['rev-parse', 'HEAD'], { cwd: fixture.cwd }).trim();
     const second = await handleTeamWorkerPostToolUseSuccess({ ...successPayload, tool_use_id: 'tool-2' }, fixture.cwd, fixture.env);
-    const headAfterSecond = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: fixture.cwd, encoding: 'utf-8' }).trim();
+    const headAfterSecond = execFileSyncCompat('git', ['rev-parse', 'HEAD'], { cwd: fixture.cwd }).trim();
     const events = await readTeamEvents('demo-team', fixture.cwd, { type: 'worker_integration_attempt_requested' });
 
     assert.equal(first.status, 'applied');
@@ -127,8 +141,8 @@ describe('handleTeamWorkerPostToolUseSuccess', () => {
     await writeFile(join(fixture.cwd, 'unstaged.txt'), 'new work\n', 'utf-8');
 
     const result = await handleTeamWorkerPostToolUseSuccess(successPayload, fixture.cwd, fixture.env);
-    const staged = execFileSync('git', ['diff', '--name-only', '--cached'], { cwd: fixture.cwd, encoding: 'utf-8' }).trim().split('\n').filter(Boolean);
-    const status = execFileSync('git', ['status', '--porcelain=v1', '-uall'], { cwd: fixture.cwd, encoding: 'utf-8' });
+    const staged = execFileSyncCompat('git', ['diff', '--name-only', '--cached'], { cwd: fixture.cwd }).trim().split('\n').filter(Boolean);
+    const status = execFileSyncCompat('git', ['status', '--porcelain=v1', '-uall'], { cwd: fixture.cwd });
 
     assert.equal(result.status, 'skipped');
     assert.equal(result.reason, 'index_not_clean');
@@ -144,8 +158,8 @@ describe('handleTeamWorkerPostToolUseSuccess', () => {
     await writeFile(join(fixture.cwd, 'commit-fail.txt'), 'must not remain staged\n', 'utf-8');
 
     const result = await handleTeamWorkerPostToolUseSuccess(successPayload, fixture.cwd, fixture.env);
-    const staged = execFileSync('git', ['diff', '--name-only', '--cached'], { cwd: fixture.cwd, encoding: 'utf-8' }).trim();
-    const status = execFileSync('git', ['status', '--porcelain=v1', '-uall'], { cwd: fixture.cwd, encoding: 'utf-8' });
+    const staged = execFileSyncCompat('git', ['diff', '--name-only', '--cached'], { cwd: fixture.cwd }).trim();
+    const status = execFileSyncCompat('git', ['status', '--porcelain=v1', '-uall'], { cwd: fixture.cwd });
 
     assert.equal(result.status, 'skipped');
     assert.match(result.reason ?? '', /^git_commit_failed:/);

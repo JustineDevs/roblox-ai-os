@@ -34,7 +34,7 @@ Observed strengths:
   skill-active state and are structurally closer to a peer-state model than a
   strict single-owner model.
 - `src/modes/base.ts` already preserves key standalone restrictions:
-  `autopilot` and `autoresearch` remain exclusive; `ralph` and `ultrawork`
+  `autopilot` and `autoresearch` remain exclusive; `forge` and `ultrawork`
   remain mutually exclusive with each other.
 
 Primary gaps relative to the PRD/test-spec:
@@ -112,9 +112,9 @@ This freezes the rollout expectations for:
 - regression expectations
 
 Also clarified two adjacent operator-facing docs so the approved overlap is not
-misread as the old linked `team ralph` lifecycle:
+misread as the removed linked team-follow-up lifecycle:
 
-- `docs/contracts/ralph-state-contract.md`
+- `docs/contracts/forge-state-contract.md`
 - `docs/codex-native-hooks.md`
 
 Added concrete recovery examples to the compatibility contract so denial

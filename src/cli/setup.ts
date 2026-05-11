@@ -2507,10 +2507,7 @@ async function cleanupGeneratedNonInstallableNativeAgents(
 		if (!file.endsWith(".toml")) continue;
 		const agentName = file.slice(0, -5);
 		const agentStatus = agentStatusByName.get(agentName);
-		if (
-			agentStatus === undefined ||
-			isNativeAgentInstallableStatus(agentStatus)
-		) {
+		if (isNativeAgentInstallableStatus(agentStatus)) {
 			continue;
 		}
 
@@ -2542,7 +2539,7 @@ async function cleanupGeneratedNonInstallableNativeAgents(
 			const prefix = options.dryRun
 				? "would remove stale generated native agent"
 				: "removed stale generated native agent";
-			console.log(`  ${prefix} ${file} (status: ${agentStatus})`);
+			console.log(`  ${prefix} ${file} (status: ${agentStatus ?? "uncataloged"})`);
 		}
 	}
 

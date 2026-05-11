@@ -1,6 +1,6 @@
 /**
  * Base mode lifecycle management for roblox-ai-os-creator-skills
- * All execution modes (autopilot, autoresearch, deep-interview, ralph, ultrawork, team, ultraqa, ralplan) share this base.
+ * All execution modes (autopilot, autoresearch, deep-interview, forge, ultrawork, team, ultraqa, blueprint) share this base.
  */
 
 import { readFile, writeFile, mkdir, readdir } from 'fs/promises';
@@ -13,10 +13,11 @@ import {
 } from '../state/workflow-transition.js';
 import { reconcileWorkflowTransition } from '../state/workflow-transition-reconcile.js';
 import { syncCanonicalSkillStateForMode } from '../state/skill-active.js';
-import { validateAndNormalizeRalphState } from '../ralph/contract.js';
+import { validateAndNormalizeForgeState } from '../forge/contract.js';
 import { applyRunOutcomeContract } from '../runtime/run-outcome.js';
 import { syncRunStateFromModeState } from '../runtime/run-state.js';
 import {
+  canonicalizeStateMode,
   getBaseStateDir,
   getReadScopedStateDirs,
   getReadScopedStatePaths,
@@ -39,7 +40,15 @@ export interface ModeState {
   [key: string]: unknown;
 }
 
-export type ModeName = 'autopilot' | 'autoresearch' | 'deep-interview' | 'ralph' | 'ultrawork' | 'team' | 'ultraqa' | 'ralplan';
+export type ModeName =
+  | 'autopilot'
+  | 'autoresearch'
+  | 'deep-interview'
+  | 'forge'
+  | 'ultrawork'
+  | 'team'
+  | 'ultraqa'
+  | 'blueprint';
 
 /** @deprecated These mode names were removed in v4.6. Use the canonical modes instead. */
 export type DeprecatedModeName = 'ultrapilot' | 'pipeline' | 'ecomode';
@@ -60,11 +69,11 @@ export function getDeprecationWarning(mode: string): string | null {
   return `[DEPRECATED] Mode "${mode}" is deprecated. ${warning}`;
 }
 
-function normalizeRalphModeStateOrThrow(state: ModeState): ModeState {
+function normalizeForgeModeStateOrThrow(state: ModeState): ModeState {
   const originalPhase = state.current_phase;
-  const validation = validateAndNormalizeRalphState(state as Record<string, unknown>);
+  const validation = validateAndNormalizeForgeState(state as Record<string, unknown>);
   if (!validation.ok || !validation.state) {
-    throw new Error(validation.error || 'Invalid ralph mode state');
+    throw new Error(validation.error || 'Invalid forge mode state');
   }
   const normalized = validation.state as ModeState;
   if (
@@ -72,7 +81,7 @@ function normalizeRalphModeStateOrThrow(state: ModeState): ModeState {
     && typeof normalized.current_phase === 'string'
     && normalized.current_phase !== originalPhase
   ) {
-    normalized.ralph_phase_normalized_from = originalPhase;
+    normalized.forge_phase_normalized_from = originalPhase;
   }
   return normalized;
 }
@@ -86,8 +95,8 @@ function applySharedRunOutcomeContractOrThrow(state: ModeState): ModeState {
 }
 
 function normalizeModeStateOrThrow(mode: string, state: ModeState): ModeState {
-  const normalized = mode === 'ralph'
-    ? normalizeRalphModeStateOrThrow(state)
+  const normalized = mode === 'forge'
+    ? normalizeForgeModeStateOrThrow(state)
     : state;
   return applySharedRunOutcomeContractOrThrow(normalized);
 }
@@ -100,10 +109,11 @@ export async function assertModeStartAllowed(
   mode: ModeName,
   projectRoot?: string,
 ): Promise<void> {
-  if (!isTrackedWorkflowMode(mode)) return;
+  const normalizedMode = canonicalizeStateMode(mode);
+  if (!isTrackedWorkflowMode(normalizedMode)) return;
   const scope = await resolveStateScope(projectRoot);
   const activeModes = await readActiveWorkflowModes(projectRoot ?? process.cwd(), scope.sessionId);
-  assertWorkflowTransitionAllowed(activeModes, mode, 'start');
+  assertWorkflowTransitionAllowed(activeModes, normalizedMode, 'start');
 }
 
 /**
@@ -115,13 +125,14 @@ export async function startMode(
   maxIterations: number = 50,
   projectRoot?: string
 ): Promise<ModeState> {
+  const normalizedMode = canonicalizeStateMode(mode);
   const dir = stateDir(projectRoot);
   await mkdir(dir, { recursive: true });
 
   const scope = await resolveStateScope(projectRoot);
   let transitionMessage: string | undefined;
-  if (isTrackedWorkflowMode(mode)) {
-    const transition = await reconcileWorkflowTransition(projectRoot ?? process.cwd(), mode, {
+  if (isTrackedWorkflowMode(normalizedMode)) {
+    const transition = await reconcileWorkflowTransition(projectRoot ?? process.cwd(), normalizedMode, {
       action: 'start',
       sessionId: scope.sessionId,
       source: 'startMode',
@@ -132,24 +143,24 @@ export async function startMode(
 
   const stateBase: ModeState = {
     active: true,
-    mode,
+    mode: normalizedMode,
     iteration: 0,
     max_iterations: maxIterations,
     current_phase: 'starting',
     task_description: taskDescription,
     started_at: new Date().toISOString(),
     ...(transitionMessage ? { transition_message: transitionMessage } : {}),
-    ...(mode === 'ralph' && scope.sessionId ? { owner_rcs_session_id: scope.sessionId } : {}),
+    ...(normalizedMode === 'forge' && scope.sessionId ? { owner_rcs_session_id: scope.sessionId } : {}),
   };
 
   const withContext = withModeRuntimeContext({}, stateBase) as ModeState;
-  const state = normalizeModeStateOrThrow(mode, withContext);
-  await writeFile(getStatePath(mode, projectRoot, scope.sessionId), JSON.stringify(state, null, 2));
+  const state = normalizeModeStateOrThrow(normalizedMode, withContext);
+  await writeFile(getStatePath(normalizedMode, projectRoot, scope.sessionId), JSON.stringify(state, null, 2));
   await syncRunStateFromModeState(state, projectRoot, scope.sessionId);
-  if (isTrackedWorkflowMode(mode)) {
+  if (isTrackedWorkflowMode(normalizedMode)) {
     await syncCanonicalSkillStateForMode({
       cwd: projectRoot ?? process.cwd(),
-      mode,
+      mode: normalizedMode,
       active: true,
       currentPhase: typeof state.current_phase === 'string' ? state.current_phase : undefined,
       sessionId: scope.sessionId,
@@ -202,9 +213,10 @@ export async function updateModeState(
   projectRoot?: string,
   explicitSessionId?: string,
 ): Promise<ModeState> {
+  const normalizedMode = canonicalizeStateMode(mode);
   const current = explicitSessionId
-    ? await readModeStateForSession(mode, explicitSessionId, projectRoot)
-    : await readModeState(mode, projectRoot);
+    ? await readModeStateForSession(normalizedMode, explicitSessionId, projectRoot)
+    : await readModeState(normalizedMode, projectRoot);
   if (!current) throw new Error(`Mode ${mode} not found`);
   const scope = await resolveStateScope(projectRoot, explicitSessionId);
   await mkdir(scope.stateDir, { recursive: true });
@@ -213,17 +225,17 @@ export async function updateModeState(
   if (!Object.prototype.hasOwnProperty.call(updates, 'run_outcome')) {
     delete updatedBase.run_outcome;
   }
-  if (mode === 'ralph' && scope.sessionId && typeof updatedBase.owner_rcs_session_id !== 'string') {
+  if (normalizedMode === 'forge' && scope.sessionId && typeof updatedBase.owner_rcs_session_id !== 'string') {
     updatedBase.owner_rcs_session_id = scope.sessionId;
   }
-  const normalizedBase = normalizeModeStateOrThrow(mode, updatedBase as ModeState);
+  const normalizedBase = normalizeModeStateOrThrow(normalizedMode, updatedBase as ModeState);
   const updated = withModeRuntimeContext(current, normalizedBase) as ModeState;
-  await writeFile(getStatePath(mode, projectRoot, scope.sessionId), JSON.stringify(updated, null, 2));
+  await writeFile(getStatePath(normalizedMode, projectRoot, scope.sessionId), JSON.stringify(updated, null, 2));
   await syncRunStateFromModeState(updated, projectRoot, scope.sessionId);
-  if (isTrackedWorkflowMode(mode)) {
+  if (isTrackedWorkflowMode(normalizedMode)) {
     await syncCanonicalSkillStateForMode({
       cwd: projectRoot ?? process.cwd(),
-      mode,
+      mode: normalizedMode,
       active: updated.active === true,
       currentPhase: typeof updated.current_phase === 'string' ? updated.current_phase : undefined,
       sessionId: scope.sessionId,

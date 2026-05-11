@@ -1,11 +1,15 @@
 ---
 name: swarm
 description: N coordinated agents on shared task list (compatibility facade over team)
+surface-class: "historical"
+domain: "archive"
+audience: "archive"
+artifact-type: "skill"
 ---
 
 # Swarm (Compatibility Facade)
 
-Swarm is a compatibility alias for the `/team` skill. All swarm invocations are routed to the Team skill's staged pipeline.
+Swarm is a compatibility alias for the `/team` skill. Public creator language should prefer `$crew` or `$team`; all swarm invocations are routed to the Team skill's staged pipeline.
 
 ## Usage
 
@@ -23,3 +27,6 @@ This skill is identical to `/team`. Invoke the Team skill with the same argument
 ```
 
 Follow the Team skill's full documentation for staged pipeline, agent routing, and coordination semantics.
+surface-class: "historical"
+domain: "creator-runtime"
+audience: "internal"

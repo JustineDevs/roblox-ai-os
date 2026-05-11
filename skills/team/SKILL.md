@@ -1,11 +1,15 @@
 ---
 name: team
-description: N coordinated agents on shared task list using tmux-based orchestration
+description: N coordinated agents on a shared task list using tmux-based crew execution
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Team Skill
 
-`$team` is the tmux-based parallel execution mode for RCS. It starts real worker Codex and/or Claude CLI sessions in split panes and coordinates them through `.rcs/state/team/...` files plus CLI team interop (`rcs team api ...`) and state files.
+`$team` is the tmux-based parallel crew execution mode for RCS. It starts real worker Codex and/or Claude CLI sessions in split panes and coordinates them through `.rcs/state/team/...` files plus CLI team interop (`rcs team api ...`) and state files.
 
 This skill is operationally sensitive. Treat it as an operator workflow, not a generic prompt pattern. In Codex App or plain outside-tmux sessions, do not present `$team` / `rcs team` as directly available; launch RCS CLI from shell first, or stay on the nearest app-safe surface until the user explicitly wants the tmux runtime.
 
@@ -13,7 +17,7 @@ This skill is operationally sensitive. Treat it as an operator workflow, not a g
 
 - Use **Codex native subagents** for bounded, in-session parallelism where one leader thread can fan out a few independent subtasks and wait for them directly.
 - Use **`rcs team`** when you need durable tmux workers, shared task state, mailbox/dispatch coordination, worktrees, explicit lifecycle control, or long-running parallel execution that must survive beyond one local reasoning burst.
-- Native subagents can complement team/ralph execution, but they do **not** replace the tmux team runtime's stateful coordination contract.
+- Native subagents can complement team/forge execution, but they do **not** replace the tmux team runtime's stateful coordination contract.
 
 ## What This Skill Must Do
 
@@ -50,12 +54,11 @@ rcs team "ship end-to-end fix with verification"
 
 `rcs team ...` is now the canonical launch path for coordinated execution.
 Team mode should carry its own parallel delivery + verification lanes without
-requiring a separate linked Ralph launch up front.
+requiring a separate linked Forge launch up front.
 
 - **Canonical launch:** use plain `rcs team ...` / `$team ...` for coordinated workers.
 - **Verification ownership:** keep one lane focused on tests, regression coverage, and evidence before shutdown.
-- **Escalation:** start a separate `rcs ralph ...` / `$ralph ...` only when a later manual follow-up still needs a persistent single-owner fix/verification loop.
-- **Deprecation:** `rcs team ralph ...` has been removed. Use plain `rcs team ...` for team execution or run `rcs ralph ...` separately when you explicitly want a later Ralph loop.
+- **Escalation:** start a separate `rcs forge ...` / `$forge ...` only when a later manual follow-up still needs a persistent single-owner fix/verification loop.
 
 ### Claude teammates (v0.6.0+)
 
@@ -114,13 +117,13 @@ For simple read-only brownfield lookups during intake, follow active session gui
 
 ## Follow-up Staffing Contract
 
-When `$team` is used as a follow-up mode from ralplan, carry forward the approved plan's explicit **available-agent-types roster** and convert it into concrete staffing guidance before launch:
+When `$team` is used as a follow-up mode from blueprint, carry forward the approved plan's explicit **available-agent-types roster** and convert it into concrete staffing guidance before launch:
 
 - keep worker-role choices inside the known roster
 - state the recommended headcount and role counts
 - state the suggested reasoning level for each lane when available
 - explain why each lane exists (delivery, verification, specialist support)
-- include an explicit launch hint (`rcs team N "<task>"` / `$team N "<task>"`) for the coordinated team run; mention a later separate Ralph follow-up only when genuinely needed
+- include an explicit launch hint (`rcs team N "<task>"` / `$team N "<task>"`) for the coordinated team run; mention a later separate Forge follow-up only when genuinely needed
 - if the ideal role is unavailable, choose the closest role from the roster and say so
 
 ## Current Runtime Behavior (As Implemented)
@@ -229,7 +232,7 @@ To avoid brittle behavior, **message/task delivery must not be driven by ad-hoc 
 
 Required default path:
 
-1. Use `rcs team ...` runtime lifecycle commands for orchestration.
+1. Use `rcs team ...` runtime lifecycle commands for crew execution.
 2. Use `rcs team api ... --json` for mailbox/task mutations.
 3. Verify delivery via mailbox/state evidence (`mailbox/*.json`, task status, `rcs team status`).
 
@@ -470,13 +473,13 @@ Do not claim success without file/pane evidence.
 Do not claim clean completion if shutdown occurred with `in_progress>0`.
 Use `rcs sparkshell --tmux-pane ...` as an explicit opt-in operator aid for pane inspection and summaries; keep raw `tmux capture-pane` evidence available for manual intervention and proof.
 
-## Programmatic Team Orchestration
+## Programmatic Team Execution
 
 Use the `rcs team ...` CLI as the supported team-launch surface. For automation, drive the same CLI flow from scripts or supervising agents rather than relying on a separate MCP runner.
 
 ### Supported current surfaces
 
-- **`rcs team ...` CLI** — Primary method for interactive or automated team orchestration. Use this when you want direct tmux-pane visibility or a scriptable launch path.
+- **`rcs team ...` CLI** — Primary method for interactive or automated team execution. Use this when you want direct tmux-pane visibility or a scriptable launch path.
 - **Team state files** — Inspect `.rcs/state/team/<team>/` when you need status, task, or mailbox evidence after launch.
 
 ### Cleanup distinction
@@ -508,3 +511,6 @@ Two cleanup paths exist and must not be confused:
 **Good:** The user changes only the output shape or downstream delivery step (for example `make a PR`). Preserve earlier non-conflicting workflow constraints and apply the update locally.
 
 **Bad:** The user says `continue`, and the workflow restarts discovery or stops before the missing verification/evidence is gathered.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

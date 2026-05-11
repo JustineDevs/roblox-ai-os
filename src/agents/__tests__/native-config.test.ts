@@ -16,9 +16,9 @@ function manifestWithAgents(names: string[]): CatalogManifest {
     schemaVersion: 1,
     catalogVersion: "test",
     skills: [
-      { name: "ralplan", category: "planning", status: "active", core: true },
+      { name: "blueprint", category: "planning", status: "active", core: true },
       { name: "team", category: "execution", status: "active", core: true },
-      { name: "ralph", category: "execution", status: "active", core: true },
+      { name: "forge", category: "execution", status: "active", core: true },
       { name: "ultrawork", category: "execution", status: "active", core: true },
       { name: "autopilot", category: "execution", status: "active", core: true },
     ],
@@ -143,7 +143,7 @@ describe("agents/native-config", () => {
       await mkdir(promptsDir, { recursive: true });
       await writeFile(join(promptsDir, "executor.md"), "executor prompt");
       await writeFile(join(promptsDir, "planner.md"), "planner prompt");
-      await writeFile(join(promptsDir, "style-reviewer.md"), "merged prompt");
+      await writeFile(join(promptsDir, "legacy-reviewer.md"), "merged prompt");
 
       const created = await installNativeAgentConfigs(root, {
         agentsDir: outDir,
@@ -152,7 +152,7 @@ describe("agents/native-config", () => {
       assert.equal(created, 2);
       assert.equal(existsSync(join(outDir, "executor.toml")), true);
       assert.equal(existsSync(join(outDir, "planner.toml")), true);
-      assert.equal(existsSync(join(outDir, "style-reviewer.toml")), false);
+      assert.equal(existsSync(join(outDir, "legacy-reviewer.toml")), false);
 
       const executorToml = await readFile(
         join(outDir, "executor.toml"),

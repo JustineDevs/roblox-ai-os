@@ -26,7 +26,7 @@ Usage:
   rcs deepinit [path]
                 Alias for agents-init (lightweight AGENTS bootstrap only)
   rcs team      Spawn parallel worker panes in tmux and bootstrap inbox/task state
-  rcs ralph     Launch Codex with ralph persistence mode active
+  rcs forge     Launch Codex with forge persistence mode active
   rcs autoresearch [DEPRECATED] Use $autoresearch; direct CLI launch removed
   rcs version   Show version information
   rcs tmux-hook Manage tmux prompt injection workaround (init|status|validate|test)

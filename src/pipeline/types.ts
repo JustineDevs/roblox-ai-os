@@ -2,7 +2,7 @@
  * Pipeline stage interfaces for roblox-ai-os-creator-skills
  *
  * Shared stage contracts for the strict Autopilot loop.
- * The pipeline sequences: ralplan -> ralph -> code-review.
+ * The pipeline sequences: blueprint -> forge -> code-review.
  */
 
 // ---------------------------------------------------------------------------
@@ -52,10 +52,10 @@ export interface StageResult {
 
 /**
  * A single stage in the pipeline. Implementations wrap concrete execution
- * backends (ralplan, ralph, code-review, and legacy team adapters) behind this uniform interface.
+ * backends (blueprint, forge, code-review, and legacy team adapters) behind this uniform interface.
  */
 export interface PipelineStage {
-  /** Unique name for this stage (e.g. 'ralplan', 'ralph', 'code-review'). */
+  /** Unique name for this stage (e.g. 'blueprint', 'forge', 'code-review'). */
   readonly name: string;
 
   /** Execute the stage. Must return a StageResult. */
@@ -63,7 +63,7 @@ export interface PipelineStage {
 
   /**
    * Optional predicate — return true to skip this stage.
-   * Useful for conditional stages (e.g. skip ralplan if plan already exists).
+   * Useful for conditional stages (e.g. skip blueprint if plan already exists).
    */
   canSkip?(ctx: StageContext): boolean;
 }
@@ -92,10 +92,10 @@ export interface PipelineConfig {
   sessionId?: string;
 
   /**
-   * Maximum ralph verification iterations.
-   * Passed through to the ralph stage. Defaults to 10.
+   * Maximum forge verification iterations.
+   * Passed through to the forge stage. Defaults to 10.
    */
-  maxRalphIterations?: number;
+  maxForgeIterations?: number;
 
   /**
    * Legacy worker count for adapters that still launch team execution. Defaults to 2.
@@ -162,14 +162,14 @@ export interface PipelineModeStateExtension {
   /** Latest code-review verdict artifact. */
   review_verdict?: unknown;
 
-  /** Reason Autopilot returned to ralplan after a non-clean review. */
-  return_to_ralplan_reason?: string | null;
+  /** Reason Autopilot returned to blueprint after a non-clean review. */
+  return_to_blueprint_reason?: string | null;
 
-  /** Phase handoff artifacts keyed by contract names: ralplan, ralph, and code_review. */
+  /** Phase handoff artifacts keyed by contract names: blueprint, forge, and code_review. */
   handoff_artifacts?: Record<string, unknown>;
 
-  /** Ralph iteration ceiling for the verification stage. */
-  pipeline_max_ralph_iterations: number;
+  /** Forge iteration ceiling for the verification stage. */
+  pipeline_max_forge_iterations: number;
 
   /** Worker count for team execution. */
   pipeline_worker_count: number;

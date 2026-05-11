@@ -1,6 +1,6 @@
 import { executeStateOperation, type StateOperationName } from '../state/operations.js';
 
-const STATE_HELP = `Usage: rcs state <read|write|clear|list-active|get-status> [--input <json>] [--json]\n\nExamples:\n  rcs state read --input '{"mode":"ralph"}' --json\n  rcs state write --input '{"mode":"ralph","active":true,"current_phase":"executing"}' --json\n  rcs state clear --input '{"mode":"ralph","all_sessions":true}' --json\n  rcs state list-active --json\n  rcs state get-status --input '{"mode":"ralph"}' --json`;
+const STATE_HELP = `Usage: rcs state <read|write|clear|list-active|get-status> [--input <json>] [--json]\n\nExamples:\n  rcs state read --input '{"mode":"forge"}' --json\n  rcs state write --input '{"mode":"forge","active":true,"current_phase":"executing"}' --json\n  rcs state clear --input '{"mode":"forge","all_sessions":true}' --json\n  rcs state list-active --json\n  rcs state get-status --input '{"mode":"forge"}' --json`;
 
 const STATE_OPERATION_MAP: Record<string, StateOperationName> = {
   read: 'state_read',

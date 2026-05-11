@@ -7,7 +7,7 @@
  *
  * Injected context:
  * - Codebase map (directory/module structure for token-efficient exploration)
- * - Active mode state (ralph iteration, autopilot phase, etc.)
+ * - Active mode state (forge iteration, autopilot phase, etc.)
  * - Priority notepad content
  * - Project memory summary (tech stack, conventions, directives)
  * - Compaction survival instructions
@@ -40,6 +40,7 @@ import {
   listActiveSkills,
   readVisibleSkillActiveState,
 } from "../state/skill-active.js";
+import { resolveTrackedWorkflowMode } from "../state/workflow-transition.js";
 import {
   RCS_GENERATED_AGENTS_MARKER,
   RCS_MANAGED_AGENTS_END_MARKER,
@@ -175,7 +176,7 @@ function capBodyToMax(sections: OverlaySection[], maxBody: number): string {
 
 // ── Overlay generation ───────────────────────────────────────────────────────
 
-async function isRalphActive(
+async function isForgeActive(
   cwd: string,
   sessionId?: string,
 ): Promise<boolean> {
@@ -183,18 +184,22 @@ async function isRalphActive(
     return false;
   }
   const refs = await listModeStateFilesWithScopePreference(cwd, sessionId);
-  const ralphRef = refs.find((ref) => ref.mode === "ralph");
-  if (!ralphRef) return false;
+  const forgeRef = refs.find((ref) => formatWorkflowLabel(ref.mode) === "forge");
+  if (!forgeRef) return false;
 
   try {
-    const data = JSON.parse(await readFile(ralphRef.path, "utf-8"));
+    const data = JSON.parse(await readFile(forgeRef.path, "utf-8"));
     return data?.active === true;
   } catch {
     return false;
   }
 }
 
-async function readRalphPlanningArtifacts(
+function formatWorkflowLabel(mode: string): string {
+  return resolveTrackedWorkflowMode(mode) ?? mode;
+}
+
+async function readForgePlanningArtifacts(
   cwd: string,
 ): Promise<{ hasPrd: boolean; hasTestSpec: boolean; complete: boolean }> {
   const artifacts = readPlanningArtifacts(cwd);
@@ -215,7 +220,7 @@ async function readActiveModes(
   const refs = await listModeStateFilesWithScopePreference(cwd, sessionId);
   const canonicalState = await readVisibleSkillActiveState(cwd, sessionId);
   const canonicalSkills = new Map(
-    listActiveSkills(canonicalState).map((entry) => [entry.skill, entry] as const),
+    listActiveSkills(canonicalState).map((entry) => [formatWorkflowLabel(entry.skill), entry] as const),
   );
   const useCompatibilityFallback = canonicalState == null;
 
@@ -233,9 +238,10 @@ async function readActiveModes(
     a.mode.localeCompare(b.mode),
   )) {
     try {
+      const label = formatWorkflowLabel(ref.mode);
       if (
         !useCompatibilityFallback &&
-        !canonicalSkills.has(ref.mode)
+        !canonicalSkills.has(label)
       ) {
         continue;
       }
@@ -246,11 +252,11 @@ async function readActiveModes(
         details.push(
           `iteration ${data.iteration}/${data.max_iterations || "?"}`,
         );
-      const canonicalPhase = canonicalSkills.get(ref.mode)?.phase;
+      const canonicalPhase = canonicalSkills.get(label)?.phase;
       const phase = data.current_phase || canonicalPhase;
       if (phase) details.push(`phase: ${phase}`);
-      modes.push(`- ${ref.mode}: ${details.join(", ") || "active"}`);
-      emittedCanonicalSkills.add(ref.mode);
+      modes.push(`- ${label}: ${details.join(", ") || "active"}`);
+      emittedCanonicalSkills.add(label);
     } catch {
       // Skip malformed mode state files.
     }
@@ -261,7 +267,8 @@ async function readActiveModes(
       if (emittedCanonicalSkills.has(skill)) continue;
       const details: string[] = [];
       if (entry.phase) details.push(`phase: ${entry.phase}`);
-      modes.push(`- ${skill}: ${details.join(", ") || "active"}`);
+      const label = formatWorkflowLabel(skill);
+      modes.push(`- ${label}: ${details.join(", ") || "active"}`);
     }
   }
 
@@ -376,7 +383,7 @@ export async function generateOverlay(
     notepadPriority,
     projectMemory,
     codebaseMap,
-    ralphActive,
+    forgeActive,
     planningArtifacts,
     teamOverlay,
     exploreRoutingGuidance,
@@ -385,8 +392,8 @@ export async function generateOverlay(
     readNotepadPriority(cwd),
     readProjectMemorySummary(cwd),
     generateCodebaseMap(cwd),
-    isRalphActive(cwd, sessionId),
-    readRalphPlanningArtifacts(cwd),
+    isForgeActive(cwd, sessionId),
+    readForgePlanningArtifacts(cwd),
     orchestrationMode === "team"
       ? readTeamOrchestratorOverlay()
       : Promise.resolve(""),
@@ -422,6 +429,23 @@ export async function generateOverlay(
     });
   }
 
+  if (forgeActive) {
+    const gateStatus = planningArtifacts.complete ? "UNLOCKED" : "BLOCKED";
+    const missing: string[] = [];
+    if (!planningArtifacts.hasPrd) missing.push("`prd-*.md`");
+    if (!planningArtifacts.hasTestSpec) missing.push("`test-spec-*.md`");
+    const details =
+      missing.length > 0
+        ? `Missing: ${missing.join(", ")}`
+        : "Planning artifacts present: PRD + test spec";
+
+    sections.push({
+      key: "forge_planning_gate",
+      text: `**Forge Blueprint-First Gate:** ${gateStatus}\n- Requirement: complete planning artifacts before implementation/tool execution.\n- ${details}\n- Path: \`.rcs/plans/\``,
+      optional: false,
+    });
+  }
+
   // Priority notepad (max 300 chars) - optional
   if (notepadPriority) {
     sections.push({
@@ -453,23 +477,6 @@ export async function generateOverlay(
       key: "explore_routing",
       text: truncate(exploreRoutingGuidance, 600),
       optional: true,
-    });
-  }
-
-  if (ralphActive) {
-    const gateStatus = planningArtifacts.complete ? "UNLOCKED" : "BLOCKED";
-    const missing: string[] = [];
-    if (!planningArtifacts.hasPrd) missing.push("`prd-*.md`");
-    if (!planningArtifacts.hasTestSpec) missing.push("`test-spec-*.md`");
-    const details =
-      missing.length > 0
-        ? `Missing: ${missing.join(", ")}`
-        : "Planning artifacts present: PRD + test spec";
-
-    sections.push({
-      key: "ralph_planning_gate",
-      text: `**Ralph Ralplan-First Gate:** ${gateStatus}\n- Requirement: complete planning artifacts before implementation/tool execution.\n- ${details}\n- Path: \`.rcs/plans/\``,
-      optional: false,
     });
   }
 

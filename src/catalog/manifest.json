@@ -9,12 +9,6 @@
       "core": true
     },
     {
-      "name": "ralph",
-      "category": "execution",
-      "status": "active",
-      "core": true
-    },
-    {
       "name": "ultrawork",
       "category": "execution",
       "status": "active",
@@ -60,13 +54,6 @@
       "status": "active"
     },
     {
-      "name": "ralplan",
-      "category": "planning",
-      "status": "active",
-      "core": true,
-      "canonical": "plan"
-    },
-    {
       "name": "deep-interview",
       "category": "planning",
       "status": "active"
@@ -79,12 +66,14 @@
     {
       "name": "blueprint",
       "category": "planning",
-      "status": "active"
+      "status": "active",
+      "core": true
     },
     {
       "name": "forge",
       "category": "execution",
-      "status": "active"
+      "status": "active",
+      "core": true
     },
     {
       "name": "crew",
@@ -216,18 +205,12 @@
       "name": "web-clone",
       "category": "shortcut",
       "status": "merged",
-      "canonical": "visual-ralph"
+      "canonical": "visual-forge"
     },
     {
-      "name": "visual-ralph",
+      "name": "visual-forge",
       "category": "shortcut",
       "status": "active",
-      "canonical": "designer"
-    },
-    {
-      "name": "frontend-ui-ux",
-      "category": "shortcut",
-      "status": "alias",
       "canonical": "designer"
     },
     {
@@ -332,7 +315,7 @@
       "internalRequired": false
     },
     {
-      "name": "ralph-init",
+      "name": "forge-init",
       "category": "utility",
       "status": "merged",
       "canonical": "plan"
@@ -386,33 +369,9 @@
       "status": "active"
     },
     {
-      "name": "style-reviewer",
-      "category": "review",
-      "status": "merged",
-      "canonical": "code-reviewer"
-    },
-    {
-      "name": "quality-reviewer",
-      "category": "review",
-      "status": "merged",
-      "canonical": "code-reviewer"
-    },
-    {
-      "name": "api-reviewer",
-      "category": "review",
-      "status": "merged",
-      "canonical": "code-reviewer"
-    },
-    {
       "name": "security-reviewer",
       "category": "review",
       "status": "active"
-    },
-    {
-      "name": "performance-reviewer",
-      "category": "review",
-      "status": "merged",
-      "canonical": "code-reviewer"
     },
     {
       "name": "code-reviewer",
@@ -430,12 +389,6 @@
       "status": "active"
     },
     {
-      "name": "quality-strategist",
-      "category": "domain",
-      "status": "merged",
-      "canonical": "verifier"
-    },
-    {
       "name": "build-fixer",
       "category": "domain",
       "status": "active"
@@ -451,12 +404,6 @@
       "status": "active"
     },
     {
-      "name": "qa-tester",
-      "category": "domain",
-      "status": "merged",
-      "canonical": "test-engineer"
-    },
-    {
       "name": "git-master",
       "category": "domain",
       "status": "active"
@@ -470,30 +417,6 @@
       "name": "researcher",
       "category": "domain",
       "status": "active"
-    },
-    {
-      "name": "product-manager",
-      "category": "product",
-      "status": "merged",
-      "canonical": "analyst"
-    },
-    {
-      "name": "ux-researcher",
-      "category": "product",
-      "status": "merged",
-      "canonical": "designer"
-    },
-    {
-      "name": "information-architect",
-      "category": "product",
-      "status": "merged",
-      "canonical": "designer"
-    },
-    {
-      "name": "product-analyst",
-      "category": "product",
-      "status": "merged",
-      "canonical": "analyst"
     },
     {
       "name": "critic",

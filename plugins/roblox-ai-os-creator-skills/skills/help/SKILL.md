@@ -1,6 +1,10 @@
 ---
 name: help
 description: Guide on using Roblox Creator Skills
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # RCS Help
@@ -49,7 +53,7 @@ These are advanced lower-level runtime surfaces, not the primary public creator 
 - `rcs setup` installs prompts, skills, hooks, and runtime wiring
 - `rcs doctor` checks install health
 - `rcs team` runs the lower-level durable tmux-backed team runtime
-- `rcs ralph` runs the lower-level persistent completion loop
+- `rcs forge` runs the lower-level persistent completion loop
 - `rcs explore` and `rcs sparkshell` cover read-only repo lookup and bounded shell inspection
 
 ## Roblox Implementation Gate
@@ -73,3 +77,6 @@ Use:
 - `docs/reference/roblox-pre-action-protocol.md`
 - `templates/psychology/`
 - `templates/roblox/`
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

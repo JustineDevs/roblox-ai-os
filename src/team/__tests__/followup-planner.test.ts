@@ -60,20 +60,20 @@ describe('followup-planner', () => {
     assert.equal(plan.verificationPlan.checkpoints.length, 3);
   });
 
-  it('builds concrete ralph staffing guidance from the available roster', () => {
+  it('builds concrete forge staffing guidance from the available roster', () => {
     const plan = buildFollowupStaffingPlan(
-      'ralph',
+      'forge',
       'Investigate auth regression and verify the fix',
       ['architect', 'debugger', 'executor', 'test-engineer'],
     );
 
-    assert.equal(plan.mode, 'ralph');
+    assert.equal(plan.mode, 'forge');
     assert.equal(plan.recommendedHeadcount, 3);
     assert.match(plan.staffingSummary, /architect x1/);
     assert.match(plan.staffingSummary, /test-engineer x1/);
     assert.ok(plan.allocations.some((allocation) => allocation.reason.includes('sign-off')));
-    assert.equal(plan.launchHints.shellCommand, 'rcs ralph "Investigate auth regression and verify the fix"');
-    assert.equal(plan.launchHints.skillCommand, '$ralph "Investigate auth regression and verify the fix"');
+    assert.equal(plan.launchHints.shellCommand, 'rcs forge "Investigate auth regression and verify the fix"');
+    assert.equal(plan.launchHints.skillCommand, '$forge "Investigate auth regression and verify the fix"');
     assert.match(plan.verificationPlan.summary, /persistent execution and verification owner/i);
     assert.equal(plan.verificationPlan.checkpoints.length, 3);
   });

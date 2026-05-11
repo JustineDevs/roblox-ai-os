@@ -11,10 +11,10 @@ async function readSourceManifestRaw(): Promise<string> {
 
 async function readSourceManifestCounts(): Promise<{ skills: number; agents: number }> {
   const raw = await readSourceManifestRaw();
-  const parsed = JSON.parse(raw) as { skills: unknown[]; agents: unknown[] };
+  const parsed = JSON.parse(raw) as { skills: unknown[]; agents: Array<{ status?: string }> };
   return {
     skills: parsed.skills.length,
-    agents: parsed.agents.length,
+    agents: parsed.agents.filter((agent) => agent.status === 'active' || agent.status === 'internal').length,
   };
 }
 
@@ -41,14 +41,16 @@ describe('catalog reader/contract', () => {
     assert.ok(!contract.aliases.some((a) => a.name === 'analyze'));
     assert.ok(contract.internalHidden.includes('worker'));
     assert.ok(contract.coreSkills.includes('autopilot'));
+    assert.ok(contract.agents.some((a) => a.name === 'designer' && a.status === 'active'));
+    assert.equal(contract.agents.every((a) => a.status === 'active' || a.status === 'internal'), true);
     assert.ok(contract.skills.some((s) => s.name === 'analyze' && s.status === 'active'));
     assert.ok(contract.skills.some((s) => s.name === 'ask-claude' && s.status === 'active'));
     assert.ok(contract.skills.some((s) => s.name === 'ask-gemini' && s.status === 'active'));
     assert.ok(contract.skills.some((s) => s.name === 'ai-slop-cleaner' && s.status === 'active'));
-    assert.ok(contract.skills.some((s) => s.name === 'visual-ralph' && s.status === 'active'));
+    assert.ok(contract.skills.some((s) => s.name === 'visual-forge' && s.status === 'active'));
     assert.ok(
       contract.skills.some(
-        (s) => s.name === 'web-clone' && s.status === 'merged' && s.canonical === 'visual-ralph',
+        (s) => s.name === 'web-clone' && s.status === 'merged' && s.canonical === 'visual-forge',
       ),
     );
   });

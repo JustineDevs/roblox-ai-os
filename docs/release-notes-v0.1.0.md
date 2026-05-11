@@ -4,7 +4,7 @@
 
 ## Summary
 
-`v0.1.0` is the first strict RCS-owned ship candidate after the fork-to-RCS transition. This release consolidates the retained pre-v0.1.0 release-note train into one canonical archival note and defines the current shipped product surface as **Roblox Creator Skills for Codex**.
+`v0.1.0` is the first strict RCS-owned ship candidate after the package and product transition into Roblox Creator Skills. This release consolidates the retained pre-v0.1.0 release-note train into one canonical archival note and defines the current shipped product surface as **Roblox Creator Skills for Codex**.
 
 ## Canonical product surface
 

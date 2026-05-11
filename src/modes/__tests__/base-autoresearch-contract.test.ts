@@ -24,14 +24,14 @@ describe('modes/base deep-interview contract integration', () => {
 });
 
 describe('modes/base autoresearch contract integration', () => {
-  it('startMode auto-completes deep-interview when starting ralplan', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-interview-ralplan-handoff-'));
+  it('startMode auto-completes deep-interview when starting blueprint', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-interview-blueprint-handoff-'));
     try {
       await startMode('deep-interview', 'clarify contract', 3, wd);
-      const started = await startMode('ralplan', 'plan contract', 5, wd);
-      assert.equal(started.mode, 'ralplan');
+      const started = await startMode('blueprint', 'plan contract', 5, wd);
+      assert.equal(started.mode, 'blueprint');
       assert.equal(started.active, true);
-      assert.equal(started.transition_message, 'mode transiting: deep-interview -> ralplan');
+      assert.equal(started.transition_message, 'mode transiting: deep-interview -> blueprint');
 
       const completed = JSON.parse(
         await readFile(join(wd, '.rcs', 'state', 'deep-interview-state.json'), 'utf-8'),
@@ -44,25 +44,25 @@ describe('modes/base autoresearch contract integration', () => {
     }
   });
 
-  it('startMode allows the approved team + ralph overlap', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-team-ralph-overlap-'));
+  it('startMode allows the approved team + forge overlap', async () => {
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-team-forge-overlap-'));
     try {
       await startMode('team', 'demo team', 5, wd);
-      const started = await startMode('ralph', 'demo ralph', 5, wd);
-      assert.equal(started.mode, 'ralph');
+      const started = await startMode('forge', 'demo forge', 5, wd);
+      assert.equal(started.mode, 'forge');
       assert.equal(started.active, true);
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
   });
 
-  it('startMode blocks autoresearch when ralph is active', async () => {
+  it('startMode blocks autoresearch when forge is active', async () => {
     const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-autoresearch-contract-'));
     try {
-      await startMode('ralph', 'demo', 5, wd);
+      await startMode('forge', 'demo', 5, wd);
       await assert.rejects(
         () => startMode('autoresearch', 'demo mission', 1, wd),
-        /Cannot start autoresearch: ralph is already active/i,
+        /Cannot start autoresearch: forge is already active/i,
       );
     } finally {
       await rm(wd, { recursive: true, force: true });
@@ -70,9 +70,9 @@ describe('modes/base autoresearch contract integration', () => {
   });
 
   it('startMode allows ultrawork overlap with any tracked mode', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-ralph-ultrawork-allow-'));
+    const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-forge-ultrawork-allow-'));
     try {
-      await startMode('ralph', 'demo', 5, wd);
+      await startMode('forge', 'demo', 5, wd);
       const started = await startMode('ultrawork', 'demo mission', 1, wd);
       assert.equal(started.mode, 'ultrawork');
       assert.equal(started.active, true);
@@ -84,9 +84,9 @@ describe('modes/base autoresearch contract integration', () => {
   it('startMode blocks execution-to-planning rollback auto-complete', async () => {
     const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-rollback-deny-'));
     try {
-      await startMode('ralph', 'demo', 5, wd);
+      await startMode('forge', 'demo', 5, wd);
       await assert.rejects(
-        () => startMode('ralplan', 'plan again', 5, wd),
+        () => startMode('blueprint', 'plan again', 5, wd),
         /Execution-to-planning rollback auto-complete is not allowed/i,
       );
     } finally {

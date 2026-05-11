@@ -1,7 +1,8 @@
 import { spawn } from "child_process";
 import { existsSync } from "fs";
 import { appendFile, mkdir } from "fs/promises";
-import { join } from "path";
+import { basename, join } from "path";
+import { pathToFileURL } from "url";
 import { getPackageRoot } from "../../utils/package.js";
 import {
 	createLifecycleBroadcastFingerprint,
@@ -13,11 +14,13 @@ import {
 	isHookPluginsEnabled,
 	resolveHookPluginTimeoutMs,
 } from "./loader.js";
+import { createHookPluginSdk } from "./sdk.js";
 import type {
 	HookDispatchOptions,
 	HookDispatchResult,
 	HookEventEnvelope,
 	HookPluginDispatchResult,
+	HookPluginModule,
 } from "./types.js";
 
 interface RunnerResult {
@@ -29,6 +32,85 @@ interface RunnerResult {
 
 const RESULT_PREFIX = "__RCS_PLUGIN_RESULT__ ";
 const RUNNER_SIGKILL_GRACE_MS = 250;
+
+async function runPluginInProcessFallback(
+	plugin: { id: string; path: string; file: string },
+	event: HookEventEnvelope,
+	options: Required<Pick<HookDispatchOptions, "cwd">> & HookDispatchOptions,
+	sideEffectsEnabled: boolean,
+	started: number,
+	reason: string,
+): Promise<HookPluginDispatchResult> {
+	try {
+		const moduleUrl = `${pathToFileURL(plugin.path).href}?t=${Date.now()}`;
+		const loaded = await import(moduleUrl) as HookPluginModule;
+		if (typeof loaded.onHookEvent !== "function") {
+			const duration = Date.now() - started;
+			return {
+				plugin: plugin.id,
+				path: plugin.path,
+				file: plugin.file,
+				plugin_id: plugin.id,
+				ok: false,
+				status: "invalid_export",
+				reason: "invalid_export",
+				durationMs: duration,
+				duration_ms: duration,
+			};
+		}
+
+		const sdk = createHookPluginSdk({
+			cwd: options.cwd,
+			pluginName: plugin.id || basename(plugin.path),
+			event,
+			sideEffectsEnabled,
+		});
+		const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+		const originalStderrWrite = process.stderr.write.bind(process.stderr);
+		const previousCwd = process.cwd();
+		// Match isolated-runner behavior: plugin console noise must not leak into caller stdout/stderr.
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		(process.stdout as any).write = (() => true) as typeof process.stdout.write;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		(process.stderr as any).write = (() => true) as typeof process.stderr.write;
+		try {
+			if (options.cwd !== previousCwd) process.chdir(options.cwd);
+			await Promise.resolve(loaded.onHookEvent(event, sdk));
+		} finally {
+			if (process.cwd() !== previousCwd) process.chdir(previousCwd);
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(process.stdout as any).write = originalStdoutWrite;
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			(process.stderr as any).write = originalStderrWrite;
+		}
+		const duration = Date.now() - started;
+		return {
+			plugin: plugin.id,
+			path: plugin.path,
+			file: plugin.file,
+			plugin_id: plugin.id,
+			ok: true,
+			status: "ok",
+			reason,
+			durationMs: duration,
+			duration_ms: duration,
+		};
+	} catch (error) {
+		const duration = Date.now() - started;
+		return {
+			plugin: plugin.id,
+			path: plugin.path,
+			file: plugin.file,
+			plugin_id: plugin.id,
+			ok: false,
+			status: "error",
+			reason: "plugin_error",
+			error: error instanceof Error ? error.message : String(error),
+			durationMs: duration,
+			duration_ms: duration,
+		};
+	}
+}
 
 function hooksLogPath(cwd: string): string {
 	const day = new Date().toISOString().slice(0, 10);
@@ -162,19 +244,14 @@ async function runPluginRunner(
 		});
 
 		child.on("error", (error) => {
-			const duration = Date.now() - started;
-			settle({
-				plugin: plugin.id,
-				path: plugin.path,
-				file: plugin.file,
-				plugin_id: plugin.id,
-				ok: false,
-				status: "runner_error",
-				reason: "spawn_failed",
-				error: error.message,
-				durationMs: duration,
-				duration_ms: duration,
-			});
+			void runPluginInProcessFallback(
+				plugin,
+				event,
+				options,
+				sideEffectsEnabled,
+				started,
+				"spawn_failed_fallback",
+			).then((result) => settle(result));
 		});
 
 		child.on("close", () => {
@@ -226,6 +303,18 @@ async function runPluginRunner(
 					durationMs: duration,
 					duration_ms: duration,
 				});
+				return;
+			}
+
+			if (!parsed || (!stdout.trim() && !stderr.trim())) {
+				void runPluginInProcessFallback(
+					plugin,
+					event,
+					options,
+					sideEffectsEnabled,
+					started,
+					"runner_empty_output_fallback",
+				).then((result) => settle(result));
 				return;
 			}
 

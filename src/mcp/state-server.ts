@@ -20,10 +20,10 @@ const SUPPORTED_MODES = [
 	"autopilot",
 	"autoresearch",
 	"team",
-	"ralph",
+	"forge",
 	"ultrawork",
 	"ultraqa",
-	"ralplan",
+	"blueprint",
 	"deep-interview",
 	"skill-active",
 ] as const;

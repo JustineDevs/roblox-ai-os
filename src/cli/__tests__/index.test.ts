@@ -540,7 +540,7 @@ describe("cleanupPostLaunchModeStateFiles", () => {
     const sessionId = "sess-postlaunch-cleanup";
     const stateDir = join(wd, ".rcs", "state");
     const sessionStateDir = join(stateDir, "sessions", sessionId);
-    const partialState = '{\n  "active": true,\n  "mode": "ralph",\n';
+    const partialState = '{\n  "active": true,\n  "mode": "forge",\n';
     const warnings: string[] = [];
 
     await mkdir(sessionStateDir, { recursive: true });
@@ -550,7 +550,7 @@ describe("cleanupPostLaunchModeStateFiles", () => {
       "utf-8",
     );
     await writeFile(join(stateDir, "deep-interview-state.json"), "", "utf-8");
-    await writeFile(join(sessionStateDir, "ralph-state.json"), partialState, "utf-8");
+    await writeFile(join(sessionStateDir, "forge-state.json"), partialState, "utf-8");
 
     await cleanupPostLaunchModeStateFiles(wd, sessionId, {
       writeWarn: (line) => warnings.push(line),
@@ -562,8 +562,8 @@ describe("cleanupPostLaunchModeStateFiles", () => {
     const deepInterview = JSON.parse(
       await readFile(join(stateDir, "deep-interview-state.json"), "utf-8"),
     ) as Record<string, unknown>;
-    const ralph = JSON.parse(
-      await readFile(join(sessionStateDir, "ralph-state.json"), "utf-8"),
+    const forge = JSON.parse(
+      await readFile(join(sessionStateDir, "forge-state.json"), "utf-8"),
     ) as Record<string, unknown>;
     assert.equal(autopilot.active, false);
     assert.equal(typeof autopilot.completed_at, "string");
@@ -572,11 +572,11 @@ describe("cleanupPostLaunchModeStateFiles", () => {
     assert.equal(deepInterview.current_phase, "cancelled");
     assert.equal(typeof deepInterview.completed_at, "string");
     assert.equal(typeof deepInterview.last_turn_at, "string");
-    assert.equal(ralph.active, false);
-    assert.equal(ralph.mode, "ralph");
-    assert.equal(ralph.current_phase, "cancelled");
-    assert.equal(typeof ralph.completed_at, "string");
-    assert.equal(typeof ralph.last_turn_at, "string");
+    assert.equal(forge.active, false);
+    assert.equal(forge.mode, "forge");
+    assert.equal(forge.current_phase, "cancelled");
+    assert.equal(typeof forge.completed_at, "string");
+    assert.equal(typeof forge.last_turn_at, "string");
     const rootCanonicalPath = join(stateDir, "skill-active-state.json");
     const sessionCanonicalPath = join(sessionStateDir, "skill-active-state.json");
     if (existsSync(rootCanonicalPath)) {
@@ -600,21 +600,21 @@ describe("cleanupPostLaunchModeStateFiles", () => {
     const wd = await mkdtemp(join(tmpdir(), "rcs-postlaunch-mode-retry-"));
     const sessionId = "sess-postlaunch-retry";
     const stateDir = join(wd, ".rcs", "state");
-    const statePath = join(stateDir, "ralph-state.json");
+    const statePath = join(stateDir, "forge-state.json");
     const writes: Array<{ path: string; content: string }> = [];
-    const validState = JSON.stringify({ active: true, mode: "ralph" }, null, 2);
+    const validState = JSON.stringify({ active: true, mode: "forge" }, null, 2);
     let reads = 0;
 
     await mkdir(stateDir, { recursive: true });
 
     const mockReaddir = (async (dir: unknown, _options: unknown) => (
-      String(dir) === stateDir ? ["ralph-state.json"] : []
+      String(dir) === stateDir ? ["forge-state.json"] : []
     )) as unknown as typeof fsReaddir;
     const mockReadFile = (async (path: unknown, _options: unknown) => {
         assert.equal(String(path), statePath);
         reads += 1;
         return reads === 1
-          ? '{\n  "active": true,\n  "mode": "ralph"'
+          ? '{\n  "active": true,\n  "mode": "forge"'
           : validState;
       }) as unknown as typeof readFile;
     const mockWriteFile = (async (path: unknown, content: unknown, _options: unknown) => {
@@ -647,7 +647,7 @@ describe("cleanupPostLaunchModeStateFiles", () => {
     const malformedState = '{\n  "active": true,\n}\n';
 
     await mkdir(stateDir, { recursive: true });
-    await writeFile(join(stateDir, "ralph-state.json"), malformedState, "utf-8");
+    await writeFile(join(stateDir, "forge-state.json"), malformedState, "utf-8");
     await writeFile(
       join(stateDir, "ultrawork-state.json"),
       JSON.stringify({ active: true, mode: "ultrawork" }, null, 2),
@@ -671,9 +671,9 @@ describe("cleanupPostLaunchModeStateFiles", () => {
       assert.equal(canonical.active, false);
       assert.deepEqual(canonical.active_skills, []);
     }
-    assert.equal(await readFile(join(stateDir, "ralph-state.json"), "utf-8"), malformedState);
+    assert.equal(await readFile(join(stateDir, "forge-state.json"), "utf-8"), malformedState);
     assert.equal(warnings.length, 1);
-    assert.match(warnings[0] ?? "", /skipped malformed mode state .*ralph-state\.json/);
+    assert.match(warnings[0] ?? "", /skipped malformed mode state .*forge-state\.json/);
   });
 
   it("clears canonical skill-active entries during cleanup and hides them from HUD/overlay readers", async () => {
@@ -996,7 +996,6 @@ describe("commandOwnsLocalHelp", () => {
       "deepinit",
       "hooks",
       "hud",
-      "ralph",
       "resume",
       "session",
       "sparkshell",

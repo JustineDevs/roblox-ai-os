@@ -33,7 +33,7 @@ const antiSlopWorkingAgreementPatterns = [
 
 const antiSlopWorkflowPatterns = [
   /^Anti-slop workflow:$/m,
-  /^- Cleanup\/refactor\/deslop work still follows the same `\$deep-interview` -> `\$ralplan` -> `\$team`\/`\$ralph` path; use `\$ai-slop-cleaner` as a bounded helper inside the chosen execution lane, not as a competing top-level workflow\.$/m,
+  /^- Cleanup\/refactor\/deslop work still follows the same `\$deep-interview` -> `\$blueprint` -> `\$team`\/`\$forge` path; use `\$ai-slop-cleaner` as a bounded helper inside the chosen execution lane, not as a competing top-level workflow\.$/m,
   /^- Write a cleanup plan before modifying code; lock existing behavior with regression tests first, then make one smell-focused pass at a time\.$/m,
   /^- Prefer deletion over addition, and prefer reuse plus boundary repair over new layers\.$/m,
   /^- No new dependencies without explicit request\.$/m,
@@ -43,9 +43,9 @@ const antiSlopWorkflowPatterns = [
 
 const aiSlopCleanerWorkflowPatterns = [
   /^Reduce AI-generated slop with a regression-tests-first, smell-by-smell cleanup workflow that preserves behavior and raises signal quality\.$/m,
-  /^## Scoped File Lists and Ralph Workflow$/m,
+  /^## Scoped File Lists and Forge Workflow$/m,
   /^- This skill can accept a \*\*file list scope\*\* instead of a whole feature area\.$/m,
-  /^- In the \*\*Ralph workflow\*\*, the mandatory deslop pass should run this skill on Ralph's changed files only, in standard mode unless the caller explicitly requests otherwise\.$/m,
+  /^- In the \*\*Forge workflow\*\*, the mandatory deslop pass should run this skill on Forge's changed files only, in standard mode unless the caller explicitly requests otherwise\.$/m,
   /^1\. \*\*Lock behavior with regression tests first\*\*$/m,
   /^   - For fallback-like code, cover the primary path and any preserved compatibility\/fail-safe fallback before cleanup$/m,
   /^2\. \*\*Create a cleanup plan before code\*\*$/m,
@@ -56,8 +56,8 @@ const aiSlopCleanerWorkflowPatterns = [
   /^     - \*\*Masking fallback slop\*\* — hides errors or evidence, bypasses the primary contract, suppresses tests or validation, swallows failures, silently defaults, or adds untested alternate paths$/m,
   /^     - \*\*Grounded compatibility\/fail-safe fallback\*\* — is scoped to an external\/version\/fail-safe boundary, documents the rationale, preserves failure evidence, and has regression tests for both the primary and fallback behavior$/m,
   /^   - Prefer root-cause repair, deletion, boundary repair, or explicit failure behavior before preserving fallback paths$/m,
-  /^   - For broad, ambiguous, cross-layer, or architectural fallback-like code, invoke `\$ralplan` for consensus resolution before edits$/m,
-  /^   - Recursion guard: when already inside ralplan, ralph, team, or another RCS workflow, do not spawn a nested `\$ralplan`; record the finding and attach it to the active ralplan, leader, or plan handoff instead$/m,
+  /^   - For broad, ambiguous, cross-layer, or architectural fallback-like code, invoke `\$blueprint` for consensus resolution before edits$/m,
+  /^   - Recursion guard: when already inside blueprint, forge, team, or another RCS workflow, do not spawn a nested `\$blueprint`; record the finding and attach it to the active blueprint, leader, or plan handoff instead$/m,
   /^4\. \*\*Categorize issues before editing\*\*$/m,
   /^   - \*\*Fallback-like code\*\* — masking fallbacks, workaround branches, bypasses, swallowed errors, silent defaults, broad shims, alternate execution paths$/m,
   /^   - \*\*Duplication\*\* — repeated logic, copy-paste branches, redundant helpers$/m,
@@ -132,7 +132,7 @@ describe('anti-slop workflow surfaces', () => {
     assert.match(skill, /remaining risks/i);
     assert.match(skill, /file list scope/i);
     assert.match(skill, /changed files/i);
-    assert.match(skill, /Ralph workflow/i);
+    assert.match(skill, /Forge workflow/i);
     assert.match(skill, /fallback-like (?:inventory|detection|code)/i);
     assert.match(skill, /quick hack/i);
     assert.match(skill, /temporary workaround/i);
@@ -147,11 +147,11 @@ describe('anti-slop workflow surfaces', () => {
     assert.match(skill, /Grounded compatibility\/fail-safe fallback/i);
     assert.match(skill, /root-cause repair/i);
     assert.match(skill, /explicit failure behavior/i);
-    assert.match(skill, /\$ralplan/);
+    assert.match(skill, /\$blueprint/);
     assert.match(skill, /consensus resolution/i);
     assert.match(skill, /Recursion guard/i);
-    assert.match(skill, /do not spawn a nested `?\$ralplan`?/i);
-    assert.match(skill, /active ralplan/i);
+    assert.match(skill, /do not spawn a nested `?\$blueprint`?/i);
+    assert.match(skill, /active blueprint/i);
     assert.match(skill, /Fallback Findings/i);
     assert.match(skill, /classifications/i);
     assert.match(skill, /escalation status/i);

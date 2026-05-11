@@ -1,11 +1,17 @@
 ---
 name: worker
-description: Team worker protocol (ACK, mailbox, task lifecycle) for tmux-based RCS teams
+description: Compatibility worker protocol for tmux-based crew execution sessions
+surface-class: "internal"
+domain: "creator-runtime"
+audience: "internal"
+artifact-type: "skill"
 ---
 
 # Worker Skill
 
-This skill is for a Codex session that was started as an RCS Team worker (a tmux pane spawned by `$team`).
+> Legacy compatibility surface. Public creator language should prefer `crew` / coordinated execution terminology. This file remains the internal worker-runtime protocol surface for tmux-managed crew panes.
+
+This skill is for a Codex session that was started as a coordinated crew worker pane under `rcs team` / `$team`.
 
 ## Identity
 
@@ -15,7 +21,7 @@ You MUST be running with `RCS_TEAM_WORKER` set. It looks like:
 
 Example: `alpha/worker-2`
 
-## Load Worker Skill Path (Claude/Codex)
+## Load Crew Worker Skill Path (Claude/Codex)
 
 When a worker inbox tells you to load this skill, resolve the first existing path:
 
@@ -34,7 +40,7 @@ When a worker inbox tells you to load this skill, resolve the first existing pat
    - Body: one short deterministic line (recommended: `ACK: <workerName> initialized`).
 3. After ACK, proceed to your inbox instructions.
 
-The lead will see your message in:
+The crew lead will see your message in:
 
 `<team_state_root>/team/<teamName>/mailbox/leader-fixed.json`
 
@@ -67,7 +73,7 @@ rcs team api send-message --input "{\"team_name\":\"<teamName>\",\"from_worker\"
 8. Complete/fail the task via lifecycle transition CLI interop (`rcs team api transition-task-status --json`) from `in_progress` to `completed` or `failed`.
    - Do NOT directly write lifecycle fields (`status`, `owner`, `result`, `error`) in task files.
 9. Use `rcs team api release-task-claim --json` only for rollback/requeue to `pending` (not for completion).
-10. Update your worker status:
+10. Update your crew-worker status:
    `<team_state_root>/team/<teamName>/workers/<workerName>/status.json` with `{"state":"idle", ...}`
 
 ## Mailbox
@@ -95,7 +101,7 @@ rcs team api mailbox-mark-delivered --input "{\"team_name\":\"<teamName>\",\"wor
 
 ## Dispatch Discipline (state-first)
 
-Worker sessions should treat team state + CLI interop as the source of truth.
+Crew worker sessions should treat team state + CLI interop as the source of truth.
 
 - Prefer inbox/mailbox/task state and `rcs team api ... --json` operations.
 - Do **not** rely on ad-hoc tmux keystrokes as a primary delivery channel.
@@ -103,4 +109,7 @@ Worker sessions should treat team state + CLI interop as the source of truth.
 
 ## Shutdown
 
-If the lead sends a shutdown request, follow the shutdown inbox instructions exactly, write your shutdown ack file, then exit the Codex session.
+If the crew lead sends a shutdown request, follow the shutdown inbox instructions exactly, write your shutdown ack file, then exit the Codex session.
+surface-class: "internal"
+domain: "creator-runtime"
+audience: "internal"

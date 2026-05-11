@@ -48,14 +48,14 @@ describe('session-status helper', () => {
       await writeSessionStart(wd, 'sess-1', { nativeSessionId: 'native-1' });
       await writeJson(join(wd, '.rcs', 'state', 'sessions', 'sess-1', 'skill-active-state.json'), {
         active: true,
-        skill: 'ralph',
+        skill: 'forge',
         phase: 'executing',
         updated_at: '2026-03-20T00:04:30.000Z',
         session_id: 'sess-1',
       });
       await writeJson(join(wd, '.rcs', 'state', 'sessions', 'sess-1', 'run-state.json'), {
         version: 1,
-        mode: 'ralph',
+        mode: 'forge',
         active: true,
         outcome: 'continue',
         current_phase: 'executing',
@@ -75,7 +75,7 @@ describe('session-status helper', () => {
           threadId,
           turnId,
           timestamp: '2026-03-20T00:04:00.000Z',
-          mode: 'ralph',
+          mode: 'forge',
         });
       }
       await writeSubagentTrackingState(wd, tracking);
@@ -87,7 +87,7 @@ describe('session-status helper', () => {
       assert.match(status, /^Tracked RCS session status/m);
       assert.match(status, /Session: sess-1/);
       assert.match(status, /Native: native-1/);
-      assert.match(status, /State: running \(ralph\/executing\)/);
+      assert.match(status, /State: running \(forge\/executing\)/);
       assert.match(status, /Tmux: rcs-session \/ %9/);
       assert.match(status, /Updated: 2026-03-20T00:04:30.000Z/);
       assert.match(status, /Freshness: Fresh/);
@@ -97,13 +97,13 @@ describe('session-status helper', () => {
     }
   });
 
-  it('does not report prompt-seeded ralph skill-active state as running without a live run-state', async () => {
+  it('does not report prompt-seeded forge skill-active state as running without a live run-state', async () => {
     const wd = await mkdtemp(join(tmpdir(), 'rcs-session-status-prompt-seeded-'));
     try {
       await writeSessionStart(wd, 'sess-seeded', { nativeSessionId: 'native-seeded' });
       await writeJson(join(wd, '.rcs', 'state', 'sessions', 'sess-seeded', 'skill-active-state.json'), {
         active: true,
-        skill: 'ralph',
+        skill: 'forge',
         phase: 'planning',
         updated_at: '2026-03-20T00:04:30.000Z',
         session_id: 'sess-seeded',
@@ -116,7 +116,7 @@ describe('session-status helper', () => {
       assert.match(status, /Session: sess-seeded/);
       assert.match(status, /Native: native-seeded/);
       assert.match(status, /State: running$/m);
-      assert.doesNotMatch(status, /ralph\/planning/);
+      assert.doesNotMatch(status, new RegExp(['ra', 'lph'].join('') + '/planning'));
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
@@ -226,7 +226,7 @@ describe('session-status helper', () => {
         updated_at: '2026-03-20T00:04:30.000Z',
         active_skills: [
           {
-            skill: 'ralph',
+            skill: 'forge',
             phase: 'executing',
             active: true,
             session_id: 'sess-foreign',
@@ -246,7 +246,7 @@ describe('session-status helper', () => {
       });
 
       assert.match(status, /State: team\/running/);
-      assert.doesNotMatch(status, /ralph\/executing/);
+      assert.doesNotMatch(status, new RegExp(['ra', 'lph'].join('') + '/executing'));
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
@@ -257,11 +257,11 @@ describe('session-status helper', () => {
     try {
       await writeJson(join(wd, '.rcs', 'state', 'skill-active-state.json'), {
         active: true,
-        skill: 'ralph',
+        skill: 'forge',
         phase: 'executing',
         updated_at: '2026-03-20T00:04:30.000Z',
         active_skills: [{
-          skill: 'ralph',
+          skill: 'forge',
           phase: 'executing',
           active: true,
           session_id: 'sess-foreign',

@@ -1,6 +1,10 @@
 ---
 name: ecomode
 description: Token-efficient model routing modifier
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Ecomode Skill
@@ -19,7 +23,7 @@ Overrides default model selection to prefer cheaper tiers:
 
 ## What Ecomode Does NOT Do
 
-- **Persistence**: Use `ralph` for "don't stop until done"
+- **Persistence**: Use `forge` for "don't stop until done"
 - **Parallel Execution**: Use `ultrawork` for parallel agents
 - **Delegation Enforcement**: Always active via core orchestration
 
@@ -29,7 +33,7 @@ Ecomode is a modifier that combines with execution modes:
 
 | Combination | Effect |
 |-------------|--------|
-| `eco ralph` | Ralph loop with cheaper agents |
+| `eco forge` | Forge loop with cheaper agents |
 | `eco ultrawork` | Parallel execution with cheaper agents |
 | `eco autopilot` | Full autonomous with cost optimization |
 
@@ -112,3 +116,6 @@ Use `rcs_state` MCP tools for ecomode lifecycle state.
   `state_write({mode: "ecomode", active: false})`
 - **On cancellation/cleanup**:
   run `$cancel` (which should call `state_clear(mode="ecomode")`)
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

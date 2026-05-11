@@ -241,7 +241,7 @@ describe('question ui arrow navigation', () => {
         {
           question: 'Which lane?',
           options: [
-            { label: 'Plan first', value: 'ralplan', description: 'Need architecture and test-shape review before execution' },
+            { label: 'Plan first', value: 'blueprint', description: 'Need architecture and test-shape review before execution' },
             { label: 'Execute directly', value: 'autopilot', description: 'Requirements are already explicit enough for planning plus execution' },
           ],
           allow_other: false,
@@ -267,7 +267,7 @@ describe('question ui arrow navigation', () => {
 
       await runPromise;
       const loaded = await readQuestionRecord(recordPath);
-      assert.equal(loaded?.answer?.value, 'ralplan');
+      assert.equal(loaded?.answer?.value, 'blueprint');
       assert.match(rendered, /1\. Plan first\n\s+Need architecture and test-shape review before execution/);
       assert.match(rendered, /2\. Execute directly\n\s+Requirements are already explicit enough for planning plus execution/);
     } finally {

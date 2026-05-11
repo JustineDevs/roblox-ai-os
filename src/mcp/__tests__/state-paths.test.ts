@@ -36,7 +36,7 @@ describe('validateSessionId', () => {
 
 describe('validateStateModeSegment', () => {
   it('accepts safe mode names', () => {
-    assert.equal(validateStateModeSegment('ralph'), 'ralph');
+    assert.equal(validateStateModeSegment('forge'), 'forge');
     assert.equal(validateStateModeSegment('ultraqa'), 'ultraqa');
   });
 
@@ -120,8 +120,8 @@ describe('state paths', () => {
   it('builds session state paths', () => {
     assert.equal(getStateDir('/repo', 'sess1'), '/repo/.rcs/state/sessions/sess1');
     assert.equal(
-      getStatePath('ralph', '/repo', 'sess1'),
-      '/repo/.rcs/state/sessions/sess1/ralph-state.json'
+      getStatePath('forge', '/repo', 'sess1'),
+      '/repo/.rcs/state/sessions/sess1/forge-state.json'
     );
     assert.equal(
       getStateFilePath('hud-state.json', '/repo', 'sess1'),
@@ -184,11 +184,11 @@ describe('state paths', () => {
       await mkdir(join(sessionsRoot, 'sess1'), { recursive: true });
       await mkdir(join(sessionsRoot, 'sess2'), { recursive: true });
 
-      const paths = await getAllScopedStatePaths('ralph', wd);
+      const paths = await getAllScopedStatePaths('forge', wd);
       assert.deepEqual(paths.sort(), [
-        getStatePath('ralph', wd),
-        getStatePath('ralph', wd, 'sess1'),
-        getStatePath('ralph', wd, 'sess2'),
+        getStatePath('forge', wd),
+        getStatePath('forge', wd, 'sess1'),
+        getStatePath('forge', wd, 'sess2'),
       ].sort());
     } finally {
       await rm(wd, { recursive: true, force: true });

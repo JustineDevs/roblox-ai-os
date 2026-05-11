@@ -38,8 +38,8 @@ describe('formatSessionIdle', () => {
   });
 
   it('should include modes when provided', () => {
-    const result = formatSessionIdle({ ...basePayload, modesUsed: ['ultrawork', 'ralph'] });
-    assert.ok(result.includes('**Modes:** ultrawork, ralph'));
+    const result = formatSessionIdle({ ...basePayload, modesUsed: ['ultrawork', 'forge'] });
+    assert.ok(result.includes('**Modes:** ultrawork, forge'));
   });
 
   it('should include tmux session in footer when available', () => {
@@ -78,10 +78,10 @@ describe('formatSessionEnd', () => {
     const result = formatSessionEnd({
       ...basePayload,
       event: 'session-end',
-      modesUsed: ['ralph'],
+      modesUsed: ['forge'],
       contextSummary: 'Fixed auth bug',
     });
-    assert.ok(result.includes('**Modes:** ralph'));
+    assert.ok(result.includes('**Modes:** forge'));
     assert.ok(result.includes('**Summary:** Fixed auth bug'));
   });
 });
@@ -91,12 +91,12 @@ describe('formatSessionStop', () => {
     const result = formatSessionStop({
       ...basePayload,
       event: 'session-stop',
-      activeMode: 'ralph',
+      activeMode: 'forge',
       iteration: 3,
       maxIterations: 10,
     });
     assert.ok(result.includes('# Session Continuing'));
-    assert.ok(result.includes('**Mode:** ralph'));
+    assert.ok(result.includes('**Mode:** forge'));
     assert.ok(result.includes('3/10'));
   });
 });

@@ -28,6 +28,7 @@
 
 - Term standardization:
 - Naming vocabulary:
+- Vocabulary source: `docs/reference/canonical-vocabulary.md`
 
 ## 5. Risks and Uncertainties
 

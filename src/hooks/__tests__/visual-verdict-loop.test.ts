@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const visualVerdictSkill = readFileSync(join(__dirname, '../../../skills/visual-verdict/SKILL.md'), 'utf-8');
-const ralphSkill = readFileSync(join(__dirname, '../../../skills/ralph/SKILL.md'), 'utf-8');
+const forgeSkill = readFileSync(join(__dirname, '../../../skills/forge/SKILL.md'), 'utf-8');
 
 describe('visual-verdict skill contract', () => {
   it('documents required JSON fields', () => {
@@ -22,19 +22,19 @@ describe('visual-verdict skill contract', () => {
   });
 });
 
-describe('ralph visual loop integration guidance', () => {
+describe('forge visual loop integration guidance', () => {
   it('requires running $visual-verdict before next edit', () => {
-    assert.match(ralphSkill, /\$visual-verdict/);
-    assert.match(ralphSkill, /before every next edit/i);
+    assert.match(forgeSkill, /\$visual-verdict/);
+    assert.match(forgeSkill, /before every next edit/i);
   });
 
   it('documents -i and --images-dir flags', () => {
-    assert.match(ralphSkill, /-i <image-path>/);
-    assert.match(ralphSkill, /--images-dir <directory>/);
+    assert.match(forgeSkill, /-i <image-path>/);
+    assert.match(forgeSkill, /--images-dir <directory>/);
   });
 
-  it('requires persisting visual feedback to ralph-progress ledger', () => {
-    assert.match(ralphSkill, /ralph-progress\.json/);
-    assert.match(ralphSkill, /numeric \+ qualitative feedback/i);
+  it('requires persisting visual feedback to forge-progress ledger', () => {
+    assert.match(forgeSkill, /forge-progress\.json/);
+    assert.match(forgeSkill, /numeric \+ qualitative feedback/i);
   });
 });

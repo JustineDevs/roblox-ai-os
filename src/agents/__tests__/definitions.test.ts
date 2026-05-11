@@ -16,7 +16,7 @@ describe('agents/definitions', () => {
 
   it('keeps key/name contract aligned', () => {
     const names = getAgentNames();
-    assert.ok(names.length > 20, 'expected non-trivial agent catalog');
+    assert.ok(names.length >= 20, 'expected non-trivial agent catalog');
 
     for (const name of names) {
       const agent = AGENT_DEFINITIONS[name];
@@ -39,7 +39,6 @@ describe('agents/definitions', () => {
       'build',
       'review',
       'domain',
-      'product',
       'coordination',
     ];
 

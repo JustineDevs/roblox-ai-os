@@ -1,6 +1,10 @@
 ---
 name: forge-status
 description: Creator workflow for `$forge:status`
+surface-class: "canonical"
+domain: "roblox-studio"
+audience: "creator"
+artifact-type: "skill"
 ---
 
 # Forge Status
@@ -15,3 +19,6 @@ Generate a **Prestige / Status Spec**.
 - visible milestones
 - pets, profile badges, or showcases where fit
 - visibility and fairness risks
+surface-class: "canonical"
+domain: "creator-runtime"
+audience: "creator"

@@ -1,6 +1,10 @@
 ---
 name: trace
 description: Show agent flow trace timeline and summary
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Agent Flow Trace
@@ -31,3 +35,6 @@ Present the timeline first, then the summary. Highlight:
 - **Mode transitions** (how execution modes changed)
 - **Bottlenecks** (slow tools or agents)
 - **Flow patterns** (keyword -> skill -> agent chains)
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

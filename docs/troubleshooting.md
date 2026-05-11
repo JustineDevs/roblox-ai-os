@@ -16,7 +16,7 @@ rcs exec --skip-git-repo-check -C . "Reply with exactly RCS-EXEC-OK"
 Treat the boundary this way:
 
 - Codex plugin install/discovery may cache `roblox-ai-os-creator-skills` under `${CODEX_HOME:-~/.codex}/plugins/cache/$MARKETPLACE_NAME/roblox-ai-os-creator-skills/$VERSION/` (with `local` possible as a version identifier for local installs). That confirms a marketplace/plugin artifact; the packaged plugin includes plugin-scoped companion metadata for MCP servers and apps, while native/runtime hooks remain setup-owned, so it is still not the full RCS runtime setup.
-- Plugin install/discovery is not a replacement for `npm install -g roblox-ai-os-creator-skills` plus `rcs setup`; legacy setup mode installs native agents and prompts, while plugin setup mode relies on plugin discovery for bundled skills and archives/removes legacy RCS-managed prompts/native-agent TOMLs so stale role files cannot shadow plugin behavior.
+- Plugin install/discovery is not a replacement for `npm install -g @jstn-sdk/rcs` plus `rcs setup`; legacy setup mode installs native agents and prompts, while plugin setup mode relies on plugin discovery for bundled skills and archives/removes legacy RCS-managed prompts/native-agent TOMLs so stale role files cannot shadow plugin behavior.
 - `rcs doctor` green: install and local runtime wiring look sane.
 - `codex login status` green: the active Codex profile can see login state.
 - `rcs exec ...` returns `RCS-EXEC-OK`: real execution, auth, provider routing, and current working-directory assumptions are working together.

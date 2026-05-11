@@ -1,15 +1,15 @@
 /**
  * Consensus mode execution handoff regression tests
  *
- * Verifies that the plan skill's consensus mode (ralplan) mandates:
+ * Verifies that the plan skill's consensus mode (blueprint) mandates:
  * 1. Structured question UI for approval (not plain text)
- * 2. Explicit $ralph invocation on approval
+ * 2. Explicit $forge invocation on approval
  * 3. Prohibition of direct implementation from the planning agent
  * 4. User feedback step after Planner but before Architect/Critic
- * 5. RALPLAN-DR short mode and deliberate mode requirements
+ * 5. BLUEPRINT-DR short mode and deliberate mode requirements
  *
  * Also verifies non-consensus modes (interview, direct, review) are unaffected,
- * and that architect/critic prompts contain required RALPLAN-DR sections.
+ * and that architect/critic prompts contain required BLUEPRINT-DR sections.
  *
  * Note: This file loads SKILL.md and prompt content directly via fs.readFileSync()
  * instead of getBuiltinSkill() (which does not exist in RCS).
@@ -26,8 +26,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const planSkill = readFileSync(
   join(__dirname, '../../../skills/plan/SKILL.md'), 'utf-8'
 );
-const ralplanSkill = readFileSync(
-  join(__dirname, '../../../skills/ralplan/SKILL.md'), 'utf-8'
+const blueprintSkill = readFileSync(
+  join(__dirname, '../../../skills/blueprint/SKILL.md'), 'utf-8'
 );
 const plannerPrompt = readFileSync(
   join(__dirname, '../../../prompts/planner.md'), 'utf-8'
@@ -58,12 +58,12 @@ describe('Consensus mode execution handoff (plan/SKILL.md)', () => {
     );
   });
 
-  it('should mandate $ralph invocation for execution on user approval', () => {
+  it('should mandate $forge invocation for execution on user approval', () => {
     const consensusSection = extractSection(planSkill, 'Consensus Mode');
     assert.ok(consensusSection, 'Consensus Mode section should exist');
     assert.ok(
-      consensusSection.includes('$ralph'),
-      'Consensus mode should reference $ralph invocation'
+      consensusSection.includes('$forge'),
+      'Consensus mode should reference $forge invocation'
     );
   });
 
@@ -71,8 +71,8 @@ describe('Consensus mode execution handoff (plan/SKILL.md)', () => {
     const consensusSection = extractSection(planSkill, 'Consensus Mode');
     assert.ok(consensusSection, 'Consensus Mode section should exist');
     assert.ok(
-      /MUST.*\$ralph/s.test(consensusSection) || /\$ralph.*MUST/s.test(consensusSection),
-      'Consensus mode should use MUST language around $ralph invocation'
+      /MUST.*\$forge/s.test(consensusSection) || /\$forge.*MUST/s.test(consensusSection),
+      'Consensus mode should use MUST language around $forge invocation'
     );
   });
 
@@ -107,17 +107,17 @@ describe('Consensus mode execution handoff (plan/SKILL.md)', () => {
     assert.ok(reviewSection.includes('Evaluate via Critic'));
   });
 
-  it('should reference $ralph in Escalation section', () => {
+  it('should reference $forge in Escalation section', () => {
     assert.ok(
-      planSkill.includes('$ralph'),
-      'plan/SKILL.md should reference $ralph for execution handoff'
+      planSkill.includes('$forge'),
+      'plan/SKILL.md should reference $forge for execution handoff'
     );
   });
 
-  it('should require RALPLAN-DR structured deliberation in consensus mode', () => {
+  it('should require BLUEPRINT-DR structured deliberation in consensus mode', () => {
     const consensusSection = extractSection(planSkill, 'Consensus Mode');
     assert.ok(consensusSection, 'Consensus Mode section should exist');
-    assert.ok(consensusSection.includes('RALPLAN-DR'), 'Should mention RALPLAN-DR');
+    assert.ok(consensusSection.includes('BLUEPRINT-DR'), 'Should mention BLUEPRINT-DR');
     assert.ok(consensusSection.includes('**Principles** (3-5)'), 'Should require Principles');
     assert.ok(consensusSection.includes('**Decision Drivers** (top 3)'), 'Should require Decision Drivers');
     assert.ok(consensusSection.includes('**Viable Options** (>=2)'), 'Should require Viable Options');
@@ -234,63 +234,63 @@ describe('User feedback step between Planner and Architect/Critic (plan/SKILL.md
   it('should require adaptive step sizing instead of a fixed five-step template', () => {
     assert.match(planSkill, /adaptive step count|right-sized to task scope/i);
     assert.match(planSkill, /do not default to exactly five steps|not a fixed five-step template/i);
-    assert.match(ralplanSkill, /do not default to exactly five steps/i);
+    assert.match(blueprintSkill, /do not default to exactly five steps/i);
   });
 
-describe('RALPLAN-DR in ralplan/SKILL.md', () => {
-  it('should contain RALPLAN-DR structured deliberation description', () => {
+describe('BLUEPRINT-DR in blueprint/SKILL.md', () => {
+  it('should contain BLUEPRINT-DR structured deliberation description', () => {
     assert.ok(
-      ralplanSkill.includes('RALPLAN-DR'),
-      'ralplan/SKILL.md should mention RALPLAN-DR'
+      blueprintSkill.includes('BLUEPRINT-DR'),
+      'blueprint/SKILL.md should mention BLUEPRINT-DR'
     );
   });
 
   it('should document the --deliberate flag', () => {
     assert.ok(
-      ralplanSkill.includes('--deliberate'),
-      'ralplan/SKILL.md should document --deliberate flag'
+      blueprintSkill.includes('--deliberate'),
+      'blueprint/SKILL.md should document --deliberate flag'
     );
   });
 
   it('should contain Pre-Execution Gate section', () => {
     assert.ok(
-      ralplanSkill.includes('Pre-Execution Gate'),
-      'ralplan/SKILL.md should contain Pre-Execution Gate section'
+      blueprintSkill.includes('Pre-Execution Gate'),
+      'blueprint/SKILL.md should contain Pre-Execution Gate section'
     );
   });
 
   it('should document gate bypass prefixes force: and !', () => {
     assert.ok(
-      ralplanSkill.includes('force:') && ralplanSkill.includes('! '),
-      'ralplan/SKILL.md should document force: and ! bypass prefixes'
+      blueprintSkill.includes('force:') && blueprintSkill.includes('! '),
+      'blueprint/SKILL.md should document force: and ! bypass prefixes'
     );
   });
 
   it('should document sequential Architect then Critic execution', () => {
     assert.ok(
-      /step[s]? 3 and 4 MUST run sequentially|Do NOT.*parallel/i.test(ralplanSkill) ||
-      ralplanSkill.includes('await completion before step 4'),
-      'ralplan/SKILL.md should require sequential Architect/Critic execution'
+      /step[s]? 3 and 4 MUST run sequentially|Do NOT.*parallel/i.test(blueprintSkill) ||
+      blueprintSkill.includes('await completion before step 4'),
+      'blueprint/SKILL.md should require sequential Architect/Critic execution'
     );
   });
 
   it('should document ADR requirement', () => {
     assert.ok(
-      ralplanSkill.includes('ADR'),
-      'ralplan/SKILL.md should reference ADR requirement'
+      blueprintSkill.includes('ADR'),
+      'blueprint/SKILL.md should reference ADR requirement'
     );
   });
 
-  it('should document roster-aware team and ralph follow-up guidance', () => {
-    assert.match(ralplanSkill, /available-agent-types roster/i);
-    assert.match(ralplanSkill, /staffing guidance|role\/staffing allocation/i);
-    assert.match(ralplanSkill, /reasoning levels? by lane|reasoning-by-lane/i);
-    assert.match(ralplanSkill, /rcs team|launch hints?/i);
-    assert.match(ralplanSkill, /team verification/i);
+  it('should document roster-aware team and forge follow-up guidance', () => {
+    assert.match(blueprintSkill, /available-agent-types roster/i);
+    assert.match(blueprintSkill, /staffing guidance|role\/staffing allocation/i);
+    assert.match(blueprintSkill, /reasoning levels? by lane|reasoning-by-lane/i);
+    assert.match(blueprintSkill, /rcs team|launch hints?/i);
+    assert.match(blueprintSkill, /team verification/i);
   });
 });
 
-describe('Architect prompt RALPLAN-DR sections', () => {
+describe('Architect prompt BLUEPRINT-DR sections', () => {
   it('should have steelman antithesis requirement', () => {
     assert.ok(
       architectPrompt.includes('antithesis') || architectPrompt.includes('steelman'),
@@ -312,29 +312,29 @@ describe('Architect prompt RALPLAN-DR sections', () => {
     );
   });
 
-  it('should reference ralplan consensus reviews', () => {
+  it('should reference blueprint consensus reviews', () => {
     assert.ok(
-      architectPrompt.includes('ralplan'),
-      'architect.md should reference ralplan consensus reviews'
+      architectPrompt.includes('blueprint'),
+      'architect.md should reference blueprint consensus reviews'
     );
   });
 });
 
 describe('Planner prompt follow-up staffing guidance', () => {
-  it('should require roster-aware staffing guidance for team and ralph handoff', () => {
+  it('should require roster-aware staffing guidance for team and forge handoff', () => {
     assert.match(plannerPrompt, /available-agent-types roster/i);
-    assert.match(plannerPrompt, /team and ralph follow-up paths/i);
+    assert.match(plannerPrompt, /team and forge follow-up paths/i);
     assert.match(plannerPrompt, /reasoning levels? by lane|suggested reasoning/i);
     assert.match(plannerPrompt, /launch hints?/i);
     assert.match(plannerPrompt, /team verification path/i);
   });
 });
 
-describe('Critic prompt RALPLAN-DR sections', () => {
-  it('should have gate checks for ralplan reviews', () => {
+describe('Critic prompt BLUEPRINT-DR sections', () => {
+  it('should have gate checks for blueprint reviews', () => {
     assert.ok(
-      criticPrompt.includes('ralplan') && criticPrompt.includes('gate'),
-      'critic.md should mention ralplan gate checks'
+      criticPrompt.includes('blueprint') && criticPrompt.includes('gate'),
+      'critic.md should mention blueprint gate checks'
     );
   });
 

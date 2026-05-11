@@ -126,11 +126,11 @@ export function getPhaseAgents(phase: TeamPhase): string[] {
     case 'team-plan':
       return ['analyst', 'planner'];
     case 'team-prd':
-      return ['product-manager', 'analyst'];
+      return ['analyst', 'planner'];
     case 'team-exec':
       return ['executor', 'designer', 'test-engineer'];
     case 'team-verify':
-      return ['verifier', 'quality-reviewer', 'security-reviewer'];
+      return ['verifier', 'code-reviewer', 'security-reviewer'];
     case 'team-fix':
       return ['executor', 'build-fixer', 'debugger'];
     default: {
@@ -148,11 +148,11 @@ export function getPhaseInstructions(phase: TeamPhase): string {
     case 'team-plan':
       return 'PHASE: Planning. Use /analyst for requirements, /planner for task breakdown. Output: task list with dependencies.';
     case 'team-prd':
-      return 'PHASE: Requirements. Use /product-manager for PRD, /analyst for acceptance criteria. Output: explicit scope and success metrics.';
+      return 'PHASE: Requirements. Use /analyst for scope, outcomes, and acceptance criteria. Output: explicit scope and success metrics.';
     case 'team-exec':
       return 'PHASE: Execution. Use /executor for implementation, /test-engineer for tests. Output: working code with tests.';
     case 'team-verify':
-      return 'PHASE: Verification. Use /verifier for evidence collection, /quality-reviewer for review. Output: pass/fail with evidence.';
+      return 'PHASE: Verification. Use /verifier for evidence collection, /code-reviewer for review. Output: pass/fail with evidence.';
     case 'team-fix':
       return 'PHASE: Fixing. Use /debugger for root cause, /executor for fixes. Output: fixed code, re-verify needed.';
     default: {

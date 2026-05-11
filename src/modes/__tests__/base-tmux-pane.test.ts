@@ -11,8 +11,8 @@ describe('modes/base tmux pane capture', () => {
     process.env.TMUX_PANE = '%123';
     const wd = await mkdtemp(join(tmpdir(), 'rcs-mode-pane-'));
     try {
-      await startMode('ralph', 'test', 1, wd);
-      const raw = JSON.parse(await readFile(join(wd, '.rcs', 'state', 'ralph-state.json'), 'utf-8'));
+      await startMode('forge', 'test', 1, wd);
+      const raw = JSON.parse(await readFile(join(wd, '.rcs', 'state', 'forge-state.json'), 'utf-8'));
       assert.equal(raw.tmux_pane_id, '%123');
       assert.ok(typeof raw.tmux_pane_set_at === 'string' && raw.tmux_pane_set_at.length > 0);
     } finally {
@@ -27,11 +27,11 @@ describe('modes/base tmux pane capture', () => {
     try {
       const stateDir = join(wd, '.rcs', 'state');
       await mkdir(stateDir, { recursive: true });
-      await writeFile(join(stateDir, 'ralph-state.json'), '{ "active": true');
+      await writeFile(join(stateDir, 'forge-state.json'), '{ "active": true');
 
       await assert.rejects(
         () => startMode('autopilot', 'test', 1, wd),
-        /repair or clear that workflow state yourself via `rcs state clear --mode ralph` or the `rcs_state\.\*` MCP tools/i,
+        /repair or clear that workflow state yourself via `rcs state clear --mode forge` or the `rcs_state\.\*` MCP tools/i,
       );
     } finally {
       await rm(wd, { recursive: true, force: true });

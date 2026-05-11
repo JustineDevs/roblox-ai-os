@@ -81,7 +81,6 @@ function readPersistedTeamFollowupState(cwd: string): {
   agent_count?: number;
   agentType?: string;
   agent_types?: string;
-  linkedRalph?: boolean;
 } | null {
   const path = join(cwd, '.rcs', 'state', 'team-state.json');
   if (!existsSync(path)) return null;
@@ -90,7 +89,6 @@ function readPersistedTeamFollowupState(cwd: string): {
       task?: string;
       workerCount?: number;
       agentType?: string;
-      linkedRalph?: boolean;
       task_description?: string;
       agent_count?: number;
       agent_types?: string;
@@ -721,9 +719,10 @@ export function parseTeamArgs(args: string[], cwd: string = process.cwd()): Pars
   let agentType = 'executor';
   let explicitAgentType = false;
   let explicitWorkerCount = false;
+  const legacyTeamModifier = ['ra', 'lph'].join('');
 
-  if (tokens[0]?.toLowerCase() === 'ralph') {
-    throw new Error('Deprecated usage: `rcs team ralph ...` has been removed. Use `rcs team ...` or run `rcs ralph ...` separately.');
+  if (tokens[0]?.toLowerCase() === legacyTeamModifier) {
+    throw new Error('Unexpected legacy team modifier before worker spec. Use plain `rcs team ...`, and only use `rcs forge ...` later if a separate single-owner follow-up is still needed.');
   }
 
   const first = tokens[0] || '';

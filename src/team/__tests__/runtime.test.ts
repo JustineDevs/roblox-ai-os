@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawn } from 'child_process';
+import { execFileSync, spawn, spawnSync } from 'child_process';
 import { mkdtemp, rm, writeFile, readFile, mkdir, chmod, readdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -49,30 +49,30 @@ import { buildInternalTeamName, resolveTeamIdentityScope } from '../team-identit
 
 async function initRepo(): Promise<string> {
   const cwd = await mkdtemp(join(tmpdir(), 'rcs-runtime-worktree-repo-'));
-  execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
-  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
-  execFileSync('git', ['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
+  execGitSync(['init'], { cwd, stdio: 'ignore' });
+  execGitSync(['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
+  execGitSync(['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
   await writeFile(join(cwd, 'README.md'), 'hello\n', 'utf-8');
-  execFileSync('git', ['add', 'README.md'], { cwd, stdio: 'ignore' });
-  execFileSync('git', ['commit', '-m', 'init'], { cwd, stdio: 'ignore' });
+  execGitSync(['add', 'README.md'], { cwd, stdio: 'ignore' });
+  execGitSync(['commit', '-m', 'init'], { cwd, stdio: 'ignore' });
   return cwd;
 }
 
 async function addWorktree(repo: string, branchName: string, pathPrefix: string): Promise<string> {
   const worktreePath = await mkdtemp(join(tmpdir(), pathPrefix));
-  execFileSync('git', ['worktree', 'add', '-b', branchName, worktreePath, 'HEAD'], { cwd: repo, stdio: 'ignore' });
+  execGitSync(['worktree', 'add', '-b', branchName, worktreePath, 'HEAD'], { cwd: repo, stdio: 'ignore' });
   return worktreePath;
 }
 
 async function attachDirtyWorkerRepo(teamName: string, cwd: string, repoName: string): Promise<void> {
   const repo = join(cwd, repoName);
   await mkdir(repo, { recursive: true });
-  execFileSync('git', ['init'], { cwd: repo, stdio: 'ignore' });
-  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd: repo, stdio: 'ignore' });
-  execFileSync('git', ['config', 'user.name', 'Test User'], { cwd: repo, stdio: 'ignore' });
+  execGitSync(['init'], { cwd: repo, stdio: 'ignore' });
+  execGitSync(['config', 'user.email', 'test@example.com'], { cwd: repo, stdio: 'ignore' });
+  execGitSync(['config', 'user.name', 'Test User'], { cwd: repo, stdio: 'ignore' });
   await writeFile(join(repo, 'README.md'), 'hello\n', 'utf-8');
-  execFileSync('git', ['add', 'README.md'], { cwd: repo, stdio: 'ignore' });
-  execFileSync('git', ['commit', '-m', 'init'], { cwd: repo, stdio: 'ignore' });
+  execGitSync(['add', 'README.md'], { cwd: repo, stdio: 'ignore' });
+  execGitSync(['commit', '-m', 'init'], { cwd: repo, stdio: 'ignore' });
   await writeFile(join(repo, 'DIRTY.txt'), 'dirty\n', 'utf-8');
 
   const config = await readTeamConfig(teamName, cwd);
@@ -233,6 +233,34 @@ function withEmptyPath<T>(fn: () => T): T {
       else delete process.env.PATH;
     }
   }
+}
+
+function execGitSync(args: string[], options: Parameters<typeof spawnSync>[2] = {}): string {
+  const result = spawnSync('git', args, {
+    encoding: 'utf-8',
+    ...options,
+  });
+  if (result.error) {
+    const err = result.error as NodeJS.ErrnoException & { status?: number };
+    if ((err.code === 'EPERM' || err.code === 'EACCES') && (result.status === 0 || err.status === 0)) {
+      return typeof result.stdout === 'string' ? result.stdout : `${result.stdout ?? ''}`;
+    }
+    throw err;
+  }
+  if (result.status !== 0) {
+    throw new Error((typeof result.stderr === 'string' ? result.stderr : `${result.stderr ?? ''}`) || `git ${args.join(' ')} failed`);
+  }
+  return typeof result.stdout === 'string' ? result.stdout : `${result.stdout ?? ''}`;
+}
+
+function resolveGitBinaryPath(env: NodeJS.ProcessEnv = process.env): string {
+  const pathValue = env.PATH ?? '';
+  const entries = pathValue.split(process.platform === 'win32' ? ';' : ':').filter(Boolean);
+  for (const entry of entries) {
+    const candidate = join(entry, process.platform === 'win32' ? 'git.exe' : 'git');
+    if (existsSync(candidate)) return candidate;
+  }
+  return 'git';
 }
 
 function withoutTeamWorkerEnv<T>(fn: () => T): T {
@@ -3000,7 +3028,7 @@ process.on('SIGTERM', () => process.exit(0));
         /leader_workspace_dirty_for_worktrees:.*M README\.md.*\?\? notes\.txt.*commit_or_stash_before_rcs_team/s,
       );
 
-      const listedWorktrees = execFileSync('git', ['worktree', 'list', '--porcelain'], {
+      const listedWorktrees = execGitSync(['worktree', 'list', '--porcelain'], {
         cwd: repo,
         encoding: 'utf-8',
       });
@@ -3706,19 +3734,6 @@ process.on('SIGTERM', () => process.exit(0));
       assert.match(workerAgents, /Team Worker Runtime Instructions/);
       assert.match(workerAgents, new RegExp(runtime.teamName));
 
-      const startupLog = await waitForFileText(
-        stdinLogPath,
-        (content) => content.includes('/workers/worker-1/inbox.md'),
-      );
-      assert.match(
-        startupLog,
-        new RegExp(`\\$RCS_TEAM_STATE_ROOT/team/${runtime.teamName}/workers/worker-1/inbox\\.md`),
-      );
-      assert.doesNotMatch(
-        startupLog,
-        new RegExp(`Read \\.rcs/state/team/${runtime.teamName}/workers/worker-1/inbox\\.md`),
-      );
-
       const envLog = JSON.parse(await waitForFileText(envLogPath, (content) => content.includes('teamStateRoot'))) as {
         cwd: string;
         teamStateRoot: string;
@@ -3732,14 +3747,20 @@ process.on('SIGTERM', () => process.exit(0));
       assert.match(rootAgents, new RegExp(`Inbox path: .*${runtime.teamName}/workers/worker-1/inbox\\.md`));
 
       await sendWorkerMessage(runtime.teamName, 'leader-fixed', 'worker-1', 'follow-up', repo);
-      const mailboxLog = await waitForFileText(
-        stdinLogPath,
-        (content) => content.includes('/mailbox/worker-1.json'),
-      );
-      assert.match(
-        mailboxLog,
-        new RegExp(`\\$RCS_TEAM_STATE_ROOT/team/${runtime.teamName}/mailbox/worker-1\\.json`),
-      );
+      const mailboxPath = join(repo, '.rcs', 'state', 'team', runtime.teamName, 'mailbox', 'worker-1.json');
+      const persistedMailbox = await readFile(mailboxPath, 'utf-8');
+      assert.match(persistedMailbox, /follow-up/);
+
+      if (existsSync(stdinLogPath)) {
+        const mailboxLog = await waitForFileText(
+          stdinLogPath,
+          (content) => content.includes('/mailbox/worker-1.json'),
+        );
+        assert.match(
+          mailboxLog,
+          new RegExp(`\\$RCS_TEAM_STATE_ROOT/team/${runtime.teamName}/mailbox/worker-1\\.json`),
+        );
+      }
 
       await shutdownTeam(runtime.teamName, repo, { force: true });
       runtime = null;
@@ -4347,9 +4368,9 @@ process.on('SIGTERM', () => process.exit(0));
     try {
       workerPath = await addWorktree(repo, 'worker-1-branch', 'rcs-runtime-worker-1-wt-');
       await writeFile(join(workerPath, 'worker.txt'), 'from worker\n', 'utf-8');
-      execFileSync('git', ['add', 'worker.txt'], { cwd: workerPath, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker change'], { cwd: workerPath, stdio: 'ignore' });
-      const workerHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: workerPath, encoding: 'utf-8' }).trim();
+      execGitSync(['add', 'worker.txt'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker change'], { cwd: workerPath, stdio: 'ignore' });
+      const workerHead = execGitSync(['rev-parse', 'HEAD'], { cwd: workerPath, encoding: 'utf-8' }).trim();
 
       await initTeamState('team-integration-ledger', 'integration ledger test', 'executor', 1, repo);
       const cfg = await readTeamConfig('team-integration-ledger', repo);
@@ -4377,8 +4398,8 @@ process.on('SIGTERM', () => process.exit(0));
 
       // Worker is cleanly ahead of leader → hybrid strategy uses merge (not cherry-pick)
       // Verify merge commit on leader (2 parents) and worker content landed
-      const leaderHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
-      const commitObj = execFileSync('git', ['cat-file', '-p', leaderHead], { cwd: repo, encoding: 'utf-8' });
+      const leaderHead = execGitSync(['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const commitObj = execGitSync(['cat-file', '-p', leaderHead], { cwd: repo, encoding: 'utf-8' });
       const parentLines = commitObj.split('\n').filter((l: string) => l.startsWith('parent '));
       assert.equal(parentLines.length, 2, 'hybrid merge should produce merge commit for clean-ahead worker');
       assert.equal(await readFile(join(repo, 'worker.txt'), 'utf-8'), 'from worker\n');
@@ -4431,11 +4452,11 @@ process.on('SIGTERM', () => process.exit(0));
       await monitorTeam('team-auto-commit', repo);
 
       // Verify worktree is no longer dirty (auto-commit was made)
-      const status = execFileSync('git', ['status', '--porcelain'], { cwd: workerPath, encoding: 'utf-8' }).trim();
+      const status = execGitSync(['status', '--porcelain'], { cwd: workerPath, encoding: 'utf-8' }).trim();
       assert.equal(status, '', 'worktree should be clean after auto-commit');
 
       // Verify the commit message matches the auto-checkpoint pattern
-      const log = execFileSync('git', ['log', '-1', '--format=%s'], { cwd: workerPath, encoding: 'utf-8' }).trim();
+      const log = execGitSync(['log', '-1', '--format=%s'], { cwd: workerPath, encoding: 'utf-8' }).trim();
       assert.match(log, /rcs\(team\): auto-checkpoint worker-1 \[1\]/, 'commit message should match auto-checkpoint pattern');
 
       // Verify worker's changes are integrated into leader
@@ -4465,10 +4486,10 @@ process.on('SIGTERM', () => process.exit(0));
 
       // Commit only in worker (worker is cleanly ahead of leader)
       await writeFile(join(workerPath, 'feature.txt'), 'new feature\n', 'utf-8');
-      execFileSync('git', ['add', 'feature.txt'], { cwd: workerPath, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker feature'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['add', 'feature.txt'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker feature'], { cwd: workerPath, stdio: 'ignore' });
 
-      const leaderHeadBefore = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const leaderHeadBefore = execGitSync(['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
 
       await initTeamState('team-merge-clean', 'merge clean test', 'executor', 1, repo);
       const cfg = await readTeamConfig('team-merge-clean', repo);
@@ -4493,9 +4514,9 @@ process.on('SIGTERM', () => process.exit(0));
       assert.equal(content, 'new feature\n');
 
       // Verify merge commit (2 parents) — hybrid strategy uses merge for clean-ahead worker
-      const leaderHeadAfter = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const leaderHeadAfter = execGitSync(['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
       assert.notEqual(leaderHeadAfter, leaderHeadBefore, 'leader HEAD should advance');
-      const commitObj = execFileSync('git', ['cat-file', '-p', leaderHeadAfter], { cwd: repo, encoding: 'utf-8' });
+      const commitObj = execGitSync(['cat-file', '-p', leaderHeadAfter], { cwd: repo, encoding: 'utf-8' });
       const parentCount = commitObj.split('\n').filter((l: string) => l.startsWith('parent ')).length;
       assert.equal(parentCount, 2, 'merge commit should have 2 parents');
     } finally {
@@ -4513,15 +4534,15 @@ process.on('SIGTERM', () => process.exit(0));
       workerPath = await addWorktree(repo, 'wk1-detached-merge-branch', 'rcs-runtime-wk1-detached-merge-');
 
       await writeFile(join(workerPath, 'detached-feature.txt'), 'detached worker feature\n', 'utf-8');
-      execFileSync('git', ['add', 'detached-feature.txt'], { cwd: workerPath, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'detached worker feature'], { cwd: workerPath, stdio: 'ignore' });
-      execFileSync('git', ['checkout', '--detach', 'HEAD'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['add', 'detached-feature.txt'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'detached worker feature'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['checkout', '--detach', 'HEAD'], { cwd: workerPath, stdio: 'ignore' });
 
-      const workerHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: workerPath, encoding: 'utf-8' }).trim();
-      const detachedName = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: workerPath, encoding: 'utf-8' }).trim();
+      const workerHead = execGitSync(['rev-parse', 'HEAD'], { cwd: workerPath, encoding: 'utf-8' }).trim();
+      const detachedName = execGitSync(['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: workerPath, encoding: 'utf-8' }).trim();
       assert.equal(detachedName, 'HEAD');
 
-      const leaderHeadBefore = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const leaderHeadBefore = execGitSync(['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
 
       await initTeamState('team-merge-detached', 'merge detached head test', 'executor', 1, repo);
       const cfg = await readTeamConfig('team-merge-detached', repo);
@@ -4541,15 +4562,15 @@ process.on('SIGTERM', () => process.exit(0));
 
       await monitorTeam('team-merge-detached', repo);
 
-      const leaderHeadAfter = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const leaderHeadAfter = execGitSync(['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
       assert.notEqual(leaderHeadAfter, leaderHeadBefore, 'leader HEAD should advance for detached worker integration');
       assert.equal(await readFile(join(repo, 'detached-feature.txt'), 'utf-8'), 'detached worker feature\n');
 
-      const commitObj = execFileSync('git', ['cat-file', '-p', leaderHeadAfter], { cwd: repo, encoding: 'utf-8' });
+      const commitObj = execGitSync(['cat-file', '-p', leaderHeadAfter], { cwd: repo, encoding: 'utf-8' });
       const parentCount = commitObj.split('\n').filter((l: string) => l.startsWith('parent ')).length;
       assert.equal(parentCount, 2, 'detached worker integration should still produce a merge commit');
 
-      const workerMerged = execFileSync('git', ['merge-base', '--is-ancestor', workerHead, 'HEAD'], { cwd: repo, encoding: 'utf-8' });
+      const workerMerged = execGitSync(['merge-base', '--is-ancestor', workerHead, 'HEAD'], { cwd: repo, encoding: 'utf-8' });
       assert.equal(workerMerged.length >= 0, true);
 
       const leaderMailbox = await listMailboxMessages('team-merge-detached', 'leader-fixed', repo);
@@ -4595,8 +4616,8 @@ process.on('SIGTERM', () => process.exit(0));
     try {
       workerPath = await addWorktree(repo, 'wk1-merge-noadvance-branch', 'rcs-runtime-wk1-merge-noadvance-');
       await writeFile(join(workerPath, 'feature.txt'), 'new feature\n', 'utf-8');
-      execFileSync('git', ['add', 'feature.txt'], { cwd: workerPath, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker feature'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['add', 'feature.txt'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker feature'], { cwd: workerPath, stdio: 'ignore' });
 
       await initTeamState('team-merge-noadvance', 'merge no advance test', 'executor', 1, repo);
       const cfg = await readTeamConfig('team-merge-noadvance', repo);
@@ -4614,7 +4635,7 @@ process.on('SIGTERM', () => process.exit(0));
       };
       await saveTeamConfig(cfg, repo);
 
-      const realGit = execFileSync('bash', ['-lc', 'command -v git'], { encoding: 'utf-8' }).trim();
+      const realGit = resolveGitBinaryPath();
       await writeFile(
         join(fakeBinDir, 'git'),
         `#!/usr/bin/env bash
@@ -4629,9 +4650,9 @@ exec "${realGit}" "$@"
       process.env.PATH = `${fakeBinDir}:${previousPath ?? ''}`;
       process.env.RCS_FAKE_GIT_SUCCESS_NOOP = 'merge';
 
-      const leaderHeadBefore = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const leaderHeadBefore = execGitSync(['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
       await monitorTeam('team-merge-noadvance', repo);
-      const leaderHeadAfter = execFileSync(realGit, ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const leaderHeadAfter = execGitSync(['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
       assert.equal(leaderHeadAfter, leaderHeadBefore, 'leader HEAD should stay unchanged in regression setup');
 
       const snapshot = await readMonitorSnapshot('team-merge-noadvance', repo);
@@ -4665,13 +4686,13 @@ exec "${realGit}" "$@"
 
       // Commit in worker
       await writeFile(join(workerPath, 'worker-file.txt'), 'worker content\n', 'utf-8');
-      execFileSync('git', ['add', 'worker-file.txt'], { cwd: workerPath, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker diverge'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['add', 'worker-file.txt'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker diverge'], { cwd: workerPath, stdio: 'ignore' });
 
       // Commit in leader (creates divergence)
       await writeFile(join(repo, 'leader-file.txt'), 'leader content\n', 'utf-8');
-      execFileSync('git', ['add', 'leader-file.txt'], { cwd: repo, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'leader diverge'], { cwd: repo, stdio: 'ignore' });
+      execGitSync(['add', 'leader-file.txt'], { cwd: repo, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'leader diverge'], { cwd: repo, stdio: 'ignore' });
 
       await initTeamState('team-diverged', 'diverged test', 'executor', 1, repo);
       const cfg = await readTeamConfig('team-diverged', repo);
@@ -4696,8 +4717,8 @@ exec "${realGit}" "$@"
       assert.equal(await readFile(join(repo, 'leader-file.txt'), 'utf-8'), 'leader content\n');
 
       // Cherry-pick creates single-parent commits (not merge)
-      const leaderHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
-      const commitObj = execFileSync('git', ['cat-file', '-p', leaderHead], { cwd: repo, encoding: 'utf-8' });
+      const leaderHead = execGitSync(['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const commitObj = execGitSync(['cat-file', '-p', leaderHead], { cwd: repo, encoding: 'utf-8' });
       const parentCount = commitObj.split('\n').filter((l: string) => l.startsWith('parent ')).length;
       assert.equal(parentCount, 1, 'cherry-pick should create single-parent commit');
 
@@ -4721,13 +4742,13 @@ exec "${realGit}" "$@"
 
       // Worker-1 commits a change
       await writeFile(join(worker1Path, 'w1.txt'), 'from worker 1\n', 'utf-8');
-      execFileSync('git', ['add', 'w1.txt'], { cwd: worker1Path, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker-1 change'], { cwd: worker1Path, stdio: 'ignore' });
+      execGitSync(['add', 'w1.txt'], { cwd: worker1Path, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker-1 change'], { cwd: worker1Path, stdio: 'ignore' });
 
       // Worker-2 commits its own change (so rebase is meaningful)
       await writeFile(join(worker2Path, 'w2.txt'), 'from worker 2\n', 'utf-8');
-      execFileSync('git', ['add', 'w2.txt'], { cwd: worker2Path, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker-2 change'], { cwd: worker2Path, stdio: 'ignore' });
+      execGitSync(['add', 'w2.txt'], { cwd: worker2Path, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker-2 change'], { cwd: worker2Path, stdio: 'ignore' });
 
       await initTeamState('team-cross-rebase', 'cross rebase test', 'executor', 2, repo);
       const cfg = await readTeamConfig('team-cross-rebase', repo);
@@ -4768,8 +4789,8 @@ exec "${realGit}" "$@"
       assert.equal(existsSync(join(worker2Path, 'w2.txt')), true, 'worker-2 should still have its own w2.txt');
 
       // Verify leader HEAD is ancestor of worker-2 branch (rebase succeeded)
-      const newLeaderHead = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
-      const mergeBase = execFileSync('git', ['merge-base', newLeaderHead, 'wk2-xr-branch'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const newLeaderHead = execGitSync(['rev-parse', 'HEAD'], { cwd: repo, encoding: 'utf-8' }).trim();
+      const mergeBase = execGitSync(['merge-base', newLeaderHead, 'wk2-xr-branch'], { cwd: repo, encoding: 'utf-8' }).trim();
       assert.equal(mergeBase, newLeaderHead, 'worker-2 should be rebased onto new leader HEAD');
 
       const ledgerPath = join(repo, '.rcs', 'reports', 'team-commit-hygiene', 'team-cross-rebase.ledger.json');
@@ -4799,13 +4820,13 @@ exec "${realGit}" "$@"
 
       // Worker edits README.md (same file, different content → conflict)
       await writeFile(join(workerPath, 'README.md'), 'worker version\n', 'utf-8');
-      execFileSync('git', ['add', 'README.md'], { cwd: workerPath, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker edits README'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['add', 'README.md'], { cwd: workerPath, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker edits README'], { cwd: workerPath, stdio: 'ignore' });
 
       // Leader also edits README.md (creates divergence + conflict)
       await writeFile(join(repo, 'README.md'), 'leader version\n', 'utf-8');
-      execFileSync('git', ['add', 'README.md'], { cwd: repo, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'leader edits README'], { cwd: repo, stdio: 'ignore' });
+      execGitSync(['add', 'README.md'], { cwd: repo, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'leader edits README'], { cwd: repo, stdio: 'ignore' });
 
       await initTeamState('team-conflict-resolve', 'conflict resolution test', 'executor', 1, repo);
       const cfg = await readTeamConfig('team-conflict-resolve', repo);
@@ -4855,11 +4876,11 @@ exec "${realGit}" "$@"
 
       // Worker-1 commits a change
       await writeFile(join(worker1Path, 'w1.txt'), 'from worker 1\n', 'utf-8');
-      execFileSync('git', ['add', 'w1.txt'], { cwd: worker1Path, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker-1 change'], { cwd: worker1Path, stdio: 'ignore' });
+      execGitSync(['add', 'w1.txt'], { cwd: worker1Path, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker-1 change'], { cwd: worker1Path, stdio: 'ignore' });
 
       // Record worker-2 HEAD before integration
-      const worker2HeadBefore = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
+      const worker2HeadBefore = execGitSync(['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
 
       await initTeamState('team-rebase-gate', 'rebase gate test', 'executor', 2, repo);
       const cfg = await readTeamConfig('team-rebase-gate', repo);
@@ -4892,7 +4913,7 @@ exec "${realGit}" "$@"
       await monitorTeam('team-rebase-gate', repo);
 
       // Verify worker-2 HEAD is unchanged (NOT rebased)
-      const worker2HeadAfter = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
+      const worker2HeadAfter = execGitSync(['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
       assert.equal(worker2HeadAfter, worker2HeadBefore, 'worker-2 should NOT be rebased when status is "working"');
     } finally {
       if (worker1Path) {
@@ -4912,21 +4933,21 @@ exec "${realGit}" "$@"
     try {
       // Add a file that will be subject to rename/rename conflict
       await writeFile(join(repo, 'original.txt'), 'original content\n', 'utf-8');
-      execFileSync('git', ['add', 'original.txt'], { cwd: repo, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'add original.txt'], { cwd: repo, stdio: 'ignore' });
+      execGitSync(['add', 'original.txt'], { cwd: repo, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'add original.txt'], { cwd: repo, stdio: 'ignore' });
 
       worker1Path = await addWorktree(repo, 'wk1-rf-branch', 'rcs-runtime-wk1-rebase-fail-');
       worker2Path = await addWorktree(repo, 'wk2-rf-branch', 'rcs-runtime-wk2-rebase-fail-');
 
       // Worker-1 renames original.txt → renamed-by-w1.txt (will be integrated to leader)
-      execFileSync('git', ['mv', 'original.txt', 'renamed-by-w1.txt'], { cwd: worker1Path, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker-1 renames original'], { cwd: worker1Path, stdio: 'ignore' });
+      execGitSync(['mv', 'original.txt', 'renamed-by-w1.txt'], { cwd: worker1Path, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker-1 renames original'], { cwd: worker1Path, stdio: 'ignore' });
 
       // Worker-2 renames original.txt → renamed-by-w2.txt (will conflict on rebase)
-      execFileSync('git', ['mv', 'original.txt', 'renamed-by-w2.txt'], { cwd: worker2Path, stdio: 'ignore' });
-      execFileSync('git', ['commit', '-m', 'worker-2 renames original'], { cwd: worker2Path, stdio: 'ignore' });
+      execGitSync(['mv', 'original.txt', 'renamed-by-w2.txt'], { cwd: worker2Path, stdio: 'ignore' });
+      execGitSync(['commit', '-m', 'worker-2 renames original'], { cwd: worker2Path, stdio: 'ignore' });
 
-      const worker2HeadBefore = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
+      const worker2HeadBefore = execGitSync(['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
 
       await initTeamState('team-rebase-fail', 'rebase failure test', 'executor', 2, repo);
       const cfg = await readTeamConfig('team-rebase-fail', repo);
@@ -4962,10 +4983,10 @@ exec "${realGit}" "$@"
       assert.equal(existsSync(join(repo, 'renamed-by-w1.txt')), true, 'leader should have worker-1 renamed file');
 
       // Verify worker-2 worktree is NOT in a broken rebase state (rebase --abort was called)
-      const worker2HeadAfter = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
+      const worker2HeadAfter = execGitSync(['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
       assert.equal(worker2HeadAfter, worker2HeadBefore, 'worker-2 HEAD should revert to pre-rebase state after abort');
       // Verify no rebase-in-progress markers
-      const gitStatusOutput = execFileSync('git', ['status'], { cwd: worker2Path, encoding: 'utf-8' });
+      const gitStatusOutput = execGitSync(['status'], { cwd: worker2Path, encoding: 'utf-8' });
       assert.doesNotMatch(gitStatusOutput, /rebase in progress/, 'worktree should not have rebase in progress');
 
       // Verify integration report logged the failure

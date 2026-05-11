@@ -1,8 +1,8 @@
 import { createHash } from 'crypto';
-import { execFileSync } from 'child_process';
-import { resolveTmuxBinaryForPlatform } from '../utils/platform-command.js';
+import { resolveTmuxBinaryForPlatform, spawnPlatformCommandSync } from '../utils/platform-command.js';
+import { canonicalizeStateMode } from '../mcp/state-paths.js';
 
-export const DEFAULT_ALLOWED_MODES = ['ralph', 'ultrawork', 'team'];
+export const DEFAULT_ALLOWED_MODES = ['forge', 'ultrawork', 'team'];
 export const DEFAULT_MARKER = '[RCS_TMUX_INJECT]';
 const PLACEHOLDER_TARGET_VALUES = new Set([
   'replace-with-tmux-pane-id',
@@ -34,7 +34,9 @@ export function normalizeTmuxHookConfig(raw: any): any {
   }
 
   const allowedModes = Array.isArray(raw.allowed_modes)
-    ? raw.allowed_modes.filter((mode: any) => typeof mode === 'string' && mode.trim() !== '')
+    ? raw.allowed_modes
+      .filter((mode: any) => typeof mode === 'string' && mode.trim() !== '')
+      .map((mode: string) => canonicalizeStateMode(mode))
     : [];
 
   const targetValue = raw.target && typeof raw.target === 'object' && typeof raw.target.value === 'string'
@@ -86,9 +88,14 @@ export function tmuxHookExplicitlyDisablesInjection(raw: any): boolean {
 }
 
 export function pickActiveMode(activeModes: any, allowedModes: any): string | null {
-  const activeSet = new Set((activeModes || []).filter((mode: any) => typeof mode === 'string'));
+  const activeSet = new Set(
+    (activeModes || [])
+      .filter((mode: any) => typeof mode === 'string')
+      .map((mode: string) => canonicalizeStateMode(mode))
+  );
   for (const mode of allowedModes || []) {
-    if (activeSet.has(mode)) return mode;
+    const canonicalMode = typeof mode === 'string' ? canonicalizeStateMode(mode) : mode;
+    if (typeof canonicalMode === 'string' && activeSet.has(canonicalMode)) return canonicalMode;
   }
   return null;
 }
@@ -199,7 +206,7 @@ function isHudStartCommand(startCommand: string): boolean {
  * 2. Scan all panes in the same tmux session for one started with codex
  * 3. Fail closed instead of guessing a shell or HUD pane
  *
- * All callers (auto-nudge, ralph steer, team dispatch, tmux injection) should
+ * All callers (auto-nudge, forge steer, team dispatch, tmux injection) should
  * use this instead of raw `process.env.TMUX_PANE`.
  */
 export function resolveCodexPane(): string {
@@ -207,13 +214,21 @@ export function resolveCodexPane(): string {
   const tmuxCommand = resolveTmuxBinaryForPlatform() || 'tmux';
   if (!envPane) return '';
 
+  const readTmuxOutput = (args: string[]): string => {
+    const { result } = spawnPlatformCommandSync(tmuxCommand, args, {
+      encoding: 'utf-8',
+      timeout: 2000,
+      windowsHide: process.platform === 'win32',
+    });
+    if (result.status !== 0) {
+      throw result.error ?? new Error(String(result.stderr || 'tmux command failed'));
+    }
+    return String(result.stdout ?? '').trim();
+  };
+
   try {
-    const cmd = execFileSync(tmuxCommand, ['display-message', '-t', envPane, '-p', '#{pane_current_command}'], {
-      encoding: 'utf-8', timeout: 2000, windowsHide: process.platform === 'win32',
-    }).trim().toLowerCase();
-    const startCmd = execFileSync(tmuxCommand, ['display-message', '-t', envPane, '-p', '#{pane_start_command}'], {
-      encoding: 'utf-8', timeout: 2000, windowsHide: process.platform === 'win32',
-    }).trim().toLowerCase();
+    const cmd = readTmuxOutput(['display-message', '-t', envPane, '-p', '#{pane_current_command}']).toLowerCase();
+    const startCmd = readTmuxOutput(['display-message', '-t', envPane, '-p', '#{pane_start_command}']).toLowerCase();
     const base = cmd.split('/').pop()?.replace(/^-/, '') || '';
     if (AGENT_COMMANDS.has(base) && !isHudStartCommand(startCmd)) {
       return envPane;
@@ -227,16 +242,13 @@ export function resolveCodexPane(): string {
   }
 
   try {
-    const sessionName = execFileSync(tmuxCommand, ['display-message', '-t', envPane, '-p', '#S'], {
-      encoding: 'utf-8', timeout: 2000,
-      windowsHide: true,
-    }).trim();
+    const sessionName = readTmuxOutput(['display-message', '-t', envPane, '-p', '#S']);
     if (!sessionName) return '';
 
-    const panes = execFileSync(tmuxCommand, [
+    const panes = readTmuxOutput([
       'list-panes', '-s', '-t', sessionName,
       '-F', '#{pane_id}\t#{pane_current_command}\t#{pane_start_command}',
-    ], { encoding: 'utf-8', timeout: 2000, windowsHide: process.platform === 'win32' }).trim().split('\n');
+    ]).split('\n');
 
     for (const line of panes) {
       const parts = line.split('\t');

@@ -218,7 +218,12 @@ function readDaemonState(): ReplyListenerState | null {
 }
 
 function writeDaemonState(state: ReplyListenerState): void {
-  writeSecureFile(STATE_FILE_PATH, JSON.stringify(state, null, 2));
+  try {
+    writeSecureFile(STATE_FILE_PATH, JSON.stringify(state, null, 2));
+  } catch {
+    // Best-effort persistence only; reply polling should not fail because
+    // the daemon state file cannot be updated in the current environment.
+  }
 }
 
 function readDaemonConfig(): ReplyListenerDaemonConfig | null {

@@ -76,10 +76,9 @@ describe('rcs setup skills overwrite behavior', () => {
       assert.equal(installed.has('swarm'), false);
       assert.equal(installed.has('ecomode'), false);
       assert.equal(installed.has('ultraqa'), true);
-      assert.equal(installed.has('ralph-init'), false);
-      assert.equal(installed.has('visual-ralph'), true);
+      assert.equal(installed.has('forge-init'), false);
+      assert.equal(installed.has('visual-forge'), true);
       assert.equal(installed.has('web-clone'), false);
-      assert.equal(installed.has('frontend-ui-ux'), false);
       assert.equal(installed.has('pipeline'), true);
       assert.equal(installed.has('configure-notifications'), true);
       assert.equal(installed.has('wiki'), true);
@@ -121,7 +120,7 @@ describe('rcs setup skills overwrite behavior', () => {
       await setup({ scope: 'project' });
 
       assert.equal(existsSync(staleWebCloneDir), false);
-      assert.equal(existsSync(join(wd, '.codex', 'skills', 'visual-ralph', 'SKILL.md')), true);
+      assert.equal(existsSync(join(wd, '.codex', 'skills', 'visual-forge', 'SKILL.md')), true);
     } finally {
       process.chdir(previousCwd);
       await rm(wd, { recursive: true, force: true });

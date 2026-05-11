@@ -9,7 +9,7 @@ describe('native release workflow', () => {
     assert.equal(existsSync(workflowPath), true, `missing workflow: ${workflowPath}`);
 
     const workflow = readFileSync(workflowPath, 'utf-8');
-    assert.match(workflow, /name:\s*Release/);
+    assert.match(workflow, /name:\s*(?:RCS\s+)?Release/);
     assert.match(workflow, /push:\s*\n\s*tags:/);
     assert.match(workflow, /permissions:\s*\n\s*contents:\s*write/);
     assert.match(workflow, /id-token:\s*write/);

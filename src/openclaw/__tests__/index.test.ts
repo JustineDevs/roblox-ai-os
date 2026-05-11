@@ -12,9 +12,11 @@ import { tmpdir } from "os";
 describe("wakeOpenClaw", () => {
   let tmpDir: string;
   let originalEnv: NodeJS.ProcessEnv;
+  let originalFetch: typeof globalThis.fetch | undefined;
 
   beforeEach(() => {
     originalEnv = { ...process.env };
+    originalFetch = globalThis.fetch;
     tmpDir = join(tmpdir(), `rcs-openclaw-index-test-${Date.now()}`);
     mkdirSync(tmpDir, { recursive: true });
   });
@@ -26,6 +28,8 @@ describe("wakeOpenClaw", () => {
     for (const [key, val] of Object.entries(originalEnv)) {
       process.env[key] = val;
     }
+    if (originalFetch) globalThis.fetch = originalFetch;
+    else delete (globalThis as { fetch?: typeof globalThis.fetch }).fetch;
     try { rmSync(tmpDir, { recursive: true }); } catch { /* ignore */ }
   });
 
@@ -119,25 +123,16 @@ describe("wakeOpenClaw", () => {
     process.env.TMUX_PANE = "%42";
 
     for (const eventName of ["stop", "session-end"] as const) {
-      const { createServer } = await import("http");
       let capturedBody = "";
-      const server = createServer((req, res) => {
-        let body = "";
-        req.on("data", (chunk: Buffer) => { body += chunk.toString(); });
-        req.on("end", () => {
-          capturedBody = body;
-          res.writeHead(200);
-          res.end();
-        });
-      });
-      await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-      const addr = server.address();
-      const port = typeof addr === "object" && addr ? addr.port : 0;
+      globalThis.fetch = (async (_input, init) => {
+        capturedBody = String(init?.body ?? "");
+        return new Response(null, { status: 200 });
+      }) as typeof globalThis.fetch;
 
       const configPath = join(tmpDir, `openclaw-${eventName}.json`);
       writeFileSync(configPath, JSON.stringify({
         enabled: true,
-        gateways: { gw: { type: "http", url: `http://127.0.0.1:${port}/hook` } },
+        gateways: { gw: { type: "http", url: `http://127.0.0.1/hook` } },
         hooks: {
           [eventName]: { gateway: "gw", instruction: "Event", enabled: true },
         },
@@ -148,7 +143,6 @@ describe("wakeOpenClaw", () => {
       resetOpenClawConfigCache();
 
       const result = await wakeOpenClaw(eventName, { projectPath: "/some/project" });
-      server.close();
 
       assert.ok(result !== null);
       assert.equal(result!.success, true);
@@ -164,26 +158,16 @@ describe("wakeOpenClaw", () => {
     process.env.OPENCLAW_REPLY_TARGET = "user42";
     process.env.OPENCLAW_REPLY_THREAD = "thread-abc";
 
-    // Use a local HTTP server to capture the payload
-    const { createServer } = await import("http");
     let capturedBody = "";
-    const server = createServer((req, res) => {
-      let body = "";
-      req.on("data", (chunk: Buffer) => { body += chunk.toString(); });
-      req.on("end", () => {
-        capturedBody = body;
-        res.writeHead(200);
-        res.end();
-      });
-    });
-    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-    const addr = server.address();
-    const port = typeof addr === "object" && addr ? addr.port : 0;
+    globalThis.fetch = (async (_input, init) => {
+      capturedBody = String(init?.body ?? "");
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+    }) as typeof globalThis.fetch;
 
     const configPath = join(tmpDir, "openclaw.json");
     writeFileSync(configPath, JSON.stringify({
       enabled: true,
-      gateways: { gw: { type: "http", url: `http://127.0.0.1:${port}/hook` } },
+      gateways: { gw: { type: "http", url: `http://127.0.0.1/hook` } },
       hooks: {
         "session-start": { gateway: "gw", instruction: "hello", enabled: true },
       },
@@ -194,7 +178,6 @@ describe("wakeOpenClaw", () => {
     resetOpenClawConfigCache();
 
     const result = await wakeOpenClaw("session-start", { sessionId: "s1" });
-    server.close();
 
     assert.ok(result !== null);
     assert.equal(result!.success, true);
@@ -215,25 +198,16 @@ describe("wakeOpenClaw", () => {
     delete process.env.OPENCLAW_REPLY_TARGET;
     delete process.env.OPENCLAW_REPLY_THREAD;
 
-    const { createServer } = await import("http");
     let capturedBody = "";
-    const server = createServer((req, res) => {
-      let body = "";
-      req.on("data", (chunk: Buffer) => { body += chunk.toString(); });
-      req.on("end", () => {
-        capturedBody = body;
-        res.writeHead(200);
-        res.end();
-      });
-    });
-    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-    const addr = server.address();
-    const port = typeof addr === "object" && addr ? addr.port : 0;
+    globalThis.fetch = (async (_input, init) => {
+      capturedBody = String(init?.body ?? "");
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+    }) as typeof globalThis.fetch;
 
     const configPath = join(tmpDir, "openclaw.json");
     writeFileSync(configPath, JSON.stringify({
       enabled: true,
-      gateways: { gw: { type: "http", url: `http://127.0.0.1:${port}/hook` } },
+      gateways: { gw: { type: "http", url: `http://127.0.0.1/hook` } },
       hooks: {
         "session-start": { gateway: "gw", instruction: "hello", enabled: true },
       },
@@ -244,7 +218,6 @@ describe("wakeOpenClaw", () => {
     resetOpenClawConfigCache();
 
     const result = await wakeOpenClaw("session-start", { sessionId: "s1" });
-    server.close();
 
     assert.ok(result !== null);
     assert.equal(result!.success, true);
@@ -262,25 +235,16 @@ describe("wakeOpenClaw", () => {
     process.env.RCS_OPENCLAW = "1";
     process.env.OPENCLAW_REPLY_CHANNEL = "env-channel";
 
-    const { createServer } = await import("http");
     let capturedBody = "";
-    const server = createServer((req, res) => {
-      let body = "";
-      req.on("data", (chunk: Buffer) => { body += chunk.toString(); });
-      req.on("end", () => {
-        capturedBody = body;
-        res.writeHead(200);
-        res.end();
-      });
-    });
-    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-    const addr = server.address();
-    const port = typeof addr === "object" && addr ? addr.port : 0;
+    globalThis.fetch = (async (_input, init) => {
+      capturedBody = String(init?.body ?? "");
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+    }) as typeof globalThis.fetch;
 
     const configPath = join(tmpDir, "openclaw.json");
     writeFileSync(configPath, JSON.stringify({
       enabled: true,
-      gateways: { gw: { type: "http", url: `http://127.0.0.1:${port}/hook` } },
+      gateways: { gw: { type: "http", url: `http://127.0.0.1/hook` } },
       hooks: {
         "session-start": { gateway: "gw", instruction: "hello", enabled: true },
       },
@@ -294,7 +258,6 @@ describe("wakeOpenClaw", () => {
       sessionId: "s1",
       replyChannel: "ctx-channel",
     });
-    server.close();
 
     assert.ok(result !== null);
     const parsed = JSON.parse(capturedBody);
@@ -308,25 +271,16 @@ describe("wakeOpenClaw", () => {
     delete process.env.OPENCLAW_REPLY_TARGET;
     delete process.env.OPENCLAW_REPLY_THREAD;
 
-    const { createServer } = await import("http");
     let capturedBody = "";
-    const server = createServer((req, res) => {
-      let body = "";
-      req.on("data", (chunk: Buffer) => { body += chunk.toString(); });
-      req.on("end", () => {
-        capturedBody = body;
-        res.writeHead(200);
-        res.end();
-      });
-    });
-    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-    const addr = server.address();
-    const port = typeof addr === "object" && addr ? addr.port : 0;
+    globalThis.fetch = (async (_input, init) => {
+      capturedBody = String(init?.body ?? "");
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+    }) as typeof globalThis.fetch;
 
     const configPath = join(tmpDir, "openclaw.json");
     writeFileSync(configPath, JSON.stringify({
       enabled: true,
-      gateways: { gw: { type: "http", url: `http://127.0.0.1:${port}/hook` } },
+      gateways: { gw: { type: "http", url: `http://127.0.0.1/hook` } },
       hooks: {
         "session-start": { gateway: "gw", instruction: "do the thing", enabled: true },
       },
@@ -337,7 +291,6 @@ describe("wakeOpenClaw", () => {
     resetOpenClawConfigCache();
 
     const result = await wakeOpenClaw("session-start", { sessionId: "s1" });
-    server.close();
 
     assert.ok(result !== null);
     assert.equal(result!.success, true);
@@ -374,25 +327,16 @@ describe("wakeOpenClaw", () => {
     delete process.env.OPENCLAW_REPLY_TARGET;
     delete process.env.OPENCLAW_REPLY_THREAD;
 
-    const { createServer } = await import("http");
     let capturedBody = "";
-    const server = createServer((req, res) => {
-      let body = "";
-      req.on("data", (chunk: Buffer) => { body += chunk.toString(); });
-      req.on("end", () => {
-        capturedBody = body;
-        res.writeHead(200);
-        res.end();
-      });
-    });
-    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
-    const addr = server.address();
-    const port = typeof addr === "object" && addr ? addr.port : 0;
+    globalThis.fetch = (async (_input, init) => {
+      capturedBody = String(init?.body ?? "");
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+    }) as typeof globalThis.fetch;
 
     const configPath = join(tmpDir, "openclaw.json");
     writeFileSync(configPath, JSON.stringify({
       enabled: true,
-      gateways: { gw: { type: "http", url: `http://127.0.0.1:${port}/hook` } },
+      gateways: { gw: { type: "http", url: `http://127.0.0.1/hook` } },
       hooks: {
         "session-end": { gateway: "gw", instruction: "Ended", enabled: true },
       },
@@ -405,11 +349,10 @@ describe("wakeOpenClaw", () => {
     const result = await wakeOpenClaw("session-end", {
       sessionId: "s1",
       tmuxTail: [
-        "fix/issue-1525-post-stop-keyword-replay | ralph:2/50 | turns:4 | session:1m | last:5s ago",
+        "fix/issue-1525-post-stop-keyword-replay | forge:2/50 | turns:4 | session:1m | last:5s ago",
         "stderr: Error: test suite failed",
       ].join("\n"),
     });
-    server.close();
 
     assert.ok(result !== null);
     assert.equal(result!.success, true);

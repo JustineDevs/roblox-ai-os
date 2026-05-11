@@ -32,7 +32,7 @@ export interface TeamExecStageOptions {
   extraEnv?: Record<string, string>;
 }
 
-const APPROVED_TEAM_LAUNCH_PATTERN = /(?<command>(?:rcs\s+team|\$team)\s+(?<ralph>ralph\s+)?(?<count>\d+)(?::(?<role>[a-z][a-z0-9-]*))?\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi;
+const APPROVED_TEAM_LAUNCH_PATTERN = /(?<command>(?:rcs\s+team|\$team)\s+(?<count>\d+)(?::(?<role>[a-z][a-z0-9-]*))?\s+(?<task>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'))/gi;
 
 function decodeQuotedValue(raw: string): string | null {
   const normalized = raw.trim();
@@ -51,9 +51,9 @@ function decodeQuotedValue(raw: string): string | null {
   }
 }
 
-function resolveRequestedTask(ctx: StageContext, ralplanArtifacts?: Record<string, unknown>): string {
-  const ralplanTask = typeof ralplanArtifacts?.task === 'string' ? ralplanArtifacts.task.trim() : '';
-  return ralplanTask || ctx.task;
+function resolveRequestedTask(ctx: StageContext, blueprintArtifacts?: Record<string, unknown>): string {
+  const blueprintTask = typeof blueprintArtifacts?.task === 'string' ? blueprintArtifacts.task.trim() : '';
+  return blueprintTask || ctx.task;
 }
 
 function normalizePlanningRelativePath(rawPath: string): string {
@@ -108,9 +108,9 @@ function resolvePlanningPrdPath(
 function readRuntimeLatestPlanningSelection(
   artifacts: PlanningArtifacts,
   cwd: string,
-  ralplanArtifacts?: Record<string, unknown>,
+  blueprintArtifacts?: Record<string, unknown>,
 ): { prdPath: string | null; testSpecPaths: string[] } | null {
-  const drafts = Array.isArray(ralplanArtifacts?.drafts) ? ralplanArtifacts.drafts : [];
+  const drafts = Array.isArray(blueprintArtifacts?.drafts) ? blueprintArtifacts.drafts : [];
   for (let index = drafts.length - 1; index >= 0; index -= 1) {
     const draft = drafts[index];
     if (!draft || typeof draft !== 'object') continue;
@@ -131,11 +131,11 @@ function readRuntimeLatestPlanningSelection(
 function resolveApprovedTeamPlanPath(
   cwd: string,
   latestPlanPath: string,
-  ralplanArtifacts?: Record<string, unknown>,
+  blueprintArtifacts?: Record<string, unknown>,
 ): string {
   const artifacts = readPlanningArtifacts(cwd);
   const resolvedLatestPlanPath = resolvePlanningPrdPath(artifacts, cwd, latestPlanPath);
-  const selection = readRuntimeLatestPlanningSelection(artifacts, cwd, ralplanArtifacts) ?? readLatestPlanningArtifacts(cwd);
+  const selection = readRuntimeLatestPlanningSelection(artifacts, cwd, blueprintArtifacts) ?? readLatestPlanningArtifacts(cwd);
   const selectedPrdPath = selection.prdPath
     ? resolvePlanningPrdPath(artifacts, cwd, selection.prdPath).matchedPath
     : null;
@@ -153,9 +153,9 @@ function resolveApprovedTeamPlanPath(
 function resolveApprovedTeamTaskFromPlanPath(
   cwd: string,
   latestPlanPath: string,
-  ralplanArtifacts?: Record<string, unknown>,
+  blueprintArtifacts?: Record<string, unknown>,
 ): string {
-  const approvedPlanPath = resolveApprovedTeamPlanPath(cwd, latestPlanPath, ralplanArtifacts);
+  const approvedPlanPath = resolveApprovedTeamPlanPath(cwd, latestPlanPath, blueprintArtifacts);
   let content = '';
   try {
     content = readFileSync(approvedPlanPath, 'utf-8');
@@ -178,15 +178,15 @@ function resolveApprovedTeamTaskFromPlanPath(
   return task;
 }
 
-function resolveTeamExecTask(ctx: StageContext, ralplanArtifacts?: Record<string, unknown>): string {
-  const requestedTask = resolveRequestedTask(ctx, ralplanArtifacts);
-  const latestPlanPath = typeof ralplanArtifacts?.latestPlanPath === 'string'
-    ? ralplanArtifacts.latestPlanPath.trim()
+function resolveTeamExecTask(ctx: StageContext, blueprintArtifacts?: Record<string, unknown>): string {
+  const requestedTask = resolveRequestedTask(ctx, blueprintArtifacts);
+  const latestPlanPath = typeof blueprintArtifacts?.latestPlanPath === 'string'
+    ? blueprintArtifacts.latestPlanPath.trim()
     : '';
   if (!latestPlanPath) {
     return requestedTask;
   }
-  return resolveApprovedTeamTaskFromPlanPath(ctx.cwd, latestPlanPath, ralplanArtifacts);
+  return resolveApprovedTeamTaskFromPlanPath(ctx.cwd, latestPlanPath, blueprintArtifacts);
 }
 
 interface BuildTeamInstructionOptions {
@@ -288,7 +288,7 @@ function buildTeamRuntimeCliLaunchInput(descriptor: TeamExecDescriptor): TeamRun
  * Create a team-exec pipeline stage.
  *
  * This stage delegates to the existing `rcs team` infrastructure, which
- * starts real Codex CLI workers in tmux panes. When RALPLAN names a
+ * starts real Codex CLI workers in tmux panes. When BLUEPRINT names a
  * concrete approved PRD handoff, team-exec reuses that exact task text;
  * otherwise it stays on the generic request-task path.
  */
@@ -303,10 +303,10 @@ export function createTeamExecStage(options: TeamExecStageOptions = {}): Pipelin
       const startTime = Date.now();
 
       try {
-        const ralplanArtifacts = typeof ctx.artifacts['ralplan'] === 'object' && ctx.artifacts['ralplan'] !== null
-          ? ctx.artifacts['ralplan'] as Record<string, unknown>
+        const blueprintArtifacts = typeof ctx.artifacts['blueprint'] === 'object' && ctx.artifacts['blueprint'] !== null
+          ? ctx.artifacts['blueprint'] as Record<string, unknown>
           : undefined;
-        const task = resolveTeamExecTask(ctx, ralplanArtifacts);
+        const task = resolveTeamExecTask(ctx, blueprintArtifacts);
         const availableAgentTypes = await resolveAvailableAgentTypes(ctx.cwd);
         const staffingPlan = buildFollowupStaffingPlan('team', task, availableAgentTypes, {
           workerCount,

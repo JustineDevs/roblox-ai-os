@@ -39,8 +39,8 @@ describe('code-review skill contract', () => {
     assert.match(codeReviewSkill, /\*\*COMMENT\*\* - `code-reviewer` returns COMMENT with architect status `CLEAR`, architect status is `WATCH`, or only LOW\/MEDIUM improvements remain/i);
   });
 
-  it('bounds auto-fix wording to the explicit ralph path only', () => {
-    assert.match(codeReviewSkill, /On the explicit Ralph path/i);
+  it('bounds auto-fix wording to the explicit forge path only', () => {
+    assert.match(codeReviewSkill, /On the explicit Forge path/i);
     assert.match(codeReviewSkill, /automatic fix follow-up without another permission prompt/i);
     assert.match(codeReviewSkill, /Plain `code-review` itself remains read-only and does \*\*not\*\* promise auto-fix/i);
   });

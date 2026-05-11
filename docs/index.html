@@ -22,9 +22,54 @@
       <section class="hero">
         <span class="badge">Roblox Creator Skills</span>
         <h1>RCS</h1>
-        <p>Creator workflow runtime for OpenAI Codex CLI.</p>
+        <p>Roblox Studio workflow and runtime layer for OpenAI Codex CLI.</p>
         <pre><code>npm install -g @openai/codex @jstn-sdk/rcs</code></pre>
+        <p>RCS gives advanced Roblox creators one disciplined path from creator brief to approved blueprint to verified implementation, using Roblox-native terms instead of generic web-app workflow language.</p>
         <p>Real global version bumps now print an explicit reminder instead of auto-launching <code>rcs setup</code>. When you're ready, run <code>rcs setup</code> manually or use <code>rcs update</code> to check npm and then run the same setup refresh path. Fresh RCS-managed <code>gpt-5.5</code> configs recommend <code>250000 / 200000</code> only when those keys are missing.</p>
+      </section>
+
+      <section aria-labelledby="who-its-for">
+        <h2 id="who-its-for">Who It's For</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Roblox Studio Builders</h3>
+            <p>Creators building gameplay systems, UI, remotes, persistence, live-ops, and technical experience code.</p>
+          </article>
+          <article class="card">
+            <h3>Plugin and Tool Authors</h3>
+            <p>Developers working on Studio-adjacent tooling who want Codex guided by Roblox-native workflow boundaries.</p>
+          </article>
+          <article class="card">
+            <h3>Advanced Codex Users</h3>
+            <p>People who already like Codex but want a stricter creator runtime instead of generic coding prompts.</p>
+          </article>
+          <article class="card">
+            <h3>Not the Main Audience</h3>
+            <p>RCS is not primarily a beginner teaching app, a generic web stack, or a SaaS product framework.</p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="how-it-works">
+        <h2 id="how-it-works">How It Works</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>1. Brief</h3>
+            <p>Use <code>$brief</code> to clarify creator intent, scope, audience, and non-goals before implementation starts.</p>
+          </article>
+          <article class="card">
+            <h3>2. Blueprint</h3>
+            <p>Use <code>$blueprint</code> to approve the implementation shape, Roblox touchpoints, tradeoffs, and verification plan.</p>
+          </article>
+          <article class="card">
+            <h3>3. Forge or Crew</h3>
+            <p>Use <code>$forge</code> for one persistent owner or <code>$crew</code> for coordinated parallel execution.</p>
+          </article>
+          <article class="card">
+            <h3>4. Verify</h3>
+            <p>RCS keeps runtime state, contracts, and checks aligned so the work ends with actual proof, not vague confidence.</p>
+          </article>
+        </div>
       </section>
 
       <section aria-labelledby="whats-new-010">
@@ -61,7 +106,7 @@
       <div class="grid">
         <article class="card"><h3>Agent Prompts</h3><p>Specialized roles for implementation, review, design, and planning.</p></article>
         <article class="card"><h3>Skills</h3><p>Composable creator workflows for briefing, blueprinting, forging, psychology design, setup, and tracing.</p></article>
-        <article class="card"><h3>Team Orchestration</h3><p>Staged execution pipeline with verification and fix loops.</p></article>
+        <article class="card"><h3>Crew Execution</h3><p>Staged execution flow with verification and fix loops.</p></article>
         <article class="card"><h3>MCP State Management</h3><p>Persistent lifecycle state, notepad, and project memory across sessions.</p></article>
       </div>
 
@@ -75,11 +120,17 @@
 
       <h2>Reference Guides</h2>
       <ul>
+        <li><a href="./reference/canonical-vocabulary.md">Canonical Vocabulary</a></li>
+        <li><a href="./reference/semantic-design-system.md">Semantic Design System</a></li>
+        <li><a href="./reference/roblox-workspace-standard.md">Roblox Workspace Standard</a></li>
+        <li><a href="./reference/robloxstudio-mcp-compatibility.md">robloxstudio-mcp Compatibility</a></li>
+        <li><a href="./reference/surface-map.md">Surface Map</a></li>
         <li><a href="./reference/rcs-config-schema-routing.md">.rcs-config.json model/env routing reference</a></li>
+        <li><a href="./archive/README.md">Archive Docs</a></li>
       </ul>
 
       <h2>Integration Guides</h2>
-      <p>OpenClaw / notification gateway setup and prompt-tuning guides by language:</p>
+      <p>Notification delivery and OpenClaw setup guides by language:</p>
       <p><a href="./integrations.html">Open dedicated Integrations page</a></p>
       <ul>
         <li><a href="./openclaw-integration.md">English</a></li>
@@ -101,7 +152,7 @@
       <h2>Architecture</h2>
       <pre><code>User
   -> Codex CLI
-     -> AGENTS.md (orchestration brain)
+     -> AGENTS.md (creator workflow brain)
      -> ~/.codex/prompts/*.md (installable active/internal agent prompt catalog)
      -> ~/.codex/skills/*/SKILL.md (skill catalog)
      -> ~/.codex/config.toml (features, notify, MCP)

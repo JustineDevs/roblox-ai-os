@@ -1,6 +1,6 @@
-# OpenClaw / Generic Notification Gateway Integration Guide
+# Notification Gateway and OpenClaw Integration Guide
 
-This guide covers two supported setup paths:
+This guide covers the supported RCS notification delivery setup paths:
 
 1. **Explicit OpenClaw schema** (`notifications.openclaw`) — runtime-native shape
 2. **Generic aliases** (`custom_webhook_command`, `custom_cli_command`) — flexible setup for OpenClaw or other services

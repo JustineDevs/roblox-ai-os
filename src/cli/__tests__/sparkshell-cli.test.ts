@@ -145,7 +145,7 @@ describe('resolveSparkShellBinaryPath', () => {
       await mkdir(stagingDir, { recursive: true });
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
+        repository: { url: 'git+https://github.com/JustineDevs/roblox-ai-os.git' },
       }));
       const stagedBinary = join(stagingDir, process.platform === 'win32' ? 'rcs-sparkshell.exe' : 'rcs-sparkshell');
       await writeFile(stagedBinary, process.platform === 'win32' ? '@echo off\r\necho hydrated\r\n' : '#!/bin/sh\necho hydrated\n');
@@ -202,7 +202,7 @@ describe('resolveSparkShellBinaryPath', () => {
       await mkdir(missingRoot, { recursive: true });
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
+        repository: { url: 'git+https://github.com/JustineDevs/roblox-ai-os.git' },
       }));
 
       const manifestPath = join(missingRoot, 'native-release-manifest.json');

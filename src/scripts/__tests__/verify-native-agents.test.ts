@@ -45,14 +45,14 @@ describe("verify-native-agents", () => {
       manifest: manifest([
         { name: "executor", category: "build", status: "active" },
         {
-          name: "style-reviewer",
+          name: "legacy-reviewer",
           category: "review",
           status: "merged",
           canonical: "executor",
         },
       ]),
-      definitions: { executor: definition, "style-reviewer": { ...definition, name: "style-reviewer" } },
-      promptNames: new Set(["executor", "style-reviewer", "explore-harness"]),
+      definitions: { executor: definition, "legacy-reviewer": { ...definition, name: "legacy-reviewer" } },
+      promptNames: new Set(["executor", "legacy-reviewer", "explore-harness"]),
       pluginManifest: { skills: "./skills/" },
     });
 
@@ -97,14 +97,14 @@ describe("verify-native-agents", () => {
       verifyNativeAgents({
         manifest: manifest([
           {
-            name: "style-reviewer",
+            name: "legacy-reviewer",
             category: "review",
             status: "merged",
             canonical: "code-reviewer",
           },
         ]),
-        definitions: { "style-reviewer": { ...definition, name: "style-reviewer" } },
-        promptNames: new Set(["style-reviewer"]),
+        definitions: { "legacy-reviewer": { ...definition, name: "legacy-reviewer" } },
+        promptNames: new Set(["legacy-reviewer"]),
         pluginManifest: {},
       }),
     );
@@ -113,7 +113,7 @@ describe("verify-native-agents", () => {
       verifyNativeAgents({
         manifest: manifest([
           {
-            name: "style-reviewer",
+            name: "legacy-reviewer",
             category: "review",
             status: "merged",
             canonical: "code-reviewer",
@@ -125,10 +125,10 @@ describe("verify-native-agents", () => {
           },
         ]),
         definitions: {
-          "style-reviewer": { ...definition, name: "style-reviewer" },
+          "legacy-reviewer": { ...definition, name: "legacy-reviewer" },
           "code-reviewer": { ...definition, name: "code-reviewer" },
         },
-        promptNames: new Set(["style-reviewer", "code-reviewer"]),
+        promptNames: new Set(["legacy-reviewer", "code-reviewer"]),
         pluginManifest: {},
       }),
     );
@@ -139,13 +139,13 @@ describe("verify-native-agents", () => {
       verifyNativeAgents({
         manifest: manifest([
           {
-            name: "style-reviewer",
+            name: "legacy-reviewer",
             category: "review",
             status: "alias",
-            canonical: "quality-reviewer",
+            canonical: "legacy-quality",
           },
           {
-            name: "quality-reviewer",
+            name: "legacy-quality",
             category: "review",
             status: "merged",
             canonical: "executor",
@@ -154,10 +154,10 @@ describe("verify-native-agents", () => {
         ]),
         definitions: {
           executor: definition,
-          "style-reviewer": { ...definition, name: "style-reviewer" },
-          "quality-reviewer": { ...definition, name: "quality-reviewer" },
+          "legacy-reviewer": { ...definition, name: "legacy-reviewer" },
+          "legacy-quality": { ...definition, name: "legacy-quality" },
         },
-        promptNames: new Set(["executor", "style-reviewer", "quality-reviewer"]),
+        promptNames: new Set(["executor", "legacy-reviewer", "legacy-quality"]),
         pluginManifest: {},
       }),
     );
@@ -189,7 +189,7 @@ describe("verify-native-agents", () => {
     const nativeManifest = manifest([
       { name: "executor", category: "build", status: "active" },
       {
-        name: "style-reviewer",
+        name: "legacy-reviewer",
         category: "review",
         status: "merged",
         canonical: "executor",

@@ -1,29 +1,22 @@
 {
-  "generatedAt": "2026-05-03T15:46:03.845Z",
+  "generatedAt": "2026-05-09T10:21:55.127Z",
   "version": "2026.05.03.1",
   "counts": {
-    "skillCount": 61,
-    "promptCount": 30,
-    "activeSkillCount": 46,
+    "skillCount": 58,
+    "promptCount": 20,
+    "activeSkillCount": 44,
     "activeAgentCount": 18
   },
   "coreSkills": [
     "autopilot",
-    "ralph",
     "ultrawork",
     "team",
-    "ralplan"
+    "blueprint",
+    "forge"
   ],
   "skills": [
     {
       "name": "autopilot",
-      "category": "execution",
-      "status": "active",
-      "core": true,
-      "internalRequired": false
-    },
-    {
-      "name": "ralph",
       "category": "execution",
       "status": "active",
       "core": true,
@@ -88,14 +81,6 @@
       "internalRequired": false
     },
     {
-      "name": "ralplan",
-      "category": "planning",
-      "status": "active",
-      "canonical": "plan",
-      "core": true,
-      "internalRequired": false
-    },
-    {
       "name": "deep-interview",
       "category": "planning",
       "status": "active",
@@ -113,14 +98,14 @@
       "name": "blueprint",
       "category": "planning",
       "status": "active",
-      "core": false,
+      "core": true,
       "internalRequired": false
     },
     {
       "name": "forge",
       "category": "execution",
       "status": "active",
-      "core": false,
+      "core": true,
       "internalRequired": false
     },
     {
@@ -301,22 +286,14 @@
       "name": "web-clone",
       "category": "shortcut",
       "status": "merged",
-      "canonical": "visual-ralph",
+      "canonical": "visual-forge",
       "core": false,
       "internalRequired": false
     },
     {
-      "name": "visual-ralph",
+      "name": "visual-forge",
       "category": "shortcut",
       "status": "active",
-      "canonical": "designer",
-      "core": false,
-      "internalRequired": false
-    },
-    {
-      "name": "frontend-ui-ux",
-      "category": "shortcut",
-      "status": "alias",
       "canonical": "designer",
       "core": false,
       "internalRequired": false
@@ -447,7 +424,7 @@
       "internalRequired": false
     },
     {
-      "name": "ralph-init",
+      "name": "forge-init",
       "category": "utility",
       "status": "merged",
       "canonical": "plan",
@@ -504,33 +481,9 @@
       "status": "active"
     },
     {
-      "name": "style-reviewer",
-      "category": "review",
-      "status": "merged",
-      "canonical": "code-reviewer"
-    },
-    {
-      "name": "quality-reviewer",
-      "category": "review",
-      "status": "merged",
-      "canonical": "code-reviewer"
-    },
-    {
-      "name": "api-reviewer",
-      "category": "review",
-      "status": "merged",
-      "canonical": "code-reviewer"
-    },
-    {
       "name": "security-reviewer",
       "category": "review",
       "status": "active"
-    },
-    {
-      "name": "performance-reviewer",
-      "category": "review",
-      "status": "merged",
-      "canonical": "code-reviewer"
     },
     {
       "name": "code-reviewer",
@@ -548,12 +501,6 @@
       "status": "active"
     },
     {
-      "name": "quality-strategist",
-      "category": "domain",
-      "status": "merged",
-      "canonical": "verifier"
-    },
-    {
       "name": "build-fixer",
       "category": "domain",
       "status": "active"
@@ -569,12 +516,6 @@
       "status": "active"
     },
     {
-      "name": "qa-tester",
-      "category": "domain",
-      "status": "merged",
-      "canonical": "test-engineer"
-    },
-    {
       "name": "git-master",
       "category": "domain",
       "status": "active"
@@ -588,30 +529,6 @@
       "name": "researcher",
       "category": "domain",
       "status": "active"
-    },
-    {
-      "name": "product-manager",
-      "category": "product",
-      "status": "merged",
-      "canonical": "analyst"
-    },
-    {
-      "name": "ux-researcher",
-      "category": "product",
-      "status": "merged",
-      "canonical": "designer"
-    },
-    {
-      "name": "information-architect",
-      "category": "product",
-      "status": "merged",
-      "canonical": "designer"
-    },
-    {
-      "name": "product-analyst",
-      "category": "product",
-      "status": "merged",
-      "canonical": "analyst"
     },
     {
       "name": "critic",
@@ -647,11 +564,7 @@
     },
     {
       "name": "web-clone",
-      "canonical": "visual-ralph"
-    },
-    {
-      "name": "frontend-ui-ux",
-      "canonical": "designer"
+      "canonical": "visual-forge"
     },
     {
       "name": "git-master",
@@ -678,7 +591,7 @@
       "canonical": "configure-notifications"
     },
     {
-      "name": "ralph-init",
+      "name": "forge-init",
       "canonical": "plan"
     }
   ],

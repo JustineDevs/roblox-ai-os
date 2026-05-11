@@ -58,7 +58,7 @@ function resolveGitOutputPath(cwd: string, gitPath: string | null): string | nul
  * On Windows, read git info from .git/ files directly to avoid spawning
  * console windows (conhost.exe flicker on every poll cycle).
  *
- * See: https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/issues/1100
+ * See internal tracker issue #1100.
  */
 async function tryReadGitValue(cwd: string, args: string[]): Promise<string | null> {
   if (process.platform === 'win32') {

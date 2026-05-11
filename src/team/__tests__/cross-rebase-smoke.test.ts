@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,6 +15,20 @@ import {
 } from '../state.js';
 import { monitorTeam } from '../runtime.js';
 import { readTeamEvents } from '../state/events.js';
+
+function execFileSyncCompat(command: string, args: string[], options: Parameters<typeof execFileSync>[2] = {}): string {
+  const result = spawnSync(command, args, {
+    encoding: 'utf-8',
+    ...options,
+  });
+  if (result.status !== 0 && !result.error) {
+    throw new Error(String(result.stderr || `spawnSync ${command} failed`));
+  }
+  if (result.status !== 0 && result.error) {
+    throw result.error;
+  }
+  return String(result.stdout ?? '');
+}
 
 async function initRepo(): Promise<string> {
   const cwd = await mkdtemp(join(tmpdir(), 'rcs-cross-rebase-smoke-repo-'));
@@ -116,7 +130,7 @@ describe('cross-rebase smoke regression', () => {
       execFileSync('git', ['mv', 'original.txt', 'renamed-by-w2.txt'], { cwd: worker2Path, stdio: 'ignore' });
       execFileSync('git', ['commit', '-m', 'worker-2 renames original'], { cwd: worker2Path, stdio: 'ignore' });
 
-      const worker2HeadBefore = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
+      const worker2HeadBefore = execFileSyncCompat('git', ['rev-parse', 'HEAD'], { cwd: worker2Path }).trim();
 
       await configureWorkers('cross-rebase-conflict', repo, [
         { path: worker1Path, branch: 'wk1-cross-conflict' },
@@ -126,8 +140,8 @@ describe('cross-rebase smoke regression', () => {
 
       await monitorTeam('cross-rebase-conflict', repo);
 
-      const worker2HeadAfter = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
-      const worker2StatusOutput = execFileSync('git', ['status'], { cwd: worker2Path, encoding: 'utf-8' });
+      const worker2HeadAfter = execFileSyncCompat('git', ['rev-parse', 'HEAD'], { cwd: worker2Path }).trim();
+      const worker2StatusOutput = execFileSyncCompat('git', ['status'], { cwd: worker2Path });
       const events = await readTeamEvents('cross-rebase-conflict', repo, { wakeableOnly: false });
       const wakeable = await readTeamEvents('cross-rebase-conflict', repo, { wakeableOnly: true });
       const leaderMailbox = await listMailboxMessages('cross-rebase-conflict', 'leader-fixed', repo);
@@ -163,7 +177,7 @@ describe('cross-rebase smoke regression', () => {
       execFileSync('git', ['add', 'w1.txt'], { cwd: worker1Path, stdio: 'ignore' });
       execFileSync('git', ['commit', '-m', 'worker-1 change'], { cwd: worker1Path, stdio: 'ignore' });
 
-      const worker2HeadBefore = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
+      const worker2HeadBefore = execFileSyncCompat('git', ['rev-parse', 'HEAD'], { cwd: worker2Path }).trim();
 
       await configureWorkers('cross-rebase-skipped', repo, [
         { path: worker1Path, branch: 'wk1-cross-skipped' },
@@ -173,7 +187,7 @@ describe('cross-rebase smoke regression', () => {
 
       await monitorTeam('cross-rebase-skipped', repo);
 
-      const worker2HeadAfter = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: worker2Path, encoding: 'utf-8' }).trim();
+      const worker2HeadAfter = execFileSyncCompat('git', ['rev-parse', 'HEAD'], { cwd: worker2Path }).trim();
       const events = await readTeamEvents('cross-rebase-skipped', repo, { wakeableOnly: false });
       const wakeable = await readTeamEvents('cross-rebase-skipped', repo, { wakeableOnly: true });
 

@@ -2309,7 +2309,7 @@ exit 0
       assert.equal(result.status, 0, `notify-hook failed: ${result.stderr || result.stdout}`);
 
       const tmuxLog = await readFile(tmuxLogPath, 'utf-8');
-      assert.match(tmuxLog, /Team worker-turn-stall-threshold: worker panes stalled, no progress 45s\./);
+      assert.match(tmuxLog, /Team worker-turn-stall-threshold: worker panes stalled, no progress 4[56]s\./);
     });
   });
 

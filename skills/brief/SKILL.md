@@ -1,6 +1,10 @@
 ---
 name: brief
 description: Canonical creator briefing surface for Roblox Creator Skills
+surface-class: "canonical"
+domain: "roblox-studio"
+audience: "creator"
+artifact-type: "skill"
 ---
 
 # Brief
@@ -25,3 +29,6 @@ Use the protocol in:
 Follow with:
 - `$brief:audience`
 - `$brief:motivation`
+surface-class: "canonical"
+domain: "creator-runtime"
+audience: "creator"

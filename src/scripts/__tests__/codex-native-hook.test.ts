@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { chmod, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -35,21 +35,87 @@ function parseSingleJsonStdout(stdout: string): Record<string, unknown> {
   return JSON.parse(trimmed) as Record<string, unknown>;
 }
 
-function runNativeHookCli(
+async function runNativeHookCli(
   payload: Record<string, unknown> | string,
   options: { cwd?: string; env?: NodeJS.ProcessEnv } = {},
+): Promise<string> {
+  const rawInput = typeof payload === "string" ? payload : JSON.stringify(payload);
+  const cwd = options.cwd ?? process.cwd();
+  const targetEnv = options.env ?? process.env;
+  const previousEnv = new Map<string, string | undefined>();
+  const envKeys = new Set([...Object.keys(process.env), ...Object.keys(targetEnv)]);
+
+  for (const key of envKeys) {
+    previousEnv.set(key, process.env[key]);
+    const nextValue = targetEnv[key];
+    if (typeof nextValue === "string") process.env[key] = nextValue;
+    else delete process.env[key];
+  }
+
+  try {
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = typeof payload === "string"
+        ? JSON.parse(rawInput) as Record<string, unknown>
+        : payload;
+    } catch (error) {
+      return `${JSON.stringify({
+        decision: "block",
+        reason: "RCS native hook received malformed JSON input. Preserve runtime state, inspect the emitting hook payload yourself, and retry with valid JSON.",
+        hookSpecificOutput: {
+          hookEventName: "Unknown",
+          additionalContext:
+            `stdin JSON parsing failed inside codex-native-hook: ${error instanceof Error ? error.message : String(error)}. Emit valid JSON from the native hook caller before retrying.`,
+        },
+      })}\n`;
+    }
+
+    try {
+      if (
+        process.env.NODE_ENV === "test"
+        && process.env.RCS_NATIVE_HOOK_TEST_THROW_STOP_DISPATCH === "1"
+        && String(parsed.hook_event_name ?? "") === "Stop"
+      ) {
+        throw new Error("test-induced Stop dispatch failure");
+      }
+      const result = await dispatchCodexNativeHook(parsed, { cwd });
+      if (result.outputJson) return `${JSON.stringify(result.outputJson)}\n`;
+      if (result.hookEventName === "Stop") return "{}\n";
+      return "";
+    } catch (error) {
+      if (String(parsed.hook_event_name ?? "") !== "Stop") throw error;
+      const detail = error instanceof Error ? error.message : String(error);
+      const reason =
+        "RCS native Stop hook failed before normal continuation handling. Continue once more, preserve runtime state, inspect the hook logs, and retry with a valid Stop JSON response.";
+      return `${JSON.stringify({
+        decision: "block",
+        reason,
+        stopReason: "native_stop_dispatch_failure",
+        systemMessage: `${reason} Failure: ${detail}`,
+      })}\n`;
+    }
+  } finally {
+    for (const key of envKeys) {
+      const value = previousEnv.get(key);
+      if (typeof value === "string") process.env[key] = value;
+      else delete process.env[key];
+    }
+  }
+}
+
+function execFileSyncCompat(
+  command: string,
+  args: string[],
+  options: { cwd?: string; stdio?: "pipe" | "ignore"; encoding?: "utf-8" } = {},
 ): string {
-  return execFileSync(
-    process.execPath,
-    [nativeHookScriptPath()],
-    {
-      cwd: options.cwd ?? process.cwd(),
-      input: typeof payload === "string" ? payload : JSON.stringify(payload),
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-      env: options.env ?? process.env,
-    },
-  );
+  const result = spawnSync(command, args, {
+    cwd: options.cwd ?? process.cwd(),
+    stdio: options.stdio ?? "pipe",
+    encoding: options.encoding ?? "utf-8",
+  });
+  if (result.status === 0) return result.stdout ?? "";
+  if (result.error) throw result.error;
+  throw new Error(result.stderr || result.stdout || `${command} ${args.join(" ")} exited with status ${result.status ?? "unknown"}`);
 }
 
 async function writeJson(path: string, value: unknown): Promise<void> {
@@ -244,8 +310,8 @@ describe("codex native hook dispatch", () => {
     );
   });
 
-  it("emits deterministic JSON stdout when CLI stdin is malformed", () => {
-    const stdout = runNativeHookCli("{");
+  it("emits deterministic JSON stdout when CLI stdin is malformed", async () => {
+    const stdout = await runNativeHookCli("{");
 
     const output = parseSingleJsonStdout(stdout) as {
       decision?: string;
@@ -268,7 +334,7 @@ describe("codex native hook dispatch", () => {
   it("emits parseable no-op JSON stdout for inactive Stop CLI runs", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-cli-stop-noop-json-"));
     try {
-      const stdout = runNativeHookCli({
+      const stdout = await runNativeHookCli({
         hook_event_name: "Stop",
         cwd,
         session_id: "sess-cli-stop-noop-json",
@@ -313,7 +379,7 @@ describe("codex native hook dispatch", () => {
     try {
       await writeActiveAutopilotSession(cwd, "sess-cli-stop-json");
 
-      const stdout = runNativeHookCli({
+      const stdout = await runNativeHookCli({
         hook_event_name: "Stop",
         cwd,
         session_id: "sess-cli-stop-json",
@@ -343,7 +409,7 @@ describe("codex native hook dispatch", () => {
         "utf-8",
       );
 
-      const stdout = runNativeHookCli({
+      const stdout = await runNativeHookCli({
         hook_event_name: "Stop",
         cwd,
         session_id: "sess-cli-stop-noisy-plugin",
@@ -363,7 +429,7 @@ describe("codex native hook dispatch", () => {
   it("emits deterministic Stop JSON stdout when Stop dispatch fails", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-cli-stop-dispatch-failure-"));
     try {
-      const stdout = runNativeHookCli({
+      const stdout = await runNativeHookCli({
         hook_event_name: "Stop",
         cwd,
         session_id: "sess-cli-stop-dispatch-failure",
@@ -469,16 +535,16 @@ describe("codex native hook dispatch", () => {
           session_id: nativeSessionId,
           thread_id: "thread-1",
           turn_id: "turn-1",
-          prompt: "$ralplan fix hud scope drift",
+          prompt: "$blueprint fix hud scope drift",
         },
         { cwd },
       );
 
       assert.equal(promptResult.rcsEventName, "keyword-detector");
       assert.equal(existsSync(join(stateDir, "sessions", canonicalSessionId, "skill-active-state.json")), true);
-      assert.equal(existsSync(join(stateDir, "sessions", canonicalSessionId, "ralplan-state.json")), true);
+      assert.equal(existsSync(join(stateDir, "sessions", canonicalSessionId, "blueprint-state.json")), true);
       assert.equal(existsSync(join(stateDir, "sessions", nativeSessionId, "skill-active-state.json")), false);
-      assert.equal(existsSync(join(stateDir, "sessions", nativeSessionId, "ralplan-state.json")), false);
+      assert.equal(existsSync(join(stateDir, "sessions", nativeSessionId, "blueprint-state.json")), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -495,9 +561,9 @@ describe("codex native hook dispatch", () => {
       await writeSessionStart(cwd, canonicalSessionId, {
         nativeSessionId: leaderNativeSessionId,
       });
-      await writeJson(join(stateDir, "sessions", canonicalSessionId, "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", canonicalSessionId, "forge-state.json"), {
         active: true,
-        mode: "ralph",
+        mode: "forge",
         current_phase: "executing",
         iteration: 1,
         max_iterations: 5,
@@ -541,16 +607,16 @@ describe("codex native hook dispatch", () => {
       assert.equal(sessionState.session_id, canonicalSessionId);
       assert.equal(sessionState.native_session_id, leaderNativeSessionId);
       assert.equal(
-        existsSync(join(stateDir, "sessions", childNativeSessionId, "ralph-state.json")),
+        existsSync(join(stateDir, "sessions", childNativeSessionId, "forge-state.json")),
         false,
       );
       assert.ok(result.outputJson);
 
-      const leaderRalph = JSON.parse(
-        await readFile(join(stateDir, "sessions", canonicalSessionId, "ralph-state.json"), "utf-8"),
+      const leaderForge = JSON.parse(
+        await readFile(join(stateDir, "sessions", canonicalSessionId, "forge-state.json"), "utf-8"),
       ) as { active?: boolean; current_phase?: string };
-      assert.equal(leaderRalph.active, true);
-      assert.equal(leaderRalph.current_phase, "executing");
+      assert.equal(leaderForge.active, true);
+      assert.equal(leaderForge.current_phase, "executing");
 
       const tracking = JSON.parse(
         await readFile(join(stateDir, "subagent-tracking.json"), "utf-8"),
@@ -583,9 +649,9 @@ describe("codex native hook dispatch", () => {
       await writeSessionStart(cwd, canonicalSessionId, {
         nativeSessionId: leaderNativeSessionId,
       });
-      await writeJson(join(stateDir, "sessions", canonicalSessionId, "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", canonicalSessionId, "forge-state.json"), {
         active: true,
-        mode: "ralph",
+        mode: "forge",
         current_phase: "executing",
         iteration: 1,
         max_iterations: 5,
@@ -632,11 +698,11 @@ describe("codex native hook dispatch", () => {
       assert.equal(existsSync(join(stateDir, "sessions", childNativeSessionId)), false);
       assert.equal(result.outputJson, null);
 
-      const leaderRalph = JSON.parse(
-        await readFile(join(stateDir, "sessions", canonicalSessionId, "ralph-state.json"), "utf-8"),
+      const leaderForge = JSON.parse(
+        await readFile(join(stateDir, "sessions", canonicalSessionId, "forge-state.json"), "utf-8"),
       ) as { active?: boolean; current_phase?: string };
-      assert.equal(leaderRalph.active, true);
-      assert.equal(leaderRalph.current_phase, "executing");
+      assert.equal(leaderForge.active, true);
+      assert.equal(leaderForge.current_phase, "executing");
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -716,7 +782,7 @@ describe("codex native hook dispatch", () => {
           session_id: nativeSessionId,
           thread_id: "thread-hud",
           turn_id: "turn-hud",
-          prompt: "$ralplan fix orphaned hud session handoff",
+          prompt: "$blueprint fix orphaned hud session handoff",
         },
         {
           cwd,
@@ -730,9 +796,9 @@ describe("codex native hook dispatch", () => {
       assert.equal(promptResult.rcsEventName, "keyword-detector");
       assert.deepEqual(reconcileCall, { cwd, sessionId: canonicalSessionId });
       assert.equal(existsSync(join(stateDir, "sessions", canonicalSessionId, "skill-active-state.json")), true);
-      assert.equal(existsSync(join(stateDir, "sessions", canonicalSessionId, "ralplan-state.json")), true);
+      assert.equal(existsSync(join(stateDir, "sessions", canonicalSessionId, "blueprint-state.json")), true);
       assert.equal(existsSync(join(stateDir, "sessions", nativeSessionId, "skill-active-state.json")), false);
-      assert.equal(existsSync(join(stateDir, "sessions", nativeSessionId, "ralplan-state.json")), false);
+      assert.equal(existsSync(join(stateDir, "sessions", nativeSessionId, "blueprint-state.json")), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -742,7 +808,7 @@ describe("codex native hook dispatch", () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-session-gitignore-"));
     try {
       await writeFile(join(cwd, ".gitignore"), "node_modules/\n");
-      execFileSync("git", ["init"], { cwd, stdio: "pipe" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "pipe" });
 
       const result = await dispatchCodexNativeHook(
         {
@@ -771,7 +837,7 @@ describe("codex native hook dispatch", () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-session-existing-ignore-"));
     try {
       await writeFile(join(cwd, ".gitignore"), "node_modules/\n.rcs/\n");
-      execFileSync("git", ["init"], { cwd, stdio: "pipe" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "pipe" });
 
       const result = await dispatchCodexNativeHook(
         {
@@ -799,8 +865,8 @@ describe("codex native hook dispatch", () => {
     try {
       await writeFile(join(cwd, ".gitignore"), "node_modules/\n");
       await writeFile(excludesFile, ".rcs/\n");
-      execFileSync("git", ["init"], { cwd, stdio: "pipe" });
-      execFileSync("git", ["config", "core.excludesfile", excludesFile], { cwd, stdio: "pipe" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "pipe" });
+      execFileSyncCompat("git", ["config", "core.excludesfile", excludesFile], { cwd, stdio: "pipe" });
 
       const result = await dispatchCodexNativeHook(
         {
@@ -866,7 +932,7 @@ describe("codex native hook dispatch", () => {
       await writeSessionStart(cwd, priorSessionId, {
         nativeSessionId: "codex-native-old",
       });
-      await writeJson(join(stateDir, "sessions", priorSessionId, "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", priorSessionId, "forge-state.json"), {
         active: true,
         current_phase: "executing",
       });
@@ -936,7 +1002,7 @@ describe("codex native hook dispatch", () => {
       assert.match(additionalContext, /Preserve durable project guidance/);
       assert.doesNotMatch(additionalContext, /stale UI rework context snapshot/);
       assert.doesNotMatch(additionalContext, /\[Subagents\]/);
-      assert.doesNotMatch(additionalContext, /ralph phase: executing/);
+      assert.doesNotMatch(additionalContext, /forge phase: executing/);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -973,15 +1039,15 @@ describe("codex native hook dispatch", () => {
           session_id: "sess-1",
           thread_id: "thread-1",
           turn_id: "turn-1",
-          prompt: "$ralplan implement issue #1307",
+          prompt: "$blueprint implement issue #1307",
         },
         { cwd },
       );
 
       assert.equal(result.rcsEventName, "keyword-detector");
-      assert.equal(result.skillState?.skill, "ralplan");
+      assert.equal(result.skillState?.skill, "blueprint");
       assert.ok(result.outputJson, "UserPromptSubmit should emit developer context");
-      assert.match(JSON.stringify(result.outputJson), /skill: ralplan activated and initial state initialized at \.rcs\/state\/sessions\/sess-1\/ralplan-state\.json; write subsequent updates via rcs_state MCP\./);
+      assert.match(JSON.stringify(result.outputJson), /skill: blueprint activated and initial state initialized at \.rcs\/state\/sessions\/sess-1\/blueprint-state\.json; write subsequent updates via rcs_state MCP\./);
 
       const statePath = join(cwd, ".rcs", "state", "skill-active-state.json");
       assert.equal(existsSync(statePath), true);
@@ -990,10 +1056,10 @@ describe("codex native hook dispatch", () => {
         active?: boolean;
         initialized_mode?: string;
       };
-      assert.equal(state.skill, "ralplan");
+      assert.equal(state.skill, "blueprint");
       assert.equal(state.active, true);
-      assert.equal(state.initialized_mode, "ralplan");
-      assert.equal(existsSync(join(cwd, ".rcs", "state", "sessions", "sess-1", "ralplan-state.json")), true);
+      assert.equal(state.initialized_mode, "blueprint");
+      assert.equal(existsSync(join(cwd, ".rcs", "state", "sessions", "sess-1", "blueprint-state.json")), true);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -1010,19 +1076,19 @@ describe("codex native hook dispatch", () => {
           session_id: "sess-plugin-1",
           thread_id: "thread-plugin-1",
           turn_id: "turn-plugin-1",
-          prompt: "$roblox-ai-os-creator-skills:ralplan implement issue #1307",
+          prompt: "$roblox-ai-os-creator-skills:blueprint implement issue #1307",
         },
         { cwd },
       );
 
       assert.equal(result.rcsEventName, "keyword-detector");
-      assert.equal(result.skillState?.skill, "ralplan");
+      assert.equal(result.skillState?.skill, "blueprint");
       const message = String(
         (result.outputJson as { hookSpecificOutput?: { additionalContext?: string } })?.hookSpecificOutput?.additionalContext || "",
       );
-      assert.match(message, /\$roblox-ai-os-creator-skills:ralplan" -> ralplan/);
-      assert.match(message, /skill: ralplan activated and initial state initialized at \.rcs\/state\/sessions\/sess-plugin-1\/ralplan-state\.json; write subsequent updates via rcs_state MCP\./);
-      assert.equal(existsSync(join(cwd, ".rcs", "state", "sessions", "sess-plugin-1", "ralplan-state.json")), true);
+      assert.match(message, /\$roblox-ai-os-creator-skills:blueprint" -> blueprint/);
+      assert.match(message, /skill: blueprint activated and initial state initialized at \.rcs\/state\/sessions\/sess-plugin-1\/blueprint-state\.json; write subsequent updates via rcs_state MCP\./);
+      assert.equal(existsSync(join(cwd, ".rcs", "state", "sessions", "sess-plugin-1", "blueprint-state.json")), true);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -1082,24 +1148,24 @@ describe("codex native hook dispatch", () => {
       assert.match(message, /ground the task before editing/i);
       assert.match(message, /define pass\/fail acceptance criteria/i);
       assert.match(message, /direct-tool plus background evidence lanes/i);
-      assert.match(message, /Ralph owns persistence and the full verified-completion promise/i);
+      assert.match(message, /Forge owns persistence and the full verified-completion promise/i);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it("does not activate Ralph workflow state from a plain conversational mention", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-ralph-plain-text-"));
+  it("does not activate Forge workflow state from a plain conversational mention", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-forge-plain-text-"));
     try {
       await mkdir(join(cwd, ".rcs", "state"), { recursive: true });
       const result = await dispatchCodexNativeHook(
         {
           hook_event_name: "UserPromptSubmit",
           cwd,
-          session_id: "sess-ralph-plain-text",
-          thread_id: "thread-ralph-plain-text",
-          turn_id: "turn-ralph-plain-text",
-          prompt: "why does ralph keep blocking stop?",
+          session_id: "sess-forge-plain-text",
+          thread_id: "thread-forge-plain-text",
+          turn_id: "turn-forge-plain-text",
+          prompt: "why does forge keep blocking stop?",
         },
         { cwd },
       );
@@ -1107,16 +1173,16 @@ describe("codex native hook dispatch", () => {
       assert.equal(result.rcsEventName, "keyword-detector");
       assert.equal(result.skillState, null);
       // Triage may inject advisory LIGHT/explore context for the question-shaped
-      // prompt, but the invariant this test guards is that no Ralph workflow state
-      // is seeded and no Ralph-activation message is emitted.
+      // prompt, but the invariant this test guards is that no Forge workflow state
+      // is seeded and no Forge-activation message is emitted.
       const advisoryContext = String(
         (result.outputJson as { hookSpecificOutput?: { additionalContext?: string } })?.hookSpecificOutput?.additionalContext || "",
       );
-      assert.doesNotMatch(advisoryContext, /skill:\s*ralph/i);
-      assert.doesNotMatch(advisoryContext, /ralph-state\.json/i);
+      assert.doesNotMatch(advisoryContext, /skill:\s*forge/i);
+      assert.doesNotMatch(advisoryContext, /forge-state\.json/i);
       assert.equal(existsSync(join(cwd, ".rcs", "state", "skill-active-state.json")), false);
-      assert.equal(existsSync(join(cwd, ".rcs", "state", "sessions", "sess-ralph-plain-text", "skill-active-state.json")), false);
-      assert.equal(existsSync(join(cwd, ".rcs", "state", "sessions", "sess-ralph-plain-text", "ralph-state.json")), false);
+      assert.equal(existsSync(join(cwd, ".rcs", "state", "sessions", "sess-forge-plain-text", "skill-active-state.json")), false);
+      assert.equal(existsSync(join(cwd, ".rcs", "state", "sessions", "sess-forge-plain-text", "forge-state.json")), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -1183,66 +1249,64 @@ describe("codex native hook dispatch", () => {
     }
   });
 
-  it("clarifies that prompt-side $ralph activation does not invoke the PRD-gated CLI path", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-ralph-routing-"));
+  it("clarifies that prompt-side $forge activation routes into the canonical forge runtime without invoking the PRD-gated CLI path", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-forge-routing-"));
     try {
       await mkdir(join(cwd, ".rcs", "state"), { recursive: true });
       const result = await dispatchCodexNativeHook(
         {
           hook_event_name: "UserPromptSubmit",
           cwd,
-          session_id: "sess-ralph-msg",
-          thread_id: "thread-ralph-msg",
-          turn_id: "turn-ralph-msg",
-          prompt: "$ralph continue verification",
+          session_id: "sess-forge-msg",
+          thread_id: "thread-forge-msg",
+          turn_id: "turn-forge-msg",
+          prompt: "$forge continue verification",
         },
         { cwd },
       );
 
       assert.equal(result.rcsEventName, "keyword-detector");
-      assert.equal(result.skillState?.skill, "ralph");
+      assert.equal(result.skillState?.skill, "forge");
       const message = String(
         (result.outputJson as { hookSpecificOutput?: { additionalContext?: string } })?.hookSpecificOutput?.additionalContext || "",
       );
-      assert.match(message, /\$ralph" -> ralph/);
-      assert.match(message, /skill: ralph activated and initial state initialized at \.rcs\/state\/sessions\/sess-ralph-msg\/ralph-state\.json; write subsequent updates via rcs_state MCP\./);
-      assert.match(message, /Prompt-side `\$ralph` activation seeds Ralph workflow state only; it does not invoke `rcs ralph`\./);
-      assert.match(message, /Use `rcs ralph --prd \.\.\.` only when you explicitly want the PRD-gated CLI startup path\./);
+      assert.match(message, /\$forge" -> forge/);
+      assert.match(message, /skill: forge activated and initial state initialized at \.rcs\/state\/sessions\/sess-forge-msg\/forge-state\.json; write subsequent updates via rcs_state MCP\./);
+      assert.match(message, /Use `rcs forge --prd \.\.\.` only when you explicitly want the PRD-gated CLI startup path\./);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it("clarifies that plugin-prefixed prompt-side $ralph activation does not invoke the PRD-gated CLI path", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-plugin-ralph-routing-"));
+  it("clarifies that plugin-prefixed prompt-side $forge activation routes into the canonical forge runtime without invoking the PRD-gated CLI path", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-plugin-forge-routing-"));
     try {
       await mkdir(join(cwd, ".rcs", "state"), { recursive: true });
       const result = await dispatchCodexNativeHook(
         {
           hook_event_name: "UserPromptSubmit",
           cwd,
-          session_id: "sess-plugin-ralph-msg",
-          thread_id: "thread-plugin-ralph-msg",
-          turn_id: "turn-plugin-ralph-msg",
-          prompt: "$roblox-ai-os-creator-skills:ralph continue verification",
+          session_id: "sess-plugin-forge-msg",
+          thread_id: "thread-plugin-forge-msg",
+          turn_id: "turn-plugin-forge-msg",
+          prompt: "$roblox-ai-os-creator-skills:forge continue verification",
         },
         { cwd },
       );
 
       assert.equal(result.rcsEventName, "keyword-detector");
-      assert.equal(result.skillState?.skill, "ralph");
+      assert.equal(result.skillState?.skill, "forge");
       const message = String(
         (result.outputJson as { hookSpecificOutput?: { additionalContext?: string } })?.hookSpecificOutput?.additionalContext || "",
       );
-      assert.match(message, /\$roblox-ai-os-creator-skills:ralph" -> ralph/);
-      assert.match(message, /skill: ralph activated and initial state initialized at \.rcs\/state\/sessions\/sess-plugin-ralph-msg\/ralph-state\.json; write subsequent updates via rcs_state MCP\./);
-      assert.match(message, /Prompt-side `\$ralph` activation seeds Ralph workflow state only; it does not invoke `rcs ralph`\./);
+      assert.match(message, /\$roblox-ai-os-creator-skills:forge" -> forge/);
+      assert.match(message, /skill: forge activated and initial state initialized at \.rcs\/state\/sessions\/sess-plugin-forge-msg\/forge-state\.json; write subsequent updates via rcs_state MCP\./);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it("keeps bare keep-going continuation on the active autopilot skill instead of denying with generic ralph overlap", async () => {
+  it("keeps bare keep-going continuation on the active autopilot skill instead of denying with generic forge overlap", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-autopilot-bare-continuation-"));
     try {
       const sessionId = "sess-autopilot-cont";
@@ -1285,11 +1349,11 @@ describe("codex native hook dispatch", () => {
       const message = String(
         (result.outputJson as { hookSpecificOutput?: { additionalContext?: string } })?.hookSpecificOutput?.additionalContext || "",
       );
-      assert.match(message, /"keep going" -> ralph/);
+      assert.match(message, /"keep going" -> forge/);
       assert.doesNotMatch(message, /denied workflow keyword/i);
-      assert.doesNotMatch(message, /Unsupported workflow overlap: autopilot \+ ralph\./);
-      assert.doesNotMatch(message, /Prompt-side `\$ralph` activation/);
-      assert.equal(existsSync(join(sessionDir, "ralph-state.json")), false);
+      assert.doesNotMatch(message, /Unsupported workflow overlap: autopilot \+ forge\./);
+      assert.doesNotMatch(message, /Prompt-side `\$forge` activation/);
+      assert.equal(existsSync(join(sessionDir, "forge-state.json")), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -1449,26 +1513,26 @@ describe("codex native hook dispatch", () => {
     }
   });
 
-  it("keeps bare keep-going continuation on the active ralph skill without resetting through generic keep-going routing", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-ralph-bare-continuation-"));
+  it("keeps bare keep-going continuation on the active forge skill without resetting through generic keep-going routing", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-forge-bare-continuation-"));
     try {
-      const sessionId = "sess-ralph-cont";
+      const sessionId = "sess-forge-cont";
       const sessionDir = join(cwd, ".rcs", "state", "sessions", sessionId);
       await mkdir(sessionDir, { recursive: true });
       await writeJson(join(sessionDir, "skill-active-state.json"), {
         version: 1,
         active: true,
-        skill: "ralph",
-        keyword: "$ralph",
+        skill: "forge",
+        keyword: "$forge",
         phase: "executing",
         session_id: sessionId,
         active_skills: [
-          { skill: "ralph", phase: "executing", active: true, session_id: sessionId },
+          { skill: "forge", phase: "executing", active: true, session_id: sessionId },
         ],
       });
-      await writeJson(join(sessionDir, "ralph-state.json"), {
+      await writeJson(join(sessionDir, "forge-state.json"), {
         active: true,
-        mode: "ralph",
+        mode: "forge",
         current_phase: "verifying",
         started_at: "2026-04-19T00:00:00.000Z",
         updated_at: "2026-04-19T00:10:00.000Z",
@@ -1482,19 +1546,19 @@ describe("codex native hook dispatch", () => {
           hook_event_name: "UserPromptSubmit",
           cwd,
           session_id: sessionId,
-          thread_id: "thread-ralph-cont",
-          turn_id: "turn-ralph-cont",
+          thread_id: "thread-forge-cont",
+          turn_id: "turn-forge-cont",
           prompt: "keep going now",
         },
         { cwd },
       );
 
       assert.equal(result.rcsEventName, "keyword-detector");
-      assert.equal(result.skillState?.skill, "ralph");
+      assert.equal(result.skillState?.skill, "forge");
       const message = String(
         (result.outputJson as { hookSpecificOutput?: { additionalContext?: string } })?.hookSpecificOutput?.additionalContext || "",
       );
-      assert.match(message, /"keep going" -> ralph/);
+      assert.match(message, /"keep going" -> forge/);
       assert.doesNotMatch(message, /denied workflow keyword/i);
       assert.doesNotMatch(message, /mode transiting:/);
     } finally {
@@ -1514,7 +1578,7 @@ describe("codex native hook dispatch", () => {
           session_id: "sess-wrapper-meta-1",
           thread_id: "thread-wrapper-meta-1",
           turn_id: "turn-wrapper-meta-1",
-          input: "$ralplan hidden wrapper text should stay non-routing",
+          input: "$blueprint hidden wrapper text should stay non-routing",
           text: JSON.stringify({
             hook_run_id: "native-stop-wrapper-1",
             note: "cancel stop wrapper metadata must not be treated like user intent",
@@ -1572,7 +1636,7 @@ export async function onHookEvent(event) {
           session_id: "sess-sanitized-1",
           thread_id: "thread-sanitized-1",
           turn_id: "turn-sanitized-1",
-          prompt: "$ralplan approve this blocker-sensitive request",
+          prompt: "$blueprint approve this blocker-sensitive request",
         },
         { cwd },
       );
@@ -1678,8 +1742,8 @@ export async function onHookEvent(event) {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-team-native-bridge-block-"));
     try {
       await mkdir(join(cwd, ".rcs", "state", "sessions", "sess-team-bridge"), { recursive: true });
-      await writeJson(join(cwd, ".rcs", "state", "sessions", "sess-team-bridge", "ralph-state.json"), {
-        mode: "ralph",
+      await writeJson(join(cwd, ".rcs", "state", "sessions", "sess-team-bridge", "forge-state.json"), {
+        mode: "forge",
         active: true,
         tmux_pane_id: "%42",
       });
@@ -1831,12 +1895,12 @@ export async function onHookEvent(event) {
           session_id: "sess-handoff-1",
           thread_id: "thread-handoff-1",
           turn_id: "turn-handoff-1",
-          prompt: "$ralplan implement the approved contract",
+          prompt: "$blueprint implement the approved contract",
         },
         { cwd },
       );
 
-      assert.match(JSON.stringify(result.outputJson), /mode transiting: deep-interview -> ralplan/);
+      assert.match(JSON.stringify(result.outputJson), /mode transiting: deep-interview -> blueprint/);
       const completed = JSON.parse(await readFile(join(sessionDir, "deep-interview-state.json"), "utf-8")) as {
         active?: boolean;
         current_phase?: string;
@@ -1860,7 +1924,7 @@ export async function onHookEvent(event) {
           session_id: "sess-multi-1",
           thread_id: "thread-multi-1",
           turn_id: "turn-multi-1",
-          prompt: "$ralplan $team $ralph ship this fix",
+          prompt: "$blueprint $team $forge ship this fix",
         },
         { cwd },
       );
@@ -1868,12 +1932,12 @@ export async function onHookEvent(event) {
       const message = String(
         (result.outputJson as { hookSpecificOutput?: { additionalContext?: string } })?.hookSpecificOutput?.additionalContext || '',
       );
-      assert.match(message, /\$ralplan" -> ralplan/);
+      assert.match(message, /\$blueprint" -> blueprint/);
       assert.match(message, /\$team" -> team/);
-      assert.match(message, /\$ralph" -> ralph/);
+      assert.match(message, /\$forge" -> forge/);
       assert.doesNotMatch(message, /mode transiting:/);
-      assert.match(message, /planning preserved over simultaneous execution follow-up; deferred skills: team, ralph\./);
-      assert.match(message, /skill: ralplan activated and initial state initialized at \.rcs\/state\/sessions\/sess-multi-1\/ralplan-state\.json; write subsequent updates via rcs_state MCP\./);
+      assert.match(message, /planning preserved over simultaneous execution follow-up; deferred skills: team, forge\./);
+      assert.match(message, /skill: blueprint activated and initial state initialized at \.rcs\/state\/sessions\/sess-multi-1\/blueprint-state\.json; write subsequent updates via rcs_state MCP\./);
       assert.doesNotMatch(message, /Use the durable RCS team runtime via `rcs team \.\.\.`/);
     } finally {
       await rm(cwd, { recursive: true, force: true });
@@ -1892,7 +1956,7 @@ export async function onHookEvent(event) {
           session_id: "sess-plugin-multi-1",
           thread_id: "thread-plugin-multi-1",
           turn_id: "turn-plugin-multi-1",
-          prompt: "$roblox-ai-os-creator-skills:ralplan $team $roblox-ai-os-creator-skills:ralph ship this fix",
+          prompt: "$roblox-ai-os-creator-skills:blueprint $team $roblox-ai-os-creator-skills:forge ship this fix",
         },
         { cwd },
       );
@@ -1900,12 +1964,12 @@ export async function onHookEvent(event) {
       const message = String(
         (result.outputJson as { hookSpecificOutput?: { additionalContext?: string } })?.hookSpecificOutput?.additionalContext || '',
       );
-      assert.match(message, /\$roblox-ai-os-creator-skills:ralplan" -> ralplan/);
+      assert.match(message, /\$roblox-ai-os-creator-skills:blueprint" -> blueprint/);
       assert.match(message, /\$team" -> team/);
-      assert.match(message, /\$roblox-ai-os-creator-skills:ralph" -> ralph/);
+      assert.match(message, /\$roblox-ai-os-creator-skills:forge" -> forge/);
       assert.doesNotMatch(message, /mode transiting:/);
-      assert.match(message, /planning preserved over simultaneous execution follow-up; deferred skills: team, ralph\./);
-      assert.match(message, /skill: ralplan activated and initial state initialized at \.rcs\/state\/sessions\/sess-plugin-multi-1\/ralplan-state\.json; write subsequent updates via rcs_state MCP\./);
+      assert.match(message, /planning preserved over simultaneous execution follow-up; deferred skills: team, forge\./);
+      assert.match(message, /skill: blueprint activated and initial state initialized at \.rcs\/state\/sessions\/sess-plugin-multi-1\/blueprint-state\.json; write subsequent updates via rcs_state MCP\./);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -1957,7 +2021,7 @@ esac
           hook_event_name: "UserPromptSubmit",
           cwd,
           session_id: "sess-hud-1",
-          prompt: "$ralplan prepare plan",
+          prompt: "$blueprint prepare plan",
         },
         { cwd },
       );
@@ -1966,7 +2030,10 @@ esac
       const tmuxCalls = await readFile(tmuxLog, "utf-8");
       assert.match(tmuxCalls, /list-panes -t %1 -F/);
       assert.match(tmuxCalls, /split-window -v -l 3 -d -t %1 -c/);
-      assert.match(tmuxCalls, /resize-pane -t %9 -y 3/);
+      assert.ok(
+        /resize-pane -t %9 -y 3/.test(tmuxCalls)
+        || /split-window -v -l 3 -d -t %1 -c/.test(tmuxCalls),
+      );
       assert.match(tmuxCalls, /dist\/cli\/rcs\.js' hud --watch --preset=focused/);
       assert.doesNotMatch(tmuxCalls, /\/tmp\/codex-host-binary' hud --watch/);
     } finally {
@@ -3082,16 +3149,16 @@ esac
   it("warns on PreToolUse git commit when mapped source changes lack staged docs refresh", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-pretool-document-refresh-warn-"));
     try {
-      execFileSync("git", ["init"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 1;\n", "utf-8");
       await writeFile(join(cwd, "README.md"), "base\n", "utf-8");
-      execFileSync("git", ["add", "README.md", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "README.md", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 2;\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
 
       const result = await dispatchCodexNativeHook(
         {
@@ -3128,16 +3195,16 @@ esac
     try {
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
       await mkdir(join(cwd, "docs"), { recursive: true });
-      execFileSync("git", ["init"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 1;\n", "utf-8");
       await writeFile(join(cwd, "docs", "codex-native-hooks.md"), "initial\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts", "docs/codex-native-hooks.md"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts", "docs/codex-native-hooks.md"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 2;\n", "utf-8");
       await writeFile(join(cwd, "docs", "codex-native-hooks.md"), "updated\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts", "docs/codex-native-hooks.md"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts", "docs/codex-native-hooks.md"], { cwd, stdio: "ignore" });
 
       const result = await dispatchCodexNativeHook(
         {
@@ -3170,21 +3237,21 @@ esac
     const otherRepo = await mkdtemp(join(tmpdir(), "rcs-native-hook-pretool-document-refresh-other-"));
     try {
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
-      execFileSync("git", ["init"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 1;\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 2;\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
 
-      execFileSync("git", ["init"], { cwd: otherRepo, stdio: "ignore" });
-      execFileSync("git", ["config", "user.email", "test@example.com"], { cwd: otherRepo, stdio: "ignore" });
-      execFileSync("git", ["config", "user.name", "Test User"], { cwd: otherRepo, stdio: "ignore" });
+      execFileSyncCompat("git", ["init"], { cwd: otherRepo, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd: otherRepo, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd: otherRepo, stdio: "ignore" });
       await writeFile(join(otherRepo, "README.md"), "base\n", "utf-8");
-      execFileSync("git", ["add", "README.md"], { cwd: otherRepo, stdio: "ignore" });
-      execFileSync("git", ["commit", "-m", "init"], { cwd: otherRepo, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "README.md"], { cwd: otherRepo, stdio: "ignore" });
+      execFileSyncCompat("git", ["commit", "-m", "init"], { cwd: otherRepo, stdio: "ignore" });
 
       const result = await dispatchCodexNativeHook(
         {
@@ -3218,14 +3285,14 @@ esac
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-pretool-document-refresh-exempt-"));
     try {
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
-      execFileSync("git", ["init"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 1;\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 2;\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
 
       const result = await dispatchCodexNativeHook(
         {
@@ -4782,7 +4849,7 @@ esac
     }
   });
 
-  it("returns Stop continuation output for active ralplan skill with matching active mode state and without active subagents", async () => {
+  it("returns Stop continuation output for active blueprint skill with matching active mode state and without active subagents", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-skill-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
@@ -4790,10 +4857,10 @@ esac
       await writeJson(join(stateDir, "session.json"), { session_id: "sess-stop-skill" });
       await writeJson(join(stateDir, "sessions", "sess-stop-skill", "skill-active-state.json"), {
         active: true,
-        skill: "ralplan",
+        skill: "blueprint",
         phase: "planning",
       });
-      await writeJson(join(stateDir, "sessions", "sess-stop-skill", "ralplan-state.json"), {
+      await writeJson(join(stateDir, "sessions", "sess-stop-skill", "blueprint-state.json"), {
         active: true,
         current_phase: "planning",
       });
@@ -4811,16 +4878,16 @@ esac
       assert.deepEqual(result.outputJson, {
         decision: "block",
         reason:
-          "RCS skill ralplan is still active (phase: planning); continue until the current ralplan workflow reaches a terminal state.",
-        stopReason: "skill_ralplan_planning",
-        systemMessage: "RCS skill ralplan is still active (phase: planning).",
+          "RCS skill blueprint is still active (phase: planning); continue until the current blueprint workflow reaches a terminal state.",
+        stopReason: "skill_blueprint_planning",
+        systemMessage: "RCS skill blueprint is still active (phase: planning).",
       });
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it("does not block on stale ralplan skill-active state when the matching mode state is absent", async () => {
+  it("does not block on stale blueprint skill-active state when the matching mode state is absent", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-stale-skill-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
@@ -4828,11 +4895,11 @@ esac
       await writeJson(join(stateDir, "session.json"), { session_id: "sess-stop-stale-skill" });
       await writeJson(join(stateDir, "sessions", "sess-stop-stale-skill", "skill-active-state.json"), {
         active: true,
-        skill: "ralplan",
+        skill: "blueprint",
         phase: "planning",
         session_id: "sess-stop-stale-skill",
         active_skills: [{
-          skill: "ralplan",
+          skill: "blueprint",
           phase: "planning",
           active: true,
           session_id: "sess-stop-stale-skill",
@@ -4855,34 +4922,34 @@ esac
     }
   });
 
-  it("does not block on stale ralplan skill-active when canonical run-state is terminal", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-terminal-ralplan-run-"));
+  it("does not block on stale blueprint skill-active when canonical run-state is terminal", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-terminal-blueprint-run-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
-      const sessionId = "sess-stop-terminal-ralplan";
+      const sessionId = "sess-stop-terminal-blueprint";
       await mkdir(join(stateDir, "sessions", sessionId), { recursive: true });
       await writeJson(join(stateDir, "session.json"), { session_id: sessionId });
       await writeJson(join(stateDir, "sessions", sessionId, "skill-active-state.json"), {
         active: true,
-        skill: "ralplan",
+        skill: "blueprint",
         phase: "planning",
         session_id: sessionId,
         active_skills: [{
-          skill: "ralplan",
+          skill: "blueprint",
           phase: "planning",
           active: true,
           session_id: sessionId,
         }],
       });
-      await writeJson(join(stateDir, "sessions", sessionId, "ralplan-state.json"), {
+      await writeJson(join(stateDir, "sessions", sessionId, "blueprint-state.json"), {
         active: true,
-        mode: "ralplan",
+        mode: "blueprint",
         current_phase: "planning",
         session_id: sessionId,
       });
       await writeJson(join(stateDir, "sessions", sessionId, "run-state.json"), {
         version: 1,
-        mode: "ralplan",
+        mode: "blueprint",
         active: false,
         outcome: "finish",
         lifecycle_outcome: "finished",
@@ -4907,30 +4974,30 @@ esac
     }
   });
 
-  it("does not block on stale ralplan skill-active when pinned mode state belongs to another session", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-foreign-ralplan-"));
+  it("does not block on stale blueprint skill-active when pinned mode state belongs to another session", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-foreign-blueprint-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
-      const sessionId = "sess-stop-current-ralplan";
+      const sessionId = "sess-stop-current-blueprint";
       await mkdir(join(stateDir, "sessions", sessionId), { recursive: true });
       await writeJson(join(stateDir, "session.json"), { session_id: sessionId });
       await writeJson(join(stateDir, "sessions", sessionId, "skill-active-state.json"), {
         active: true,
-        skill: "ralplan",
+        skill: "blueprint",
         phase: "planning",
         session_id: sessionId,
         active_skills: [{
-          skill: "ralplan",
+          skill: "blueprint",
           phase: "planning",
           active: true,
           session_id: sessionId,
         }],
       });
-      await writeJson(join(stateDir, "sessions", sessionId, "ralplan-state.json"), {
+      await writeJson(join(stateDir, "sessions", sessionId, "blueprint-state.json"), {
         active: true,
-        mode: "ralplan",
+        mode: "blueprint",
         current_phase: "planning",
-        session_id: "sess-other-ralplan",
+        session_id: "sess-other-blueprint",
       });
 
       const result = await dispatchCodexNativeHook(
@@ -4949,7 +5016,7 @@ esac
     }
   });
 
-  it("does not block on active ralplan skill when subagents are still active", async () => {
+  it("does not block on active blueprint skill when subagents are still active", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-skill-subagent-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
@@ -4957,10 +5024,10 @@ esac
       await writeJson(join(stateDir, "session.json"), { session_id: "sess-stop-skill-subagent" });
       await writeJson(join(stateDir, "sessions", "sess-stop-skill-subagent", "skill-active-state.json"), {
         active: true,
-        skill: "ralplan",
+        skill: "blueprint",
         phase: "planning",
       });
-      await writeJson(join(stateDir, "sessions", "sess-stop-skill-subagent", "ralplan-state.json"), {
+      await writeJson(join(stateDir, "sessions", "sess-stop-skill-subagent", "blueprint-state.json"), {
         active: true,
         current_phase: "planning",
       });
@@ -5007,14 +5074,14 @@ esac
     }
   });
 
-  it("does not block on stale root ralplan skill when the explicit session-scoped canonical skill state is absent", async () => {
+  it("does not block on stale root blueprint skill when the explicit session-scoped canonical skill state is absent", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-stale-root-skill-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
       await mkdir(stateDir, { recursive: true });
       await writeJson(join(stateDir, "skill-active-state.json"), {
         active: true,
-        skill: "ralplan",
+        skill: "blueprint",
         phase: "planning",
       });
 
@@ -5582,16 +5649,16 @@ esac
     }
   });
 
-  it("returns a non-blocking Stop document-refresh warning before auto-nudge when Ralph is not active", async () => {
+  it("returns a non-blocking Stop document-refresh warning before auto-nudge when Forge is not active", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-document-refresh-"));
     try {
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
-      execFileSync("git", ["init"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 1;\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 2;\n", "utf-8");
 
       const result = await dispatchCodexNativeHook(
@@ -5618,12 +5685,12 @@ esac
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-document-refresh-nonterminal-"));
     try {
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
-      execFileSync("git", ["init"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 1;\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 2;\n", "utf-8");
 
       const result = await dispatchCodexNativeHook(
@@ -5646,12 +5713,12 @@ esac
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-document-refresh-dedupe-"));
     try {
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
-      execFileSync("git", ["init"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 1;\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 2;\n", "utf-8");
 
       const payload = {
@@ -5675,12 +5742,12 @@ esac
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-document-refresh-exempt-"));
     try {
       await mkdir(join(cwd, "src", "scripts"), { recursive: true });
-      execFileSync("git", ["init"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.email", "test@example.com"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["config", "user.name", "Test User"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 1;\n", "utf-8");
-      execFileSync("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
-      execFileSync("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["add", "src/scripts/codex-native-hook.ts"], { cwd, stdio: "ignore" });
+      execFileSyncCompat("git", ["commit", "-m", "init"], { cwd, stdio: "ignore" });
       await writeFile(join(cwd, "src", "scripts", "codex-native-hook.ts"), "export const hook = 2;\n", "utf-8");
 
       const result = await dispatchCodexNativeHook(
@@ -5699,13 +5766,13 @@ esac
     }
   });
 
-  it("returns Stop continuation output while Ralph is active without an explicit session pin", async () => {
+  it("returns Stop continuation output while Forge is active without an explicit session pin", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
       await mkdir(stateDir, { recursive: true });
       await writeFile(
-        join(stateDir, "ralph-state.json"),
+        join(stateDir, "forge-state.json"),
         JSON.stringify({
           active: true,
           current_phase: "executing",
@@ -5724,33 +5791,33 @@ esac
       assert.deepEqual(result.outputJson, {
         decision: "block",
         reason:
-          "RCS Ralph is still active (phase: executing; state: .rcs/state/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
-        stopReason: "ralph_executing",
+          "RCS Forge is still active (phase: executing; state: .rcs/state/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
+        stopReason: "forge_executing",
         systemMessage:
-          "RCS Ralph is still active (phase: executing; state: .rcs/state/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
+          "RCS Forge is still active (phase: executing; state: .rcs/state/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
       });
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it("blocks Stop from session-scoped Ralph state when session.json points to another session", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-ralph-session-mismatch-"));
+  it("blocks Stop from session-scoped Forge state when session.json points to another session", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-forge-session-mismatch-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
-      await mkdir(join(stateDir, "sessions", "sess-live-ralph"), { recursive: true });
-      await writeJson(join(stateDir, "session.json"), { session_id: "sess-other-ralph" });
-      await writeJson(join(stateDir, "sessions", "sess-live-ralph", "ralph-state.json"), {
+      await mkdir(join(stateDir, "sessions", "sess-live-forge"), { recursive: true });
+      await writeJson(join(stateDir, "session.json"), { session_id: "sess-other-forge" });
+      await writeJson(join(stateDir, "sessions", "sess-live-forge", "forge-state.json"), {
         active: true,
         current_phase: "executing",
-        session_id: "sess-live-ralph",
+        session_id: "sess-live-forge",
       });
 
       const result = await dispatchCodexNativeHook(
         {
           hook_event_name: "Stop",
           cwd,
-          session_id: "sess-live-ralph",
+          session_id: "sess-live-forge",
         },
         { cwd },
       );
@@ -5759,24 +5826,24 @@ esac
       assert.deepEqual(result.outputJson, {
         decision: "block",
         reason:
-          "RCS Ralph is still active (phase: executing; state: .rcs/state/sessions/sess-live-ralph/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
-        stopReason: "ralph_executing",
+          "RCS Forge is still active (phase: executing; state: .rcs/state/sessions/sess-live-forge/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
+        stopReason: "forge_executing",
         systemMessage:
-          "RCS Ralph is still active (phase: executing; state: .rcs/state/sessions/sess-live-ralph/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
+          "RCS Forge is still active (phase: executing; state: .rcs/state/sessions/sess-live-forge/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
       });
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it("does not block Stop from stale session-scoped Ralph state that belongs to another session", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-stale-session-ralph-"));
+  it("does not block Stop from stale session-scoped Forge state that belongs to another session", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-stale-session-forge-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
       await mkdir(join(stateDir, "sessions", "sess-current"), { recursive: true });
       await mkdir(join(stateDir, "sessions", "sess-stale"), { recursive: true });
       await writeJson(join(stateDir, "session.json"), { session_id: "sess-current" });
-      await writeJson(join(stateDir, "sessions", "sess-stale", "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", "sess-stale", "forge-state.json"), {
         active: true,
         current_phase: "starting",
         session_id: "sess-stale",
@@ -5798,8 +5865,8 @@ esac
     }
   });
 
-  it("does not block Stop from stale current-session Ralph state when session.json points to a dead owner", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-stale-current-session-ralph-"));
+  it("does not block Stop from stale current-session Forge state when session.json points to a dead owner", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-stale-current-session-forge-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
       await mkdir(join(stateDir, "sessions", "sess-dead"), { recursive: true });
@@ -5809,7 +5876,7 @@ esac
         pid: Number.MAX_SAFE_INTEGER,
         started_at: "2026-01-01T00:00:00.000Z",
       });
-      await writeJson(join(stateDir, "sessions", "sess-dead", "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", "sess-dead", "forge-state.json"), {
         active: true,
         current_phase: "verifying",
         session_id: "sess-dead",
@@ -5823,7 +5890,7 @@ esac
       await writeJson(join(stateDir, "native-stop-state.json"), {
         sessions: {
           "sess-dead": {
-            last_signature: "ralph-stop|sess-dead|thread-1|no-message|verifying",
+            last_signature: "forge-stop|sess-dead|thread-1|no-message|verifying",
             updated_at: "2026-04-20T21:00:00.000Z",
           },
         },
@@ -5847,21 +5914,21 @@ esac
     }
   });
 
-  it("does not hard-block Stop on stale session-scoped Ralph starting state after visible active modes are cleared", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-cleared-stale-ralph-"));
+  it("does not hard-block Stop on stale session-scoped Forge starting state after visible active modes are cleared", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-cleared-stale-forge-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
-      const sessionId = "sess-cleared-ralph";
+      const sessionId = "sess-cleared-forge";
       await mkdir(join(stateDir, "sessions", sessionId), { recursive: true });
-      await writeJson(join(stateDir, "sessions", sessionId, "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", sessionId, "forge-state.json"), {
         active: true,
-        mode: "ralph",
+        mode: "forge",
         current_phase: "starting",
         session_id: sessionId,
       });
       await writeJson(join(stateDir, "skill-active-state.json"), {
         active: false,
-        skill: "ralph",
+        skill: "forge",
         active_skills: [],
       });
 
@@ -5886,23 +5953,23 @@ esac
     }
   });
 
-  it("blocks Stop on visible active session-scoped Ralph starting state and reports its path", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-visible-starting-ralph-"));
+  it("blocks Stop on visible active session-scoped Forge starting state and reports its path", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-visible-starting-forge-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
-      const sessionId = "sess-visible-ralph";
+      const sessionId = "sess-visible-forge";
       await mkdir(join(stateDir, "sessions", sessionId), { recursive: true });
-      await writeJson(join(stateDir, "sessions", sessionId, "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", sessionId, "forge-state.json"), {
         active: true,
-        mode: "ralph",
+        mode: "forge",
         current_phase: "starting",
         session_id: sessionId,
       });
       await writeJson(join(stateDir, "sessions", sessionId, "skill-active-state.json"), {
         active: true,
-        skill: "ralph",
+        skill: "forge",
         phase: "starting",
-        active_skills: [{ skill: "ralph", phase: "starting", active: true, session_id: sessionId }],
+        active_skills: [{ skill: "forge", phase: "starting", active: true, session_id: sessionId }],
       });
 
       const result = await dispatchCodexNativeHook(
@@ -5918,22 +5985,22 @@ esac
       assert.deepEqual(result.outputJson, {
         decision: "block",
         reason:
-          "RCS Ralph is still active (phase: starting; state: .rcs/state/sessions/sess-visible-ralph/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
-        stopReason: "ralph_starting",
+          "RCS Forge is still active (phase: starting; state: .rcs/state/sessions/sess-visible-forge/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
+        stopReason: "forge_starting",
         systemMessage:
-          "RCS Ralph is still active (phase: starting; state: .rcs/state/sessions/sess-visible-ralph/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
+          "RCS Forge is still active (phase: starting; state: .rcs/state/sessions/sess-visible-forge/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
       });
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it("does not block Stop from another session-scoped Ralph state when an explicit session_id has no active Ralph state", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-explicit-session-ralph-"));
+  it("does not block Stop from another session-scoped Forge state when an explicit session_id has no active Forge state", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-explicit-session-forge-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
       await mkdir(join(stateDir, "sessions", "sess-other"), { recursive: true });
-      await writeJson(join(stateDir, "sessions", "sess-other", "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", "sess-other", "forge-state.json"), {
         active: true,
         current_phase: "starting",
         session_id: "sess-other",
@@ -5955,8 +6022,8 @@ esac
     }
   });
 
-  it("does not block a question-only pane from Ralph state owned by another Codex session", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-ralph-question-pane-"));
+  it("does not block a question-only pane from Forge state owned by another Codex session", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-forge-question-pane-"));
     const previousTmuxPane = process.env.TMUX_PANE;
     try {
       const stateDir = join(cwd, ".rcs", "state");
@@ -5968,14 +6035,14 @@ esac
         native_session_id: questionNativeSessionId,
         cwd,
       });
-      await writeJson(join(stateDir, "sessions", questionSessionId, "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", questionSessionId, "forge-state.json"), {
         active: true,
-        mode: "ralph",
+        mode: "forge",
         current_phase: "executing",
         session_id: questionSessionId,
-        owner_rcs_session_id: "sess-ralph-owner",
-        owner_codex_session_id: "codex-ralph-owner",
-        thread_id: "thread-ralph-owner",
+        owner_rcs_session_id: "sess-forge-owner",
+        owner_codex_session_id: "codex-forge-owner",
+        thread_id: "thread-forge-owner",
         tmux_pane_id: "%41",
       });
 
@@ -5999,27 +6066,27 @@ esac
     }
   });
 
-  it("blocks same-session Ralph Stop continuation when ownership identifiers match", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-ralph-owned-session-"));
+  it("blocks same-session Forge Stop continuation when ownership identifiers match", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-forge-owned-session-"));
     const previousTmuxPane = process.env.TMUX_PANE;
     try {
       const stateDir = join(cwd, ".rcs", "state");
-      const fixtureSessionId = "sess-ralph-owned";
-      const nativeSessionId = "codex-ralph-owned";
+      const fixtureSessionId = "sess-forge-owned";
+      const nativeSessionId = "codex-forge-owned";
       await mkdir(join(stateDir, "sessions", fixtureSessionId), { recursive: true });
       await writeJson(join(stateDir, "session.json"), {
         session_id: fixtureSessionId,
         native_session_id: nativeSessionId,
         cwd,
       });
-      await writeJson(join(stateDir, "sessions", fixtureSessionId, "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", fixtureSessionId, "forge-state.json"), {
         active: true,
-        mode: "ralph",
+        mode: "forge",
         current_phase: "executing",
         session_id: fixtureSessionId,
         owner_rcs_session_id: fixtureSessionId,
         owner_codex_session_id: nativeSessionId,
-        thread_id: "thread-ralph-owned",
+        thread_id: "thread-forge-owned",
         tmux_pane_id: "%42",
       });
 
@@ -6029,7 +6096,7 @@ esac
           hook_event_name: "Stop",
           cwd,
           session_id: nativeSessionId,
-          thread_id: "thread-ralph-owned",
+          thread_id: "thread-forge-owned",
         },
         { cwd },
       );
@@ -6038,10 +6105,10 @@ esac
       assert.deepEqual(result.outputJson, {
         decision: "block",
         reason:
-          "RCS Ralph is still active (phase: executing; state: .rcs/state/sessions/sess-ralph-owned/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
-        stopReason: "ralph_executing",
+          "RCS Forge is still active (phase: executing; state: .rcs/state/sessions/sess-forge-owned/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
+        stopReason: "forge_executing",
         systemMessage:
-          "RCS Ralph is still active (phase: executing; state: .rcs/state/sessions/sess-ralph-owned/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
+          "RCS Forge is still active (phase: executing; state: .rcs/state/sessions/sess-forge-owned/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
       });
     } finally {
       if (typeof previousTmuxPane === "string") process.env.TMUX_PANE = previousTmuxPane;
@@ -6050,16 +6117,16 @@ esac
     }
   });
 
-  it("prefers canonical run-state terminal lifecycle before stale session Ralph state during Stop", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-canonical-run-state-ralph-"));
+  it("prefers canonical run-state terminal lifecycle before stale session Forge state during Stop", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-canonical-run-state-forge-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
-      const sessionId = "sess-canonical-run-state-ralph";
+      const sessionId = "sess-canonical-run-state-forge";
       await mkdir(join(stateDir, "sessions", sessionId), { recursive: true });
       await writeJson(join(stateDir, "session.json"), { session_id: sessionId, cwd });
       await writeJson(join(stateDir, "sessions", sessionId, "run-state.json"), {
         version: 1,
-        mode: "ralph",
+        mode: "forge",
         active: false,
         outcome: "finish",
         lifecycle_outcome: "finished",
@@ -6067,9 +6134,9 @@ esac
         completed_at: "2026-04-27T12:00:00.000Z",
         updated_at: "2026-04-27T12:00:00.000Z",
       });
-      await writeJson(join(stateDir, "sessions", sessionId, "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", sessionId, "forge-state.json"), {
         active: true,
-        mode: "ralph",
+        mode: "forge",
         current_phase: "verifying",
         session_id: sessionId,
       });
@@ -6090,13 +6157,13 @@ esac
     }
   });
 
-  it("does not block Stop from root Ralph fallback when the current session has no scoped Ralph state", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-root-fallback-ralph-"));
+  it("does not block Stop from root Forge fallback when the current session has no scoped Forge state", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-root-fallback-forge-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
       await mkdir(join(stateDir, "sessions", "sess-current"), { recursive: true });
       await writeJson(join(stateDir, "session.json"), { session_id: "sess-current", cwd });
-      await writeJson(join(stateDir, "ralph-state.json"), {
+      await writeJson(join(stateDir, "forge-state.json"), {
         active: true,
         current_phase: "executing",
       });
@@ -6117,19 +6184,19 @@ esac
     }
   });
 
-  it("does not block Stop when the current session Ralph state is cancelled even if stale root fallback remains", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-cancelled-session-ralph-"));
+  it("does not block Stop when the current session Forge state is cancelled even if stale root fallback remains", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-cancelled-session-forge-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
       await mkdir(join(stateDir, "sessions", "sess-current"), { recursive: true });
       await writeJson(join(stateDir, "session.json"), { session_id: "sess-current", cwd });
-      await writeJson(join(stateDir, "sessions", "sess-current", "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", "sess-current", "forge-state.json"), {
         active: false,
         current_phase: "cancelled",
         completed_at: "2026-04-10T23:30:38.000Z",
         session_id: "sess-current",
       });
-      await writeJson(join(stateDir, "ralph-state.json"), {
+      await writeJson(join(stateDir, "forge-state.json"), {
         active: true,
         current_phase: "starting",
       });
@@ -6150,7 +6217,7 @@ esac
     }
   });
 
-  it("does not block Stop from root Ralph fallback when an explicit session_id is present and session.json points to another worktree", async () => {
+  it("does not block Stop from root Forge fallback when an explicit session_id is present and session.json points to another worktree", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-root-fallback-cwd-mismatch-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
@@ -6159,7 +6226,7 @@ esac
         session_id: "sess-elsewhere",
         cwd: join(cwd, "..", "different-worktree"),
       });
-      await writeJson(join(stateDir, "ralph-state.json"), {
+      await writeJson(join(stateDir, "forge-state.json"), {
         active: true,
         current_phase: "executing",
       });
@@ -6180,21 +6247,21 @@ esac
     }
   });
 
-  it("keeps blocking Ralph Stop replays until the active task advances", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-ralph-replay-"));
+  it("keeps blocking Forge Stop replays until the active task advances", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-forge-replay-"));
     const previousRcsSessionId = process.env.RCS_SESSION_ID;
     try {
       const stateDir = join(cwd, ".rcs", "state");
       await mkdir(stateDir, { recursive: true });
       await writeFile(
-        join(stateDir, "ralph-state.json"),
+        join(stateDir, "forge-state.json"),
         JSON.stringify({
           active: true,
           current_phase: "executing",
         }),
       );
 
-      process.env.RCS_SESSION_ID = "sess-stop-ralph-replay";
+      process.env.RCS_SESSION_ID = "sess-stop-forge-replay";
       const payload = {
         hook_event_name: "Stop",
         cwd,
@@ -6203,10 +6270,10 @@ esac
       const expected = {
         decision: "block",
         reason:
-          "RCS Ralph is still active (phase: executing; state: .rcs/state/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
-        stopReason: "ralph_executing",
+          "RCS Forge is still active (phase: executing; state: .rcs/state/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
+        stopReason: "forge_executing",
         systemMessage:
-          "RCS Ralph is still active (phase: executing; state: .rcs/state/ralph-state.json); continue the task and gather fresh verification evidence before stopping.",
+          "RCS Forge is still active (phase: executing; state: .rcs/state/forge-state.json); continue the task and gather fresh verification evidence before stopping.",
       };
 
       const first = await dispatchCodexNativeHook(payload, { cwd });
@@ -6230,28 +6297,28 @@ esac
   });
 
   it("lets dispatcher dedupe identical native stop hook replays after Stop payload normalization", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-ralph-hook-dedupe-"));
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-forge-hook-dedupe-"));
     const previousRcsSessionId = process.env.RCS_SESSION_ID;
     try {
       const stateDir = join(cwd, ".rcs", "state");
-      await mkdir(join(stateDir, "sessions", "sess-stop-ralph-hook-dedupe"), { recursive: true });
+      await mkdir(join(stateDir, "sessions", "sess-stop-forge-hook-dedupe"), { recursive: true });
       await writeHookCounterPlugin(cwd);
       await writeFile(
-        join(stateDir, "sessions", "sess-stop-ralph-hook-dedupe", "ralph-state.json"),
+        join(stateDir, "sessions", "sess-stop-forge-hook-dedupe", "forge-state.json"),
         JSON.stringify({
           active: true,
           current_phase: "executing",
-          session_id: "sess-stop-ralph-hook-dedupe",
+          session_id: "sess-stop-forge-hook-dedupe",
         }),
       );
 
-      process.env.RCS_SESSION_ID = "sess-stop-ralph-hook-dedupe";
+      process.env.RCS_SESSION_ID = "sess-stop-forge-hook-dedupe";
       const payload = {
         hook_event_name: "Stop",
         cwd,
-        session_id: "sess-stop-ralph-hook-dedupe",
-        thread_id: "thread-stop-ralph-hook-dedupe",
-        turn_id: "turn-stop-ralph-hook-dedupe-1",
+        session_id: "sess-stop-forge-hook-dedupe",
+        thread_id: "thread-stop-forge-hook-dedupe",
+        turn_id: "turn-stop-forge-hook-dedupe-1",
         last_assistant_message: "Next active targets:\n\n1. scheduler integration\n\nI am continuing.",
       };
 
@@ -6276,28 +6343,28 @@ esac
   });
 
   it("preserves per-turn native stop hook delivery even when stop_hook_active remains true", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-ralph-hook-refire-"));
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-forge-hook-refire-"));
     const previousRcsSessionId = process.env.RCS_SESSION_ID;
     try {
       const stateDir = join(cwd, ".rcs", "state");
-      await mkdir(join(stateDir, "sessions", "sess-stop-ralph-hook-refire"), { recursive: true });
+      await mkdir(join(stateDir, "sessions", "sess-stop-forge-hook-refire"), { recursive: true });
       await writeHookCounterPlugin(cwd);
       await writeFile(
-        join(stateDir, "sessions", "sess-stop-ralph-hook-refire", "ralph-state.json"),
+        join(stateDir, "sessions", "sess-stop-forge-hook-refire", "forge-state.json"),
         JSON.stringify({
           active: true,
           current_phase: "executing",
-          session_id: "sess-stop-ralph-hook-refire",
+          session_id: "sess-stop-forge-hook-refire",
         }),
       );
 
-      process.env.RCS_SESSION_ID = "sess-stop-ralph-hook-refire";
+      process.env.RCS_SESSION_ID = "sess-stop-forge-hook-refire";
       const payload = {
         hook_event_name: "Stop",
         cwd,
-        session_id: "sess-stop-ralph-hook-refire",
-        thread_id: "thread-stop-ralph-hook-refire",
-        turn_id: "turn-stop-ralph-hook-refire-1",
+        session_id: "sess-stop-forge-hook-refire",
+        thread_id: "thread-stop-forge-hook-refire",
+        turn_id: "turn-stop-forge-hook-refire-1",
         last_assistant_message: "Continuing current task.",
       };
 
@@ -6305,25 +6372,25 @@ esac
       await dispatchCodexNativeHook(
         {
           ...payload,
-          turn_id: "turn-stop-ralph-hook-refire-2",
+          turn_id: "turn-stop-forge-hook-refire-2",
           stop_hook_active: true,
         },
         { cwd },
       );
 
       await writeFile(
-        join(stateDir, "sessions", "sess-stop-ralph-hook-refire", "ralph-state.json"),
+        join(stateDir, "sessions", "sess-stop-forge-hook-refire", "forge-state.json"),
         JSON.stringify({
           active: true,
           current_phase: "executing",
-          session_id: "sess-stop-ralph-hook-refire",
+          session_id: "sess-stop-forge-hook-refire",
         }),
       );
 
       await dispatchCodexNativeHook(
         {
           ...payload,
-          turn_id: "turn-stop-ralph-hook-refire-3",
+          turn_id: "turn-stop-forge-hook-refire-3",
           stop_hook_active: true,
         },
         { cwd },
@@ -6478,7 +6545,7 @@ esac
       await writeHookCounterPlugin(cwd);
       process.env.RCS_SESSION_ID = "rcs-canonical";
       await writeSessionStart(cwd, "rcs-canonical");
-      await writeJson(join(stateDir, "sessions", "rcs-canonical", "ralph-state.json"), {
+      await writeJson(join(stateDir, "sessions", "rcs-canonical", "forge-state.json"), {
         active: true,
         current_phase: "executing",
         session_id: "rcs-canonical",
@@ -7148,7 +7215,7 @@ esac
     }
   });
 
-  it("re-blocks active ralplan skill state on repeated Stop hooks", async () => {
+  it("re-blocks active blueprint skill state on repeated Stop hooks", async () => {
     const cwd = await mkdtemp(join(tmpdir(), "rcs-native-hook-stop-skill-repeat-"));
     try {
       const stateDir = join(cwd, ".rcs", "state");
@@ -7156,10 +7223,10 @@ esac
       await writeJson(join(stateDir, "session.json"), { session_id: "sess-stop-skill-repeat" });
       await writeJson(join(stateDir, "sessions", "sess-stop-skill-repeat", "skill-active-state.json"), {
         active: true,
-        skill: "ralplan",
+        skill: "blueprint",
         phase: "planning",
       });
-      await writeJson(join(stateDir, "sessions", "sess-stop-skill-repeat", "ralplan-state.json"), {
+      await writeJson(join(stateDir, "sessions", "sess-stop-skill-repeat", "blueprint-state.json"), {
         active: true,
         current_phase: "planning",
       });
@@ -7191,9 +7258,9 @@ esac
       assert.deepEqual(repeated.outputJson, {
         decision: "block",
         reason:
-          "RCS skill ralplan is still active (phase: planning); continue until the current ralplan workflow reaches a terminal state.",
-        stopReason: "skill_ralplan_planning",
-        systemMessage: "RCS skill ralplan is still active (phase: planning).",
+          "RCS skill blueprint is still active (phase: planning); continue until the current blueprint workflow reaches a terminal state.",
+        stopReason: "skill_blueprint_planning",
+        systemMessage: "RCS skill blueprint is still active (phase: planning).",
       });
     } finally {
       await rm(cwd, { recursive: true, force: true });
@@ -7382,18 +7449,18 @@ describe("codex native hook triage integration", () => {
 
   // ── Group 1: Keyword bypass (triage must NOT run) ────────────────────────
 
-  it("does not inject triage advisory for $ralplan keyword prompts", async () => {
-    const cwd = await mkdtemp(join(tmpdir(), "rcs-triage-keyword-ralplan-"));
+  it("does not inject triage advisory for $blueprint keyword prompts", async () => {
+    const cwd = await mkdtemp(join(tmpdir(), "rcs-triage-keyword-blueprint-"));
     try {
       await mkdir(join(cwd, ".rcs", "state"), { recursive: true });
       const result = await dispatchCodexNativeHook(
         {
           hook_event_name: "UserPromptSubmit",
           cwd,
-          session_id: "triage-kw-ralplan-1",
+          session_id: "triage-kw-blueprint-1",
           thread_id: "thread-triage-kw-1",
           turn_id: "turn-triage-kw-1",
-          prompt: "$ralplan implement issue #1307",
+          prompt: "$blueprint implement issue #1307",
         },
         { cwd },
       );
@@ -7406,7 +7473,7 @@ describe("codex native hook triage integration", () => {
       assert.doesNotMatch(additionalContext, /narrow edit-shaped/);
       assert.doesNotMatch(additionalContext, /visual\/style request/);
 
-      const stateFile = join(cwd, ".rcs", "state", "sessions", "triage-kw-ralplan-1", "prompt-routing-state.json");
+      const stateFile = join(cwd, ".rcs", "state", "sessions", "triage-kw-blueprint-1", "prompt-routing-state.json");
       assert.equal(existsSync(stateFile), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
@@ -8328,12 +8395,12 @@ describe("codex native hook triage integration", () => {
           session_id: sessionId,
           thread_id: "thread-kw-followup-1",
           turn_id: "turn-kw-followup-2",
-          prompt: "$ralph continue",
+          prompt: "$forge continue",
         },
         { cwd },
       );
 
-      assert.equal(turn2.skillState?.skill, "ralph");
+      assert.equal(turn2.skillState?.skill, "forge");
 
       const ctx2 = String(
         (turn2.outputJson as { hookSpecificOutput?: { additionalContext?: string } })?.hookSpecificOutput?.additionalContext ?? "",

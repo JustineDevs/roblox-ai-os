@@ -33,25 +33,6 @@ describe('rcs setup prompt/native-agent overwrite behavior', () => {
       assert.equal(installedPrompts.has('code-reviewer.md'), true);
       assert.equal(installedPrompts.has('code-simplifier.md'), true);
 
-      for (const promptOnlyAgent of [
-        'style-reviewer',
-        'quality-reviewer',
-        'api-reviewer',
-        'performance-reviewer',
-        'product-manager',
-        'ux-researcher',
-        'information-architect',
-        'product-analyst',
-        'qa-tester',
-        'quality-strategist',
-      ]) {
-        assert.equal(
-          installedPrompts.has(`${promptOnlyAgent}.md`),
-          true,
-          `expected setup to preserve prompt-only role ${promptOnlyAgent}.md`,
-        );
-      }
-
       for (const promptAsset of NON_NATIVE_AGENT_PROMPT_ASSETS) {
         assert.equal(
           installedPrompts.has(`${promptAsset}.md`),
@@ -70,14 +51,8 @@ describe('rcs setup prompt/native-agent overwrite behavior', () => {
       }
       assert.equal(installedNativeAgents.has('code-review.toml'), false);
       assert.equal(installedNativeAgents.has('plan.toml'), false);
-      assert.equal(installedNativeAgents.has('style-reviewer.toml'), false);
-      assert.equal(installedNativeAgents.has('quality-reviewer.toml'), false);
-      assert.equal(installedNativeAgents.has('api-reviewer.toml'), false);
-      assert.equal(installedNativeAgents.has('performance-reviewer.toml'), false);
-      assert.equal(installedNativeAgents.has('product-manager.toml'), false);
-      assert.equal(installedNativeAgents.has('ux-researcher.toml'), false);
-      assert.equal(installedNativeAgents.has('information-architect.toml'), false);
-      assert.equal(installedNativeAgents.has('product-analyst.toml'), false);
+      assert.equal(installedNativeAgents.has('legacy-reviewer.toml'), false);
+      assert.equal(installedNativeAgents.has('legacy-quality.toml'), false);
 
       const codeReviewerToml = await readFile(join(wd, '.codex', 'agents', 'code-reviewer.toml'), 'utf-8');
       assert.match(codeReviewerToml, /^name = "code-reviewer"$/m);
@@ -97,7 +72,7 @@ describe('rcs setup prompt/native-agent overwrite behavior', () => {
 
       await setup({ scope: 'project' });
 
-      const validPrompts = ['style-reviewer.md', 'quality-reviewer.md', 'sisyphus-lite.md'];
+      const validPrompts = ['sisyphus-lite.md', 'team-orchestrator.md', 'explore-harness.md'];
       for (const validPrompt of validPrompts) {
         assert.equal(existsSync(join(wd, '.codex', 'prompts', validPrompt)), true);
       }
@@ -119,34 +94,6 @@ describe('rcs setup prompt/native-agent overwrite behavior', () => {
     }
   });
 
-  it('removes stale merged native agents on --force', async () => {
-    const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-prompts-'));
-    const previousCwd = process.cwd();
-    try {
-      await mkdir(join(wd, '.rcs', 'state'), { recursive: true });
-      process.chdir(wd);
-
-      await setup({ scope: 'project' });
-
-      const staleAgents = ['style-reviewer.toml', 'quality-reviewer.toml'];
-      for (const staleAgent of staleAgents) {
-        const stalePath = join(wd, '.codex', 'agents', staleAgent);
-        await writeFile(stalePath, '# stale native agent\n');
-        assert.equal(existsSync(stalePath), true);
-      }
-
-      await setup({ scope: 'project', force: true });
-
-      for (const staleAgent of staleAgents) {
-        assert.equal(existsSync(join(wd, '.codex', 'agents', staleAgent)), false);
-      }
-      assert.equal(existsSync(join(wd, '.codex', 'agents', 'executor.toml')), true);
-    } finally {
-      process.chdir(previousCwd);
-      await rm(wd, { recursive: true, force: true });
-    }
-  });
-
   it('removes generated non-installable native agents during normal setup', async () => {
     const wd = await mkdtemp(join(tmpdir(), 'rcs-setup-prompts-'));
     const previousCwd = process.cwd();
@@ -156,12 +103,12 @@ describe('rcs setup prompt/native-agent overwrite behavior', () => {
 
       await setup({ scope: 'project' });
 
-      const stalePath = join(wd, '.codex', 'agents', 'style-reviewer.toml');
+      const stalePath = join(wd, '.codex', 'agents', 'legacy-reviewer.toml');
       await writeFile(
         stalePath,
         [
-          '# roblox-ai-os-creator-skills agent: style-reviewer',
-          'name = "style-reviewer"',
+          '# roblox-ai-os-creator-skills agent: legacy-reviewer',
+          'name = "legacy-reviewer"',
           'description = "old generated merged role"',
           'developer_instructions = """old"""',
           '',
@@ -188,12 +135,12 @@ describe('rcs setup prompt/native-agent overwrite behavior', () => {
 
       await setup({ scope: 'project' });
 
-      const userAuthoredPath = join(wd, '.codex', 'agents', 'style-reviewer.toml');
+      const userAuthoredPath = join(wd, '.codex', 'agents', 'legacy-reviewer.toml');
       await writeFile(
         userAuthoredPath,
         [
           '# user-authored local agent',
-          'name = "style-reviewer"',
+          'name = "legacy-reviewer"',
           'description = "custom local role"',
           '',
         ].join('\n'),

@@ -2,6 +2,10 @@
 name: skill
 description: Manage local skills - list, add, remove, search, edit, setup wizard
 argument-hint: "<command> [args]"
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Skill Management CLI
@@ -25,7 +29,7 @@ USER SKILLS (~/.codex/skills/):
 | Name              | Triggers           | Quality | Usage | Scope |
 |-------------------|--------------------|---------|-------|-------|
 | error-handler     | fix, error         | 95%     | 42    | user  |
-| api-builder       | api, endpoint      | 88%     | 23    | user  |
+| remote-audit      | remote, payload    | 88%     | 23    | user  |
 
 PROJECT SKILLS (.codex/skills/):
 | Name              | Triggers           | Quality | Usage | Scope   |
@@ -226,16 +230,16 @@ Found 3 skills matching "typescript error":
 
 **Example:**
 ```
-User: /skill search api endpoint
-Assistant: Found 2 skills matching "api endpoint":
+User: /skill search remote payload
+Assistant: Found 2 skills matching "remote payload":
 
-1. api-builder (user)
-   Description: Generate REST API endpoints
-   Triggers: api, endpoint, rest
+1. remote-audit (user)
+   Description: Review RemoteEvent / RemoteFunction payload contracts
+   Triggers: remote, payload, validation
 
-2. backend-scaffold (project)
-   Description: Scaffold backend services
-   Match: "Creates API endpoint boilerplate"
+2. studio-plugin-scaffold (project)
+   Description: Scaffold Roblox Studio plugin surfaces
+   Match: "Creates toolbar, widget, and plugin-state boilerplate"
 ```
 
 ---
@@ -310,10 +314,10 @@ User-only skills (5):
 
 Project-only skills (2):
   - test-runner
-  - backend-scaffold
+  - studio-plugin-scaffold
 
 Common skills (3):
-  - frontend-ui-ux
+  - visual-forge
   - git-master
   - planner
 
@@ -781,8 +785,8 @@ Total skills: 5
     Description: Fix for sessionId undefined after restart in session.ts
     Modified: 2026-01-22 16:45:23
 
-  - build-cache-invalidation
-    Description: When to clear TypeScript build cache to fix phantom errors
+  - luau-cache-troubleshooting
+    Description: When to clear generated Luau or compiled runtime artifacts to fix stale behavior
     Modified: 2026-01-21 11:28:37
 
 === SUMMARY ===
@@ -833,3 +837,6 @@ What would you like to do?
 - `/skill stats` - Show usage statistics across all skills
 - `/skill validate` - Check all skills for format errors
 - `/skill template <type>` - Create from predefined templates
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

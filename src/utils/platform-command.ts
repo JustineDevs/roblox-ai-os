@@ -98,6 +98,13 @@ function resolveWindowsCommandPath(
   env: NodeJS.ProcessEnv,
   existsImpl: ExistsSyncLike,
 ): string | null {
+  if (normalizeWindowsCommandName(command) === 'tmux') {
+    const explicitTmux = typeof env.RCS_TEST_TMUX_BIN === 'string' ? env.RCS_TEST_TMUX_BIN.trim() : '';
+    if (explicitTmux && existsImpl(explicitTmux)) {
+      return explicitTmux;
+    }
+  }
+
   const pathext = normalizeWindowsPathext(env);
   const rawPath = String(env.Path ?? env.PATH ?? '');
   const pathEntries = rawPath.includes(';')
@@ -253,6 +260,8 @@ export function resolveTmuxBinaryForPlatform(
   env: NodeJS.ProcessEnv = process.env,
   existsImpl: ExistsSyncLike = existsFileSync,
 ): string | null {
+  const explicit = typeof env.RCS_TEST_TMUX_BIN === 'string' ? env.RCS_TEST_TMUX_BIN.trim() : '';
+  if (explicit && existsImpl(explicit)) return explicit;
   return resolveCommandPathForPlatform('tmux', platform, env, existsImpl);
 }
 

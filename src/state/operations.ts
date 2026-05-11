@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 import { withModeRuntimeContext } from './mode-state-context.js';
 import {
+  canonicalizeStateMode,
   getAllScopedStatePaths,
   getReadScopedStateDirs,
   getReadScopedStatePaths,
@@ -14,8 +15,8 @@ import {
   validateSessionId,
   validateStateModeSegment,
 } from '../mcp/state-paths.js';
-import { ensureCanonicalRalphArtifacts } from '../ralph/persistence.js';
-import { RALPH_PHASES, validateAndNormalizeRalphState } from '../ralph/contract.js';
+import { ensureCanonicalForgeArtifacts } from '../forge/persistence.js';
+import { FORGE_PHASES, validateAndNormalizeForgeState } from '../forge/contract.js';
 import { applyRunOutcomeContract } from '../runtime/run-outcome.js';
 import {
   SKILL_ACTIVE_STATE_MODE,
@@ -30,10 +31,10 @@ export const SUPPORTED_STATE_READ_MODES = [
   'autopilot',
   'autoresearch',
   'team',
-  'ralph',
+  'forge',
   'ultrawork',
   'ultraqa',
-  'ralplan',
+  'blueprint',
   'deep-interview',
   'skill-active',
 ] as const;
@@ -106,7 +107,7 @@ function readModeSupportsStrictValidation(mode: string): mode is SupportedStateR
 }
 
 function validateStrictReadableMode(mode: unknown): string {
-  const normalized = validateStateModeSegment(mode);
+  const normalized = canonicalizeStateMode(validateStateModeSegment(mode));
   if (!readModeSupportsStrictValidation(normalized)) {
     throw new Error(`mode must be one of: ${SUPPORTED_STATE_READ_MODES.join(', ')}`);
   }
@@ -228,7 +229,7 @@ export async function executeStateOperation(
         const effectiveSessionId = stateScope.sessionId;
         await initializeStateEnvironment(cwd, effectiveSessionId);
 
-        const mode = validateStateModeSegment(rawArgs.mode);
+        const mode = canonicalizeStateMode(validateStateModeSegment(rawArgs.mode));
         const path = getStatePath(mode, cwd, effectiveSessionId);
         const {
           mode: _mode,
@@ -239,7 +240,7 @@ export async function executeStateOperation(
         } = rawArgs;
         let validationError: string | null = null;
         let transitionMessage: string | undefined;
-        let ensureRalphArtifacts = false;
+        let ensureForgeArtifacts = false;
 
         await withStateWriteLock(path, async () => {
           let existing: Record<string, unknown> = {};
@@ -267,18 +268,18 @@ export async function executeStateOperation(
           }
 
           if (
-            mode === 'ralph' &&
+            mode === 'forge' &&
             effectiveSessionId &&
             typeof mergedRaw.owner_rcs_session_id !== 'string'
           ) {
             mergedRaw.owner_rcs_session_id = effectiveSessionId;
           }
 
-          if (mode === 'ralph') {
+          if (mode === 'forge') {
             const originalPhase = mergedRaw.current_phase;
-            const validation = validateAndNormalizeRalphState(mergedRaw);
+            const validation = validateAndNormalizeForgeState(mergedRaw);
             if (!validation.ok || !validation.state) {
-              validationError = validation.error || `ralph.current_phase must be one of: ${RALPH_PHASES.join(', ')}`;
+              validationError = validation.error || `forge.current_phase must be one of: ${FORGE_PHASES.join(', ')}`;
               return;
             }
             if (
@@ -286,10 +287,10 @@ export async function executeStateOperation(
               typeof validation.state.current_phase === 'string' &&
               validation.state.current_phase !== originalPhase
             ) {
-              validation.state.ralph_phase_normalized_from = originalPhase;
+              validation.state.forge_phase_normalized_from = originalPhase;
             }
             Object.assign(mergedRaw, validation.state);
-            ensureRalphArtifacts = true;
+            ensureForgeArtifacts = true;
           }
 
           if (mode !== SKILL_ACTIVE_STATE_MODE) {
@@ -343,8 +344,8 @@ export async function executeStateOperation(
             await writeSkillActiveStateCopies(cwd, state, effectiveSessionId);
           }
         } else {
-          if (mode === 'ralph' && ensureRalphArtifacts) {
-            await ensureCanonicalRalphArtifacts(cwd, effectiveSessionId);
+          if (mode === 'forge' && ensureForgeArtifacts) {
+            await ensureCanonicalForgeArtifacts(cwd, effectiveSessionId);
           }
           const data = JSON.parse(await readFile(path, 'utf-8')) as Record<string, unknown>;
           await syncCanonicalSkillStateForMode({
@@ -372,7 +373,7 @@ export async function executeStateOperation(
         const effectiveSessionId = stateScope.sessionId;
         await initializeStateEnvironment(cwd, effectiveSessionId);
 
-        const mode = validateStateModeSegment(rawArgs.mode);
+        const mode = validateStrictReadableMode(rawArgs.mode);
         const allSessions = rawArgs.all_sessions === true;
 
         if (!allSessions) {
@@ -432,7 +433,7 @@ export async function executeStateOperation(
       }
 
       case 'state_get_status': {
-        const mode = typeof rawArgs.mode === 'string' ? rawArgs.mode.trim() : undefined;
+        const mode = rawArgs.mode == null ? undefined : validateStrictReadableMode(rawArgs.mode);
         const statuses = await listStateStatuses(cwd, explicitSessionId, mode || undefined);
         return { payload: { statuses } };
       }

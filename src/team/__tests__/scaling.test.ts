@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtemp, rm, readFile, writeFile, mkdir, chmod } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -20,22 +20,40 @@ import { isScalingEnabled, scaleUp, scaleDown } from '../scaling.js';
 
 delete process.env.RCS_TEAM_STATE_ROOT;
 
+function execGitSync(args: string[], options: Parameters<typeof spawnSync>[2] = {}): string {
+  const result = spawnSync('git', args, {
+    encoding: 'utf-8',
+    ...options,
+  });
+  if (result.error) {
+    const err = result.error as NodeJS.ErrnoException & { status?: number };
+    if ((err.code === 'EPERM' || err.code === 'EACCES') && (result.status === 0 || err.status === 0)) {
+      return typeof result.stdout === 'string' ? result.stdout : `${result.stdout ?? ''}`;
+    }
+    throw err;
+  }
+  if (result.status !== 0) {
+    throw new Error((typeof result.stderr === 'string' ? result.stderr : `${result.stderr ?? ''}`) || `git ${args.join(' ')} failed`);
+  }
+  return typeof result.stdout === 'string' ? result.stdout : `${result.stdout ?? ''}`;
+}
+
 async function initCommittedGitRepo(cwd: string): Promise<void> {
-  execFileSync('git', ['init'], { cwd, stdio: 'pipe' });
-  execFileSync('git', ['config', 'user.name', 'RCS Test'], { cwd, stdio: 'pipe' });
-  execFileSync('git', ['config', 'user.email', 'rcs@example.com'], { cwd, stdio: 'pipe' });
-  execFileSync('git', ['add', '.'], { cwd, stdio: 'pipe' });
-  execFileSync('git', ['commit', '-m', 'init'], { cwd, stdio: 'pipe' });
+  execGitSync(['init'], { cwd, stdio: 'pipe' });
+  execGitSync(['config', 'user.name', 'RCS Test'], { cwd, stdio: 'pipe' });
+  execGitSync(['config', 'user.email', 'rcs@example.com'], { cwd, stdio: 'pipe' });
+  execGitSync(['add', '.'], { cwd, stdio: 'pipe' });
+  execGitSync(['commit', '-m', 'init'], { cwd, stdio: 'pipe' });
 }
 
 async function initRepo(): Promise<string> {
   const cwd = await mkdtemp(join(tmpdir(), 'rcs-scale-worktree-repo-'));
-  execFileSync('git', ['init'], { cwd, stdio: 'ignore' });
-  execFileSync('git', ['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
-  execFileSync('git', ['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
+  execGitSync(['init'], { cwd, stdio: 'ignore' });
+  execGitSync(['config', 'user.email', 'test@example.com'], { cwd, stdio: 'ignore' });
+  execGitSync(['config', 'user.name', 'Test User'], { cwd, stdio: 'ignore' });
   await writeFile(join(cwd, 'README.md'), 'hello\n', 'utf-8');
-  execFileSync('git', ['add', 'README.md'], { cwd, stdio: 'ignore' });
-  execFileSync('git', ['commit', '-m', 'init'], { cwd, stdio: 'ignore' });
+  execGitSync(['add', 'README.md'], { cwd, stdio: 'ignore' });
+  execGitSync(['commit', '-m', 'init'], { cwd, stdio: 'ignore' });
   return cwd;
 }
 
@@ -902,7 +920,7 @@ exit 0
       assert.equal(worker?.worktree_created, true);
       assert.equal(existsSync(worker?.worktree_path as string), true);
       assert.throws(
-        () => execFileSync('git', ['symbolic-ref', '--quiet', '--short', 'HEAD'], { cwd: worker?.worktree_path, stdio: 'pipe' }),
+        () => execGitSync(['symbolic-ref', '--quiet', '--short', 'HEAD'], { cwd: worker?.worktree_path, stdio: 'pipe' }),
       );
     } finally {
       if (typeof previousPath === 'string') process.env.PATH = previousPath;
@@ -1004,7 +1022,7 @@ exit 0
       assert.equal(worker?.worktree_created, true);
       assert.equal(existsSync(worker?.worktree_path as string), true);
       assert.equal(
-        execFileSync('git', ['symbolic-ref', '--quiet', '--short', 'HEAD'], { cwd: worker?.worktree_path, encoding: 'utf-8' }).trim(),
+        execGitSync(['symbolic-ref', '--quiet', '--short', 'HEAD'], { cwd: worker?.worktree_path, encoding: 'utf-8' }).trim(),
         `${branchBase}/worker-2`,
       );
     } finally {

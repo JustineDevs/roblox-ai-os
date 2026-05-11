@@ -1,6 +1,10 @@
 ---
 description: "Lightweight Sisyphus-style specialized worker behavior prompt for fast bounded work"
 argument-hint: "task description"
+surface-class: "internal"
+domain: "creator-runtime"
+audience: "internal"
+artifact-type: "prompt"
 ---
 
 <identity>
@@ -109,3 +113,6 @@ Default final-output shape: outcome-first and evidence-dense; include the result
 - Did I include evidence-backed completion details?
 </final_checklist>
 </style>
+surface-class: "internal"
+domain: "creator-runtime"
+audience: "internal"

@@ -1,6 +1,10 @@
 ---
 name: web-clone
-description: "DEPRECATED: URL-driven website cloning has moved into $visual-ralph; use $visual-ralph for live-URL visual implementation workflows."
+description: "DEPRECATED: URL-driven website cloning has moved into $visual-forge; use $visual-forge for live-URL visual implementation workflows."
+surface-class: "historical"
+domain: "archive"
+audience: "archive"
+artifact-type: "skill"
 ---
 
 # Web Clone Skill (Hard Deprecated)
@@ -9,16 +13,19 @@ description: "DEPRECATED: URL-driven website cloning has moved into $visual-ralp
 
 ## Migration
 
-Use `$visual-ralph` for the migrated live-URL use case. Visual Ralph now owns URL-driven visual implementation loops alongside generated-image and static-reference workflows:
+Use `$visual-forge` for the migrated live-URL use case. Visual Forge now owns URL-driven visual implementation loops alongside generated-image and static-reference workflows:
 
-- live URL or website cloning request -> `$visual-ralph`
-- generated mockup/reference request -> `$visual-ralph` with `$imagegen`
-- static screenshot/reference comparison -> `$ralph` with `$visual-verdict`
+- live URL or website cloning request -> `$visual-forge`
+- generated mockup/reference request -> `$visual-forge` with `$imagegen`
+- static screenshot/reference comparison -> `$forge` with `$visual-verdict`
 
 ## Behavior
 
-If this skill is selected by older routing, stop the standalone web-clone pipeline and reroute the task to `$visual-ralph` instead. Preserve the user's target URL, fidelity requirements, viewport constraints, and functional parity notes in the Visual Ralph handoff.
+If this skill is selected by older routing, stop the standalone web-clone pipeline and reroute the task to `$visual-forge` instead. Preserve the user's target URL, fidelity requirements, viewport constraints, and functional parity notes in the Visual Forge handoff.
 
 ## Rationale
 
-The URL extraction, visual iteration, and implementation verification responsibilities are now part of Visual Ralph's broader visual-delivery workflow. Keeping a second standalone cloning skill would split guidance and make verification behavior drift.
+The URL extraction, visual iteration, and implementation verification responsibilities are now part of Visual Forge's broader visual-delivery workflow. Keeping a second standalone cloning skill would split guidance and make verification behavior drift.
+surface-class: "historical"
+domain: "creator-runtime"
+audience: "internal"

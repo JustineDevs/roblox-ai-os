@@ -36,7 +36,7 @@ import {
 } from '../subagents/tracker.js';
 import { listNotifyCanonicalActiveTeams } from './notify-hook/active-team.js';
 import { sameFilePath } from '../utils/paths.js';
-import { validateSessionId } from '../mcp/state-paths.js';
+import { canonicalizeStateMode, validateSessionId } from '../mcp/state-paths.js';
 import { TEAM_NAME_SAFE_PATTERN } from '../team/contracts.js';
 import { shouldContinueRun } from '../runtime/run-loop.js';
 
@@ -155,14 +155,14 @@ const maxLogBytes = Math.max(
   0,
   asNumber(argValue('--log-max-bytes', process.env.RCS_NOTIFY_FALLBACK_LOG_MAX_BYTES || String(defaultMaxLogBytes)), defaultMaxLogBytes),
 );
-const ralphSteerTimestampPath = join(stateDir, 'ralph-last-steer-at');
-const ralphSteerLockPath = join(stateDir, 'ralph-continue-steer.lock');
+const forgeSteerTimestampPath = join(stateDir, 'forge-last-steer-at');
+const forgeSteerLockPath = join(stateDir, 'forge-continue-steer.lock');
 const watcherOwnerToken = `${process.pid}-${startedAt}-${Math.random().toString(36).slice(2, 10)}`;
-const RALPH_CONTINUE_TEXT = 'Ralph loop active continue';
-const RALPH_CONTINUE_CADENCE_MS = 60_000;
-const RALPH_STEER_LOCK_STALE_MS = 30_000;
-const RALPH_TERMINAL_PHASES = new Set(['blocked_on_user', 'complete', 'failed', 'cancelled']);
-const RALPH_STARTING_PHASE_TIMEOUT_MS = RALPH_CONTINUE_CADENCE_MS * 2;
+const FORGE_CONTINUE_TEXT = 'Forge loop active continue';
+const FORGE_CONTINUE_CADENCE_MS = 60_000;
+const FORGE_STEER_LOCK_STALE_MS = 30_000;
+const FORGE_TERMINAL_PHASES = new Set(['blocked_on_user', 'complete', 'failed', 'cancelled']);
+const FORGE_STARTING_PHASE_TIMEOUT_MS = FORGE_CONTINUE_CADENCE_MS * 2;
 const QUIET_ONCE_EVENT_TYPES = new Set(['watcher_start', 'watcher_once_complete']);
 
 interface WatcherFileMeta {
@@ -173,7 +173,7 @@ interface WatcherFileMeta {
   decoder: StringDecoder;
 }
 
-interface RalphContinueSteerState {
+interface ForgeContinueSteerState {
   enabled: boolean;
   cadence_ms: number;
   message: string;
@@ -203,7 +203,7 @@ interface PidFileRecord {
   owner_token?: string;
 }
 
-interface RalphSteerLockRecord {
+interface ForgeSteerLockRecord {
   pid: number;
   acquired_at: string;
 }
@@ -300,10 +300,10 @@ let lastLeaderNudge: LeaderNudgeState = {
   last_tick_at: null,
   last_error: null,
 };
-let lastRalphContinueSteer: RalphContinueSteerState = {
+let lastForgeContinueSteer: ForgeContinueSteerState = {
   enabled: true,
-  cadence_ms: RALPH_CONTINUE_CADENCE_MS,
-  message: RALPH_CONTINUE_TEXT,
+  cadence_ms: FORGE_CONTINUE_CADENCE_MS,
+  message: FORGE_CONTINUE_TEXT,
   active: false,
   last_state_check_at: null,
   last_sent_at: '',
@@ -316,9 +316,9 @@ let lastRalphContinueSteer: RalphContinueSteerState = {
   current_phase: '',
   subagent_session_id: '',
   active_subagent_thread_ids: [],
-  shared_timestamp_path: ralphSteerTimestampPath,
+  shared_timestamp_path: forgeSteerTimestampPath,
   shared_last_sent_at: '',
-  singleton_lock_path: ralphSteerLockPath,
+  singleton_lock_path: forgeSteerLockPath,
 };
 let lastParentGuard: ParentGuardState = {
   reason: '',
@@ -462,12 +462,12 @@ function shouldLogDispatchDrainTick(result: unknown): boolean {
   return reason !== '' && reason !== 'worker_context';
 }
 
-function normalizeRalphContinueSteerState(raw: Record<string, unknown> | null | undefined): RalphContinueSteerState {
-  if (!raw || typeof raw !== 'object') return { ...lastRalphContinueSteer };
+function normalizeForgeContinueSteerState(raw: Record<string, unknown> | null | undefined): ForgeContinueSteerState {
+  if (!raw || typeof raw !== 'object') return { ...lastForgeContinueSteer };
   return {
     enabled: raw.enabled !== false,
-    cadence_ms: Number.isFinite(raw.cadence_ms) && (raw.cadence_ms as number) > 0 ? raw.cadence_ms as number : RALPH_CONTINUE_CADENCE_MS,
-    message: safeString(raw.message) || RALPH_CONTINUE_TEXT,
+    cadence_ms: Number.isFinite(raw.cadence_ms) && (raw.cadence_ms as number) > 0 ? raw.cadence_ms as number : FORGE_CONTINUE_CADENCE_MS,
+    message: safeString(raw.message) || FORGE_CONTINUE_TEXT,
     active: raw.active === true,
     last_state_check_at: safeString(raw.last_state_check_at) || null,
     last_sent_at: safeString(raw.last_sent_at),
@@ -482,36 +482,36 @@ function normalizeRalphContinueSteerState(raw: Record<string, unknown> | null | 
     active_subagent_thread_ids: Array.isArray(raw.active_subagent_thread_ids)
       ? raw.active_subagent_thread_ids.map((value) => safeString(value).trim()).filter(Boolean)
       : [],
-    shared_timestamp_path: safeString(raw.shared_timestamp_path) || ralphSteerTimestampPath,
+    shared_timestamp_path: safeString(raw.shared_timestamp_path) || forgeSteerTimestampPath,
     shared_last_sent_at: safeString(raw.shared_last_sent_at),
-    singleton_lock_path: safeString(raw.singleton_lock_path) || ralphSteerLockPath,
+    singleton_lock_path: safeString(raw.singleton_lock_path) || forgeSteerLockPath,
   };
 }
 
-function hasRalphTerminalState(raw: Record<string, unknown> | null | undefined): boolean {
+function hasForgeTerminalState(raw: Record<string, unknown> | null | undefined): boolean {
   if (!raw || typeof raw !== 'object') return true;
   if (raw.active !== true) return true;
   if (!shouldContinueRun(raw)) return true;
   const phase = safeString(raw.current_phase).trim().toLowerCase();
-  if (phase && RALPH_TERMINAL_PHASES.has(phase)) return true;
-  if (isStaleRalphStartingPhase(raw)) return true;
+  if (phase && FORGE_TERMINAL_PHASES.has(phase)) return true;
+  if (isStaleForgeStartingPhase(raw)) return true;
   if (safeString(raw.completed_at).trim()) return true;
   return false;
 }
 
-function isStaleRalphStartingPhase(raw: Record<string, unknown>): boolean {
+function isStaleForgeStartingPhase(raw: Record<string, unknown>): boolean {
   const phase = safeString(raw.current_phase).trim().toLowerCase();
   if (phase !== 'starting') return false;
   const reference = parseIsoMillis(safeString(raw.last_turn_at)) ?? parseIsoMillis(safeString(raw.started_at));
   if (reference === null) return false;
-  return Date.now() - reference > RALPH_STARTING_PHASE_TIMEOUT_MS;
+  return Date.now() - reference > FORGE_STARTING_PHASE_TIMEOUT_MS;
 }
 
 async function loadPersistedWatcherState(): Promise<void> {
   const persisted = await readFile(statePath, 'utf-8')
     .then((content) => JSON.parse(content) as Record<string, unknown>)
     .catch(() => null);
-  lastRalphContinueSteer = normalizeRalphContinueSteerState(persisted?.ralph_continue_steer as Record<string, unknown> | null | undefined);
+  lastForgeContinueSteer = normalizeForgeContinueSteerState(persisted?.forge_continue_steer as Record<string, unknown> | null | undefined);
   const persistedAutoNudge = persisted?.fallback_auto_nudge as Record<string, unknown> | null | undefined;
   if (persistedAutoNudge && typeof persistedAutoNudge === 'object') {
     lastFallbackAutoNudge = {
@@ -552,6 +552,7 @@ interface ActiveModeResult {
 }
 
 async function resolveActiveModeState(mode: string): Promise<ActiveModeResult> {
+  const stateMode = canonicalizeStateMode(mode);
   const candidateDirs: string[] = [];
   let currentSessionId = '';
   let currentSessionIsLive = false;
@@ -568,7 +569,7 @@ async function resolveActiveModeState(mode: string): Promise<ActiveModeResult> {
   if (!candidateDirs.includes(stateDir)) candidateDirs.push(stateDir);
 
   for (const dir of candidateDirs) {
-    if (mode === 'ralph' && dir === stateDir && currentSessionId) {
+    if (mode === 'forge' && dir === stateDir && currentSessionId) {
       return {
         active: false,
         reason: currentSessionIsLive ? 'blocked_by_current_session' : 'stale_current_session',
@@ -577,13 +578,13 @@ async function resolveActiveModeState(mode: string): Promise<ActiveModeResult> {
       };
     }
 
-    const path = join(dir, `${mode}-state.json`);
+    const path = join(dir, `${stateMode}-state.json`);
     if (!existsSync(path)) continue;
     const parsed = await readFile(path, 'utf-8')
       .then((content) => JSON.parse(content) as Record<string, unknown>)
       .catch(() => null);
     if (!parsed || typeof parsed !== 'object') continue;
-    if (mode === 'ralph' && dir !== stateDir && isStaleRalphStartingPhase(parsed)) {
+    if (mode === 'forge' && dir !== stateDir && isStaleForgeStartingPhase(parsed)) {
       return {
         active: false,
         reason: 'starting_stale',
@@ -591,7 +592,7 @@ async function resolveActiveModeState(mode: string): Promise<ActiveModeResult> {
         state: parsed,
       };
     }
-    if (hasRalphTerminalState(parsed)) {
+    if (hasForgeTerminalState(parsed)) {
       return {
         active: false,
         reason: 'terminal',
@@ -615,8 +616,8 @@ async function resolveActiveModeState(mode: string): Promise<ActiveModeResult> {
   };
 }
 
-async function resolveActiveRalphState(): Promise<ActiveModeResult> {
-  return resolveActiveModeState('ralph');
+async function resolveActiveForgeState(): Promise<ActiveModeResult> {
+  return resolveActiveModeState('forge');
 }
 
 async function resolveActiveTeamState(): Promise<ActiveTeamResult> {
@@ -744,7 +745,7 @@ async function resolveActiveTeamState(): Promise<ActiveTeamResult> {
   };
 }
 
-async function emitRalphContinueSteer(paneId: string, message: string): Promise<void> {
+async function emitForgeContinueSteer(paneId: string, message: string): Promise<void> {
   const markedText = `${message} ${DEFAULT_MARKER}`;
   await new Promise<void>((resolve) => {
     const { result: typed } = spawnPlatformCommandSync('tmux', ['send-keys', '-t', paneId, '-l', markedText], { encoding: 'utf-8' });
@@ -766,20 +767,20 @@ async function emitRalphContinueSteer(paneId: string, message: string): Promise<
   }
 }
 
-async function readRalphSteerTimestamp(): Promise<string> {
-  return readFile(ralphSteerTimestampPath, 'utf-8')
+async function readForgeSteerTimestamp(): Promise<string> {
+  return readFile(forgeSteerTimestampPath, 'utf-8')
     .then((content) => safeString(content).trim())
     .catch(() => '');
 }
 
-async function writeRalphSteerTimestamp(nowIso: string): Promise<void> {
-  await mkdir(dirname(ralphSteerTimestampPath), { recursive: true }).catch(() => {});
-  const tempPath = `${ralphSteerTimestampPath}.${process.pid}.tmp`;
+async function writeForgeSteerTimestamp(nowIso: string): Promise<void> {
+  await mkdir(dirname(forgeSteerTimestampPath), { recursive: true }).catch(() => {});
+  const tempPath = `${forgeSteerTimestampPath}.${process.pid}.tmp`;
   await writeFile(tempPath, `${nowIso}\n`, 'utf-8');
-  await rename(tempPath, ralphSteerTimestampPath);
+  await rename(tempPath, forgeSteerTimestampPath);
 }
 
-async function readRalphSteerLock(path: string): Promise<RalphSteerLockRecord | null> {
+async function readForgeSteerLock(path: string): Promise<ForgeSteerLockRecord | null> {
   const raw = await readFile(path, 'utf-8').catch(() => '');
   if (!raw.trim()) return null;
   try {
@@ -793,17 +794,17 @@ async function readRalphSteerLock(path: string): Promise<RalphSteerLockRecord | 
   }
 }
 
-const RALPH_STEER_LOCK_MAX_RETRIES = 5;
+const FORGE_STEER_LOCK_MAX_RETRIES = 5;
 
-async function withRalphSteerLock<T>(task: () => Promise<T>): Promise<T | null> {
-  await mkdir(dirname(ralphSteerLockPath), { recursive: true }).catch(() => {});
+async function withForgeSteerLock<T>(task: () => Promise<T>): Promise<T | null> {
+  await mkdir(dirname(forgeSteerLockPath), { recursive: true }).catch(() => {});
 
   let acquired = false;
-  for (let attempt = 0; attempt < RALPH_STEER_LOCK_MAX_RETRIES; attempt++) {
+  for (let attempt = 0; attempt < FORGE_STEER_LOCK_MAX_RETRIES; attempt++) {
     let handle;
     try {
-      handle = await open(ralphSteerLockPath, 'wx');
-      const payload: RalphSteerLockRecord = {
+      handle = await open(forgeSteerLockPath, 'wx');
+      const payload: ForgeSteerLockRecord = {
         pid: process.pid,
         acquired_at: new Date().toISOString(),
       };
@@ -813,15 +814,15 @@ async function withRalphSteerLock<T>(task: () => Promise<T>): Promise<T | null> 
     } catch (error) {
       const code = error !== null && typeof error === 'object' ? (error as NodeJS.ErrnoException).code : '';
       if (code !== 'EEXIST') throw error;
-      const existing = await readRalphSteerLock(ralphSteerLockPath);
+      const existing = await readForgeSteerLock(forgeSteerLockPath);
       const lockAgeMs = parseIsoMillis(existing?.acquired_at) ?? 0;
       const stale = existing !== null
-        && (!isPidAlive(existing.pid) || (lockAgeMs > 0 && Date.now() - lockAgeMs > RALPH_STEER_LOCK_STALE_MS));
+        && (!isPidAlive(existing.pid) || (lockAgeMs > 0 && Date.now() - lockAgeMs > FORGE_STEER_LOCK_STALE_MS));
       if (stale) {
-        await unlink(ralphSteerLockPath).catch(() => {});
+        await unlink(forgeSteerLockPath).catch(() => {});
         continue;
       }
-      lastRalphContinueSteer.last_reason = 'global_lock_busy';
+      lastForgeContinueSteer.last_reason = 'global_lock_busy';
       return null;
     } finally {
       await handle?.close().catch(() => {});
@@ -829,21 +830,21 @@ async function withRalphSteerLock<T>(task: () => Promise<T>): Promise<T | null> 
   }
 
   if (!acquired) {
-    lastRalphContinueSteer.last_reason = 'global_lock_exhausted';
+    lastForgeContinueSteer.last_reason = 'global_lock_exhausted';
     return null;
   }
 
   try {
     return await task();
   } finally {
-    const existing = await readRalphSteerLock(ralphSteerLockPath);
+    const existing = await readForgeSteerLock(forgeSteerLockPath);
     if (existing?.pid === process.pid) {
-      await unlink(ralphSteerLockPath).catch(() => {});
+      await unlink(forgeSteerLockPath).catch(() => {});
     }
   }
 }
 
-interface RalphProgressGateResult {
+interface ForgeProgressGateResult {
   allow: boolean;
   reason: string;
   progress_at: string;
@@ -851,11 +852,11 @@ interface RalphProgressGateResult {
   active_subagent_thread_ids?: string[];
 }
 
-async function readRalphProgressGate(
-  activeRalphState: Record<string, unknown> | null,
+async function readForgeProgressGate(
+  activeForgeState: Record<string, unknown> | null,
   now: number,
-): Promise<RalphProgressGateResult> {
-  const subagentSessionId = safeString(activeRalphState?.owner_codex_session_id).trim();
+): Promise<ForgeProgressGateResult> {
+  const subagentSessionId = safeString(activeForgeState?.owner_codex_session_id).trim();
   if (subagentSessionId) {
     const summary = await readSubagentSessionSummary(cwd, subagentSessionId, {
       now: new Date(now),
@@ -887,25 +888,25 @@ async function readRalphProgressGate(
     return { allow: false, reason: 'progress_invalid', progress_at: progressAt, subagent_session_id: subagentSessionId };
   }
 
-  if (now - progressMs < RALPH_CONTINUE_CADENCE_MS) {
+  if (now - progressMs < FORGE_CONTINUE_CADENCE_MS) {
     return { allow: false, reason: 'progress_fresh', progress_at: progressAt, subagent_session_id: subagentSessionId };
   }
 
   return { allow: true, reason: 'progress_stale', progress_at: progressAt, subagent_session_id: subagentSessionId };
 }
 
-function shouldSkipRalphContinue(now: number, candidateIso: string): { skip: boolean; reason: string; anchorMs: number; anchorIso: string } {
+function shouldSkipForgeContinue(now: number, candidateIso: string): { skip: boolean; reason: string; anchorMs: number; anchorIso: string } {
   const sharedMs = parseIsoMillis(candidateIso);
-  const localMs = parseIsoMillis(lastRalphContinueSteer.last_sent_at);
-  const startupAnchorIso = lastRalphContinueSteer.cooldown_anchor_at;
+  const localMs = parseIsoMillis(lastForgeContinueSteer.last_sent_at);
+  const startupAnchorIso = lastForgeContinueSteer.cooldown_anchor_at;
   const startupAnchorMs = parseIsoMillis(startupAnchorIso);
   const startupCooldown = sharedMs === null && localMs === null && startupAnchorMs !== null;
   const anchorMs = sharedMs ?? localMs ?? startupAnchorMs ?? 0;
   const anchorIso = sharedMs !== null
     ? candidateIso
-    : (localMs !== null ? lastRalphContinueSteer.last_sent_at : startupAnchorIso);
+    : (localMs !== null ? lastForgeContinueSteer.last_sent_at : startupAnchorIso);
   return {
-    skip: anchorMs > 0 && now - anchorMs < RALPH_CONTINUE_CADENCE_MS,
+    skip: anchorMs > 0 && now - anchorMs < FORGE_CONTINUE_CADENCE_MS,
     reason: startupCooldown ? 'startup_cooldown' : (sharedMs !== null ? 'global_cooldown' : 'cooldown'),
     anchorMs,
     anchorIso,
@@ -955,7 +956,7 @@ function latestWatcherTickIso(state: Record<string, unknown> | null): string {
     safeString((state.dispatch_drain as Record<string, unknown> | undefined)?.last_tick_at),
     safeString((state.leader_nudge as Record<string, unknown> | undefined)?.last_tick_at),
     safeString((state.fallback_auto_nudge as Record<string, unknown> | undefined)?.last_tick_at),
-    safeString((state.ralph_continue_steer as Record<string, unknown> | undefined)?.last_state_check_at),
+    safeString((state.forge_continue_steer as Record<string, unknown> | undefined)?.last_state_check_at),
   ]
     .map((value) => value.trim())
     .filter(Boolean);
@@ -1005,7 +1006,7 @@ async function resolveAuthorityPrimaryWatcherHealth(now = Date.now()): Promise<A
 
   const lastTickMs = parseIsoMillis(lastTickAt);
   const primaryPollMs = Math.max(50, asNumber(persistedState.poll_ms as string | number | undefined, 250));
-  const thresholdMs = Math.max(1_000, primaryPollMs * 4);
+  const thresholdMs = Math.max(2_000, primaryPollMs * 8);
   if (lastTickMs === null) {
     return createAuthorityBackoffState('tick_invalid', {
       primary_pid: existingRecord.pid,
@@ -1055,7 +1056,7 @@ async function buildWatcherManagedPayload(): Promise<Record<string, string> | nu
   return { session_id: sessionId };
 }
 
-async function persistReboundRalphPaneState(
+async function persistReboundForgePaneState(
   statePath: string,
   state: Record<string, unknown> | null,
   paneId: string,
@@ -1080,12 +1081,12 @@ async function persistReboundRalphPaneState(
   return nextState;
 }
 
-async function resolveRalphContinuePaneTarget(
-  activeRalph: ActiveModeResult,
+async function resolveForgeContinuePaneTarget(
+  activeForge: ActiveModeResult,
   nowIso: string,
 ): Promise<{ paneId: string; state: Record<string, unknown> | null; reboundFrom: string }> {
-  const currentState = activeRalph.state && typeof activeRalph.state === 'object'
-    ? activeRalph.state as Record<string, unknown>
+  const currentState = activeForge.state && typeof activeForge.state === 'object'
+    ? activeForge.state as Record<string, unknown>
     : null;
   const anchorPaneId = safeString(currentState?.tmux_pane_id).trim();
   if (!anchorPaneId) {
@@ -1124,7 +1125,7 @@ async function resolveRalphContinuePaneTarget(
     };
   }
 
-  const updatedState = await persistReboundRalphPaneState(activeRalph.path, currentState, resolvedPaneId, nowIso);
+  const updatedState = await persistReboundForgePaneState(activeForge.path, currentState, resolvedPaneId, nowIso);
   return {
     paneId: resolvedPaneId,
     state: updatedState,
@@ -1132,124 +1133,124 @@ async function resolveRalphContinuePaneTarget(
   };
 }
 
-async function runRalphContinueSteerTick(): Promise<void> {
+async function runForgeContinueSteerTick(): Promise<void> {
   const now = Date.now();
   const nowIso = new Date(now).toISOString();
-  const activeRalph = await resolveActiveRalphState();
-  const activePaneId = safeString(activeRalph.state?.tmux_pane_id).trim();
-  lastRalphContinueSteer = {
-    ...lastRalphContinueSteer,
-    active: activeRalph.active,
-    current_phase: safeString(activeRalph.state?.current_phase),
+  const activeForge = await resolveActiveForgeState();
+  const activePaneId = safeString(activeForge.state?.tmux_pane_id).trim();
+  lastForgeContinueSteer = {
+    ...lastForgeContinueSteer,
+    active: activeForge.active,
+    current_phase: safeString(activeForge.state?.current_phase),
     last_state_check_at: nowIso,
-    last_reason: activeRalph.reason,
+    last_reason: activeForge.reason,
     last_error: null,
-    state_path: activeRalph.path,
+    state_path: activeForge.path,
     pane_id: activePaneId,
     pane_current_command: '',
-    subagent_session_id: safeString(activeRalph.state?.owner_codex_session_id).trim(),
+    subagent_session_id: safeString(activeForge.state?.owner_codex_session_id).trim(),
     active_subagent_thread_ids: [],
-    shared_timestamp_path: ralphSteerTimestampPath,
-    singleton_lock_path: ralphSteerLockPath,
+    shared_timestamp_path: forgeSteerTimestampPath,
+    singleton_lock_path: forgeSteerLockPath,
   };
 
-  if (!activeRalph.active) {
-    if (activeRalph.reason === 'starting_stale') {
-      lastRalphContinueSteer.last_reason = 'starting_stale';
+  if (!activeForge.active) {
+    if (activeForge.reason === 'starting_stale') {
+      lastForgeContinueSteer.last_reason = 'starting_stale';
     }
     return;
   }
 
-  const sharedBeforeLock = await readRalphSteerTimestamp();
-  lastRalphContinueSteer.shared_last_sent_at = sharedBeforeLock;
-  const initialCooldown = shouldSkipRalphContinue(now, sharedBeforeLock);
+  const sharedBeforeLock = await readForgeSteerTimestamp();
+  lastForgeContinueSteer.shared_last_sent_at = sharedBeforeLock;
+  const initialCooldown = shouldSkipForgeContinue(now, sharedBeforeLock);
   if (initialCooldown.skip) {
-    lastRalphContinueSteer.last_reason = initialCooldown.reason;
+    lastForgeContinueSteer.last_reason = initialCooldown.reason;
     if (!sharedBeforeLock && initialCooldown.reason === 'startup_cooldown') {
-      lastRalphContinueSteer.cooldown_anchor_at = initialCooldown.anchorIso;
+      lastForgeContinueSteer.cooldown_anchor_at = initialCooldown.anchorIso;
     }
     return;
   }
 
-  const outcome = await withRalphSteerLock(async () => {
-    const sharedLastSentAt = await readRalphSteerTimestamp();
-    lastRalphContinueSteer.shared_last_sent_at = sharedLastSentAt;
-    const cooldown = shouldSkipRalphContinue(Date.now(), sharedLastSentAt);
+  const outcome = await withForgeSteerLock(async () => {
+    const sharedLastSentAt = await readForgeSteerTimestamp();
+    lastForgeContinueSteer.shared_last_sent_at = sharedLastSentAt;
+    const cooldown = shouldSkipForgeContinue(Date.now(), sharedLastSentAt);
     if (cooldown.skip) {
-      lastRalphContinueSteer.last_reason = cooldown.reason;
+      lastForgeContinueSteer.last_reason = cooldown.reason;
       if (!sharedLastSentAt && cooldown.reason === 'startup_cooldown') {
-        lastRalphContinueSteer.cooldown_anchor_at = cooldown.anchorIso;
+        lastForgeContinueSteer.cooldown_anchor_at = cooldown.anchorIso;
       }
       return { sent: false, skipped: true };
     }
 
-    const progressGate = await readRalphProgressGate(activeRalph.state, Date.now());
+    const progressGate = await readForgeProgressGate(activeForge.state, Date.now());
     if (!progressGate.allow) {
-      lastRalphContinueSteer.last_reason = progressGate.reason;
-      lastRalphContinueSteer.subagent_session_id = progressGate.subagent_session_id ?? lastRalphContinueSteer.subagent_session_id;
-      lastRalphContinueSteer.active_subagent_thread_ids = progressGate.active_subagent_thread_ids ?? [];
+      lastForgeContinueSteer.last_reason = progressGate.reason;
+      lastForgeContinueSteer.subagent_session_id = progressGate.subagent_session_id ?? lastForgeContinueSteer.subagent_session_id;
+      lastForgeContinueSteer.active_subagent_thread_ids = progressGate.active_subagent_thread_ids ?? [];
       return { sent: false, skipped: true };
     }
 
-    const resolvedPane = await resolveRalphContinuePaneTarget(activeRalph, nowIso);
-    activeRalph.state = resolvedPane.state;
+    const resolvedPane = await resolveForgeContinuePaneTarget(activeForge, nowIso);
+    activeForge.state = resolvedPane.state;
     const paneId = resolvedPane.paneId;
     if (!paneId) {
-      lastRalphContinueSteer.last_reason = 'pane_missing';
-      lastRalphContinueSteer.pane_id = '';
+      lastForgeContinueSteer.last_reason = 'pane_missing';
+      lastForgeContinueSteer.pane_id = '';
       return { sent: false, skipped: true };
     }
 
     const paneGuard = await checkPaneReadyForTeamSendKeys(paneId);
-    lastRalphContinueSteer.pane_id = paneId;
-    lastRalphContinueSteer.pane_current_command = paneGuard.paneCurrentCommand || '';
+    lastForgeContinueSteer.pane_id = paneId;
+    lastForgeContinueSteer.pane_current_command = paneGuard.paneCurrentCommand || '';
     if (!paneGuard.ok) {
-      lastRalphContinueSteer.last_reason = paneGuard.reason || 'pane_guard_blocked';
+      lastForgeContinueSteer.last_reason = paneGuard.reason || 'pane_guard_blocked';
       return { sent: false, skipped: true };
     }
 
-    await emitRalphContinueSteer(paneId, RALPH_CONTINUE_TEXT);
-    await writeRalphSteerTimestamp(nowIso);
-    lastRalphContinueSteer.last_sent_at = nowIso;
-    lastRalphContinueSteer.shared_last_sent_at = nowIso;
-    lastRalphContinueSteer.cooldown_anchor_at = nowIso;
-    lastRalphContinueSteer.last_reason = 'sent';
+    await emitForgeContinueSteer(paneId, FORGE_CONTINUE_TEXT);
+    await writeForgeSteerTimestamp(nowIso);
+    lastForgeContinueSteer.last_sent_at = nowIso;
+    lastForgeContinueSteer.shared_last_sent_at = nowIso;
+    lastForgeContinueSteer.cooldown_anchor_at = nowIso;
+    lastForgeContinueSteer.last_reason = 'sent';
     await eventLog({
-      type: 'ralph_continue_steer',
+      type: 'forge_continue_steer',
       reason: 'sent',
       pane_id: paneId,
       rebound_from: resolvedPane.reboundFrom || null,
-      state_path: activeRalph.path,
-      current_phase: safeString(activeRalph.state?.current_phase) || null,
-      cadence_ms: RALPH_CONTINUE_CADENCE_MS,
-      message: RALPH_CONTINUE_TEXT,
-      shared_timestamp_path: ralphSteerTimestampPath,
+      state_path: activeForge.path,
+      current_phase: safeString(activeForge.state?.current_phase) || null,
+      cadence_ms: FORGE_CONTINUE_CADENCE_MS,
+      message: FORGE_CONTINUE_TEXT,
+      shared_timestamp_path: forgeSteerTimestampPath,
     });
     return { sent: true, skipped: false };
   });
 
   if (outcome === null) {
-    lastRalphContinueSteer.shared_last_sent_at = await readRalphSteerTimestamp();
+    lastForgeContinueSteer.shared_last_sent_at = await readForgeSteerTimestamp();
   }
 }
 
-async function runRalphWatcherBehaviorTick(): Promise<void> {
+async function runForgeWatcherBehaviorTick(): Promise<void> {
   try {
-    await runRalphContinueSteerTick();
+    await runForgeContinueSteerTick();
   } catch (error) {
     const message = error instanceof Error ? error.message : safeString(error);
-    lastRalphContinueSteer = {
-      ...lastRalphContinueSteer,
+    lastForgeContinueSteer = {
+      ...lastForgeContinueSteer,
       last_reason: 'send_failed',
       last_error: message || 'unknown_error',
     };
     await eventLog({
-      type: 'ralph_continue_steer',
+      type: 'forge_continue_steer',
       reason: 'send_failed',
-      pane_id: lastRalphContinueSteer.pane_id || null,
-      state_path: lastRalphContinueSteer.state_path || null,
-      current_phase: lastRalphContinueSteer.current_phase || null,
-      error: lastRalphContinueSteer.last_error,
+      pane_id: lastForgeContinueSteer.pane_id || null,
+      state_path: lastForgeContinueSteer.state_path || null,
+      current_phase: lastForgeContinueSteer.current_phase || null,
+      error: lastForgeContinueSteer.last_error,
     });
   }
 }
@@ -1330,11 +1331,11 @@ async function writeState(extra: Record<string, unknown> = {}): Promise<void> {
       enabled: true,
       run_count: leaderNudgeRuns,
     },
-    ralph_continue_steer: {
-      ...lastRalphContinueSteer,
+    forge_continue_steer: {
+      ...lastForgeContinueSteer,
       enabled: true,
-      cadence_ms: RALPH_CONTINUE_CADENCE_MS,
-      message: RALPH_CONTINUE_TEXT,
+      cadence_ms: FORGE_CONTINUE_CADENCE_MS,
+      message: FORGE_CONTINUE_TEXT,
     },
     fallback_auto_nudge: {
       ...lastFallbackAutoNudge,
@@ -1502,12 +1503,12 @@ async function requestShutdown(reason: string, signal: string | null = null): Pr
 async function enforceLifecycleGuards(): Promise<boolean> {
   if (runOnce) return false;
   if (parentIsGone()) {
-    const activeRalph = await resolveActiveRalphState();
-    if (activeRalph.active) {
-      const currentPhase = safeString(activeRalph.state?.current_phase);
+    const activeForge = await resolveActiveForgeState();
+    if (activeForge.active) {
+      const currentPhase = safeString(activeForge.state?.current_phase);
       const nextParentGuard: ParentGuardState = {
-        reason: 'parent_gone_deferred_for_active_ralph',
-        state_path: activeRalph.path,
+        reason: 'parent_gone_deferred_for_active_forge',
+        state_path: activeForge.path,
         current_phase: currentPhase,
       };
       if (
@@ -1929,16 +1930,16 @@ async function runWatcherCycle(): Promise<number> {
   }
   const controlPlaneSummary = await pumpTeamControlPlaneTick();
   if (!authorityOnly && !(await shouldSuppressInteractiveFallbackTicks())) {
-    await runRalphWatcherBehaviorTick();
+    await runForgeWatcherBehaviorTick();
   }
-  const ralphActive = lastRalphContinueSteer.last_reason === 'sent';
+  const forgeActive = lastForgeContinueSteer.last_reason === 'sent';
   const summary: CycleActivitySummary = processedRolloutCount > 0
     ? { active: true, reason: 'rollout_event' }
     : controlPlaneSummary.active
       ? controlPlaneSummary
-      : ralphActive
-        ? { active: true, reason: 'ralph_continue_steer' }
-        : { active: false, reason: controlPlaneSummary.reason || lastRalphContinueSteer.last_reason || 'idle' };
+      : forgeActive
+        ? { active: true, reason: 'forge_continue_steer' }
+        : { active: false, reason: controlPlaneSummary.reason || lastForgeContinueSteer.last_reason || 'idle' };
   const nextDelayMs = updateAdaptivePollState(summary);
   await writeState({ last_cycle_activity: summary.reason });
   return nextDelayMs;

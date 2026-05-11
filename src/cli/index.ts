@@ -17,7 +17,7 @@ import { hooksCommand } from "./hooks.js";
 import { hudCommand } from "../hud/index.js";
 import { sidecarCommand } from "../sidecar/index.js";
 import { teamCommand } from "./team.js";
-import { ralphCommand } from "./ralph.js";
+import { forgeCommand } from "./forge.js";
 import { askCommand } from "./ask.js";
 import { questionCommand } from "./question.js";
 import { stateCommand } from "./state.js";
@@ -190,7 +190,7 @@ Usage:
   rcs deepinit [path]
                 Alias for agents-init (lightweight AGENTS bootstrap only)
   rcs team      Spawn parallel worker panes in tmux and bootstrap inbox/task state
-  rcs ralph     Launch Codex with ralph persistence mode active
+  rcs forge     Launch Codex with forge persistence mode active
   rcs autoresearch [DEPRECATED] Use $autoresearch; direct CLI launch removed
   rcs version   Show version information
   rcs tmux-hook Manage tmux prompt injection workaround (init|status|validate|test)
@@ -296,8 +296,8 @@ const TEAM_INHERIT_LEADER_FLAGS_ENV = "RCS_TEAM_INHERIT_LEADER_FLAGS";
 const RCS_BYPASS_DEFAULT_SYSTEM_PROMPT_ENV = "RCS_BYPASS_DEFAULT_SYSTEM_PROMPT";
 const RCS_MODEL_INSTRUCTIONS_FILE_ENV = "RCS_MODEL_INSTRUCTIONS_FILE";
 const RCS_INSTANCE_OPTION = "@rcs_instance_id";
-const RCS_RALPH_APPEND_INSTRUCTIONS_FILE_ENV =
-  "RCS_RALPH_APPEND_INSTRUCTIONS_FILE";
+const RCS_FORGE_APPEND_INSTRUCTIONS_FILE_ENV =
+  "RCS_FORGE_APPEND_INSTRUCTIONS_FILE";
 const RCS_AUTORESEARCH_APPEND_INSTRUCTIONS_FILE_ENV =
   "RCS_AUTORESEARCH_APPEND_INSTRUCTIONS_FILE";
 const REASONING_MODES = ["low", "medium", "high", "xhigh"] as const;
@@ -381,7 +381,7 @@ const NESTED_HELP_COMMANDS = new Set<CliCommand>([
   "state",
   "wiki",
   "mcp-serve",
-  "ralph",
+  "forge",
   "resume",
   "session",
   "sparkshell",
@@ -953,7 +953,7 @@ export async function main(args: string[]): Promise<void> {
     "explore",
     "sparkshell",
     "team",
-    "ralph",
+    "forge",
     "session",
     "resume",
     "version",
@@ -1066,8 +1066,8 @@ export async function main(args: string[]): Promise<void> {
       case "session":
         await sessionCommand(args.slice(1));
         break;
-      case "ralph":
-        await ralphCommand(args.slice(1));
+      case "forge":
+        await forgeCommand(args.slice(1));
         break;
       case "version":
         version();
@@ -2417,7 +2417,7 @@ export function buildDetachedSessionBootstrapSteps(
 
 async function readLaunchAppendInstructions(): Promise<string> {
   const appendixCandidates = [
-    process.env[RCS_RALPH_APPEND_INSTRUCTIONS_FILE_ENV]?.trim(),
+    process.env[RCS_FORGE_APPEND_INSTRUCTIONS_FILE_ENV]?.trim(),
     process.env[RCS_AUTORESEARCH_APPEND_INSTRUCTIONS_FILE_ENV]?.trim(),
   ].filter(
     (value): value is string => typeof value === "string" && value.length > 0,
@@ -4092,18 +4092,18 @@ async function cancelModes(): Promise<void> {
       if (reportIfWasActive && wasActive) reported.add(mode);
     };
 
-    const ralphLinksUltrawork = (state: Record<string, unknown>): boolean =>
+    const forgeLinksUltrawork = (state: Record<string, unknown>): boolean =>
       state.linked_ultrawork === true || state.linked_mode === "ultrawork";
 
-    const ralph = states.get("ralph");
-    const hadActiveRalph = !!(ralph && ralph.state.active === true);
-    if (ralph && ralph.state.active === true) {
-      cancelMode("ralph", "cancelled", true);
-      if (ralphLinksUltrawork(ralph.state))
+    const forge = states.get("forge");
+    const hadActiveForge = !!(forge && forge.state.active === true);
+    if (forge && forge.state.active === true) {
+      cancelMode("forge", "cancelled", true);
+      if (forgeLinksUltrawork(forge.state))
         cancelMode("ultrawork", "cancelled", true);
     }
 
-    if (!hadActiveRalph) {
+    if (!hadActiveForge) {
       for (const [mode, entry] of states.entries()) {
         if (entry.state.active === true) cancelMode(mode, "cancelled", true);
       }

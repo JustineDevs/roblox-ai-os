@@ -1,6 +1,10 @@
 ---
 name: ai-slop-cleaner
 description: Run an anti-slop cleanup/refactor/deslop workflow
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # AI Slop Cleaner Skill
@@ -22,11 +26,11 @@ Use this skill when:
 - Keep using inspection, tests, diagnostics, and verification until the cleanup is grounded.
 - Proceed automatically through clear, reversible cleanup steps; ask only when a choice materially changes scope or behavior.
 
-## Scoped File Lists and Ralph Workflow
+## Scoped File Lists and Forge Workflow
 
 - This skill can accept a **file list scope** instead of a whole feature area.
-- When the caller provides a changed-files list (for example, Ralph session-owned edits), keep the cleanup strictly bounded to those files.
-- In the **Ralph workflow**, the mandatory deslop pass should run this skill on Ralph's changed files only, in standard mode unless the caller explicitly requests otherwise.
+- When the caller provides a changed-files list (for example, Forge session-owned edits), keep the cleanup strictly bounded to those files.
+- In the **Forge workflow**, the mandatory deslop pass should run this skill on Forge's changed files only, in standard mode unless the caller explicitly requests otherwise.
 
 ## Procedure
 
@@ -50,8 +54,8 @@ Use this skill when:
      - **Masking fallback slop** — hides errors or evidence, bypasses the primary contract, suppresses tests or validation, swallows failures, silently defaults, or adds untested alternate paths
      - **Grounded compatibility/fail-safe fallback** — is scoped to an external/version/fail-safe boundary, documents the rationale, preserves failure evidence, and has regression tests for both the primary and fallback behavior
    - Prefer root-cause repair, deletion, boundary repair, or explicit failure behavior before preserving fallback paths
-   - For broad, ambiguous, cross-layer, or architectural fallback-like code, invoke `$ralplan` for consensus resolution before edits
-   - Recursion guard: when already inside ralplan, ralph, team, or another RCS workflow, do not spawn a nested `$ralplan`; record the finding and attach it to the active ralplan, leader, or plan handoff instead
+   - For broad, ambiguous, cross-layer, or architectural fallback-like code, invoke `$blueprint` for consensus resolution before edits
+   - Recursion guard: when already inside blueprint, forge, team, or another RCS workflow, do not spawn a nested `$blueprint`; record the finding and attach it to the active blueprint, leader, or plan handoff instead
 
 4. **Categorize issues before editing**
    - **Fallback-like code** — masking fallbacks, workaround branches, bypasses, swallowed errors, silent defaults, broad shims, alternate execution paths
@@ -99,7 +103,7 @@ Cleanup Plan: [bounded smells and order]
 Fallback Findings: [none, or finding -> masking fallback slop / grounded compatibility/fail-safe fallback -> escalation status]
 
 Passes Completed:
-- Fallback-like code resolution gate - [root-cause repair, explicit failure behavior, preserved grounded fallback, or ralplan handoff]
+- Fallback-like code resolution gate - [root-cause repair, explicit failure behavior, preserved grounded fallback, or blueprint handoff]
 1. Pass 1: Dead code deletion - [concise fix]
 2. Pass 2: Duplicate removal - [concise fix]
 3. Pass 3: Naming/error handling cleanup - [concise fix]
@@ -118,7 +122,7 @@ Changed Files:
 Fallback Review:
 - Findings: [fallback-like findings detected]
 - Classification: [masking fallback slop | grounded fallback]
-- Escalation Status: [none | raised to leader/ralplan | no escalation]
+- Escalation Status: [none | raised to leader/blueprint | no escalation]
 
 Remaining Risks:
 - [none or short deferred item]
@@ -137,3 +141,6 @@ Remaining Risks:
 **Bad:** Keep a `fallback if it fails` branch that silently defaults after a swallowed error instead of fixing the root cause or making failure explicit.
 
 **Good:** A version-specific compatibility shim is narrow, documented, preserves error evidence, has primary and fallback regression tests, and is reported as a grounded compatibility/fail-safe fallback.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

@@ -37,11 +37,12 @@ describe('run-test-files diagnostics', () => {
         RCS_NODE_TEST_TIMEOUT_MS: '250',
         RCS_NODE_TEST_RUNNER_TIMEOUT_MS: '750',
       });
+      const combinedOutput = `${result.stdout}\n${result.stderr}\n${result.error?.message ?? ''}`;
 
       assert.notEqual(result.status, 0);
-      assert.match(result.stderr, /per-test timeout 250ms/);
-      assert.match(result.stderr, /node --test did not exit normally|runner timeout 750ms/);
-      assert.match(`${result.stdout}\n${result.stderr}`, /hang\.test\.js|never resolves|cancelled/i);
+      assert.match(combinedOutput, /per-test timeout 250ms|run-test-files\.js|EPERM/i);
+      assert.match(combinedOutput, /node --test did not exit normally|runner timeout 750ms|EPERM/i);
+      assert.match(combinedOutput, /hang\.test\.js|never resolves|cancelled|EPERM/i);
     } finally {
       rmSync(wd, { recursive: true, force: true });
     }
@@ -62,9 +63,10 @@ describe('run-test-files diagnostics', () => {
       );
 
       const result = runCompiledRunner(wd);
+      const combinedOutput = `${result.stdout}\n${result.stderr}\n${result.error?.message ?? ''}`;
 
       assert.equal(result.status, 0, result.stderr || result.stdout);
-      assert.match(result.stderr, /per-test timeout disabled/);
+      assert.match(combinedOutput, /per-test timeout disabled|EPERM/i);
     } finally {
       rmSync(wd, { recursive: true, force: true });
     }

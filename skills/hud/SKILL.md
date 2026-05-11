@@ -3,6 +3,10 @@ name: "hud"
 description: "Show or configure the RCS HUD (two-layer statusline)"
 role: "display"
 scope: ".rcs/**"
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # HUD Skill
@@ -11,7 +15,7 @@ The RCS HUD uses a two-layer architecture:
 
 1. **Layer 1 - Codex built-in statusLine**: Real-time TUI footer showing model, git branch, and context usage. Configured via `[tui] status_line` in `~/.codex/config.toml`. Zero code required.
 
-2. **Layer 2 - `rcs hud` CLI command**: Shows RCS-specific orchestration state (ralph, ultrawork, autopilot, team, pipeline, ecomode, turns). Reads `.rcs/state/` files.
+2. **Layer 2 - `rcs hud` CLI command**: Shows RCS-specific workflow state (forge, ultrawork, autopilot, team, pipeline, ecomode, turns). Reads `.rcs/state/` files.
 
 ## Quick Commands
 
@@ -28,17 +32,17 @@ The RCS HUD uses a two-layer architecture:
 
 ### minimal
 ```
-[RCS] ralph:3/10 | turns:42
+[RCS] forge:3/10 | turns:42
 ```
 
 ### focused (default)
 ```
-[RCS] ralph:3/10 | ultrawork | team:3 workers | turns:42 | last:5s ago
+[RCS] forge:3/10 | ultrawork | team:3 workers | turns:42 | last:5s ago
 ```
 
 ### full
 ```
-[RCS] ralph:3/10 | ultrawork | autopilot:execution | team:3 workers | pipeline:exec | turns:42 | last:5s ago | total-turns:156
+[RCS] forge:3/10 | ultrawork | autopilot:execution | team:3 workers | pipeline:exec | turns:42 | last:5s ago | total-turns:156
 ```
 
 ## Setup
@@ -59,10 +63,10 @@ status_line = ["model-with-reasoning", "git-branch", "context-remaining"]
 Available built-in items (Codex CLI v0.101.0+):
 `model-name`, `model-with-reasoning`, `current-dir`, `project-root`, `git-branch`, `context-remaining`, `context-used`, `five-hour-limit`, `weekly-limit`, `codex-version`, `context-window-size`, `used-tokens`, `total-input-tokens`, `total-output-tokens`, `session-id`
 
-## Layer 2: RCS Orchestration HUD
+## Layer 2: RCS Workflow HUD
 
 The `rcs hud` command reads these state files:
-- `.rcs/state/ralph-state.json` - Ralph loop iteration
+- `.rcs/state/forge-state.json` - Forge loop iteration
 - `.rcs/state/ultrawork-state.json` - Ultrawork mode
 - `.rcs/state/autopilot-state.json` - Autopilot phase
 - `.rcs/state/team-state.json` - Team workers
@@ -83,8 +87,8 @@ HUD config stored at `.rcs/hud-config.json`:
 ## Color Coding
 
 - **Green**: Normal/healthy
-- **Yellow**: Warning (ralph >70% of max)
-- **Red**: Critical (ralph >90% of max)
+- **Yellow**: Warning (forge >70% of max)
+- **Red**: Critical (forge >90% of max)
 
 ## Troubleshooting
 
@@ -95,4 +99,7 @@ If the TUI statusline is not showing:
 
 If `rcs hud` shows "No active modes":
 - This is expected when no workflows are running
-- Start a workflow (ralph, autopilot, etc.) and check again
+- Start a workflow (forge, autopilot, etc.) and check again
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

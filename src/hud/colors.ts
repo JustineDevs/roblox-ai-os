@@ -49,9 +49,9 @@ export function bold(text: string): string {
 }
 
 /**
- * Get color code based on ralph iteration progress.
+ * Get color code based on forge iteration progress.
  */
-export function getRalphColor(iteration: number, maxIterations: number): string {
+export function getForgeColor(iteration: number, maxIterations: number): string {
   if (!colorEnabled) return '';
   const warningThreshold = Math.floor(maxIterations * 0.7);
   const criticalThreshold = Math.floor(maxIterations * 0.9);

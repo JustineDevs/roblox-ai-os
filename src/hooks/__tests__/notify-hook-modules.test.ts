@@ -194,7 +194,7 @@ describe('notify-hook/operational-events – buildOperationalContext', () => {
         cwd: repo,
         normalizedEvent: 'pr-merged',
         text: 'Merged issue #1407 via PR #1416',
-        prUrl: 'https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/pull/1416',
+        prUrl: 'https://github.com/JustineDevs/roblox-ai-os/pull/1416',
       });
 
       assert.equal(context.branch, 'feature/opctx-pr');

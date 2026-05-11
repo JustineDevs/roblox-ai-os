@@ -1,23 +1,27 @@
 ---
 name: plan
 description: Strategic planning with optional interview workflow
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 <Purpose>
-Plan creates comprehensive, actionable work plans through intelligent interaction. It auto-detects whether to interview the user (broad requests) or plan directly (detailed requests), and supports consensus mode (iterative Planner/Architect/Critic loop with RALPLAN-DR structured deliberation) and review mode (Critic evaluation of existing plans).
+Plan creates comprehensive, actionable work plans through intelligent interaction. It auto-detects whether to interview the user (broad requests) or plan directly (detailed requests), and supports consensus mode (iterative Planner/Architect/Critic loop with BLUEPRINT-DR structured deliberation) and review mode (Critic evaluation of existing plans).
 </Purpose>
 
 <Use_When>
 - User wants to plan before implementing -- "plan this", "plan the", "let's plan"
 - User wants structured requirements gathering for a vague idea
 - User wants an existing plan reviewed -- "review this plan", `--review`
-- User wants multi-perspective consensus on a plan -- `--consensus`, "ralplan"
+- User wants multi-perspective consensus on a plan -- `--consensus`, "blueprint"
 - Task is broad or vague and needs scoping before any code is written
 </Use_When>
 
 <Do_Not_Use_When>
 - User wants autonomous end-to-end execution -- use `autopilot` instead
-- User wants to start coding immediately with a clear task -- use `ralph` or delegate to executor
+- User wants to start coding immediately with a clear task -- use `forge` or delegate to executor
 - User asks a simple question that can be answered directly -- just answer it
 - Task is a single focused fix with obvious scope -- skip planning, just do it
 </Do_Not_Use_When>
@@ -34,7 +38,7 @@ Jumping into code without understanding requirements leads to rework, scope cree
 - Plans must meet quality standards: 80%+ claims cite file/line, 90%+ criteria are testable
 - Implementation step count must be right-sized to task scope; avoid defaulting to exactly five steps when the work is clearly smaller or larger
 - Consensus mode outputs the final plan by default; add `--interactive` to enable execution handoff
-- Consensus mode uses RALPLAN-DR short mode by default; switch to deliberate mode with `--deliberate` or when the request explicitly signals high risk (auth/security, data migration, destructive/irreversible changes, production incident, compliance/PII, public API breakage)
+- Consensus mode uses BLUEPRINT-DR short mode by default; switch to deliberate mode with `--deliberate` or when the request explicitly signals high risk (auth/security, data migration, destructive/irreversible changes, production incident, compliance/PII, public API breakage)
 - Apply the shared workflow guidance pattern: outcome-first framing, concise visible updates for multi-step planning, local overrides for the active workflow branch, evidence-backed planning and validation expectations, explicit stop rules, and automatic continuation for safe reversible steps. Ask only for material, destructive, credentialed, external-production, or preference-dependent branches.
 </Execution_Policy>
 
@@ -46,7 +50,7 @@ Jumping into code without understanding requirements leads to rework, scope cree
 |------|---------|----------|
 | Interview | Default for broad requests | Interactive requirements gathering |
 | Direct | `--direct`, or detailed request | Skip interview, generate plan directly |
-| Consensus | `--consensus`, "ralplan" | Planner -> Architect -> Critic loop until agreement with RALPLAN-DR structured deliberation (short by default, `--deliberate` for high-risk); outputs plan by default |
+| Consensus | `--consensus`, "blueprint" | Planner -> Architect -> Critic loop until agreement with BLUEPRINT-DR structured deliberation (short by default, `--deliberate` for high-risk); outputs plan by default |
 | Consensus Interactive | `--consensus --interactive` | Same as Consensus but pauses for user feedback at draft and approval steps, then hands off to execution |
 | Review | `--review`, "review this plan" | Critic evaluation of existing plan |
 
@@ -65,17 +69,17 @@ Jumping into code without understanding requirements leads to rework, scope cree
 2. **Create plan**: Generate comprehensive work plan immediately
 3. **Review** (optional): Critic review if requested
 
-### Consensus Mode (`--consensus` / "ralplan")
+### Consensus Mode (`--consensus` / "blueprint")
 
-**RALPLAN-DR modes**: **Short** (default, bounded structure) and **Deliberate** (for `--deliberate` or explicit high-risk requests). Both modes keep the same Planner -> Architect -> Critic sequence. The workflow auto-proceeds through planning steps (Planner/Architect/Critic) but outputs the final plan without executing.
+**BLUEPRINT-DR modes**: **Short** (default, bounded structure) and **Deliberate** (for `--deliberate` or explicit high-risk requests). Both modes keep the same Planner -> Architect -> Critic sequence. The workflow auto-proceeds through planning steps (Planner/Architect/Critic) but outputs the final plan without executing.
 
-1. **Planner** creates initial plan and a compact **RALPLAN-DR summary** before any Architect review. The summary **MUST** include:
+1. **Planner** creates initial plan and a compact **BLUEPRINT-DR summary** before any Architect review. The summary **MUST** include:
    - **Principles** (3-5)
    - **Decision Drivers** (top 3)
    - **Viable Options** (>=2) with bounded pros/cons for each option
    - If only one viable option remains, an explicit **invalidation rationale** for the alternatives that were rejected
    - In **deliberate mode**: a **pre-mortem** (3 failure scenarios) and an **expanded test plan** covering **unit / integration / e2e / observability**
-2. **User feedback** *(--interactive only)*: If running with `--interactive`, **MUST** use `AskUserQuestion` / the structured question UI (`rcs question` in attached tmux; native structured input outside tmux when available) to present the draft plan **plus the RALPLAN-DR Principles / Decision Drivers / Options summary for early direction alignment** with these options:
+2. **User feedback** *(--interactive only)*: If running with `--interactive`, **MUST** use `AskUserQuestion` / the structured question UI (`rcs question` in attached tmux; native structured input outside tmux when available) to present the draft plan **plus the BLUEPRINT-DR Principles / Decision Drivers / Options summary for early direction alignment** with these options:
    - **Proceed to review** — send to Architect and Critic for evaluation
    - **Request changes** — return to step 1 with user feedback incorporated
    - **Skip review** — go directly to final approval (step 7)
@@ -94,17 +98,17 @@ Jumping into code without understanding requirements leads to rework, scope cree
    b. Deduplicate and categorize the suggestions
    c. Update the plan file in `.rcs/plans/` with the accepted improvements (add missing details, refine steps, strengthen acceptance criteria, ADR updates, etc.)
    d. Note which improvements were applied in a brief changelog section at the end of the plan
-   e. Before any execution handoff, derive an explicit **available-agent-types roster** from the known prompt catalog and add concrete **follow-up staffing guidance** for both `$ralph` and `$team` (recommended roles, counts, suggested reasoning levels by lane, and why each lane exists)
-   f. For the `$team` path, add an explicit launch-hint block with concrete `rcs team` / `$team` commands and a **team verification path** (what team proves before shutdown, what Ralph verifies after handoff)
+   e. Before any execution handoff, derive an explicit **available-agent-types roster** from the known prompt catalog and add concrete **follow-up staffing guidance** for both `$forge` and `$team` (recommended roles, counts, suggested reasoning levels by lane, and why each lane exists)
+   f. For the `$team` path, add an explicit launch-hint block with concrete `rcs team` / `$team` commands and a **team verification path** (what team proves before shutdown, what Forge verifies after handoff)
 7. On Critic approval (with improvements applied): *(--interactive only)* If running with `--interactive`, use `AskUserQuestion` / the structured question UI to present the plan with these options:
-   - **Approve and execute** — proceed to implementation via ralph+ultrawork
+   - **Approve and execute** — proceed to implementation via forge+ultrawork
    - **Approve and implement via team** — proceed to implementation via coordinated parallel team agents
    - **Request changes** — return to step 1 with user feedback
    - **Reject** — discard the plan entirely
    If NOT running with `--interactive`, output the final approved plan and stop. Do NOT auto-execute.
 8. *(--interactive only)* User chooses via the structured question UI (never ask for approval in plain text when a structured surface is available)
 9. On user approval (--interactive only):
-   - **Approve and execute**: **MUST** invoke `$ralph` with the approved plan path from `.rcs/plans/` as context **plus the explicit available-agent-types roster, suggested reasoning levels, concrete role allocation guidance, and direct launch hints for Ralph follow-up work**. Do NOT implement directly. Do NOT edit source code files in the planning agent. The ralph skill handles execution via ultrawork parallel agents.
+   - **Approve and execute**: **MUST** invoke `$forge` with the approved plan path from `.rcs/plans/` as context **plus the explicit available-agent-types roster, suggested reasoning levels, concrete role allocation guidance, and direct launch hints for Forge follow-up work**. Do NOT implement directly. Do NOT edit source code files in the planning agent. The forge skill handles execution via ultrawork parallel agents.
    - **Approve and implement via team**: **MUST** invoke `$team` with the approved plan path from `.rcs/plans/` as context **plus the explicit available-agent-types roster, suggested reasoning levels, concrete staffing / worker-role allocation guidance, explicit `rcs team` / `$team` launch hints, and the team verification path**. Do NOT implement directly. The team skill coordinates parallel agents across the staged pipeline for faster execution on large tasks.
 
 ### Review Mode (`--review`)
@@ -114,7 +118,7 @@ Jumping into code without understanding requirements leads to rework, scope cree
 2. Evaluate via Critic using `ask_codex` with `agent_role: "critic"`
 3. For cleanup/refactor/anti-slop work, verify that the artifact includes a cleanup plan, regression tests or an explicit test gap, smell-by-smell passes, and quality gates.
 4. Return verdict: APPROVED, REVISE (with specific feedback), or REJECT (replanning required)
-5. If the current context authored the artifact, hand the review to `/review`, `critic`, `quality-reviewer`, `security-reviewer`, or `verifier` as appropriate.
+5. If the current context authored the artifact, hand the review to `/review`, `critic`, `code-reviewer`, `security-reviewer`, or `verifier` as appropriate.
 
 ### Plan Output Format
 
@@ -125,9 +129,9 @@ Every plan includes:
 - Adaptive step count sized to the actual scope (not a fixed five-step template)
 - Risks and Mitigations
 - Verification Steps
-- For consensus/ralplan: **RALPLAN-DR summary** (Principles, Decision Drivers, Options)
-- For consensus/ralplan final output: **ADR** (Decision, Drivers, Alternatives considered, Why chosen, Consequences, Follow-ups)
-- For consensus/ralplan execution handoff: **Available-Agent-Types Roster**, **Follow-up Staffing Guidance** (including suggested reasoning levels by lane), explicit `rcs team` / `$team` **Launch Hints**, and **Team Verification Path**
+- For consensus/blueprint: **BLUEPRINT-DR summary** (Principles, Decision Drivers, Options)
+- For consensus/blueprint final output: **ADR** (Decision, Drivers, Alternatives considered, Why chosen, Consequences, Follow-ups)
+- For consensus/blueprint execution handoff: **Available-Agent-Types Roster**, **Follow-up Staffing Guidance** (including suggested reasoning levels by lane), explicit `rcs team` / `$team` **Launch Hints**, and **Team Verification Path**
 - For deliberate consensus mode: **Pre-mortem (3 scenarios)** and **Expanded Test Plan** (unit/integration/e2e/observability)
 
 Plans are saved to `.rcs/plans/`. Drafts go to `.rcs/drafts/`.
@@ -144,9 +148,9 @@ Plans are saved to `.rcs/plans/`. Drafts go to `.rcs/drafts/`.
 - Use `ask_codex` with `agent_role: "critic"` for plan review in consensus and review modes
 - If ToolSearch finds no MCP tools or Codex is unavailable, fall back to equivalent RCS prompt agents -- never block on external tools
 - **CRITICAL — Consensus mode agent calls MUST be sequential, never parallel.** Always await the Architect result before issuing the Critic call.
-- In consensus mode, default to RALPLAN-DR short mode; enable deliberate mode on `--deliberate` or explicit high-risk signals (auth/security, migrations, destructive changes, production incidents, compliance/PII, public API breakage)
+- In consensus mode, default to BLUEPRINT-DR short mode; enable deliberate mode on `--deliberate` or explicit high-risk signals (auth/security, migrations, destructive changes, production incidents, compliance/PII, public API breakage)
 - In consensus mode with `--interactive`: use `AskUserQuestion` / the structured question UI for the user feedback step (step 2) and the final approval step (step 7) -- never ask for approval in plain text when a structured surface is available. Without `--interactive`, auto-proceed through planning steps without pausing. Output the final plan without execution.
-- In consensus mode with `--interactive`, on user approval **MUST** invoke `$ralph` for execution (step 9) -- never implement directly in the planning agent
+- In consensus mode with `--interactive`, on user approval **MUST** invoke `$forge` for execution (step 9) -- never implement directly in the planning agent
 - In consensus mode, execution follow-up handoff **MUST** include an explicit available-agent-types roster plus concrete staffing / role-allocation guidance grounded in that roster, suggested reasoning levels by lane, explicit `rcs team` / `$team` launch hints, and a team verification path
 </Tool_Usage>
 
@@ -163,10 +167,10 @@ Plans are saved to `.rcs/plans/`. Drafts go to `.rcs/drafts/`.
 <Good>
 Adaptive interview (gathering facts before asking):
 ```
-Planner: [spawns explore agent: "find authentication implementation"]
-Planner: [receives: "Auth is in src/auth/ using JWT with passport.js"]
-Planner: "I see you're using JWT authentication with passport.js in src/auth/.
-         For this new feature, should we extend the existing auth or add a separate auth flow?"
+Planner: [spawns explore agent: "find where inventory sync RemoteEvents are handled on the server"]
+Planner: [receives: "ServerScriptService/Inventory/Network.server.lua validates payloads before MutateStock"]
+Planner: "I see inventory mutations are centralized in Network.server.lua with server-side validation.
+         For the new trading feature, should we extend that module or add a separate remote group?"
 ```
 Why good: Answers its own codebase question first, then asks an informed preference question.
 </Good>
@@ -186,8 +190,8 @@ Why good: Each question builds on the previous answer. Focused and progressive.
 <Bad>
 Asking about things you could look up:
 ```
-Planner: "Where is authentication implemented in your codebase?"
-User: "Uh, somewhere in src/auth I think?"
+Planner: "Where does the server validate RemoteEvent payloads for this feature?"
+User: "Uh, somewhere under ServerScriptService I think?"
 ```
 Why bad: The planner should spawn an explore agent to find this, not ask the user.
 </Bad>
@@ -212,8 +216,8 @@ Why bad: Decision fatigue. Present one option with trade-offs, get reaction, the
 <Escalation_And_Stop_Conditions>
 - Stop interviewing when requirements are clear enough to plan -- do not over-interview
 - In consensus mode, stop after 5 Planner/Architect/Critic iterations and present the best version
-- Consensus mode outputs the plan by default; with `--interactive`, user can approve and hand off to ralph/team
-- If the user says "just do it" or "skip planning", **MUST** invoke `$ralph` to transition to execution mode. Do NOT implement directly in the planning agent.
+- Consensus mode outputs the plan by default; with `--interactive`, user can approve and hand off to forge/team
+- If the user says "just do it" or "skip planning", **MUST** invoke `$forge` to transition to execution mode. Do NOT implement directly in the planning agent.
 - Escalate to the user when there are irreconcilable trade-offs that require a business decision
 </Escalation_And_Stop_Conditions>
 
@@ -223,7 +227,7 @@ Why bad: Decision fatigue. Present one option with trade-offs, get reaction, the
 - [ ] All risks have mitigations identified
 - [ ] No vague terms without metrics ("fast" -> "p99 < 200ms")
 - [ ] Plan saved to `.rcs/plans/`
-- [ ] In consensus mode: RALPLAN-DR summary includes 3-5 principles, top 3 drivers, and >=2 viable options (or explicit invalidation rationale)
+- [ ] In consensus mode: BLUEPRINT-DR summary includes 3-5 principles, top 3 drivers, and >=2 viable options (or explicit invalidation rationale)
 - [ ] In consensus mode final output: ADR section included (Decision / Drivers / Alternatives considered / Why chosen / Consequences / Follow-ups)
 - [ ] In deliberate consensus mode: pre-mortem (3 scenarios) + expanded test plan (unit/integration/e2e/observability) included
 - [ ] In consensus mode with `--interactive`: user explicitly approved before any execution; without `--interactive`: output final plan after Critic approval (no auto-execution)
@@ -273,5 +277,8 @@ Before asking any interview question, classify it:
 
 ## Deprecation Notice
 
-The separate `/planner`, `/ralplan`, and `/review` skills have been merged into `$plan`. All workflows (interview, direct, consensus, review) are available through `$plan`.
+The separate `/planner` and `/review` skills have been merged into `$plan`. Consensus planning remains available through `$plan --consensus`, while `$blueprint` is the canonical creator-facing planning workflow when you want the full Roblox-native design lane.
 </Advanced>
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

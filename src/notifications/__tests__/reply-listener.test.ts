@@ -478,6 +478,7 @@ describe('pollDiscordOnce', () => {
           injectCalled = true;
           return true;
         },
+        writeDaemonStateImpl: () => {},
       },
     );
 
@@ -535,6 +536,7 @@ describe('pollDiscordOnce', () => {
         injectReplyImpl: () => {
           throw new Error('injectReply should not run for exact-match status probes');
         },
+        writeDaemonStateImpl: () => {},
       },
     );
 
@@ -638,6 +640,7 @@ describe('pollDiscordOnce', () => {
         injectReplyImpl: () => {
           throw new Error('injectReply should not be called for unauthorized replies');
         },
+        writeDaemonStateImpl: () => {},
       },
     );
 
@@ -673,6 +676,7 @@ describe('pollDiscordOnce', () => {
         injectReplyImpl: () => {
           throw new Error('injectReply should not run for unauthorized status replies');
         },
+        writeDaemonStateImpl: () => {},
       },
     );
 
@@ -716,6 +720,7 @@ describe('pollDiscordOnce', () => {
           injectCalled = true;
           return true;
         },
+        writeDaemonStateImpl: () => {},
       },
     );
 

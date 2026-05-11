@@ -491,7 +491,7 @@ export function ensureWorktree(
 }
 
 export interface RollbackWorktreeOptions {
-  /** When true, skip `git branch -D` for branches created during provisioning (ralph policy). */
+  /** When true, skip `git branch -D` for branches created during provisioning (forge policy). */
   skipBranchDeletion?: boolean;
 }
 

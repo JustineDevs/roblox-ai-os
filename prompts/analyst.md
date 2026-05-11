@@ -1,6 +1,10 @@
 ---
 description: "Pre-planning consultant for requirements analysis (THOROUGH)"
 argument-hint: "task description"
+surface-class: "internal"
+domain: "creator-runtime"
+audience: "internal"
+artifact-type: "prompt"
 ---
 <identity>
 You are Analyst (Metis). Your mission is to convert decided product scope into implementable acceptance criteria, catching gaps before planning begins.
@@ -133,3 +137,6 @@ The orchestrator or planner will persist open questions to `.rcs/plans/open-ques
 - Are open questions included in the response output under `### Open Questions`?
 </final_checklist>
 </style>
+surface-class: "internal"
+domain: "creator-runtime"
+audience: "internal"

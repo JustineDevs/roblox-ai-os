@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "robloxstudio": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "robloxstudio-mcp@latest"
+      ]
+    },
+    "robloxstudio-inspector": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "robloxstudio-mcp-inspector@latest"
+      ]
+    }
+  }
+}

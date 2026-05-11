@@ -537,7 +537,7 @@ describe('resolveExploreHarnessCommand', () => {
       await mkdir(stagingDir, { recursive: true });
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
+        repository: { url: 'git+https://github.com/JustineDevs/roblox-ai-os.git' },
       }));
       await mkdir(join(wd, 'crates', 'rcs-explore'), { recursive: true });
       await writeFile(join(wd, 'crates', 'rcs-explore', 'Cargo.toml'), '[package]\nname=\"rcs-explore-harness\"\nversion=\"0.8.15\"\n');
@@ -620,7 +620,7 @@ describe('resolveExploreHarnessCommand', () => {
     try {
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
+        repository: { url: 'git+https://github.com/JustineDevs/roblox-ai-os.git' },
       }));
       let server: { baseUrl: string; close: () => Promise<void> };
       try {

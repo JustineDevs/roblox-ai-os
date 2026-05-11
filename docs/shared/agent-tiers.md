@@ -17,11 +17,11 @@ Use role to choose responsibility, tier to choose depth, and posture to choose o
 - `LOW`:
   Fast lookups and narrow checks.
   Use for simple exploration, style checks, and lightweight doc edits.
-  Typical roles: `explore`, `style-reviewer`, `writer`.
+  Typical roles: `explore`, `writer`.
 
 - `STANDARD`:
   Default tier for implementation, debugging, and normal verification.
-  Typical roles: `executor`, `debugger`, `test-engineer`, `quality-reviewer`.
+  Typical roles: `executor`, `debugger`, `test-engineer`, `code-reviewer`.
 
 - `THOROUGH`:
   Use for architectural, security-sensitive, or high-impact multi-file work.
@@ -36,7 +36,7 @@ Use role to choose responsibility, tier to choose depth, and posture to choose o
    - security/auth/trust-boundary changes
    - architectural decisions with system-wide impact
    - large refactors across many files
-4. For Ralph completion checks, use at least `STANDARD` architect verification.
+4. For Forge completion checks, use at least `STANDARD` architect verification.
 
 ## Posture Guidance
 

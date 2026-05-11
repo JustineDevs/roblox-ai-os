@@ -153,7 +153,7 @@ describe('team model contract', () => {
   it('detects low-complexity agent types', () => {
     assert.equal(isLowComplexityAgentType('explore'), true);
     assert.equal(isLowComplexityAgentType('writer'), false);
-    assert.equal(isLowComplexityAgentType('style-reviewer'), true);
+    assert.equal(isLowComplexityAgentType('writer-low'), true);
     assert.equal(isLowComplexityAgentType('executor'), false);
     assert.equal(isLowComplexityAgentType('executor-low'), true);
   });
@@ -179,8 +179,8 @@ describe('team model contract', () => {
     withIsolatedDefaultModelEnv(() => {
       assert.equal(resolveAgentDefaultModel('explore'), expectedLowComplexityModel());
       assert.equal(resolveAgentReasoningEffort('explore'), 'low');
-      assert.equal(resolveAgentDefaultModel('style-reviewer'), expectedLowComplexityModel());
-      assert.equal(resolveAgentReasoningEffort('style-reviewer'), 'low');
+      assert.equal(resolveAgentDefaultModel('writer-low'), expectedLowComplexityModel());
+      assert.equal(resolveAgentReasoningEffort('writer-low'), 'low');
     });
   });
 });

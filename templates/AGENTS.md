@@ -14,6 +14,9 @@ When RCS is installed, load the installed prompt/skill/agent surfaces from `~/.c
 
 <guidance_schema_contract>
 Canonical guidance schema for this template is defined in `docs/guidance-schema.md`.
+Canonical vocabulary and semantic system are defined in:
+- `docs/reference/canonical-vocabulary.md`
+- `docs/reference/semantic-design-system.md`
 
 Required schema sections and this template's mapping:
 - **Role & Intent**: title + opening paragraphs.
@@ -27,6 +30,12 @@ Keep runtime marker contracts stable and non-destructive when overlays are appli
 - `<!-- RCS:RUNTIME:START --> ... <!-- RCS:RUNTIME:END -->`
 - `<!-- RCS:TEAM:WORKER:START --> ... <!-- RCS:TEAM:WORKER:END -->`
 </guidance_schema_contract>
+
+<semantic_vocabulary_contract>
+- Default to the canonical Roblox-native vocabulary from `docs/reference/canonical-vocabulary.md`.
+- Use creator/player/experience/Studio/Luau/RemoteEvent/DataStore/HUD/plugin language before generic app/API/backend language.
+- Treat removed compatibility labels and generic enterprise abstractions as historical/internal only, not as active onboarding language.
+</semantic_vocabulary_contract>
 
 <operating_principles>
 - Solve the task directly when you can do so safely and well.
@@ -99,9 +108,9 @@ Default posture: work directly.
 
 Choose the lane before acting:
 - `$deep-interview` for unclear intent, missing boundaries, or explicit "don't assume" requests. This mode clarifies and hands off; it does not implement.
-- `$ralplan` when requirements are clear enough but plan, tradeoff, or test-shape review is still needed.
+- `$blueprint` when requirements are clear enough but plan, tradeoff, or test-shape review is still needed.
 - `$team` when the approved plan needs coordinated parallel execution across multiple lanes.
-- `$ralph` when the approved plan needs a persistent single-owner completion / verification loop.
+- `$forge` when the approved plan needs a persistent single-owner completion / verification loop.
 - **Solo execute** when the task is already scoped and one agent can finish + verify it directly.
 
 Delegate only when it materially improves quality, speed, or safety. Do not delegate trivial work or use delegation as a substitute for reading the code.
@@ -141,7 +150,7 @@ Rules:
 
 <model_routing>
 Match role to task shape:
-- Low complexity: `explore`, `style-reviewer`, `writer`
+- Low complexity: `explore`, `writer`
 - Research/discovery: `explore` for repo lookup, `researcher` for official docs/reference gathering, `dependency-expert` for SDK/API/package evaluation
 - Standard: `executor`, `debugger`, `test-engineer`
 - High complexity: `architect`, `executor`, `critic`
@@ -181,13 +190,13 @@ Keyword routing is implemented primarily by native `UserPromptSubmit` hooks and 
 
 Fallback behavior when hook context is unavailable:
 - Explicit `$name` invocations run left-to-right and override implicit keywords.
-- Bare skill names do not activate skills by themselves; skill-name activation requires explicit `$skill` invocation. Natural-language routing phrases may still map to a workflow when they are not just the bare skill name. Examples: `analyze` / `investigate` → `$analyze` for read-only deep analysis with ranked synthesis, explicit confidence, and concrete file references; `deep interview`, `interview`, `don't assume`, or `ouroboros` → `$deep-interview` for Socratic deep interview requirements clarification; `ralplan` / `consensus plan` → `$ralplan`; `cancel`, `stop`, or `abort` → `$cancel`.
+- Bare skill names do not activate skills by themselves; skill-name activation requires explicit `$skill` invocation. Natural-language routing phrases may still map to a workflow when they are not just the bare skill name. Examples: `analyze` / `investigate` → `$analyze` for read-only deep analysis with ranked synthesis, explicit confidence, and concrete file references; `deep interview`, `interview`, `don't assume`, or `ouroboros` → `$deep-interview` for Socratic deep interview requirements clarification; `blueprint` / `consensus plan` → `$blueprint`; `cancel`, `stop`, or `abort` → `$cancel`.
 - Keep the detailed keyword list in `src/hooks/keyword-registry.ts`; do not duplicate that table here.
 
 Runtime availability gate:
-- Treat `autopilot`, `ralph`, `ultrawork`, `ultraqa`, `team`/`swarm`, and `ecomode` as **RCS runtime workflows**, not generic prompt aliases.
+- Treat `autopilot`, `forge`, `ultrawork`, `ultraqa`, `team`/`swarm`, and `ecomode` as **RCS runtime workflows**, not generic prompt aliases.
 - Auto-activate runtime workflows only when the current session is actually running under RCS CLI/runtime (for example, launched via `rcs`, with RCS session overlay/runtime state available, or when the user explicitly asks to run `rcs ...` in the shell).
-- In Codex App or plain Codex sessions without RCS runtime, do **not** treat those keywords alone as activation. Explain that they require RCS CLI runtime support and are not directly available there, and continue with the nearest App-safe surface (`deep-interview`, `ralplan`, `plan`, or native subagents) unless the user explicitly wants you to launch RCS CLI from shell first.
+- In Codex App or plain Codex sessions without RCS runtime, do **not** treat those keywords alone as activation. Explain that they require RCS CLI runtime support and are not directly available there, and continue with the nearest App-safe surface (`deep-interview`, `blueprint`, `plan`, or native subagents) unless the user explicitly wants you to launch RCS CLI from shell first.
 - When deep-interview is active in attached-tmux RCS CLI/runtime, ask each interview round via `rcs question` as a temporary popup-style renderer over the leader pane; after launching `rcs question` in a background terminal, wait for that terminal to finish and read the JSON answer before continuing; preserve the leader pane with `RCS_QUESTION_RETURN_PANE=$TMUX_PANE` (or an explicit `%pane` value) when invoking it through Bash/tool paths, prefer `answers[0].answer` / `answers[]` from the response and use legacy `answer` only as fallback, and respect Stop-hook blocking while a deep-interview question obligation is pending. Deep-interview remains one question per round; do not batch multiple interview rounds into one `questions[]` form. Outside tmux or native surfaces that cannot render `rcs question` should use the native structured question path when available, otherwise ask exactly one concise plain-text question and wait for the answer.
 
 <triage_routing>
@@ -204,8 +213,8 @@ Explicit keywords remain the deterministic control surface when you want explici
 To opt out per prompt with phrases such as `no workflow`, `just chat`, or `plain answer` — the triage layer will suppress context injection for that prompt.
 </triage_routing>
 
-Ralph / Ralplan execution gate:
-- Enforce **ralplan-first** when ralph is active and planning is not complete.
+Forge / Blueprint execution gate:
+- Enforce **blueprint-first** when forge is active and planning is not complete.
 - Planning is complete only after both `.rcs/plans/prd-*.md` and `.rcs/plans/test-spec-*.md` exist.
 - Until complete, do not begin implementation or execute implementation-focused tools.
 </keyword_detection>
@@ -213,7 +222,7 @@ Ralph / Ralplan execution gate:
 ---
 
 <skills>
-Skills are workflow commands. Core workflows include `autopilot`, `ralph`, `ultrawork`, `visual-verdict`, `visual-ralph`, `ecomode`, `team`, `swarm`, `ultraqa`, `plan`, `deep-interview`, and `ralplan`; utilities include `cancel`, `note`, `doctor`, `help`, and `trace`.
+Skills are workflow commands. Core workflows include `autopilot`, `forge`, `ultrawork`, `visual-verdict`, `visual-forge`, `ecomode`, `team`, `swarm`, `ultraqa`, `plan`, `deep-interview`, and `blueprint`; utilities include `cancel`, `note`, `doctor`, `help`, and `trace`.
 </skills>
 
 ---
@@ -271,7 +280,7 @@ Verification loop: define the claim and success criteria, run the smallest valid
 </verification>
 
 <execution_protocols>
-Mode selection: use `$deep-interview` for unclear intent/boundaries; `$ralplan` for consensus on architecture, tradeoffs, or tests; `$team` for approved multi-lane work; `$ralph` for persistent single-owner completion/verification loops; otherwise execute directly in solo mode. Switch modes only when evidence shows the current lane is mismatched or blocked.
+Mode selection: use `$deep-interview` for unclear intent/boundaries; `$blueprint` for consensus on architecture, tradeoffs, or tests; `$team` for approved multi-lane work; `$forge` for persistent single-owner completion/verification loops; otherwise execute directly in solo mode. Switch modes only when evidence shows the current lane is mismatched or blocked.
 
 Command routing:
 - When `USE_RCS_EXPLORE_CMD` enables advisory routing, strongly prefer `rcs explore` as the default surface for simple read-only repository lookup tasks (files, symbols, patterns, relationships).
@@ -288,7 +297,7 @@ Stop / escalate:
 - Stop when the task is verified complete, the user says stop/cancel, or no meaningful recovery path remains.
 - Escalate to the user only for irreversible, destructive, or materially branching decisions, or when required authority is missing.
 - Escalate from worker to leader for blockers, scope expansion, shared ownership conflicts, or mode mismatch.
-- `deep-interview` and `ralplan` stop at a clarified artifact or approved-plan handoff; they do not implement unless execution mode is explicitly switched.
+- `deep-interview` and `blueprint` stop at a clarified artifact or approved-plan handoff; they do not implement unless execution mode is explicitly switched.
 
 Output contract:
 - Default update/final shape: current mode; action/result; evidence or blocker/next step.
@@ -298,7 +307,7 @@ Output contract:
 Parallelization: run independent tasks in parallel, dependent tasks sequentially, and long builds/tests in the background when helpful. Prefer Team mode only when coordination value outweighs overhead. If correctness depends on retrieval, diagnostics, tests, or other tools, continue until the task is grounded and verified.
 
 Anti-slop workflow:
-- Cleanup/refactor/deslop work still follows the same `$deep-interview` -> `$ralplan` -> `$team`/`$ralph` path; use `$ai-slop-cleaner` as a bounded helper inside the chosen execution lane, not as a competing top-level workflow.
+- Cleanup/refactor/deslop work still follows the same `$deep-interview` -> `$blueprint` -> `$team`/`$forge` path; use `$ai-slop-cleaner` as a bounded helper inside the chosen execution lane, not as a competing top-level workflow.
 - Write a cleanup plan before modifying code; lock existing behavior with regression tests first, then make one smell-focused pass at a time.
 - Prefer deletion over addition, and prefer reuse plus boundary repair over new layers.
 - No new dependencies without explicit request.
@@ -307,13 +316,13 @@ Anti-slop workflow:
 
 Visual iteration gate:
 - For visual tasks, run `$visual-verdict` every iteration before the next edit.
-- Persist verdict JSON in `.rcs/state/{scope}/ralph-progress.json`.
+- Persist verdict JSON in `.rcs/state/{scope}/forge-progress.json`.
 
 Continuation:
 Before concluding, confirm: no pending work, features working, tests passing, zero known errors, verification evidence collected. If not, continue.
 
-Ralph planning gate:
-If ralph is active, verify PRD + test spec artifacts exist before implementation work.
+Forge planning gate:
+If forge is active, verify PRD + test spec artifacts exist before implementation work.
 </execution_protocols>
 
 <cancellation>

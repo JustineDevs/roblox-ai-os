@@ -48,8 +48,7 @@ describe('explore + sparkshell guidance contract', () => {
       'prompts/sisyphus-lite.md',
       'skills/deep-interview/SKILL.md',
       'skills/plan/SKILL.md',
-      'skills/ralplan/SKILL.md',
-      'skills/ralph/SKILL.md',
+      'skills/blueprint/SKILL.md',
       'skills/team/SKILL.md',
     ]) {
       expectPatterns(surface, [
@@ -61,7 +60,7 @@ describe('explore + sparkshell guidance contract', () => {
   });
 
   it('keeps sparkshell guidance explicit opt-in and preserves raw qa or tmux evidence', () => {
-    expectPatterns('prompts/qa-tester.md', [
+    expectPatterns('prompts/test-engineer.md', [
       /optional operator aid/i,
       /does not replace raw `tmux capture-pane` evidence/i,
       /explicit opt-?in/i,

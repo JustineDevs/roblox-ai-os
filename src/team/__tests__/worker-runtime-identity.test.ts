@@ -84,7 +84,7 @@ describe('worker runtime identity contract', () => {
     await mkdir(captureDir, { recursive: true });
     await mkdir(promptsDir, { recursive: true });
     await writeFile(join(promptsDir, 'explore.md'), '<identity>You are Explorer.</identity>');
-    await writeFile(join(promptsDir, 'style-reviewer.md'), '<identity>You are Style Reviewer.</identity>');
+    await writeFile(join(promptsDir, 'writer-low.md'), '<identity>You are Writer Low.</identity>');
     await writeFile(join(promptsDir, 'sisyphus-lite.md'), '<identity>You are Sisyphus-lite.</identity>');
     await writeFile(
       fakeCodexPath,
@@ -124,22 +124,22 @@ process.on('SIGTERM', () => process.exit(0));
             2,
             [
               { subject: 'map files', description: 'map files', owner: 'worker-1', role: 'explore' },
-              { subject: 'review style', description: 'review style', owner: 'worker-2', role: 'style-reviewer' },
+              { subject: 'capture concise notes', description: 'capture concise notes', owner: 'worker-2', role: 'writer-low' },
             ],
             cwd,
           )));
 
       assert.equal(runtime.config.worker_launch_mode, 'prompt');
       assert.equal(runtime.config.workers[0]?.role, 'explore');
-      assert.equal(runtime.config.workers[1]?.role, 'style-reviewer');
+      assert.equal(runtime.config.workers[1]?.role, 'writer-low');
 
       const worker1Instructions = await readFile(join(cwd, '.rcs', 'state', 'team', runtime.teamName, 'workers', 'worker-1', 'AGENTS.md'), 'utf-8');
       const worker2Instructions = await readFile(join(cwd, '.rcs', 'state', 'team', runtime.teamName, 'workers', 'worker-2', 'AGENTS.md'), 'utf-8');
       assert.match(worker1Instructions, /You are operating as the \*\*explore\*\* role/);
       assert.match(worker1Instructions, /You are Explorer\./);
       assert.doesNotMatch(worker1Instructions, /Sisyphus-lite/);
-      assert.match(worker2Instructions, /You are operating as the \*\*style-reviewer\*\* role/);
-      assert.match(worker2Instructions, /You are Style Reviewer\./);
+      assert.match(worker2Instructions, /You are operating as the \*\*writer-low\*\* role/);
+      assert.match(worker2Instructions, /You are Writer Low\./);
       assert.doesNotMatch(worker2Instructions, /Sisyphus-lite/);
 
       let worker1Args: string[] | null = null;

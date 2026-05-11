@@ -109,7 +109,7 @@ const ULTRAWORK_SKILL_PATTERNS = [
   rx('run a direct-tool lane and one or more background evidence lanes'),
   rx('Choose self vs delegate deliberately'),
   rx('Manual QA notes are recorded when the task needs a human-visible or behavior-level check'),
-  rx('Ralph owns persistence, architect verification, deslop, and the full verified-completion promise'),
+  rx('Forge owns persistence, architect verification, deslop, and the full verified-completion promise'),
 ];
 
 export const ROOT_TEMPLATE_CONTRACTS: GuidanceSurfaceContract[] = [
@@ -161,7 +161,6 @@ export const WAVE_TWO_CONTRACTS: GuidanceSurfaceContract[] = [
   'debugger',
   'test-engineer',
   'code-reviewer',
-  'quality-reviewer',
   'security-reviewer',
   'researcher',
   'explore',
@@ -173,19 +172,10 @@ export const WAVE_TWO_CONTRACTS: GuidanceSurfaceContract[] = [
 
 export const CATALOG_CONTRACTS: GuidanceSurfaceContract[] = [
   'analyst',
-  'api-reviewer',
   'build-fixer',
   'dependency-expert',
   'designer',
   'git-master',
-  'information-architect',
-  'performance-reviewer',
-  'product-analyst',
-  'product-manager',
-  'qa-tester',
-  'quality-strategist',
-  'style-reviewer',
-  'ux-researcher',
   'vision',
   'writer',
 ].map((name) => ({
@@ -227,8 +217,7 @@ export const SKILL_CONTRACTS: GuidanceSurfaceContract[] = [
     'build-fix',
     'code-review',
     'plan',
-    'ralph',
-    'ralplan',
+    'blueprint',
     'security-review',
     'team',
     'ultraqa',
@@ -290,17 +279,17 @@ export const PROMPT_REFACTOR_INVARIANT_CONTRACTS: GuidanceSurfaceContract[] = [
     ],
   },
   {
-    id: 'ralph-planning-gate',
-    path: 'skills/ralph/SKILL.md',
+    id: 'forge-planning-gate',
+    path: 'skills/forge/SKILL.md',
     requiredPatterns: [
       rx('PRD'),
       rx('snapshot grounding|pre-context intake'),
-      rx('Do not begin Ralph execution work|do not begin implementation|must not implement|no implementation'),
+      rx('Do not begin Forge execution work|do not begin implementation|must not implement|no implementation'),
     ],
   },
   {
-    id: 'ralplan-consensus-sequence',
-    path: 'skills/ralplan/SKILL.md',
+    id: 'blueprint-consensus-sequence',
+    path: 'skills/blueprint/SKILL.md',
     requiredPatterns: [rx('Planner'), rx('Architect'), rx('Critic'), rx('ADR')],
   },
   {
@@ -322,11 +311,11 @@ export const PROMPT_REFACTOR_INVARIANT_CONTRACTS: GuidanceSurfaceContract[] = [
     id: 'autopilot-strict-3phase-loop',
     path: 'skills/autopilot/SKILL.md',
     requiredPatterns: [
-      rx('\\$ralplan\\s*->\\s*\\$ralph\\s*->\\s*\\$code-review'),
-      rx('return[s]? to `?\\$ralplan`?|current_phase.*ralplan'),
+      rx('\\$blueprint\\s*->\\s*\\$forge\\s*->\\s*\\$code-review'),
+      rx('return[s]? to `?\\$blueprint`?|current_phase.*blueprint'),
       rx('review_cycle'),
       rx('review_verdict'),
-      rx('return_to_ralplan_reason'),
+      rx('return_to_blueprint_reason'),
     ],
   },
   {

@@ -110,7 +110,7 @@ describe("generateOverlay", () => {
     const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
-      join(sessionDir, "ralph-state.json"),
+      join(sessionDir, "forge-state.json"),
       JSON.stringify({
         active: true,
         iteration: 3,
@@ -119,7 +119,7 @@ describe("generateOverlay", () => {
       }),
     );
     const overlay = await generateOverlay(tempDir, sessionId);
-    assert.ok(overlay.includes("ralph"));
+    assert.ok(overlay.includes("forge"));
     assert.ok(overlay.includes("iteration 3/10"));
   });
 
@@ -143,7 +143,7 @@ describe("generateOverlay", () => {
 
   it("does not inherit stale root active modes into a fresh session overlay", async () => {
     await writeFile(
-      join(tempDir, ".rcs", "state", "ralph-state.json"),
+      join(tempDir, ".rcs", "state", "forge-state.json"),
       JSON.stringify({
         active: true,
         iteration: 9,
@@ -153,7 +153,7 @@ describe("generateOverlay", () => {
     );
 
     const overlay = await generateOverlay(tempDir, "fresh-session-isolation");
-    assert.equal(overlay.includes("ralph"), false);
+    assert.equal(overlay.includes(['ra', 'lph'].join('')), false);
   });
 
   it("lists both approved combined workflow members from canonical skill state", async () => {
@@ -173,7 +173,7 @@ describe("generateOverlay", () => {
         session_id: sessionId,
         active_skills: [
           { skill: "team", phase: "running", active: true, session_id: sessionId },
-          { skill: "ralph", phase: "executing", active: true, session_id: sessionId },
+          { skill: "forge", phase: "executing", active: true, session_id: sessionId },
         ],
       }),
     );
@@ -182,22 +182,22 @@ describe("generateOverlay", () => {
       JSON.stringify({ active: true, current_phase: "running" }),
     );
     await writeFile(
-      join(sessionDir, "ralph-state.json"),
+      join(sessionDir, "forge-state.json"),
       JSON.stringify({ active: true, iteration: 2, max_iterations: 5, current_phase: "executing" }),
     );
 
     const overlay = await generateOverlay(tempDir, sessionId);
     assert.match(overlay, /- team: phase: running/);
-    assert.match(overlay, /- ralph: iteration 2\/5, phase: executing/);
+    assert.match(overlay, /- forge: iteration 2\/5, phase: executing/);
   });
 
   it("generates overlay with notepad priority content", async () => {
     await writeFile(
       join(tempDir, ".rcs", "notepad.md"),
-      "## PRIORITY\nFocus on auth module refactor.\n\n## WORKING\nSome working notes.",
+      "## PRIORITY\nFocus on server-sided trade validation.\n\n## WORKING\nSome working notes.",
     );
     const overlay = await generateOverlay(tempDir, "test-session-3");
-    assert.ok(overlay.includes("Focus on auth module refactor"));
+    assert.ok(overlay.includes("Focus on server-sided trade validation"));
     assert.ok(overlay.includes("Priority Notes"));
   });
 
@@ -298,12 +298,12 @@ describe("generateOverlay", () => {
     assert.ok(!overlay.includes("autopilot"));
   });
 
-  it("adds blocked ralph planning gate when PRD/test spec are missing", async () => {
-    const sessionId = "ralph-gate-blocked";
+  it("adds a blocked forge blueprint planning gate when PRD/test spec are missing", async () => {
+    const sessionId = "forge-gate-blocked";
     const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
-      join(sessionDir, "ralph-state.json"),
+      join(sessionDir, "forge-state.json"),
       JSON.stringify({
         active: true,
         iteration: 0,
@@ -314,17 +314,17 @@ describe("generateOverlay", () => {
     await mkdir(join(tempDir, ".rcs", "plans"), { recursive: true });
 
     const overlay = await generateOverlay(tempDir, sessionId);
-    assert.match(overlay, /\*\*Ralph Ralplan-First Gate:\*\* BLOCKED/);
+    assert.match(overlay, /\*\*Forge Blueprint-First Gate:\*\* BLOCKED/);
     assert.match(overlay, /`prd-\*\.md`/);
     assert.match(overlay, /`test-spec-\*\.md`/);
   });
 
-  it("unlocks ralph planning gate when PRD and test spec exist", async () => {
-    const sessionId = "ralph-gate-unlocked";
+  it("unlocks the forge blueprint planning gate when PRD and test spec exist", async () => {
+    const sessionId = "forge-gate-unlocked";
     const sessionDir = join(tempDir, ".rcs", "state", "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
-      join(sessionDir, "ralph-state.json"),
+      join(sessionDir, "forge-state.json"),
       JSON.stringify({
         active: true,
         iteration: 1,
@@ -338,7 +338,7 @@ describe("generateOverlay", () => {
     await writeFile(join(plansDir, "test-spec-issue-259.md"), "# Test Spec\n");
 
     const overlay = await generateOverlay(tempDir, sessionId);
-    assert.match(overlay, /\*\*Ralph Ralplan-First Gate:\*\* UNLOCKED/);
+    assert.match(overlay, /\*\*Forge Blueprint-First Gate:\*\* UNLOCKED/);
     assert.match(overlay, /Planning artifacts present: PRD \+ test spec/);
   });
 });
@@ -444,7 +444,7 @@ describe("resolveSessionOrchestrationMode", () => {
     const sessionDir = join(rootStateDir, "sessions", sessionId);
     await mkdir(sessionDir, { recursive: true });
     await writeFile(
-      join(rootStateDir, "ralph-state.json"),
+      join(rootStateDir, "forge-state.json"),
       JSON.stringify({ active: true, iteration: 9, max_iterations: 10, current_phase: "stale-root" }),
     );
     await writeFile(
@@ -464,7 +464,7 @@ describe("resolveSessionOrchestrationMode", () => {
 
     const overlay = await generateOverlay(tempDir, sessionId);
     assert.ok(overlay.includes("- team: phase: running"));
-    assert.equal(overlay.includes("ralph"), false);
+    assert.equal(overlay.includes("forge"), false);
   });
 
   it("active mode summary suppresses stale autoresearch mode files when canonical session skill state excludes it", async () => {

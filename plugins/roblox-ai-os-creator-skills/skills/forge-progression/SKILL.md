@@ -1,6 +1,10 @@
 ---
 name: forge-progression
 description: Creator workflow for `$forge:progression`
+surface-class: "canonical"
+domain: "roblox-studio"
+audience: "creator"
+artifact-type: "skill"
 ---
 
 # Forge Progression
@@ -14,3 +18,6 @@ Generate a **Progression Ladder**.
 - unlock cadence
 - multiplier / prestige / rebirth logic where fit
 - clarity notes for first-session payoff
+surface-class: "canonical"
+domain: "creator-runtime"
+audience: "creator"

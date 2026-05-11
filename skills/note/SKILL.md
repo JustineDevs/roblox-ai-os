@@ -1,6 +1,10 @@
 ---
 name: note
 description: Save notes to notepad.md for compaction resilience
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Note Skill
@@ -40,7 +44,7 @@ Save important context to `.rcs/notepad.md` that survives conversation compactio
 ```
 /note Found auth bug in UserContext - missing useEffect dependency
 /note --priority Project uses TypeScript strict mode, all files in src/
-/note --manual Contact: api-team@company.com for backend questions
+/note --manual Contact: studio-systems@company.com for remote or economy questions
 /note --show
 /note --prune
 ```
@@ -60,3 +64,6 @@ Notepad content is automatically loaded on session start:
 - Working Memory: Loaded if recent entries exist
 
 This helps survive conversation compaction without losing critical context.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

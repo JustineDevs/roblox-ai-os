@@ -1,6 +1,10 @@
 ---
 name: code-review
 description: Run a comprehensive code review
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Code Review Skill
@@ -167,20 +171,20 @@ HIGH (0)
 
 MEDIUM (7)
 ----------
-1. src/api/auth.ts:42
-   Issue: Email normalization logic is duplicated instead of reusing the shared helper
-   Risk: Validation rules can drift between authentication paths
-   Fix: Route both paths through the shared normalization helper
+1. ServerScriptService/Economy/PurchaseHandler.server.lua:42
+   Issue: Purchase receipt validation and grant logic are split across two modules with overlapping guards
+   Risk: Server-side economy rules can drift between grant paths
+   Fix: Route both paths through one verified grant helper after ProcessReceipt validation
 
-2. src/components/UserProfile.tsx:89
-   Issue: Derived permissions are recalculated on every render
-   Risk: Avoidable work during profile refreshes
-   Fix: Memoize the derived permissions list or compute it upstream
+2. ReplicatedStorage/UI/Leaderboard.client.lua:89
+   Issue: Client recomputes rank labels on every AttributeChanged for leaderstats
+   Risk: Avoidable work during high-churn leaderstat updates
+   Fix: Debounce UI refresh or compute display strings from a small server-provided snapshot
 
-3. src/utils/validation.ts:15
-   Issue: Form-layer and server-layer validation messages are defined separately
-   Risk: User-facing validation guidance can become inconsistent
-   Fix: Share one validation message helper across both call sites
+3. ServerScriptService/Inventory/Validation.lua:15
+   Issue: Client-visible error strings and server-only validation reasons are defined separately
+   Risk: Player-facing guidance diverges from what the server actually enforces
+   Fix: Share one message table for public errors; keep detailed reasons server-only
 
 LOW (5)
 -------
@@ -208,13 +212,12 @@ Address any WATCH concerns before treating the change as merge-ready.
 
 The `code-reviewer` lane checks:
 
-### Security
-- [ ] No hardcoded secrets (API keys, passwords, tokens)
-- [ ] All user inputs sanitized
-- [ ] SQL/NoSQL injection prevention
-- [ ] XSS prevention (escaped outputs)
-- [ ] CSRF protection on state-changing operations
-- [ ] Authentication/authorization properly enforced
+### Security (Roblox experience code)
+- [ ] No hardcoded secrets or API keys in **client** or **ReplicatedStorage**; sensitive tokens only on **server**
+- [ ] **RemoteEvents / RemoteFunctions:** arguments validated server-side; no trusting client for economy, inventory, or progression
+- [ ] **DataStore / persistence:** correct key scoping; no cross-player data leaks; safe retries / no double grants
+- [ ] **Economy:** purchase / entitlement paths verified on server; idempotent grants where duplicates are possible
+- [ ] **Anti-exploit:** high-risk gameplay (combat, trade, movement) assumes malicious clients; server is source of truth
 
 ### Code Quality
 - [ ] Functions < 50 lines (guideline)
@@ -227,7 +230,7 @@ The `code-reviewer` lane checks:
 - [ ] No N+1 query patterns
 - [ ] Appropriate caching where applicable
 - [ ] Efficient algorithms (avoid O(n²) when O(n) possible)
-- [ ] No unnecessary re-renders (React/Vue)
+- [ ] No unnecessary rerender churn or repeated UI tree rebuilds in Roact/Fusion/Studio GUI flows
 
 ### Best Practices
 - [ ] Error handling present and appropriate
@@ -265,15 +268,15 @@ The `architect` lane checks:
 
 **With Team:**
 ```
-/team "review recent auth changes and report findings"
+/team "review recent economy / RemoteEvent changes and report findings"
 ```
 Includes coordinated review execution across specialized agents.
 
-**With Ralph:**
+**With Forge:**
 ```
-/ralph code-review then fix all issues
+/forge code-review then fix all issues
 ```
-On the explicit Ralph path, review findings should flow into automatic fix follow-up without another permission prompt. Plain `code-review` itself remains read-only and does **not** promise auto-fix.
+On the explicit Forge path, review findings should flow into automatic fix follow-up without another permission prompt. Plain `code-review` itself remains read-only and does **not** promise auto-fix.
 
 **With Ultrawork:**
 ```
@@ -288,3 +291,6 @@ Parallel code review across multiple files.
 - **Address CRITICAL/HIGH first** - Fix security and bugs immediately
 - **Consider context** - Some "issues" may be intentional trade-offs
 - **Learn from reviews** - Use feedback to improve coding practices
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

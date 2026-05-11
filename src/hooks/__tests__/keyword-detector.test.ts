@@ -14,7 +14,7 @@ import {
   persistDeepInterviewModeState,
 } from '../keyword-detector.js';
 import { SKILL_ACTIVE_STATE_FILE } from '../../state/skill-active.js';
-import { isUnderspecifiedForExecution, applyRalplanGate } from '../keyword-detector.js';
+import { isUnderspecifiedForExecution, applyBlueprintGate } from '../keyword-detector.js';
 import { KEYWORD_TRIGGER_DEFINITIONS } from '../keyword-registry.js';
 
 describe('keyword detector swarm/team compatibility', () => {
@@ -29,8 +29,8 @@ describe('keyword detector swarm/team compatibility', () => {
   });
 
   it('limits explicit multi-skill invocation to the first contiguous $skill block', () => {
-    const matches = detectKeywords('$ralplan Fix issue #1030 and ensure other directives ($ralph, $team, $deep-interview) are not affected');
-    assert.deepEqual(matches.map((m) => m.skill), ['ralplan']);
+    const matches = detectKeywords('$blueprint Fix issue #1030 and ensure other directives ($forge, $team, $deep-interview) are not affected');
+    assert.deepEqual(matches.map((m) => m.skill), ['blueprint']);
   });
 
   it('does not merge implicit keyword matches when an explicit $skill is present', () => {
@@ -46,26 +46,26 @@ describe('keyword detector swarm/team compatibility', () => {
   });
 
   it('recognizes plugin-prefixed explicit skill tokens', () => {
-    const matches = detectKeywords('$roblox-ai-os-creator-skills:ralplan implement issue #1307');
-    assert.deepEqual(matches.map((m) => m.skill), ['ralplan']);
-    assert.equal(matches[0]?.keyword, '$roblox-ai-os-creator-skills:ralplan');
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:blueprint implement issue #1307');
+    assert.deepEqual(matches.map((m) => m.skill), ['blueprint']);
+    assert.equal(matches[0]?.keyword, '$roblox-ai-os-creator-skills:blueprint');
   });
 
   it('supports mixed-form explicit multi-skill invocation ordering and dedupe', () => {
-    const matches = detectKeywords('$roblox-ai-os-creator-skills:ralplan $ralph $roblox-ai-os-creator-skills:ralplan ship this');
-    assert.deepEqual(matches.map((m) => m.skill), ['ralplan', 'ralph']);
-    assert.deepEqual(matches.map((m) => m.keyword), ['$roblox-ai-os-creator-skills:ralplan', '$ralph']);
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:blueprint $forge $roblox-ai-os-creator-skills:blueprint ship this');
+    assert.deepEqual(matches.map((m) => m.skill), ['blueprint', 'forge']);
+    assert.deepEqual(matches.map((m) => m.keyword), ['$roblox-ai-os-creator-skills:blueprint', '$forge']);
   });
 
   it('keeps recognized tokens on both sides of an unknown plugin-prefixed token in the same contiguous block', () => {
-    const matches = detectKeywords('$roblox-ai-os-creator-skills:ralplan $roblox-ai-os-creator-skills:unknown $ralph');
-    assert.deepEqual(matches.map((m) => m.skill), ['ralplan', 'ralph']);
-    assert.deepEqual(matches.map((m) => m.keyword), ['$roblox-ai-os-creator-skills:ralplan', '$ralph']);
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:blueprint $roblox-ai-os-creator-skills:unknown $forge');
+    assert.deepEqual(matches.map((m) => m.skill), ['blueprint', 'forge']);
+    assert.deepEqual(matches.map((m) => m.keyword), ['$roblox-ai-os-creator-skills:blueprint', '$forge']);
   });
 
   it('limits mixed-form explicit invocation to the first contiguous block', () => {
-    const matches = detectKeywords('$roblox-ai-os-creator-skills:ralplan text $ralph');
-    assert.deepEqual(matches.map((m) => m.skill), ['ralplan']);
+    const matches = detectKeywords('$roblox-ai-os-creator-skills:blueprint text $forge');
+    assert.deepEqual(matches.map((m) => m.skill), ['blueprint']);
   });
 
   it('normalizes plugin-prefixed alias tokens', () => {
@@ -226,23 +226,30 @@ describe('keyword detector swarm/team compatibility', () => {
     assert.equal(match, null);
   });
 
-  it('does not trigger ralph from plain conversational mention', () => {
-    const match = detectPrimaryKeyword('why does ralph keep blocking stop?');
+  it('does not trigger forge from plain conversational mention', () => {
+    const match = detectPrimaryKeyword('why does forge keep blocking stop?');
     assert.equal(match, null);
   });
 
-  it('still triggers ralph for explicit $ralph invocation', () => {
-    const match = detectPrimaryKeyword('$ralph continue verification');
+  it('still triggers forge for explicit $forge invocation', () => {
+    const match = detectPrimaryKeyword('$forge continue verification');
     assert.ok(match);
-    assert.equal(match.skill, 'ralph');
-    assert.equal(match.keyword.toLowerCase(), '$ralph');
+    assert.equal(match.skill, 'forge');
+    assert.equal(match.keyword.toLowerCase(), '$forge');
   });
 
-  it('prefers ralplan over ralph follow-up language when both implicit routes are present', () => {
+  it('treats $forge as the canonical creator completion trigger', () => {
+    const match = detectPrimaryKeyword('$forge continue verification');
+    assert.ok(match);
+    assert.equal(match.skill, 'forge');
+    assert.equal(match.keyword.toLowerCase(), '$forge');
+  });
+
+  it('prefers blueprint over forge-style follow-up language when both implicit routes are present', () => {
     const match = detectPrimaryKeyword('keep going but do consensus plan first');
 
     assert.ok(match);
-    assert.equal(match.skill, 'ralplan');
+    assert.equal(match.skill, 'blueprint');
   });
 
   it('applies longest-match tie-breaker when priorities are equal', () => {
@@ -377,12 +384,12 @@ describe('explicit skill-name invocation requirement', () => {
     assert.equal(detectPrimaryKeyword('please run autoresearch now'), null);
   });
 
-  it('does not trigger ralph from bare skill-name usage', () => {
-    assert.equal(detectPrimaryKeyword('please use ralph for this task'), null);
+  it('does not trigger forge from bare skill-name usage', () => {
+    assert.equal(detectPrimaryKeyword('please use forge for this task'), null);
   });
 
-  it('does not trigger ralplan from bare skill-name usage', () => {
-    assert.equal(detectPrimaryKeyword('please do ralplan first'), null);
+  it('does not trigger blueprint from bare skill-name usage', () => {
+    assert.equal(detectPrimaryKeyword('please do blueprint first'), null);
   });
 });
 
@@ -422,7 +429,49 @@ describe('keyword registry coverage', () => {
 });
 
 describe('keyword detector skill-active-state lifecycle', () => {
-  it('writes skill-active-state.json with ralplan phase when autopilot keyword activates', async () => {
+  it('seeds forge as the public workflow skill while initializing canonical forge runtime state', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-forge-'));
+    const stateDir = join(cwd, '.rcs', 'state');
+    try {
+      await mkdir(stateDir, { recursive: true });
+      const result = await recordSkillActivation({
+        stateDir,
+        text: 'please run $forge and keep going',
+        sessionId: 'sess-forge',
+        threadId: 'thread-forge',
+        turnId: 'turn-forge',
+        nowIso: '2026-05-04T00:00:00.000Z',
+      });
+
+      assert.ok(result);
+      assert.equal(result.skill, 'forge');
+      assert.equal(result.phase, 'planning');
+      assert.equal(result.initialized_mode, 'forge');
+      assert.deepEqual(result.active_skills, [{
+        skill: 'forge',
+        phase: 'planning',
+        active: true,
+        activated_at: '2026-05-04T00:00:00.000Z',
+        updated_at: '2026-05-04T00:00:00.000Z',
+        session_id: 'sess-forge',
+        thread_id: 'thread-forge',
+        turn_id: 'turn-forge',
+      }]);
+
+      const persisted = JSON.parse(await readFile(join(stateDir, 'sessions', 'sess-forge', SKILL_ACTIVE_STATE_FILE), 'utf-8')) as {
+        skill: string;
+        initialized_mode?: string;
+        active_skills?: Array<{ skill: string }>;
+      };
+      assert.equal(persisted.skill, 'forge');
+      assert.equal(persisted.initialized_mode, 'forge');
+      assert.deepEqual(persisted.active_skills, [{ skill: 'forge', phase: 'planning', active: true, activated_at: '2026-05-04T00:00:00.000Z', updated_at: '2026-05-04T00:00:00.000Z', session_id: 'sess-forge', thread_id: 'thread-forge', turn_id: 'turn-forge' }]);
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('writes skill-active-state.json with blueprint phase when autopilot keyword activates', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-'));
     const stateDir = join(cwd, '.rcs', 'state');
     try {
@@ -438,11 +487,11 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       assert.ok(result);
       assert.equal(result.skill, 'autopilot');
-      assert.equal(result.phase, 'ralplan');
+      assert.equal(result.phase, 'blueprint');
       assert.equal(result.active, true);
       assert.deepEqual(result.active_skills, [{
         skill: 'autopilot',
-        phase: 'ralplan',
+        phase: 'blueprint',
         active: true,
         activated_at: '2026-02-25T00:00:00.000Z',
         updated_at: '2026-02-25T00:00:00.000Z',
@@ -461,11 +510,11 @@ describe('keyword detector skill-active-state lifecycle', () => {
         initialized_mode?: string;
       };
       assert.equal(persisted.skill, 'autopilot');
-      assert.equal(persisted.phase, 'ralplan');
+      assert.equal(persisted.phase, 'blueprint');
       assert.equal(persisted.active, true);
       assert.deepEqual(persisted.active_skills, [{
         skill: 'autopilot',
-        phase: 'ralplan',
+        phase: 'blueprint',
         active: true,
         activated_at: '2026-02-25T00:00:00.000Z',
         updated_at: '2026-02-25T00:00:00.000Z',
@@ -491,19 +540,19 @@ describe('keyword detector skill-active-state lifecycle', () => {
           phase_cycle: string[];
           handoff_artifacts: Record<string, unknown>;
           review_verdict: unknown;
-          return_to_ralplan_reason: string | null;
+          return_to_blueprint_reason: string | null;
         };
       };
       assert.equal(modeState.mode, 'autopilot');
       assert.equal(modeState.active, true);
-      assert.equal(modeState.current_phase, 'ralplan');
+      assert.equal(modeState.current_phase, 'blueprint');
       assert.equal(modeState.iteration, 1);
       assert.equal(modeState.review_cycle, 0);
       assert.equal(modeState.max_iterations, 10);
-      assert.deepEqual(modeState.state.phase_cycle, ['ralplan', 'ralph', 'code-review']);
-      assert.deepEqual(modeState.state.handoff_artifacts, { ralplan: null, ralph: null, code_review: null });
+      assert.deepEqual(modeState.state.phase_cycle, ['blueprint', 'forge', 'code-review']);
+      assert.deepEqual(modeState.state.handoff_artifacts, { blueprint: null, forge: null, code_review: null });
       assert.equal(modeState.state.review_verdict, null);
-      assert.equal(modeState.state.return_to_ralplan_reason, null);
+      assert.equal(modeState.state.return_to_blueprint_reason, null);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -526,7 +575,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralph continue verification',
+        text: '$forge continue verification',
         sessionId: 'sess-overlap',
         threadId: 'thread-overlap',
         turnId: 'turn-2',
@@ -536,7 +585,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
       assert.ok(result);
       assert.deepEqual(
         result.active_skills?.map((entry) => entry.skill),
-        ['team', 'ralph'],
+        ['team', 'forge'],
       );
 
       const persisted = JSON.parse(
@@ -544,25 +593,25 @@ describe('keyword detector skill-active-state lifecycle', () => {
       ) as { active_skills?: Array<{ skill: string }> };
       assert.deepEqual(
         persisted.active_skills?.map((entry) => entry.skill),
-        ['team', 'ralph'],
+        ['team', 'forge'],
       );
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it('keeps a session-scoped Ralph activation out of the root canonical state for other sessions', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralph-isolation-'));
+  it('keeps a session-scoped forge activation out of the root canonical state for other sessions', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-forge-isolation-'));
     const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralph continue verification',
-        sessionId: 'sess-ralph-a',
-        threadId: 'thread-ralph-a',
-        turnId: 'turn-ralph-a',
+        text: '$forge continue verification',
+        sessionId: 'sess-forge-a',
+        threadId: 'thread-forge-a',
+        turnId: 'turn-forge-a',
         nowIso: '2026-04-14T00:00:00.000Z',
       });
 
@@ -576,17 +625,17 @@ describe('keyword detector skill-active-state lifecycle', () => {
       );
 
       const sessionScopedSkillState = JSON.parse(
-        await readFile(join(stateDir, 'sessions', 'sess-ralph-a', SKILL_ACTIVE_STATE_FILE), 'utf-8'),
+        await readFile(join(stateDir, 'sessions', 'sess-forge-a', SKILL_ACTIVE_STATE_FILE), 'utf-8'),
       ) as { active_skills?: Array<{ skill: string; session_id?: string }> };
       assert.deepEqual(sessionScopedSkillState.active_skills, [{
-        skill: 'ralph',
+        skill: 'forge',
         phase: 'planning',
         active: true,
         activated_at: '2026-04-14T00:00:00.000Z',
         updated_at: '2026-04-14T00:00:00.000Z',
-        session_id: 'sess-ralph-a',
-        thread_id: 'thread-ralph-a',
-        turn_id: 'turn-ralph-a',
+        session_id: 'sess-forge-a',
+        thread_id: 'thread-forge-a',
+        turn_id: 'turn-forge-a',
       }]);
     } finally {
       await rm(cwd, { recursive: true, force: true });
@@ -660,7 +709,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           session_id: 'sess-visible',
           active_skills: [
             { skill: 'team', phase: 'running', active: true },
-            { skill: 'ralph', phase: 'executing', active: true, session_id: 'sess-visible' },
+            { skill: 'forge', phase: 'executing', active: true, session_id: 'sess-visible' },
           ],
         }, null, 2),
       );
@@ -678,7 +727,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
       const persisted = JSON.parse(
         await readFile(join(stateDir, 'sessions', 'sess-visible', SKILL_ACTIVE_STATE_FILE), 'utf-8'),
       ) as { active_skills?: Array<{ skill: string }> };
-      assert.deepEqual(persisted.active_skills?.map((entry) => entry.skill), ['team', 'ralph', 'ultrawork']);
+      assert.deepEqual(persisted.active_skills?.map((entry) => entry.skill), ['team', 'forge', 'ultrawork']);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -744,7 +793,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
     }
   });
 
-  it('preserves the planning skill when ralplan and autoresearch are invoked together', async () => {
+  it('preserves the planning skill when blueprint and autoresearch are invoked together', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-autoresearch-planning-precedence-'));
     const stateDir = join(cwd, '.rcs', 'state');
     try {
@@ -752,24 +801,24 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralplan $autoresearch wire the mission loop',
+        text: '$blueprint $autoresearch wire the mission loop',
         sessionId: 'sess-autoresearch-precedence',
         nowIso: '2026-04-17T00:05:00.000Z',
       });
 
       assert.equal(result?.transition_error, undefined);
-      assert.equal(result?.skill, 'ralplan');
-      assert.deepEqual(result?.active_skills?.map((entry) => entry.skill), ['ralplan']);
+      assert.equal(result?.skill, 'blueprint');
+      assert.deepEqual(result?.active_skills?.map((entry) => entry.skill), ['blueprint']);
       assert.deepEqual(result?.deferred_skills, ['autoresearch']);
-      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-autoresearch-precedence', 'ralplan-state.json')), true);
+      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-autoresearch-precedence', 'blueprint-state.json')), true);
       assert.equal(existsSync(join(stateDir, 'sessions', 'sess-autoresearch-precedence', 'autoresearch-state.json')), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it('captures tmux_pane_id in seeded ralplan prompt-submit state when TMUX_PANE is present', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralplan-pane-'));
+  it('captures tmux_pane_id in seeded blueprint prompt-submit state when TMUX_PANE is present', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-blueprint-pane-'));
     const stateDir = join(cwd, '.rcs', 'state');
     const previousPane = process.env.TMUX_PANE;
     try {
@@ -777,14 +826,14 @@ describe('keyword detector skill-active-state lifecycle', () => {
       process.env.TMUX_PANE = '%88';
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralplan tighten the plan',
-        sessionId: 'sess-ralplan-pane',
+        text: '$blueprint tighten the plan',
+        sessionId: 'sess-blueprint-pane',
         nowIso: '2026-02-25T00:00:00.000Z',
       });
 
       assert.ok(result);
       const modeState = JSON.parse(
-        await readFile(join(stateDir, 'sessions', 'sess-ralplan-pane', 'ralplan-state.json'), 'utf-8'),
+        await readFile(join(stateDir, 'sessions', 'sess-blueprint-pane', 'blueprint-state.json'), 'utf-8'),
       ) as { tmux_pane_id?: string };
       assert.equal(modeState.tmux_pane_id, '%88');
     } finally {
@@ -862,27 +911,27 @@ describe('keyword detector skill-active-state lifecycle', () => {
     }
   });
 
-  it('seeds first-class state for ralplan prompt-submit activation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralplan-'));
+  it('seeds first-class state for blueprint prompt-submit activation', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-blueprint-'));
     const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralplan tighten the plan',
-        sessionId: 'sess-ralplan',
+        text: '$blueprint tighten the plan',
+        sessionId: 'sess-blueprint',
         nowIso: '2026-02-25T00:00:00.000Z',
       });
 
       assert.ok(result);
-      assert.equal(result.skill, 'ralplan');
-      assert.equal(result.initialized_mode, 'ralplan');
-      assert.equal(result.initialized_state_path, '.rcs/state/sessions/sess-ralplan/ralplan-state.json');
+      assert.equal(result.skill, 'blueprint');
+      assert.equal(result.initialized_mode, 'blueprint');
+      assert.equal(result.initialized_state_path, '.rcs/state/sessions/sess-blueprint/blueprint-state.json');
 
       const modeState = JSON.parse(
-        await readFile(join(stateDir, 'sessions', 'sess-ralplan', 'ralplan-state.json'), 'utf-8'),
+        await readFile(join(stateDir, 'sessions', 'sess-blueprint', 'blueprint-state.json'), 'utf-8'),
       ) as { mode: string; active: boolean; current_phase: string };
-      assert.equal(modeState.mode, 'ralplan');
+      assert.equal(modeState.mode, 'blueprint');
       assert.equal(modeState.active, true);
       assert.equal(modeState.current_phase, 'planning');
     } finally {
@@ -923,13 +972,13 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralplan implement the approved contract',
+        text: '$blueprint implement the approved contract',
         sessionId: 'sess-handoff',
         nowIso: '2026-04-10T00:00:00.000Z',
       });
 
       assert.equal(result?.transition_error, undefined);
-      assert.equal(result?.transition_message, 'mode transiting: deep-interview -> ralplan');
+      assert.equal(result?.transition_message, 'mode transiting: deep-interview -> blueprint');
 
       const completed = JSON.parse(
         await readFile(join(stateDir, 'sessions', 'sess-handoff', 'deep-interview-state.json'), 'utf-8'),
@@ -956,19 +1005,19 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralplan $team $ralph ship this fix',
+        text: '$blueprint $team $forge ship this fix',
         sessionId: 'sess-multi',
         nowIso: '2026-04-10T00:00:00.000Z',
       });
 
       assert.equal(result?.transition_error, undefined);
       assert.equal(result?.transition_message, undefined);
-      assert.equal(result?.skill, 'ralplan');
-      assert.deepEqual(result?.active_skills?.map((entry) => entry.skill), ['ralplan']);
-      assert.deepEqual(result?.deferred_skills, ['team', 'ralph']);
-      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-multi', 'ralplan-state.json')), true);
+      assert.equal(result?.skill, 'blueprint');
+      assert.deepEqual(result?.active_skills?.map((entry) => entry.skill), ['blueprint']);
+      assert.deepEqual(result?.deferred_skills, ['team', 'forge']);
+      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-multi', 'blueprint-state.json')), true);
       assert.equal(existsSync(join(stateDir, 'team-state.json')), false);
-      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-multi', 'ralph-state.json')), false);
+      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-multi', 'forge-state.json')), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -982,17 +1031,39 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralph $ralplan continue',
+        text: '$forge $blueprint continue',
         sessionId: 'sess-priority',
         nowIso: '2026-04-10T00:00:00.000Z',
       });
 
       assert.equal(result?.transition_error, undefined);
-      assert.equal(result?.skill, 'ralplan');
-      assert.deepEqual(result?.active_skills?.map((entry) => entry.skill), ['ralplan']);
-      assert.deepEqual(result?.deferred_skills, ['ralph']);
-      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-priority', 'ralplan-state.json')), true);
-      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-priority', 'ralph-state.json')), false);
+      assert.equal(result?.skill, 'blueprint');
+      assert.deepEqual(result?.active_skills?.map((entry) => entry.skill), ['blueprint']);
+      assert.deepEqual(result?.deferred_skills, ['forge']);
+      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-priority', 'blueprint-state.json')), true);
+      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-priority', 'forge-state.json')), false);
+    } finally {
+      await rm(cwd, { recursive: true, force: true });
+    }
+  });
+
+  it('lets blueprint win publicly even when forge appears first in an explicit creator skill block', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-blueprint-beats-forge-'));
+    const stateDir = join(cwd, '.rcs', 'state');
+    try {
+      await mkdir(stateDir, { recursive: true });
+
+      const result = await recordSkillActivation({
+        stateDir,
+        text: '$forge $blueprint continue',
+        sessionId: 'sess-creator-priority',
+        nowIso: '2026-05-04T00:00:00.000Z',
+      });
+
+      assert.equal(result?.transition_error, undefined);
+      assert.equal(result?.skill, 'blueprint');
+      assert.deepEqual(result?.active_skills?.map((entry) => entry.skill), ['blueprint']);
+      assert.deepEqual(result?.deferred_skills, ['forge']);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -1086,15 +1157,15 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralplan $team tighten the approved execution handoff',
+        text: '$blueprint $team tighten the approved execution handoff',
         sessionId: 'sess-team-followup',
         nowIso: '2026-04-10T00:15:00.000Z',
       });
 
       assert.ok(result);
-      assert.equal(result?.skill, 'ralplan');
-      assert.equal(result?.initialized_mode, 'ralplan');
-      assert.deepEqual(result?.active_skills?.map((entry) => entry.skill), ['ralplan']);
+      assert.equal(result?.skill, 'blueprint');
+      assert.equal(result?.initialized_mode, 'blueprint');
+      assert.deepEqual(result?.active_skills?.map((entry) => entry.skill), ['blueprint']);
       assert.deepEqual(result?.deferred_skills, ['team']);
 
       const modeState = JSON.parse(
@@ -1111,27 +1182,27 @@ describe('keyword detector skill-active-state lifecycle', () => {
     }
   });
 
-  it('preserves root team state when $ralph is activated for the current session', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-team-ralph-'));
+  it('preserves root team state when $forge is activated for the current session', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-team-forge-'));
     const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
       await recordSkillActivation({
         stateDir,
         text: '$team coordinate the rollout',
-        sessionId: 'sess-team-ralph',
+        sessionId: 'sess-team-forge',
         nowIso: '2026-04-09T00:00:00.000Z',
       });
 
       const result = await recordSkillActivation({
         stateDir,
-        text: '$ralph complete the approved plan',
-        sessionId: 'sess-team-ralph',
+        text: '$forge complete the approved plan',
+        sessionId: 'sess-team-forge',
         nowIso: '2026-04-09T00:05:00.000Z',
       });
 
       assert.ok(result);
-      assert.equal(result.skill, 'ralph');
+      assert.equal(result.skill, 'forge');
 
       const rootCanonical = JSON.parse(
         await readFile(join(stateDir, SKILL_ACTIVE_STATE_FILE), 'utf-8'),
@@ -1142,11 +1213,11 @@ describe('keyword detector skill-active-state lifecycle', () => {
           phase,
           session_id,
         })),
-        [{ skill: 'team', phase: 'planning', session_id: 'sess-team-ralph' }],
+        [{ skill: 'team', phase: 'planning', session_id: 'sess-team-forge' }],
       );
 
       const sessionCanonical = JSON.parse(
-        await readFile(join(stateDir, 'sessions', 'sess-team-ralph', SKILL_ACTIVE_STATE_FILE), 'utf-8'),
+        await readFile(join(stateDir, 'sessions', 'sess-team-forge', SKILL_ACTIVE_STATE_FILE), 'utf-8'),
       ) as { active_skills?: Array<{ skill: string; phase?: string; session_id?: string }> };
       assert.deepEqual(
         sessionCanonical.active_skills?.map(({ skill, phase, session_id }) => ({
@@ -1155,8 +1226,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
           session_id,
         })),
         [
-          { skill: 'team', phase: 'planning', session_id: 'sess-team-ralph' },
-          { skill: 'ralph', phase: 'planning', session_id: 'sess-team-ralph' },
+          { skill: 'team', phase: 'planning', session_id: 'sess-team-forge' },
+          { skill: 'forge', phase: 'planning', session_id: 'sess-team-forge' },
         ],
       );
     } finally {
@@ -1210,7 +1281,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           active: true,
           skill: 'deep-interview',
           keyword: 'deep interview',
-          phase: 'ralplan',
+          phase: 'blueprint',
           activated_at: '2026-02-25T00:00:00.000Z',
           updated_at: '2026-02-25T00:00:00.000Z',
           source: 'keyword-detector',
@@ -1406,7 +1477,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           active: true,
           skill: 'autopilot',
           keyword: '$autopilot',
-          phase: 'ralplan',
+          phase: 'blueprint',
           activated_at: '2026-02-25T00:00:00.000Z',
           updated_at: '2026-02-25T00:10:00.000Z',
           source: 'keyword-detector',
@@ -1443,7 +1514,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           active: true,
           skill: 'autopilot',
           keyword: 'autopilot',
-          phase: 'ralplan',
+          phase: 'blueprint',
           activated_at: '2026-02-25T00:00:00.000Z',
           updated_at: '2026-02-25T00:10:00.000Z',
           source: 'keyword-detector',
@@ -1472,7 +1543,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       assert.ok(result);
       assert.equal(result.skill, 'autopilot');
-      assert.equal(result.phase, 'ralplan');
+      assert.equal(result.phase, 'blueprint');
       assert.equal(result.transition_error, undefined);
       const modeState = JSON.parse(
         await readFile(join(stateDir, 'sessions', 'sess-autopilot', 'autopilot-state.json'), 'utf-8'),
@@ -1485,32 +1556,32 @@ describe('keyword detector skill-active-state lifecycle', () => {
     }
   });
 
-  it('does not persist Ralph workflow state for a plain conversational mention', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralph-plain-text-'));
+  it('does not persist forge workflow state for a plain conversational mention', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-forge-plain-text-'));
     const stateDir = join(cwd, '.rcs', 'state');
     try {
       await mkdir(stateDir, { recursive: true });
 
       const result = await recordSkillActivation({
         stateDir,
-        text: 'why does ralph keep blocking stop?',
-        sessionId: 'sess-plain-ralph',
-        threadId: 'thread-plain-ralph',
-        turnId: 'turn-plain-ralph',
+        text: 'why does forge keep blocking stop?',
+        sessionId: 'sess-plain-forge',
+        threadId: 'thread-plain-forge',
+        turnId: 'turn-plain-forge',
         nowIso: '2026-04-17T00:00:00.000Z',
       });
 
       assert.equal(result, null);
       assert.equal(existsSync(join(stateDir, SKILL_ACTIVE_STATE_FILE)), false);
-      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-plain-ralph', SKILL_ACTIVE_STATE_FILE)), false);
-      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-plain-ralph', 'ralph-state.json')), false);
+      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-plain-forge', SKILL_ACTIVE_STATE_FILE)), false);
+      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-plain-forge', 'forge-state.json')), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it('preserves Ralph iteration counters for same-skill continuation', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralph-continuation-'));
+  it('preserves forge iteration counters for same-skill continuation', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-forge-continuation-'));
     const stateDir = join(cwd, '.rcs', 'state');
     const statePath = join(stateDir, SKILL_ACTIVE_STATE_FILE);
     try {
@@ -1520,8 +1591,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
         JSON.stringify({
           version: 1,
           active: true,
-          skill: 'ralph',
-          keyword: 'ralph',
+          skill: 'forge',
+          keyword: 'forge',
           phase: 'executing',
           activated_at: '2026-02-25T00:00:00.000Z',
           updated_at: '2026-02-25T00:10:00.000Z',
@@ -1529,10 +1600,10 @@ describe('keyword detector skill-active-state lifecycle', () => {
         }),
       );
       await writeFile(
-        join(stateDir, 'ralph-state.json'),
+        join(stateDir, 'forge-state.json'),
         JSON.stringify({
           active: true,
-          mode: 'ralph',
+          mode: 'forge',
           current_phase: 'verifying',
           started_at: '2026-02-25T00:00:00.000Z',
           updated_at: '2026-02-25T00:10:00.000Z',
@@ -1543,14 +1614,14 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       const result = await recordSkillActivation({
         stateDir,
-        text: 'ralph keep going',
+        text: 'forge keep going',
         nowIso: '2026-02-26T00:00:00.000Z',
       });
 
       assert.ok(result);
-      assert.equal(result.skill, 'ralph');
+      assert.equal(result.skill, 'forge');
       assert.equal(result.transition_error, undefined);
-      const modeState = JSON.parse(await readFile(join(stateDir, 'ralph-state.json'), 'utf-8')) as {
+      const modeState = JSON.parse(await readFile(join(stateDir, 'forge-state.json'), 'utf-8')) as {
         current_phase: string;
         iteration: number;
         max_iterations: number;
@@ -1643,7 +1714,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
     }
   });
 
-  it('routes bare keep-going continuation to the active autopilot skill instead of generic ralph continuation', async () => {
+  it('routes bare keep-going continuation to the active autopilot skill instead of generic forge continuation', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-autopilot-bare-continuation-'));
     const stateDir = join(cwd, '.rcs', 'state');
     try {
@@ -1655,7 +1726,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           active: true,
           skill: 'autopilot',
           keyword: '$autopilot',
-          phase: 'ralplan',
+          phase: 'blueprint',
           activated_at: '2026-04-19T00:00:00.000Z',
           updated_at: '2026-04-19T00:10:00.000Z',
           source: 'keyword-detector',
@@ -1663,7 +1734,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           active_skills: [
             {
               skill: 'autopilot',
-              phase: 'ralplan',
+              phase: 'blueprint',
               active: true,
               activated_at: '2026-04-19T00:00:00.000Z',
               updated_at: '2026-04-19T00:10:00.000Z',
@@ -1701,68 +1772,68 @@ describe('keyword detector skill-active-state lifecycle', () => {
       ) as { current_phase: string; state?: { context_snapshot_path?: string } };
       assert.equal(modeState.current_phase, 'code-review');
       assert.equal(modeState.state?.context_snapshot_path, '.rcs/context/autopilot.md');
-      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-autopilot-bare', 'ralph-state.json')), false);
+      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-autopilot-bare', 'forge-state.json')), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it('routes bare keep-going continuation to the active ralph skill instead of resetting through generic keep-going detection', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-ralph-bare-continuation-'));
+  it('routes bare keep-going continuation to the active forge skill instead of resetting through generic keep-going detection', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-state-forge-bare-continuation-'));
     const stateDir = join(cwd, '.rcs', 'state');
     try {
-      await mkdir(join(stateDir, 'sessions', 'sess-ralph-bare'), { recursive: true });
+      await mkdir(join(stateDir, 'sessions', 'sess-forge-bare'), { recursive: true });
       await writeFile(
-        join(stateDir, 'sessions', 'sess-ralph-bare', SKILL_ACTIVE_STATE_FILE),
+        join(stateDir, 'sessions', 'sess-forge-bare', SKILL_ACTIVE_STATE_FILE),
         JSON.stringify({
           version: 1,
           active: true,
-          skill: 'ralph',
-          keyword: '$ralph',
+          skill: 'forge',
+          keyword: '$forge',
           phase: 'executing',
           activated_at: '2026-04-19T00:00:00.000Z',
           updated_at: '2026-04-19T00:10:00.000Z',
           source: 'keyword-detector',
-          session_id: 'sess-ralph-bare',
+          session_id: 'sess-forge-bare',
           active_skills: [
             {
-              skill: 'ralph',
+              skill: 'forge',
               phase: 'executing',
               active: true,
               activated_at: '2026-04-19T00:00:00.000Z',
               updated_at: '2026-04-19T00:10:00.000Z',
-              session_id: 'sess-ralph-bare',
+              session_id: 'sess-forge-bare',
             },
           ],
         }, null, 2),
       );
       await writeFile(
-        join(stateDir, 'sessions', 'sess-ralph-bare', 'ralph-state.json'),
+        join(stateDir, 'sessions', 'sess-forge-bare', 'forge-state.json'),
         JSON.stringify({
           active: true,
-          mode: 'ralph',
+          mode: 'forge',
           current_phase: 'verifying',
           started_at: '2026-04-19T00:00:00.000Z',
           updated_at: '2026-04-19T00:10:00.000Z',
           iteration: 7,
           max_iterations: 50,
-          session_id: 'sess-ralph-bare',
+          session_id: 'sess-forge-bare',
         }, null, 2),
       );
 
       const result = await recordSkillActivation({
         stateDir,
         text: 'keep going now',
-        sessionId: 'sess-ralph-bare',
+        sessionId: 'sess-forge-bare',
         nowIso: '2026-04-19T00:15:00.000Z',
       });
 
       assert.ok(result);
-      assert.equal(result.skill, 'ralph');
-      assert.equal(result.keyword, '$ralph');
+      assert.equal(result.skill, 'forge');
+      assert.equal(result.keyword, '$forge');
       assert.equal(result.transition_error, undefined);
       const modeState = JSON.parse(
-        await readFile(join(stateDir, 'sessions', 'sess-ralph-bare', 'ralph-state.json'), 'utf-8'),
+        await readFile(join(stateDir, 'sessions', 'sess-forge-bare', 'forge-state.json'), 'utf-8'),
       ) as { current_phase: string; iteration: number; max_iterations: number };
       assert.equal(modeState.current_phase, 'verifying');
       assert.equal(modeState.iteration, 7);
@@ -1782,8 +1853,8 @@ describe('keyword detector skill-active-state lifecycle', () => {
         JSON.stringify({
           version: 1,
           active: true,
-          skill: 'ralph',
-          keyword: '$ralph',
+          skill: 'forge',
+          keyword: '$forge',
           phase: 'executing',
           activated_at: '2026-04-19T00:00:00.000Z',
           updated_at: '2026-04-19T00:10:00.000Z',
@@ -1791,7 +1862,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           session_id: 'sess-unknown-prefixed',
           active_skills: [
             {
-              skill: 'ralph',
+              skill: 'forge',
               phase: 'executing',
               active: true,
               activated_at: '2026-04-19T00:00:00.000Z',
@@ -1810,7 +1881,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
       });
 
       assert.equal(result, null);
-      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-unknown-prefixed', 'ralph-state.json')), false);
+      assert.equal(existsSync(join(stateDir, 'sessions', 'sess-unknown-prefixed', 'forge-state.json')), false);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
@@ -1829,7 +1900,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           active: true,
           skill: 'autopilot',
           keyword: 'autopilot',
-          phase: 'ralplan',
+          phase: 'blueprint',
           activated_at: '2026-02-25T00:00:00.000Z',
           updated_at: '2026-02-25T00:10:00.000Z',
           source: 'keyword-detector',
@@ -1838,13 +1909,13 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
       const result = await recordSkillActivation({
         stateDir,
-        text: 'please run $ralph now',
+        text: 'please run $forge now',
         nowIso: '2026-02-26T00:00:00.000Z',
       });
 
       assert.ok(result);
       assert.equal(result.skill, 'autopilot');
-      assert.match(String(result.transition_error), /Unsupported workflow overlap: autopilot \+ ralph\./);
+      assert.match(String(result.transition_error), /Unsupported workflow overlap: autopilot \+ forge\./);
       assert.equal(result.activated_at, '2026-02-25T00:00:00.000Z');
     } finally {
       await rm(cwd, { recursive: true, force: true });
@@ -1864,7 +1935,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
           active: true,
           skill: 'autopilot',
           keyword: 'autopilot',
-          phase: 'ralplan',
+          phase: 'blueprint',
           activated_at: '2026-02-25T00:00:00.000Z',
           updated_at: '2026-02-25T00:10:00.000Z',
           source: 'keyword-detector',
@@ -1891,7 +1962,7 @@ describe('keyword detector skill-active-state lifecycle', () => {
 
 describe('isUnderspecifiedForExecution', () => {
   it('flags vague prompt with no files or functions', () => {
-    assert.equal(isUnderspecifiedForExecution('ralph fix this'), true);
+    assert.equal(isUnderspecifiedForExecution('forge fix this'), true);
   });
 
   it('flags short vague prompt', () => {
@@ -1903,7 +1974,7 @@ describe('isUnderspecifiedForExecution', () => {
   });
 
   it('passes prompt with a file path reference', () => {
-    assert.equal(isUnderspecifiedForExecution('ralph fix src/hooks/bridge.ts'), false);
+    assert.equal(isUnderspecifiedForExecution('forge fix src/hooks/bridge.ts'), false);
   });
 
   it('passes prompt with a file extension reference', () => {
@@ -1919,7 +1990,7 @@ describe('isUnderspecifiedForExecution', () => {
   });
 
   it('passes prompt with a PascalCase symbol', () => {
-    assert.equal(isUnderspecifiedForExecution('ralph update UserModel'), false);
+    assert.equal(isUnderspecifiedForExecution('forge update UserModel'), false);
   });
 
   it('passes prompt with snake_case symbol', () => {
@@ -1931,19 +2002,19 @@ describe('isUnderspecifiedForExecution', () => {
   });
 
   it('passes prompt with numbered steps', () => {
-    assert.equal(isUnderspecifiedForExecution('ralph do:\n1. Add input validation\n2. Write tests\n3. Update README'), false);
+    assert.equal(isUnderspecifiedForExecution('forge do:\n1. Add input validation\n2. Write tests\n3. Update README'), false);
   });
 
   it('passes prompt with acceptance criteria keyword', () => {
-    assert.equal(isUnderspecifiedForExecution('add login - acceptance criteria: user sees error on bad password'), false);
+    assert.equal(isUnderspecifiedForExecution('add daily streak - acceptance criteria: server awards at most once per UTC day'), false);
   });
 
   it('passes prompt with a specific error reference', () => {
-    assert.equal(isUnderspecifiedForExecution('ralph fix TypeError in auth handler'), false);
+    assert.equal(isUnderspecifiedForExecution('forge fix TypeError in spawnLobby'), false);
   });
 
   it('passes with force: escape hatch prefix', () => {
-    assert.equal(isUnderspecifiedForExecution('force: ralph refactor the auth module'), false);
+    assert.equal(isUnderspecifiedForExecution('force: forge refactor the combat RemoteEvent handlers'), false);
   });
 
   it('passes with ! escape hatch prefix', () => {
@@ -1959,7 +2030,7 @@ describe('isUnderspecifiedForExecution', () => {
   });
 
   it('passes prompt with test runner command', () => {
-    assert.equal(isUnderspecifiedForExecution('ralph npm test && fix failures'), false);
+    assert.equal(isUnderspecifiedForExecution('forge npm test && fix failures'), false);
   });
 
   it('passes longer prompt that exceeds word threshold', () => {
@@ -1973,8 +2044,8 @@ describe('isUnderspecifiedForExecution', () => {
   });
 });
 
-describe('applyRalplanGate', () => {
-  it('does not re-enter ralplan for a short approved team follow-up', async () => {
+describe('applyBlueprintGate', () => {
+  it('does not re-enter blueprint for a short approved team follow-up', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-gate-followup-'));
     try {
       const plansDir = join(cwd, '.rcs', 'plans');
@@ -1985,7 +2056,7 @@ describe('applyRalplanGate', () => {
       );
       await writeFile(join(plansDir, 'test-spec-issue-831.md'), '# Test spec\n');
 
-      const result = applyRalplanGate(['team'], 'team', { cwd });
+      const result = applyBlueprintGate(['team'], 'team', { cwd });
       assert.equal(result.gateApplied, false);
       assert.deepEqual(result.keywords, ['team']);
     } finally {
@@ -1993,7 +2064,7 @@ describe('applyRalplanGate', () => {
     }
   });
 
-  it('does not re-enter ralplan for a short approved Korean team follow-up', async () => {
+  it('does not re-enter blueprint for a short approved Korean team follow-up', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-gate-followup-ko-'));
     try {
       const plansDir = join(cwd, '.rcs', 'plans');
@@ -2004,7 +2075,7 @@ describe('applyRalplanGate', () => {
       );
       await writeFile(join(plansDir, 'test-spec-issue-831.md'), '# Test spec\n');
 
-      const result = applyRalplanGate(['team'], 'team으로 해줘', { cwd });
+      const result = applyBlueprintGate(['team'], 'team으로 해줘', { cwd });
       assert.equal(result.gateApplied, false);
       assert.deepEqual(result.keywords, ['team']);
     } finally {
@@ -2012,98 +2083,98 @@ describe('applyRalplanGate', () => {
     }
   });
 
-  it('does not re-enter ralplan for a short approved ralph follow-up', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-gate-followup-ralph-'));
+  it('does not re-enter blueprint for a short approved forge follow-up', async () => {
+    const cwd = await mkdtemp(join(tmpdir(), 'rcs-keyword-gate-followup-forge-'));
     try {
       const plansDir = join(cwd, '.rcs', 'plans');
       await mkdir(plansDir, { recursive: true });
       await writeFile(
         join(plansDir, 'prd-issue-832.md'),
-        '# Approved plan\n\nLaunch hint: rcs ralph "Execute approved issue 832 plan"\n',
+        '# Approved plan\n\nLaunch hint: rcs forge "Execute approved issue 832 plan"\n',
       );
       await writeFile(join(plansDir, 'test-spec-issue-832.md'), '# Test spec\n');
 
-      const result = applyRalplanGate(['ralph'], 'ralph please', { cwd, priorSkill: 'ralplan' });
+      const result = applyBlueprintGate(['forge'], 'forge please', { cwd, priorSkill: 'blueprint' });
       assert.equal(result.gateApplied, false);
-      assert.deepEqual(result.keywords, ['ralph']);
+      assert.deepEqual(result.keywords, ['forge']);
     } finally {
       await rm(cwd, { recursive: true, force: true });
     }
   });
 
-  it('redirects underspecified execution keywords to ralplan', () => {
-    const result = applyRalplanGate(['ralph'], 'ralph fix this');
+  it('redirects underspecified execution keywords to blueprint', () => {
+    const result = applyBlueprintGate(['forge'], 'forge fix this');
     assert.equal(result.gateApplied, true);
-    assert.ok(result.keywords.includes('ralplan'));
-    assert.ok(!result.keywords.includes('ralph'));
+    assert.ok(result.keywords.includes('blueprint'));
+    assert.ok(!result.keywords.includes('forge'));
   });
 
-  it('redirects autopilot to ralplan when underspecified', () => {
-    const result = applyRalplanGate(['autopilot'], 'autopilot build the app');
+  it('redirects autopilot to blueprint when underspecified', () => {
+    const result = applyBlueprintGate(['autopilot'], 'autopilot build the app');
     assert.equal(result.gateApplied, true);
-    assert.ok(result.keywords.includes('ralplan'));
+    assert.ok(result.keywords.includes('blueprint'));
   });
 
   it('does not gate well-specified prompts', () => {
-    const result = applyRalplanGate(['ralph'], 'ralph fix src/hooks/bridge.ts null check');
+    const result = applyBlueprintGate(['forge'], 'forge fix src/hooks/bridge.ts null check');
     assert.equal(result.gateApplied, false);
-    assert.ok(result.keywords.includes('ralph'));
+    assert.ok(result.keywords.includes('forge'));
   });
 
   it('does not gate when cancel is present', () => {
-    const result = applyRalplanGate(['cancel', 'ralph'], 'cancel ralph');
+    const result = applyBlueprintGate(['cancel', 'forge'], 'cancel forge');
     assert.equal(result.gateApplied, false);
   });
 
-  it('does not gate when ralplan is already present', () => {
-    const result = applyRalplanGate(['ralplan'], 'ralplan add auth');
+  it('does not gate when blueprint is already present', () => {
+    const result = applyBlueprintGate(['blueprint'], 'blueprint add trade');
     assert.equal(result.gateApplied, false);
-    assert.ok(result.keywords.includes('ralplan'));
+    assert.ok(result.keywords.includes('blueprint'));
   });
 
   it('does not gate non-execution keywords', () => {
-    const result = applyRalplanGate(['analyze'], 'analyze this');
+    const result = applyBlueprintGate(['analyze'], 'analyze this');
     assert.equal(result.gateApplied, false);
   });
 
   it('preserves non-execution keywords when gating', () => {
-    const result = applyRalplanGate(['ralph', 'tdd'], 'ralph tdd fix this');
+    const result = applyBlueprintGate(['forge', 'tdd'], 'forge tdd fix this');
     assert.equal(result.gateApplied, true);
     assert.ok(result.keywords.includes('tdd'));
-    assert.ok(result.keywords.includes('ralplan'));
-    assert.ok(!result.keywords.includes('ralph'));
+    assert.ok(result.keywords.includes('blueprint'));
+    assert.ok(!result.keywords.includes('forge'));
   });
 
   it('handles force: escape hatch — does not gate', () => {
-    const result = applyRalplanGate(['ralph'], 'force: ralph refactor the auth module');
+    const result = applyBlueprintGate(['forge'], 'force: forge refactor the combat RemoteEvent handlers');
     assert.equal(result.gateApplied, false);
   });
 
   it('gates multiple execution keywords at once', () => {
-    const result = applyRalplanGate(['ralph', 'team'], 'ralph team fix this');
+    const result = applyBlueprintGate(['forge', 'team'], 'forge team fix this');
     assert.equal(result.gateApplied, true);
-    assert.ok(result.keywords.includes('ralplan'));
-    assert.ok(!result.keywords.includes('ralph'));
+    assert.ok(result.keywords.includes('blueprint'));
+    assert.ok(!result.keywords.includes('forge'));
     assert.ok(!result.keywords.includes('team'));
-    assert.ok(result.gatedKeywords.includes('ralph'));
+    assert.ok(result.gatedKeywords.includes('forge'));
     assert.ok(result.gatedKeywords.includes('team'));
   });
 
   it('returns empty keywords unchanged when no keywords', () => {
-    const result = applyRalplanGate([], 'fix this');
+    const result = applyBlueprintGate([], 'fix this');
     assert.equal(result.gateApplied, false);
     assert.deepEqual(result.keywords, []);
   });
 
-  it('does not duplicate ralplan if already in filtered list', () => {
-    // ultrawork is an execution keyword; after filtering, ralplan added once
-    const result = applyRalplanGate(['ultrawork'], 'ultrawork do stuff');
-    assert.equal(result.keywords.filter(k => k === 'ralplan').length, 1);
+  it('does not duplicate blueprint if already in filtered list', () => {
+    // ultrawork is an execution keyword; after filtering, blueprint added once
+    const result = applyBlueprintGate(['ultrawork'], 'ultrawork do stuff');
+    assert.equal(result.keywords.filter(k => k === 'blueprint').length, 1);
   });
 
   it('reports gatedKeywords correctly', () => {
-    const result = applyRalplanGate(['ralph', 'ultrawork'], 'ralph ultrawork build');
-    assert.ok(result.gatedKeywords.includes('ralph'));
+    const result = applyBlueprintGate(['forge', 'ultrawork'], 'forge ultrawork build');
+    assert.ok(result.gatedKeywords.includes('forge'));
     assert.ok(result.gatedKeywords.includes('ultrawork'));
   });
 });

@@ -117,11 +117,11 @@ describe('notify-hook tmux target healing', () => {
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
       await writeJson(join(sessionStateDir, 'team-state.json'), { active: true, current_phase: 'team-exec' });
-      await writeJson(join(stateDir, 'ralph-state.json'), { active: true, iteration: 0 });
+      await writeJson(join(stateDir, 'forge-state.json'), { active: true, iteration: 0 });
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'pane', value: '%42' },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -202,7 +202,7 @@ exit 1
     });
   });
 
-  it('does not revive a legacy root Ralph fallback when canonical skill state excludes Ralph', async () => {
+  it('does not revive a legacy root Forge fallback when canonical skill state excludes Forge', async () => {
     await withTempWorkingDir(async (cwd) => {
       const rcsDir = join(cwd, '.rcs');
       const stateDir = join(rcsDir, 'state');
@@ -223,21 +223,21 @@ exit 1
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
       const canonicalSessionState = JSON.parse(await readFile(sessionStatePath, 'utf-8')) as Record<string, unknown>;
-      await writeJson(join(stateDir, 'ralph-state.json'), { active: true, iteration: 0, tmux_pane_id: '%42' });
+      await writeJson(join(stateDir, 'forge-state.json'), { active: true, iteration: 0, tmux_pane_id: '%42' });
       await writeJson(join(sessionStateDir, 'skill-active-state.json'), {
         version: 1,
         active: true,
-        skill: 'ralplan',
+        skill: 'blueprint',
         phase: 'planning',
         session_id: sessionId,
         active_skills: [
-          { skill: 'ralplan', phase: 'planning', active: true, session_id: sessionId },
+          { skill: 'blueprint', phase: 'planning', active: true, session_id: sessionId },
         ],
       });
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'pane', value: '%42' },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -299,8 +299,8 @@ exit 1
         cwd,
         type: 'agent-turn-complete',
         session_id: sessionId,
-        'thread-id': 'thread-test-canonical-excludes-ralph',
-        'turn-id': 'turn-test-canonical-excludes-ralph',
+        'thread-id': 'thread-test-canonical-excludes-forge',
+        'turn-id': 'turn-test-canonical-excludes-forge',
         'input-messages': ['no marker here'],
         'last-assistant-message': 'output',
       };
@@ -324,7 +324,7 @@ exit 1
       const persistedSessionState = JSON.parse(await readFile(sessionStatePath, 'utf-8')) as Record<string, unknown>;
       assert.equal(persistedSessionState.session_id, canonicalSessionState.session_id);
       const tmuxLog = await readFile(tmuxLogPath, 'utf-8').catch(() => '');
-      assert.doesNotMatch(tmuxLog, /send-keys -t %42 -l/, 'legacy root Ralph state should not trigger a Ralph nudge when canonical skill state excludes Ralph');
+      assert.doesNotMatch(tmuxLog, /send-keys -t %42 -l/, 'legacy root Forge state should not trigger a Forge nudge when canonical skill state excludes Forge');
     });
   });
 
@@ -346,11 +346,11 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), { active: true, iteration: 0 });
+      await writeJson(join(sessionStateDir, 'forge-state.json'), { active: true, iteration: 0 });
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'session', value: sessionId },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -484,11 +484,11 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), { active: true, iteration: 0 });
+      await writeJson(join(sessionStateDir, 'forge-state.json'), { active: true, iteration: 0 });
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'pane', value: '%42' },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -616,11 +616,11 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), { active: true, iteration: 0 });
+      await writeJson(join(sessionStateDir, 'forge-state.json'), { active: true, iteration: 0 });
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'pane', value: '%42' },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -712,11 +712,11 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), { active: true, iteration: 0 });
+      await writeJson(join(sessionStateDir, 'forge-state.json'), { active: true, iteration: 0 });
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'session', value: sessionId },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -935,11 +935,11 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), { active: true, iteration: 0 });
+      await writeJson(join(sessionStateDir, 'forge-state.json'), { active: true, iteration: 0 });
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'session', value: sessionId },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -1056,11 +1056,11 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), { active: true, iteration: 0 });
+      await writeJson(join(sessionStateDir, 'forge-state.json'), { active: true, iteration: 0 });
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'pane', value: '%77' },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -1194,7 +1194,7 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), {
+      await writeJson(join(sessionStateDir, 'forge-state.json'), {
         active: true,
         iteration: 0,
         tmux_pane_id: '%99',
@@ -1202,7 +1202,7 @@ exit 1
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'session', value: 'nonexistent-session' },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -1305,7 +1305,7 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), {
+      await writeJson(join(sessionStateDir, 'forge-state.json'), {
         active: true,
         iteration: 0,
         tmux_pane_id: '%99',
@@ -1313,7 +1313,7 @@ exit 1
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'session', value: 'nonexistent-session' },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -1409,12 +1409,12 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), {
+      await writeJson(join(sessionStateDir, 'forge-state.json'), {
         active: true,
         iteration: 0,
         tmux_pane_id: '%99',
       });
-      await writeJson(join(stateDir, 'ralph-state.json'), {
+      await writeJson(join(stateDir, 'forge-state.json'), {
         active: true,
         iteration: 100,
         tmux_pane_id: '%55',
@@ -1422,7 +1422,7 @@ exit 1
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'session', value: 'nonexistent-session' },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',
@@ -1533,11 +1533,11 @@ exit 1
       await mkdir(fakeBinDir, { recursive: true });
 
       await writeManagedSessionState(stateDir, cwd, sessionId);
-      await writeJson(join(sessionStateDir, 'ralph-state.json'), { active: true, iteration: 0, tmux_pane_id: '%42' });
+      await writeJson(join(sessionStateDir, 'forge-state.json'), { active: true, iteration: 0, tmux_pane_id: '%42' });
       await writeJson(configPath, {
         enabled: true,
         target: { type: 'pane', value: '%42' },
-        allowed_modes: ['ralph'],
+        allowed_modes: ['forge'],
         cooldown_ms: 0,
         max_injections_per_session: 10,
         prompt_template: 'Continue [RCS_TMUX_INJECT]',

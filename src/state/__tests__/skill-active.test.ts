@@ -25,9 +25,9 @@ describe('skill-active state helpers', () => {
       await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeSkillActiveStateCopies(cwd, {
         active: true,
-        skill: 'ralph',
+        skill: 'forge',
         phase: 'executing',
-        active_skills: [{ skill: 'ralph', phase: 'executing', active: true }],
+        active_skills: [{ skill: 'forge', phase: 'executing', active: true }],
       });
       await writeSkillActiveStateCopies(cwd, {
         active: true,
@@ -62,7 +62,7 @@ describe('skill-active state helpers', () => {
 
       await syncCanonicalSkillStateForMode({
         cwd,
-        mode: 'ralph',
+        mode: 'forge',
         active: true,
         currentPhase: 'executing',
         sessionId: 'new-session',
@@ -73,7 +73,7 @@ describe('skill-active state helpers', () => {
       assert.ok(sessionState);
       const [entry] = listActiveSkills(sessionState);
       assert.ok(entry);
-      assert.equal(entry.skill, 'ralph');
+      assert.equal(entry.skill, 'forge');
       assert.equal(entry.phase, 'executing');
       assert.equal(entry.active, true);
       assert.equal(entry.activated_at, '2026-04-08T00:00:00.000Z');
@@ -84,7 +84,7 @@ describe('skill-active state helpers', () => {
         active_skills?: Array<{ skill: string; session_id?: string }>;
       };
       assert.deepEqual(rootState.active_skills, [{
-        skill: 'ralph',
+        skill: 'forge',
         phase: 'executing',
         active: true,
         activated_at: '2026-04-08T00:00:00.000Z',
@@ -94,8 +94,8 @@ describe('skill-active state helpers', () => {
     });
   });
 
-  it('preserves root-scoped team state when a session-scoped ralph overlap is activated', async () => {
-    await withTempRepo('rcs-skill-active-team-ralph-', async (cwd) => {
+  it('preserves root-scoped team state when a session-scoped forge overlap is activated', async () => {
+    await withTempRepo('rcs-skill-active-team-forge-', async (cwd) => {
       await mkdir(join(cwd, '.rcs', 'state'), { recursive: true });
       await writeSkillActiveStateCopies(cwd, {
         active: true,
@@ -106,7 +106,7 @@ describe('skill-active state helpers', () => {
 
       await syncCanonicalSkillStateForMode({
         cwd,
-        mode: 'ralph',
+        mode: 'forge',
         active: true,
         currentPhase: 'executing',
         sessionId: 'sess-overlap',
@@ -135,7 +135,7 @@ describe('skill-active state helpers', () => {
         })),
         [
           { skill: 'team', phase: 'running', session_id: undefined },
-          { skill: 'ralph', phase: 'executing', session_id: 'sess-overlap' },
+          { skill: 'forge', phase: 'executing', session_id: 'sess-overlap' },
         ],
       );
     });
@@ -152,7 +152,7 @@ describe('skill-active state helpers', () => {
       });
       await syncCanonicalSkillStateForMode({
         cwd,
-        mode: 'ralplan',
+        mode: 'blueprint',
         active: true,
         currentPhase: 'planning',
         sessionId: 'sess-terminal',
@@ -161,7 +161,7 @@ describe('skill-active state helpers', () => {
 
       await syncCanonicalSkillStateForMode({
         cwd,
-        mode: 'ralplan',
+        mode: 'blueprint',
         active: false,
         currentPhase: 'complete',
         sessionId: 'sess-terminal',

@@ -103,8 +103,8 @@ jobs:
             test-roots: >-
               dist/team/__tests__
               dist/state/__tests__
-              dist/ralph/__tests__
-              dist/ralplan/__tests__
+              dist/forge/__tests__
+              dist/blueprint/__tests__
               dist/runtime/__tests__
             catalog-check: false
           - node-version: 20
@@ -308,8 +308,8 @@ jobs:
           name: rust-coverage
           path: coverage/rust/
 
-  ralph-persistence-gate:
-    name: Ralph Persistence Gate
+  forge-persistence-gate:
+    name: Forge Persistence Gate
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [typecheck, build-dist]
@@ -325,14 +325,14 @@ jobs:
         with:
           name: ci-dist-node20
           path: dist
-      - name: Run Ralph persistence verification matrix
-        run: npm run test:ralph-persistence:compiled
+      - name: Run Forge persistence verification matrix
+        run: npm run test:forge-persistence:compiled
 
   build:
     name: Build (Full Source Build)
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    needs: [rustfmt, clippy, lint, typecheck, build-dist, test, ralph-persistence-gate]
+    needs: [rustfmt, clippy, lint, typecheck, build-dist, test, forge-persistence-gate]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v6
@@ -357,8 +357,82 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: [rustfmt, clippy, lint, typecheck, test, coverage-team-critical, coverage-ts-full, coverage-rust, ralph-persistence-gate, build]
+    needs: [rustfmt, clippy, lint, typecheck, test, coverage-team-critical, coverage-ts-full, coverage-rust, forge-persistence-gate, build]
     steps:
+      - name: Generate CI proof artifact
+        shell: bash
+        env:
+          GITHUB_SHA_VALUE: ${{ github.sha }}
+          GITHUB_REF_VALUE: ${{ github.ref }}
+          GITHUB_RUN_ID_VALUE: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT_VALUE: ${{ github.run_attempt }}
+          GITHUB_SERVER_URL_VALUE: ${{ github.server_url }}
+          GITHUB_REPOSITORY_VALUE: ${{ github.repository }}
+          RUSTFMT_RESULT: ${{ needs.rustfmt.result }}
+          CLIPPY_RESULT: ${{ needs.clippy.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
+          TYPECHECK_RESULT: ${{ needs.typecheck.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+          COVERAGE_TEAM_CRITICAL_RESULT: ${{ needs.coverage-team-critical.result }}
+          COVERAGE_TS_FULL_RESULT: ${{ needs.coverage-ts-full.result }}
+          COVERAGE_RUST_RESULT: ${{ needs.coverage-rust.result }}
+          FORGE_PERSISTENCE_GATE_RESULT: ${{ needs.forge-persistence-gate.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          mkdir -p ci-proof
+          cat > ci-proof/final-ci-proof.md <<EOF
+          # Final CI Proof
+
+          Repository: \`${GITHUB_REPOSITORY_VALUE}\`
+          Ref: \`${GITHUB_REF_VALUE}\`
+          Commit: \`${GITHUB_SHA_VALUE}\`
+          Run: ${GITHUB_SERVER_URL_VALUE}/${GITHUB_REPOSITORY_VALUE}/actions/runs/${GITHUB_RUN_ID_VALUE}/attempts/${GITHUB_RUN_ATTEMPT_VALUE}
+
+          | Job | Result |
+          | --- | --- |
+          | rustfmt | \`${RUSTFMT_RESULT}\` |
+          | clippy | \`${CLIPPY_RESULT}\` |
+          | lint | \`${LINT_RESULT}\` |
+          | typecheck | \`${TYPECHECK_RESULT}\` |
+          | test | \`${TEST_RESULT}\` |
+          | coverage-team-critical | \`${COVERAGE_TEAM_CRITICAL_RESULT}\` |
+          | coverage-ts-full | \`${COVERAGE_TS_FULL_RESULT}\` |
+          | coverage-rust | \`${COVERAGE_RUST_RESULT}\` |
+          | forge-persistence-gate | \`${FORGE_PERSISTENCE_GATE_RESULT}\` |
+          | build | \`${BUILD_RESULT}\` |
+          EOF
+
+          cat > ci-proof/final-ci-proof.json <<EOF
+          {
+            "repository": "${GITHUB_REPOSITORY_VALUE}",
+            "ref": "${GITHUB_REF_VALUE}",
+            "commit": "${GITHUB_SHA_VALUE}",
+            "run_id": "${GITHUB_RUN_ID_VALUE}",
+            "run_attempt": "${GITHUB_RUN_ATTEMPT_VALUE}",
+            "run_url": "${GITHUB_SERVER_URL_VALUE}/${GITHUB_REPOSITORY_VALUE}/actions/runs/${GITHUB_RUN_ID_VALUE}/attempts/${GITHUB_RUN_ATTEMPT_VALUE}",
+            "jobs": {
+              "rustfmt": "${RUSTFMT_RESULT}",
+              "clippy": "${CLIPPY_RESULT}",
+              "lint": "${LINT_RESULT}",
+              "typecheck": "${TYPECHECK_RESULT}",
+              "test": "${TEST_RESULT}",
+              "coverage-team-critical": "${COVERAGE_TEAM_CRITICAL_RESULT}",
+              "coverage-ts-full": "${COVERAGE_TS_FULL_RESULT}",
+              "coverage-rust": "${COVERAGE_RUST_RESULT}",
+              "forge-persistence-gate": "${FORGE_PERSISTENCE_GATE_RESULT}",
+              "build": "${BUILD_RESULT}"
+            }
+          }
+          EOF
+
+          cat ci-proof/final-ci-proof.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload final CI proof artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-ci-proof
+          path: ci-proof/
+          if-no-files-found: error
       - name: Check required job results
         run: |
           if [[ "${{ needs.rustfmt.result }}" != "success" ]] ||
@@ -369,7 +443,7 @@ jobs:
              [[ "${{ needs.coverage-team-critical.result }}" != "success" ]] ||
              [[ "${{ needs.coverage-ts-full.result }}" != "success" ]] ||
              [[ "${{ needs.coverage-rust.result }}" != "success" ]] ||
-             [[ "${{ needs.ralph-persistence-gate.result }}" != "success" ]] ||
+             [[ "${{ needs.forge-persistence-gate.result }}" != "success" ]] ||
              [[ "${{ needs.build.result }}" != "success" ]]; then
             echo "::error::One or more required CI jobs failed"
             echo "  rustfmt: ${{ needs.rustfmt.result }}"
@@ -380,7 +454,7 @@ jobs:
             echo "  coverage-team-critical: ${{ needs.coverage-team-critical.result }}"
             echo "  coverage-ts-full: ${{ needs.coverage-ts-full.result }}"
             echo "  coverage-rust: ${{ needs.coverage-rust.result }}"
-            echo "  ralph-persistence-gate: ${{ needs.ralph-persistence-gate.result }}"
+            echo "  forge-persistence-gate: ${{ needs.forge-persistence-gate.result }}"
             echo "  build: ${{ needs.build.result }}"
             exit 1
           fi

@@ -9,7 +9,7 @@ describe('pr-check workflow', () => {
     assert.equal(existsSync(workflowPath), true, `missing workflow: ${workflowPath}`);
 
     const workflow = readFileSync(workflowPath, 'utf-8');
-    assert.match(workflow, /name:\s*PR Check/);
+    assert.match(workflow, /name:\s*(?:RCS\s+)?PR Check/);
     assert.match(workflow, /pull_request_target:\s*\n\s*types:\s*\[opened, synchronize, reopened, edited\]/);
     assert.match(workflow, /size-label:[\s\S]*pull-requests:\s*write/);
     assert.match(workflow, /draft-check:/);
@@ -19,7 +19,7 @@ describe('pr-check workflow', () => {
     assert.match(guidanceSection, /name:\s*PR Base Guidance/);
     assert.match(guidanceSection, /if:\s*github\.event\.pull_request\.base\.ref == 'main'/);
     assert.match(guidanceSection, /permissions:\s*\{\}/);
-    assert.match(guidanceSection, /::warning title=Retarget normal PRs to dev::/);
+    assert.match(guidanceSection, /::warning title=Retarget normal (?:RCS )?PRs to dev::/);
     assert.match(guidanceSection, /Normal contributions should target `dev`\./);
     assert.match(guidanceSection, /Maintainer-directed `main` PRs are still allowed\./);
     assert.match(guidanceSection, /GITHUB_STEP_SUMMARY/);

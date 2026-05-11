@@ -27,6 +27,7 @@ import {
   buildPlatformCommandSpec,
   classifySpawnError,
   resolveCommandPathForPlatform,
+  resolveTmuxBinaryForPlatform,
   spawnPlatformCommandSync,
 } from '../utils/platform-command.js';
 import { resolveRcsCliEntryPath } from '../utils/paths.js';
@@ -121,14 +122,47 @@ interface TmuxPaneInfo {
 type SpawnSyncLike = typeof spawnSync;
 
 function runTmux(args: string[]): { ok: true; stdout: string } | { ok: false; stderr: string } {
-  const { result } = spawnPlatformCommandSync('tmux', args, { encoding: 'utf-8' });
-  if (result.error) {
-    return { ok: false, stderr: result.error.message };
-  }
+  const launch = resolveTmuxLaunch(args);
+  const { result } = spawnPlatformCommandSync(launch.command, launch.args, { encoding: 'utf-8' });
   if (result.status !== 0) {
-    return { ok: false, stderr: (result.stderr || '').trim() || `tmux exited ${result.status}` };
+    return {
+      ok: false,
+      stderr: result.error?.message || (result.stderr || '').trim() || `tmux exited ${result.status}`,
+    };
   }
   return { ok: true, stdout: (result.stdout || '').trim() };
+}
+
+export function resolveTmuxLaunch(args: string[]): { command: string; args: string[] } {
+  const tmuxBinary = resolveTmuxBinaryForPlatform() || 'tmux';
+  if (process.platform === 'win32') {
+    return { command: 'tmux', args: [...args] };
+  }
+
+  let launchCommand = tmuxBinary;
+  let launchArgs = [...args];
+
+  if (existsSync(tmuxBinary)) {
+    try {
+      const header = readFileSync(tmuxBinary, 'utf-8').slice(0, 128);
+      if (/^#!.*\b(?:bash|sh)(?:\s|$)/.test(header)) {
+        launchCommand = '/bin/bash';
+        launchArgs = [tmuxBinary, ...args];
+      } else if (/^#!.*\bnode(?:\s|$)/.test(header)) {
+        launchCommand = process.execPath;
+        launchArgs = [
+          '-e',
+          'const script=process.argv[1];process.argv=[process.execPath,script,...process.argv.slice(2)];require(script);',
+          tmuxBinary,
+          ...args,
+        ];
+      }
+    } catch {
+      // Keep the direct launch when the helper cannot be inspected.
+    }
+  }
+
+  return { command: launchCommand, args: launchArgs };
 }
 
 function appendNoUnderlineStyleFlags(style: string): string {
@@ -331,7 +365,8 @@ export function sleepFractionalSeconds(
 
 async function runTmuxAsync(args: string[]): Promise<{ok: true; stdout: string} | {ok: false; stderr: string}> {
   try {
-    const { stdout } = await execFileAsync('tmux', args, { encoding: 'utf-8' });
+    const launch = resolveTmuxLaunch(args);
+    const { stdout } = await execFileAsync(launch.command, launch.args, { encoding: 'utf-8' });
     return { ok: true, stdout: (stdout || '').trim() };
   } catch (error: unknown) {
     const err = error as { stderr?: string; message?: string };
@@ -1004,6 +1039,9 @@ export function isWsl2(): boolean {
   if (process.env.WSL_DISTRO_NAME || process.env.WSL_INTEROP) {
     return true;
   }
+  if (process.platform !== 'linux') {
+    return false;
+  }
   try {
     const version = readFileSync('/proc/version', 'utf-8');
     return /microsoft/i.test(version);
@@ -1023,7 +1061,6 @@ export function isNativeWindows(): boolean {
 // Check if tmux is available
 export function isTmuxAvailable(): boolean {
   const { result } = spawnPlatformCommandSync('tmux', ['-V'], { encoding: 'utf-8' });
-  if (result.error) return false;
   return result.status === 0;
 }
 

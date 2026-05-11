@@ -8,13 +8,13 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const autopilotSkill = readFileSync(join(__dirname, '../../../skills/autopilot/SKILL.md'), 'utf-8');
 
 describe('autopilot skill strict 3-phase contract', () => {
-  it('makes ralplan -> ralph -> code-review the primary contract', () => {
-    assert.match(autopilotSkill, /\$ralplan\s*->\s*\$ralph\s*->\s*\$code-review/);
+  it('makes blueprint -> forge -> code-review the primary contract', () => {
+    assert.match(autopilotSkill, /\$blueprint\s*->\s*\$forge\s*->\s*\$code-review/);
     assert.match(autopilotSkill, /strict autonomous delivery loop/i);
   });
 
-  it('returns non-clean code-review findings to ralplan', () => {
-    assert.match(autopilotSkill, /If `\$code-review` is not clean, Autopilot returns to `\$ralplan`/i);
+  it('returns non-clean code-review findings to blueprint', () => {
+    assert.match(autopilotSkill, /If `\$code-review` is not clean, Autopilot returns to `\$blueprint`/i);
     assert.match(autopilotSkill, /COMMENT.*REQUEST CHANGES.*WATCH.*BLOCK/s);
   });
 
@@ -26,7 +26,7 @@ describe('autopilot skill strict 3-phase contract', () => {
       'phase_cycle',
       'handoff_artifacts',
       'review_verdict',
-      'return_to_ralplan_reason',
+      'return_to_blueprint_reason',
     ]) {
       assert.match(autopilotSkill, new RegExp(field));
     }

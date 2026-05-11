@@ -1,6 +1,10 @@
 ---
 name: blueprint-psych
 description: Creator workflow for `$blueprint:psych`
+surface-class: "canonical"
+domain: "roblox-studio"
+audience: "creator"
+artifact-type: "skill"
 ---
 
 # Blueprint Psych
@@ -19,3 +23,6 @@ Return:
 - fairness risks.
 
 Use `docs/reference/player-psychology-framework.md` as the framework source.
+surface-class: "canonical"
+domain: "creator-runtime"
+audience: "creator"

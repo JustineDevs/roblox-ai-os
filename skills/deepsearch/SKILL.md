@@ -1,6 +1,10 @@
 ---
 name: deepsearch
 description: Thorough codebase search
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"
+artifact-type: "skill"
 ---
 
 # Deep Search Mode
@@ -36,3 +40,6 @@ Perform thorough search of the codebase for the specified query, pattern, or con
 - **Key Insights** (patterns, conventions, gotchas)
 
 Focus on being comprehensive but concise. Cite file paths and line numbers.
+surface-class: "operator"
+domain: "creator-runtime"
+audience: "operator"

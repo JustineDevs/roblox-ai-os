@@ -61,7 +61,6 @@ describe('nested help routing', () => {
     [['state', '--help'], /Usage:\s*rcs state <read\|write\|clear\|list-active\|get-status>/i],
     [['mcp-serve', '--help'], /Usage:\s*rcs mcp-serve <target>/i],
     [['tmux-hook', '--help'], /Usage:\s*\n\s*rcs tmux-hook init/i],
-    [['ralph', '--help'], /rcs ralph - Launch Codex with ralph persistence mode active/i],
   ] satisfies Array<[string[], RegExp]>) {
     it(`routes ${argv.join(' ')} to command-local help`, async () => {
       const cwd = await mkdtemp(join(tmpdir(), 'rcs-nested-help-'));
@@ -79,9 +78,9 @@ describe('nested help routing', () => {
   it('routes `rcs state read` through the top-level CLI', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'rcs-state-route-'));
     try {
-      const result = await runRcsCli(cwd, ['state', 'read', '--input', '{"mode":"ralph"}', '--json']);
+      const result = await runRcsCli(cwd, ['state', 'read', '--input', '{"mode":"forge"}', '--json']);
       assert.equal(result.status, 0, result.stderr || result.stdout);
-      assert.match(result.stdout.trim(), /^\{"exists":false,"mode":"ralph"\}$/);
+      assert.match(result.stdout.trim(), /^\{"exists":false,"mode":"forge"\}$/);
       assert.doesNotMatch(result.stdout, /Unknown command: state/i);
     } finally {
       await rm(cwd, { recursive: true, force: true });

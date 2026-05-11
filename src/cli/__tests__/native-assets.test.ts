@@ -130,10 +130,10 @@ describe('native asset helpers', () => {
     try {
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
+        repository: { url: 'git+https://github.com/JustineDevs/roblox-ai-os.git' },
       }));
       const base = await resolveNativeReleaseBaseUrl(wd, undefined, {});
-      assert.equal(base, 'https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills/releases/download/v0.8.15');
+      assert.equal(base, 'https://github.com/JustineDevs/roblox-ai-os/releases/download/v0.8.15');
     } finally {
       await rm(wd, { recursive: true, force: true });
     }
@@ -148,7 +148,7 @@ describe('native asset helpers', () => {
       await mkdir(assetRoot, { recursive: true });
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
+        repository: { url: 'git+https://github.com/JustineDevs/roblox-ai-os.git' },
       }));
 
       const stagingDir = join(wd, 'staging');
@@ -223,7 +223,7 @@ describe('native asset helpers', () => {
       await mkdir(assetRoot, { recursive: true });
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
+        repository: { url: 'git+https://github.com/JustineDevs/roblox-ai-os.git' },
       }));
 
       const stagingDir = join(wd, 'staging', 'rcs-sparkshell-x86_64-unknown-linux-musl');
@@ -295,7 +295,7 @@ describe('native asset helpers', () => {
     try {
       await writeFile(join(wd, 'package.json'), JSON.stringify({
         version: '0.8.15',
-        repository: { url: 'git+https://github.com/Yeachan-Heo/roblox-ai-os-creator-skills.git' },
+        repository: { url: 'git+https://github.com/JustineDevs/roblox-ai-os.git' },
       }));
 
       const missingRoot = join(wd, 'missing-assets');

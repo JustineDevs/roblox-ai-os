@@ -20,7 +20,7 @@ are live.
 Allowed active-set shapes in this rollout are intentionally narrow:
 
 - standalone single-workflow state for tracked workflows
-- `team + ralph`
+- `team + forge`
 - `team + ultrawork`
 
 The resulting active set is peer state. Neither member is semantically primary
@@ -70,12 +70,12 @@ Example operator guidance shape:
 CLI parity surface:
 
 - `rcs state clear --input '{"mode":"team"}' --json`
-- `rcs state clear --input '{"mode":"ralph","all_sessions":true}' --json`
+- `rcs state clear --input '{"mode":"forge","all_sessions":true}' --json`
 
 MCP parity surface:
 
 - `rcs_state.state_clear({ mode: "team" })`
-- `rcs_state.state_clear({ mode: "ralph", all_sessions: true })`
+- `rcs_state.state_clear({ mode: "forge", all_sessions: true })`
 
 ## Brownfield consumer expectations
 
@@ -107,9 +107,9 @@ must not accidentally delete the entire combined state.
 Implementation should be considered complete only when tests prove:
 
 1. canonical active state can hold a multi-entry active set
-2. `team + ralph` is allowed in both activation orders
+2. `team + forge` is allowed in both activation orders
 3. `team + ultrawork` is allowed in both activation orders
 4. unsupported overlaps deny without mutation
 5. denial messages mention both `rcs state` and `rcs_state.*`
 6. HUD / overlay / stop-hook consumers honor the combined set consistently
-7. `autopilot` and `autoresearch` still reject unsupported overlap attempts; `autopilot -> ralplan` is the only review-driven planning loopback exception
+7. `autopilot` and `autoresearch` still reject unsupported overlap attempts; `autopilot -> blueprint` is the only review-driven planning loopback exception

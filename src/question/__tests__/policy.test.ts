@@ -66,10 +66,10 @@ describe('evaluateQuestionPolicy', () => {
 
   it('blocks active execution-like workflows for the current session', async () => {
     const cwd = await makeRepo();
-    const sessionDir = join(cwd, '.rcs', 'state', 'sessions', 'sess-ralph');
+    const sessionDir = join(cwd, '.rcs', 'state', 'sessions', 'sess-forge');
     await mkdir(sessionDir, { recursive: true });
-    await writeFile(join(sessionDir, 'ralph-state.json'), JSON.stringify({ mode: 'ralph', active: true }));
-    const result = await evaluateQuestionPolicy({ cwd, explicitSessionId: 'sess-ralph', env: { ...process.env, RCS_TEAM_WORKER: '' } });
+    await writeFile(join(sessionDir, 'forge-state.json'), JSON.stringify({ mode: 'forge', active: true }));
+    const result = await evaluateQuestionPolicy({ cwd, explicitSessionId: 'sess-forge', env: { ...process.env, RCS_TEAM_WORKER: '' } });
     assert.equal(result.allowed, false);
     assert.equal(result.code, 'active_execution_mode_blocked');
     assert.equal(result.fallbackAllowed, false);
