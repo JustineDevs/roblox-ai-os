@@ -18,6 +18,7 @@ describe('contributor workflow templates', () => {
       '.github/PULL_REQUEST_TEMPLATE.md',
       '.github/labels.yml',
       '.github/workflows/sync-labels.yml',
+      '.github/workflows/sync-github-wiki.yml',
     ]) {
       assert.equal(existsSync(join(root, path)), true, `missing contributor workflow file: ${path}`);
     }
@@ -28,6 +29,7 @@ describe('contributor workflow templates', () => {
     const pr = read('.github/PULL_REQUEST_TEMPLATE.md');
     const labels = read('.github/labels.yml');
     const syncLabelsWorkflow = read('.github/workflows/sync-labels.yml');
+    const syncWikiWorkflow = read('.github/workflows/sync-github-wiki.yml');
 
     assert.match(bug, /type:\s+textarea/);
     assert.match(bug, /label:\s+Summary/);
@@ -48,6 +50,9 @@ describe('contributor workflow templates', () => {
     assert.match(labels, /name:\s+contributor experience/);
     assert.match(syncLabelsWorkflow, /name:\s+Sync Labels/);
     assert.match(syncLabelsWorkflow, /crazy-max\/ghaction-github-labeler@v5/);
+    assert.match(syncWikiWorkflow, /name:\s+Sync GitHub Wiki/);
+    assert.match(syncWikiWorkflow, /docs\/wiki\/\*\*/);
+    assert.match(syncWikiWorkflow, /sync-github-wiki\.js/);
   });
 
   it('tightens contributing guidance around docs drift and active Roblox-facing framing', () => {
@@ -56,6 +61,7 @@ describe('contributor workflow templates', () => {
     assert.match(contributing, /generic web\/enterprise framing/i);
     assert.match(contributing, /GitHub issue \/ PR templates/i);
     assert.match(contributing, /Contributor wiki/i);
+    assert.match(contributing, /canonical contributor wiki source/i);
     assert.match(contributing, /good first issue/i);
   });
 
@@ -81,11 +87,12 @@ describe('contributor workflow templates', () => {
     assert.match(docsIndex, /\.\.\/wiki\/Home\.md/);
     assert.match(docsIndex, /\.\.\/wiki\/ROADMAP\.md/);
     assert.match(wikiHome, /This is the contributor-facing wiki source/i);
+    assert.match(wikiHome, /generated mirror/i);
     assert.match(roadmap, /canonical versioned product roadmap/i);
     assert.match(roadmap, /`0\.2\.0`/);
-    assert.match(roadmap, /Patch Assistant/i);
-    assert.match(roadmap, /Roblox Monetization Planner/i);
-    assert.match(roadmap, /Audience and Retention Planner/i);
+    assert.match(roadmap, /Patch and Release Assistant/i);
+    assert.match(roadmap, /Monetization and Retention Suite/i);
+    assert.match(roadmap, /Experience Surface Suite/i);
     assert.match(roadmap, /`1\.0\.0`/);
   });
 });

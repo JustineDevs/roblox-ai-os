@@ -9,7 +9,7 @@ Use this wiki for community guidance, roadmap context, issue triage, and release
 
 - [Contributing guide](./Contributing.md)
 - [Good first issues and labels](./Good-First-Issues.md)
-- [Roadmap](../../ROADMAP.md)
+- [Roadmap](./ROADMAP.md)
 - [Release playbook](./Release-Playbook.md)
 
 ## What this wiki is for
@@ -30,6 +30,11 @@ Use this wiki for community guidance, roadmap context, issue triage, and release
 
 ## Source of truth
 
-- Canonical public entry point: [../../README.md](../../README.md)
-- Contributor workflow contract: [../../CONTRIBUTING.md](../../CONTRIBUTING.md)
-- Roadmap source for contributor planning: [../../ROADMAP.md](../../ROADMAP.md)
+- Canonical public entry point: [README](../../README.md)
+- Contributor workflow contract: [CONTRIBUTING](../../CONTRIBUTING.md)
+- Roadmap source for contributor planning: [ROADMAP](./ROADMAP.md)
+
+## Publishing model
+
+- `docs/wiki/` is the canonical contributor wiki source in the repository
+- the GitHub Wiki surface is a generated mirror, not a second source of truth

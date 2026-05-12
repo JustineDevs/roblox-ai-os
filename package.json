@@ -54,6 +54,7 @@
     "postpack": "npm run clean:native-package-assets",
     "sync:plugin": "node dist/scripts/sync-plugin-mirror.js",
     "sync:plugin:check": "node dist/scripts/sync-plugin-mirror.js --check",
+    "sync:github-wiki": "node dist/scripts/sync-github-wiki.js",
     "sync:release-notes": "node dist/scripts/sync-release-notes.js",
     "sync:release-notes:check": "node dist/scripts/sync-release-notes.js --check",
     "release:backfill:github": "node dist/scripts/backfill-github-releases.js",

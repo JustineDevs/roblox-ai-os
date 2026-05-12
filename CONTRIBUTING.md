@@ -38,7 +38,9 @@ Contributor planning surfaces:
 
 - [Contributor wiki](./docs/wiki/Home.md)
 - [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
-- [Roadmap](./ROADMAP.md)
+- [Roadmap](./docs/wiki/ROADMAP.md)
+
+`docs/wiki/` is the canonical contributor wiki source. The GitHub Wiki is a published mirror of that folder, not a second source of truth.
 
 ### Team/state coverage gate (issue #454)
 

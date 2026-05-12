@@ -30,6 +30,13 @@ RCS is a Roblox Studio operating layer for [OpenAI Codex CLI](https://github.com
 
 ## Agentic IDE support matrix
 
+<details>
+<summary>Open the Agentic IDE support matrix</summary>
+
+<p>
+To create a dropdown in a README, use the native HTML <code>&lt;details&gt;</code> and <code>&lt;summary&gt;</code> tags.
+</p>
+
 RCS separates **what we author once** (canonical `skills/`, prompts, catalog, templates) from **how each host consumes it**. See [Agentic platform compatibility](./docs/reference/agentic-platform-compatibility.md) and the machine-readable registry [`src/platform-targets/manifest.json`](./src/platform-targets/manifest.json).
 
 | Tier | Hosts | What you get today |
@@ -41,6 +48,8 @@ RCS separates **what we author once** (canonical `skills/`, prompts, catalog, te
 **Windows vs CI:** GitHub Actions runs the primary Node test gate on **Linux**. A full local `npm test` on **native Windows** may still fail on path- or tool-specific tests unrelated to your feature work; prefer **Linux or WSL2** when verifying a release line, or run the same scoped commands your PR checks use.
 
 **npm install vs git clone:** The published `@jstn-sdk/rcs` package tarball does **not** include [`corpora/`](./corpora/README.md) (security datasets). Clone the repository when you need those paths or contributor corpora docs.
+
+</details>
 
 It keeps Codex as the execution engine and makes it easier to:
 - start a stronger Codex session by default
@@ -161,34 +170,36 @@ That is the main path.
 > Native/runtime hooks still stay on the setup/runtime side rather than the installable plugin manifest.
 > It is still **not** a replacement for `npm install -g @jstn-sdk/rcs` plus `rcs setup`.
 
-> [!IMPORTANT]
-> **MCP activation split**
->
-> After `rcs setup`, the default Codex-compatible config should include two MCP layers:
->
-> 1. **First-party RCS MCP servers** via `rcs mcp-serve`
->    - `rcs_state`
->    - `rcs_memory`
->    - `rcs_code_intel`
->    - `rcs_trace`
->    - `rcs_wiki`
->
-> 2. **Default Roblox reference MCP servers** via GitMCP remote transport
->    - `creator_docs`
->    - `roblox_skills`
->    - `devprod_docs`
->    - `roblox_scripts_corpus`
->
-> Recommended activation model:
-> - keep **first-party `rcs mcp-serve`** active for local runtime/state/control-plane work
-> - keep the **GitMCP Roblox reference servers** active by default to reduce hallucination and improve Roblox platform grounding
-> - enable **`robloxstudio-mcp`** manually only when you want a live Codex CLI <-> Roblox Studio connection
->
-> Important clarification:
-> - `rcs mcp-serve` is only for **RCS-owned local MCP servers**
-> - it does **not** serve `robloxstudio-mcp`
-> - `robloxstudio-mcp` remains an explicit opt-in live Studio bridge because it requires a Studio plugin, HTTP enabled in Studio, and a higher-trust write boundary
-> - for plugin install/activation steps, follow the upstream `robloxstudio-mcp` guide first; RCS compatibility docs do **not** replace the upstream setup instructions
+<details>
+<summary>Optional: MCP activation split and live Studio boundary</summary>
+
+After `rcs setup`, the default Codex-compatible config should include two MCP layers:
+
+1. **First-party RCS MCP servers** via `rcs mcp-serve`
+   - `rcs_state`
+   - `rcs_memory`
+   - `rcs_code_intel`
+   - `rcs_trace`
+   - `rcs_wiki`
+
+2. **Default Roblox reference MCP servers** via GitMCP remote transport
+   - `creator_docs`
+   - `roblox_skills`
+   - `devprod_docs`
+   - `roblox_scripts_corpus`
+
+Recommended activation model:
+- keep **first-party `rcs mcp-serve`** active for local runtime/state/control-plane work
+- keep the **GitMCP Roblox reference servers** active by default to reduce hallucination and improve Roblox platform grounding
+- enable **`robloxstudio-mcp`** manually only when you want a live Codex CLI <-> Roblox Studio connection
+
+Important clarification:
+- `rcs mcp-serve` is only for **RCS-owned local MCP servers**
+- it does **not** serve `robloxstudio-mcp`
+- `robloxstudio-mcp` remains an explicit opt-in live Studio bridge because it requires a Studio plugin, HTTP enabled in Studio, and a higher-trust write boundary
+- for plugin install/activation steps, follow the upstream `robloxstudio-mcp` guide first; RCS compatibility docs do **not** replace the upstream setup instructions
+
+</details>
 
 ## Who RCS is for
 
@@ -217,7 +228,7 @@ RCS should be easy to understand, run, and improve.
 Contributor entry points:
 - [Contributor wiki](./docs/wiki/Home.md)
 - [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
-- [Roadmap](./ROADMAP.md)
+- [Roadmap](./docs/wiki/ROADMAP.md)
 - [Contributing](./CONTRIBUTING.md)
 
 Maintainer standards:
@@ -373,6 +384,9 @@ Each driver is evaluated through player desire, mechanic patterns, UI feedback, 
 
 These are supporting operator interfaces, not the main onboarding path.
 
+<details>
+<summary>Open advanced creator operations and operator-only surfaces</summary>
+
 ### Coordinated execution
 
 Use `rcs team` only when the approved creator plan genuinely needs durable tmux/worktree coordination. The default creator flow remains `$brief -> $blueprint -> $forge / $crew -> $autoforge`.
@@ -473,6 +487,8 @@ On native Windows, RCS accepts `psmux` as the tmux-compatible binary for the exi
 | Windows | `winget install psmux` |
 | Windows (WSL2) | `sudo apt install tmux` |
 
+</details>
+
 ## Known issues
 
 ### Intel Mac: high `syspolicyd` / `trustd` CPU during startup
@@ -486,11 +502,14 @@ If this happens, try:
 
 ## Documentation
 
+<details>
+<summary>Open the full documentation index</summary>
+
 - [Getting Started](./docs/site/getting-started.html)
 - [Demo guide](./DEMO.md)
 - [Wiki feature](./docs/wiki/wiki-feature.md)
 - [Contributor wiki home](./docs/wiki/Home.md)
-- [Contributor roadmap](./ROADMAP.md)
+- [Contributor roadmap](./docs/wiki/ROADMAP.md)
 - [Good first issues and labels](./docs/wiki/Good-First-Issues.md)
 - [Agent catalog](./docs/site/agents.html)
 - [Multi-agent compatibility architecture](./docs/reference/multi-agent-compatibility-architecture.md)
@@ -502,7 +521,12 @@ If this happens, try:
 - [Contributing](./CONTRIBUTING.md)
 - [Changelog](./CHANGELOG.md)
 
+</details>
+
 ## Languages
+
+<details>
+<summary>Open translated README links</summary>
 
 - [English](./README.md)
 - [한국어](./docs/readme/README.ko.md)
@@ -520,6 +544,8 @@ If this happens, try:
 - [Ελληνικά](./docs/readme/README.el.md)
 - [Polski](./docs/readme/README.pl.md)
 - [Українська](./docs/readme/README.uk.md)
+
+</details>
 
 ## Ownership
 

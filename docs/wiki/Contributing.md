@@ -1,6 +1,6 @@
 # Contributing Wiki
 
-This page complements the repository root [CONTRIBUTING.md](../../CONTRIBUTING.md).
+This page complements the repository root [CONTRIBUTING guide](../../CONTRIBUTING.md).
 
 ## Fastest way to start
 

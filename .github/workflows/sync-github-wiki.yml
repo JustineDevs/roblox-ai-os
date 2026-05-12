@@ -1,0 +1,65 @@
+name: Sync GitHub Wiki
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/wiki/**'
+      - 'src/scripts/sync-github-wiki.ts'
+      - 'src/scripts/__tests__/sync-github-wiki.test.ts'
+      - '.github/workflows/sync-github-wiki.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-github-wiki-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish-wiki:
+    name: Publish contributor wiki mirror
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - name: Clone wiki repository
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-out
+
+      - name: Render contributor wiki into GitHub Wiki tree
+        run: node dist/scripts/sync-github-wiki.js --out wiki-out
+
+      - name: Commit and push wiki mirror
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git -C wiki-out status --short)" ]; then
+            echo "wiki is already up to date"
+            exit 0
+          fi
+          git -C wiki-out config user.name "github-actions[bot]"
+          git -C wiki-out config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C wiki-out add --all
+          git -C wiki-out commit -m "Sync contributor wiki mirror from docs/wiki"
+          git -C wiki-out push origin HEAD
+
+      - name: Write workflow summary
+        run: |
+          {
+            echo '## GitHub Wiki Sync'
+            echo ''
+            echo '- Source of truth: `docs/wiki/`'
+            echo '- Target repo: `${GITHUB_REPOSITORY}.wiki.git`'
+          } >> "$GITHUB_STEP_SUMMARY"
