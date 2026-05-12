@@ -53,6 +53,7 @@ describe('contributor workflow templates', () => {
     assert.match(syncWikiWorkflow, /name:\s+Sync GitHub Wiki/);
     assert.match(syncWikiWorkflow, /docs\/wiki\/\*\*/);
     assert.match(syncWikiWorkflow, /sync-github-wiki\.js/);
+    assert.match(syncWikiWorkflow, /GH_TOKEN:\s+\$\{\{\s*secrets\.GH_TOKEN\s*\}\}/);
   });
 
   it('tightens contributing guidance around docs drift and active Roblox-facing framing', () => {

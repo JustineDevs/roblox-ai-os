@@ -34,16 +34,16 @@ jobs:
 
       - name: Clone wiki repository
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-out
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-out
 
       - name: Render contributor wiki into GitHub Wiki tree
         run: node dist/scripts/sync-github-wiki.js --out wiki-out
 
       - name: Commit and push wiki mirror
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           if [ -z "$(git -C wiki-out status --short)" ]; then
             echo "wiki is already up to date"
