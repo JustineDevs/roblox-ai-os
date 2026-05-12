@@ -13,9 +13,9 @@ const generatedDir = join(root, 'src', 'catalog', 'generated');
 const generatedPublicCatalogPath = join(generatedDir, 'public-catalog.json');
 
 const docsToScan = [
-  join(root, 'docs', 'index.html'),
-  join(root, 'docs', 'skills.html'),
-  join(root, 'docs', 'agents.html'),
+  join(root, 'docs', 'site', 'index.html'),
+  join(root, 'docs', 'site', 'skills.html'),
+  join(root, 'docs', 'site', 'agents.html'),
   join(root, 'README.md'),
   join(root, 'src', 'cli', 'setup.ts'),
   join(root, 'src', 'cli', 'doctor.ts'),
